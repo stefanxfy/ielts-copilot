@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雅思自学备考指南 IELTS Copilot · 可点击原型 v0.1</title>
+<style>
+  :root{
+    --blue:#1a6feb; --blue-d:#0d4fa8; --blue-bg:#e8f0fe;
+    --ink:#1c2330; --ink-2:#5b6574; --ink-3:#8a93a2;
+    --line:#dfe4ec; --bg:#f4f6fa; --card:#ffffff;
+    --green:#18925c; --red:#d33c3c; --amber:#c07d10;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
+  button{font-family:inherit;cursor:pointer}
+  .topbar{position:sticky;top:0;z-index:50;background:#10233f;color:#fff;display:flex;align-items:center;gap:16px;padding:0 20px;height:52px}
+  .topbar .logo{font-weight:600;font-size:15px;letter-spacing:.5px}
+  .topbar .logo span{color:#7db2ff}
+  .topbar nav{display:flex;gap:4px;flex:1}
+  .topbar nav button{background:transparent;border:none;color:#b9c6d8;padding:6px 12px;border-radius:6px;font-size:13px}
+  .topbar nav button:hover{background:rgba(255,255,255,.08);color:#fff}
+  .topbar nav button.active{background:rgba(125,178,255,.18);color:#fff}
+  .badge-demo{margin-left:auto;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:3px 10px;border-radius:99px;font-size:12px;color:#cfe3ff}
+  main{max-width:1180px;margin:24px auto;padding:0 20px 90px}
+  .view{display:none}
+  .view.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+  h2.page-title{font-size:20px;margin-bottom:4px}
+  p.page-sub{color:var(--ink-2);font-size:13px;margin-bottom:20px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .tag-v2{font-size:10px;color:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:1px 7px;white-space:nowrap}
+  .tag-now{font-size:10px;color:var(--blue-d);background:var(--blue-bg);border-radius:99px;padding:1px 7px;white-space:nowrap}
+  .combo-step{background:var(--blue-bg);color:var(--blue-d);border-radius:6px;padding:4px 10px;font-size:12px;white-space:nowrap}
+  /* 机考模拟：子导航 tab */
+  .exam-tabs{display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:18px;max-width:660px}
+  .exam-tabs button{flex:1;background:transparent;border:none;padding:9px 0;border-radius:7px;font-size:13px;color:var(--ink-2);cursor:pointer}
+  .exam-tabs button.active{background:var(--blue-bg);color:var(--blue-d);font-weight:600}
+  .mod-badge{display:inline-block;font-size:11px;font-weight:600;border-radius:99px;padding:2px 10px;vertical-align:2px;margin-left:10px}
+  .mod-badge.G{background:var(--blue-bg);color:var(--blue-d)}
+  .mod-badge.A{background:#fdf1e6;color:#a8540c}
+  /* A/G 类顶部切换器：与 exam-tabs 同款胶囊，独立一行 */
+  .mod-switch{display:inline-flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:10px}
+  .mod-switch button{background:transparent;border:none;padding:7px 18px;border-radius:7px;font-size:13px;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .mod-switch button.active.G{background:var(--blue-bg);color:var(--blue-d);font-weight:600}
+  .mod-switch button.active.A{background:#fdf1e6;color:#a8540c;font-weight:600}
+  .mod-switch .dot{width:8px;height:8px;border-radius:99px;background:var(--ink-3);display:inline-block}
+  .mod-switch button.active.G .dot{background:var(--blue)}
+  .mod-switch button.active.A .dot{background:#d97b1a}
+  .exam-panel{display:none}
+  .exam-panel.active{display:block;animation:fade .2s ease}
+  /* 题库：年份→月份 树 */
+  .year-group{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:12px;overflow:hidden}
+  .year-head{display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;user-select:none}
+  .year-head:hover{background:var(--blue-bg)}
+  .year-head .caret{color:var(--ink-3);transition:transform .15s;font-size:12px}
+  .year-group.open .year-head .caret{transform:rotate(90deg)}
+  .year-head .yr{font-size:16px;font-weight:700}
+  .year-head .yr-note{font-size:12px;color:var(--ink-3);font-weight:400}
+  .year-head .yr-count{margin-left:auto;font-size:12px;color:var(--ink-3)}
+  .year-head .yr-count b{color:var(--blue-d);font-size:14px}
+  /* 年份占位（无入库真题）：单行、不可点、不展开 month-grid */
+  .year-empty{border:1px solid var(--line);border-radius:12px;background:#fafbfc;margin-bottom:12px;padding:12px 18px;display:flex;align-items:center;gap:10px;opacity:.65}
+  .year-empty .yr{font-size:14px;font-weight:600;color:var(--ink-3)}
+  .year-empty .yr-hint{font-size:12px;color:var(--ink-3)}
+  .month-grid{display:none;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;padding:4px 18px 18px}
+  .year-group.open .month-grid{display:grid}
+  /* 分科真题列表：整行单列堆叠（month-grid 默认窄列是给月份卡片用的，长标题会被挤叠） */
+  .month-grid.rows{grid-template-columns:1fr;gap:8px}
+  .month-card{border:1px solid var(--line);border-radius:9px;padding:10px 12px;cursor:pointer;text-align:left;background:#fff;transition:all .15s}
+  .month-card:hover{border-color:var(--blue);box-shadow:0 3px 10px rgba(16,35,63,.08)}
+  .month-card .m{font-size:13px;font-weight:600}
+  .month-card .s{font-size:11px;color:var(--ink-3);margin-top:3px}
+  .month-card.done .s{color:var(--green)}
+  .month-card.part .s{color:var(--amber)}
+  /* 套题详情 */
+  .detail-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+  .back-link{background:none;border:1px solid var(--line);color:var(--ink-2);padding:6px 14px;border-radius:7px;font-size:13px;cursor:pointer}
+  .back-link:hover{border-color:var(--blue);color:var(--blue-d)}
+  .detail-title{font-size:17px;font-weight:700}
+  .detail-meta{font-size:12px;color:var(--ink-3);margin-top:3px}
+  .paper-status{font-size:11px;color:var(--green);border:1px solid #cde8da;background:#eefaf3;border-radius:99px;padding:2px 9px}
+  /* 单科题库列表 */
+  .single-list{display:flex;flex-direction:column;gap:10px;max-width:760px}
+  .single-row{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:11px;background:#fff;padding:13px 16px}
+  .single-row>div:first-child{flex:1;min-width:0}
+  .single-row .name{font-size:14px;font-weight:600}
+  .single-row .meta{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .single-row .go{margin-left:auto;white-space:nowrap}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  /* 仪表盘题库统计 tile：点击进入机考模拟对应题库 */
+  .stat-tile{cursor:pointer;text-align:center;transition:all .15s}
+  .stat-tile:hover{border-color:var(--blue);box-shadow:0 3px 10px rgba(16,35,63,.08)}
+  .stat-tile .arrow{font-size:12px;color:var(--ink-3);margin-top:6px}
+  .stat-tile:hover .arrow{color:var(--blue)}
+  /* dashboard */
+  .paper-card{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff;position:relative;cursor:pointer;transition:box-shadow .15s}
+  .paper-card:hover{box-shadow:0 4px 14px rgba(16,35,63,.08)}
+  .paper-card .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;margin-bottom:8px}
+  .tag.pub{background:#e5f6ee;color:var(--green)}
+  .tag.rev{background:#fdf1dd;color:var(--amber)}
+  .paper-card h3{font-size:15px;margin-bottom:2px}
+  .paper-card .meta{color:var(--ink-3);font-size:12px}
+  .paper-card .go{margin-top:12px;display:inline-block;background:var(--blue);color:#fff;border:none;padding:6px 14px;border-radius:7px;font-size:13px}
+  table.history{width:100%;border-collapse:collapse;font-size:13px}
+  table.history th{text-align:left;color:var(--ink-2);font-weight:500;border-bottom:1px solid var(--line);padding:8px 10px;font-size:12px}
+  table.history td{padding:10px;border-bottom:1px solid var(--line)}
+  .band{font-weight:600;color:var(--blue)}
+  .empty-hint{color:var(--ink-3);font-size:12px;text-align:center;padding:24px 0}
+  /* 通用按钮（工作台/设置/题库卡共用；内置演示卷样式已随样题删除） */
+  .btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 12px;font-size:13px;color:var(--ink)}
+  .btn:hover{border-color:var(--blue);color:var(--blue)}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+  .btn.primary:hover{background:var(--blue-d)}
+  /* settings */
+  .set-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .set-row label{width:130px;font-size:13px;color:var(--ink-2)}
+  .set-row input,.set-row select{flex:1;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:13px}
+  .hint{font-size:12px;color:var(--ink-3);margin-top:4px}
+  .toast{position:fixed;top:64px;right:20px;background:#10233f;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:100}
+  .toast.show{opacity:1}
+  .divider{height:1px;background:var(--line);margin:18px 0}
+  .note-bar{background:#fdf6e3;border:1px solid #f0e3b8;color:#7a5c10;font-size:12px;padding:6px 12px;border-radius:8px;margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">IELTS<span>Copilot</span></div>
+  <nav>
+    <button data-view="dashboard" onclick="go('dashboard')">仪表盘</button>
+    <button data-view="exam" onclick="go('exam')">机考模拟</button>
+    <button data-view="learn" onclick="go('learn')">学习中心</button>
+    <button data-view="settings" onclick="go('settings')">设置</button>
+  </nav>
+  <div class="badge-demo">可点击原型 · 假数据 · 交互验证用</div>
+</div>
+
+<main>
+
+<!-- ============ 仪表盘 ============ -->
+<section id="view-dashboard" class="view active">
+  <h2 class="page-title">仪表盘</h2>
+  <p class="page-sub">本地题库 · 全部数据存于本机 <code>data/</code> 目录</p>
+
+  <div class="grid-3" style="margin-bottom:20px">
+    <div class="card" style="text-align:center"><div style="font-size:26px;font-weight:700;color:var(--blue)" id="dashPaperCount">-</div><div style="font-size:12px;color:var(--ink-2)">已发布试卷</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:26px;font-weight:700;color:var(--blue)">23</div><div style="font-size:12px;color:var(--ink-2)">累计完成考试</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:26px;font-weight:700;color:var(--blue)">6.5</div><div style="font-size:12px;color:var(--ink-2)">最近一次总分</div></div>
+  </div>
+
+  <h3 style="font-size:15px;margin-bottom:12px">题库</h3>
+  <div class="grid-3" style="margin-bottom:24px" id="bankStats"></div>
+
+  <h3 style="font-size:15px;margin-bottom:12px">历史成绩</h3>
+  <div class="card" style="padding:8px 16px">
+    <div class="empty-hint">暂无考试记录 · 从上方「开始机考」进入雅思阅读真题 1</div>
+    <div class="empty-hint">V3 将在此叠加：错题本 · 弱项雷达 · 分数曲线</div>
+  </div>
+</section>
+
+<!-- ============ 机考模拟 ============ -->
+<section id="view-exam" class="view">
+  <h2 class="page-title">机考模拟</h2>
+  <p class="page-sub">选择考试科目 · 全程还原官方机考体验 · <span id="examModLabel">当前为 A类（Academic）题库</span></p>
+
+  <!-- A/G 类顶部切换器（与下方 exam-tabs 解耦：先选类，再选科目）。
+       顺序：A 类学术类在前（产品主推，PRD §1.4），G 类培训类在后。 -->
+  <div class="mod-switch" role="tablist" aria-label="考试类型">
+    <button id="modBtnA" class="active A" data-mod="A" onclick="setExamMod('A')"><span class="dot"></span>A类 · 学术类</button>
+    <button id="modBtnG" data-mod="G" onclick="setExamMod('G')"><span class="dot"></span>G类 · 培训类</button>
+  </div>
+
+  <!-- 子导航 tab -->
+  <div class="exam-tabs">
+    <button class="active" data-tab="combined" onclick="examTab('combined')">雅思综合</button>
+    <button data-tab="listening" onclick="examTab('listening')">听力</button>
+    <button data-tab="reading" onclick="examTab('reading')">阅读</button>
+    <button data-tab="writing" onclick="examTab('writing')">写作</button>
+    <button data-tab="speaking" onclick="examTab('speaking')">口语</button>
+  </div>
+
+  <!-- 雅思综合：题库（年份→月份→套题详情） -->
+  <div id="examPanel-combined" class="exam-panel active">
+    <div id="papersHome">
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap">
+          <span style="font-weight:500">考试顺序</span>
+          <span class="combo-step">听力 · 约30分钟</span><span style="color:var(--ink-3)">→</span>
+          <span class="combo-step">阅读 · 60分钟</span><span style="color:var(--ink-3)">→</span>
+          <span class="combo-step">写作 · 60分钟</span><span style="color:var(--ink-3)">→</span>
+          <span class="combo-step">口语 · 11–14分钟</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:10px">当前：<b id="examModInline">A类 · 学术类</b> · 按题库分组选择一套真题 → 点开查看四科详情 → 开始全套模考。已完成套题绿色标注。</div>
+      </div>
+      <div id="papersTree"></div>
+    </div>
+
+    <!-- 套题详情 -->
+    <div id="paperDetail" style="display:none">
+      <div class="detail-head">
+        <button class="back-link" onclick="backToPapers()">← 返回题库</button>
+        <div>
+          <div class="detail-title" id="pdTitle">2024 年 1 月 · 全套模考</div>
+          <div class="detail-meta" id="pdMeta"></div>
+        </div>
+        <span class="paper-status" id="pdStatus" style="display:none">已完成</span>
+      </div>
+      <div class="grid-4" style="margin-bottom:16px" id="pdSections"></div>
+      <button class="btn primary" onclick="startCombined()">开始全套模考</button>
+    </div>
+  </div>
+
+  <!-- 听力：单科题库（按年份折叠；V2 尚未实现，4 个年份均占位） -->
+  <div id="examPanel-listening" class="exam-panel">
+    <div style="font-size:13px;color:var(--ink-2);margin-bottom:14px">选择一套听力真题开始机考 · 约 30 分钟 · Part 1-4 · A/G 类同卷（V2 待开放）</div>
+    <div class="single-list" id="listeningList"></div>
+  </div>
+
+  <!-- 阅读：单科题库 -->
+  <div id="examPanel-reading" class="exam-panel">
+    <div style="font-size:13px;color:var(--ink-2);margin-bottom:14px" id="rdPanelMeta">选择一套阅读真题开始机考 · 60 分钟 · 3 个 Section（日常短文→职场文本→长文）· 40 题 · 左右分屏 + 原文高亮</div>
+    <div class="single-list" id="readingList"></div>
+  </div>
+
+  <!-- 写作：单科题库 -->
+  <div id="examPanel-writing" class="exam-panel">
+    <div style="font-size:13px;color:var(--ink-2);margin-bottom:14px" id="wrPanelMeta">选择一套写作真题开始机考 · 60 分钟 · Task 1 书信 + Task 2 议论文 · 交卷后 AI 四维批改</div>
+    <div class="single-list" id="writingList"></div>
+  </div>
+
+  <!-- 口语：单科题库（按年份折叠；V2 尚未实现，4 个年份均占位） -->
+  <div id="examPanel-speaking" class="exam-panel">
+    <div style="font-size:13px;color:var(--ink-2);margin-bottom:14px">选择一套口语真题开始机考 · 11–14 分钟 · Part 1-3 · A/G 类同卷（V2 待开放）</div>
+    <div class="single-list" id="speakingList"></div>
+  </div>
+</section>
+
+<!-- ============ 学习中心 ============ -->
+<section id="view-learn" class="view">
+  <h2 class="page-title">学习中心</h2>
+  <p class="page-sub">提分闭环功能 · 按版本逐步开放</p>
+  <div class="grid-3">
+    <div class="paper-card" onclick="toast('错题本 V2 提供')">
+      <div style="font-weight:600;font-size:14px;display:flex;justify-content:space-between">错题本 <span class="tag-v2">V2</span></div>
+      <div style="font-size:12px;color:var(--ink-2);margin-top:8px">按题型归类错题，快速定位薄弱题型</div>
+    </div>
+    <div class="paper-card" onclick="toast('专项训练 V2 提供')">
+      <div style="font-weight:600;font-size:14px;display:flex;justify-content:space-between">专项训练 <span class="tag-v2">V2</span></div>
+      <div style="font-size:12px;color:var(--ink-2);margin-top:8px">只刷某一种题型，随机抽题反复练</div>
+    </div>
+    <div class="paper-card" onclick="toast('精听训练 V2 提供')">
+      <div style="font-weight:600;font-size:14px;display:flex;justify-content:space-between">精听训练 <span class="tag-v2">V2</span></div>
+      <div style="font-size:12px;color:var(--ink-2);margin-top:8px">听力逐句循环、跟读、听写</div>
+    </div>
+    <div class="paper-card" onclick="toast('弱项雷达 V3 提供')">
+      <div style="font-weight:600;font-size:14px;display:flex;justify-content:space-between">弱项雷达 <span class="tag-v2">V3</span></div>
+      <div style="font-size:12px;color:var(--ink-2);margin-top:8px">题型维度能力分布，一眼看清短板</div>
+    </div>
+    <div class="paper-card" onclick="toast('分数曲线 V3 提供')">
+      <div style="font-weight:600;font-size:14px;display:flex;justify-content:space-between">分数曲线 <span class="tag-v2">V3</span></div>
+      <div style="font-size:12px;color:var(--ink-2);margin-top:8px">历次模考 band 追踪，看趋势</div>
+    </div>
+    <div class="paper-card" onclick="toast('生词本 V3 提供')">
+      <div style="font-weight:600;font-size:14px;display:flex;justify-content:space-between">生词本 <span class="tag-v2">V3</span></div>
+      <div style="font-size:12px;color:var(--ink-2);margin-top:8px">阅读点词收藏，导出 Anki 背单词</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 设置页 ============ -->
+<section id="view-settings" class="view">
+  <h2 class="page-title">设置</h2>
+  <p class="page-sub">AI 配置存于本机 <code>config.json</code> · 界面修改与直接编辑文件均生效（以文件修改时间较新者为准）</p>
+
+  <div class="card" style="max-width:680px">
+    <h3 style="font-size:15px;margin-bottom:14px">AI 服务配置</h3>
+    <div class="set-row">
+      <label>Provider</label>
+      <select><option>openai</option><option>anthropic</option><option>openai-compatible</option></select>
+    </div>
+    <div class="set-row">
+      <label>Base URL</label>
+      <input value="https://api.openai.com/v1" placeholder="https://...">
+    </div>
+    <div class="set-row">
+      <label>API Key</label>
+      <input type="password" value="sk-xxxxxxxxxxxxxxxxx" placeholder="sk-...">
+    </div>
+    <div class="set-row">
+      <label>解析模型</label>
+      <input value="gpt-4o-mini">
+    </div>
+    <div class="set-row">
+      <label>批改模型</label>
+      <input value="gpt-4o">
+    </div>
+    <div class="hint" style="margin-bottom:14px">所有 AI 调用均读取此配置，不写死在代码中。也可以直接用文本编辑器打开 <code>config.json</code> 修改。</div>
+    <div style="display:flex;gap:10px">
+      <button class="btn primary" onclick="toast('已保存到 config.json ✓')">保存配置</button>
+      <button class="btn" onclick="toast('连通性测试通过 ✓（原型演示）')">测试连接</button>
+    </div>
+
+    <div class="divider"></div>
+    <h3 style="font-size:15px;margin-bottom:14px">本地数据</h3>
+    <div class="hint">数据目录：<code>~/ielts-copilot/data/</code>（app.db）</div>
+    <div style="margin-top:10px;display:flex;gap:10px">
+      <button class="btn" onclick="toast('数据目录已打开（原型）')">打开数据目录</button>
+      <button class="btn" onclick="toast('备份为题库包，V3 提供（原型）')">导出题库包</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 视图切换 ===== */
+function go(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.topbar nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
+  window.scrollTo(0,0);
+}
+
+/* ===== 机考模拟：子导航 tab + 题库 ===== */
+const RD_DESC='3 个 Section（日常短文→职场文本→长文）';
+const WR_DESC_G='Task 1 书信 + Task 2 议论文';
+const WR_DESC_A='Task 1 图表作文 + Task 2 议论文';
+/* 本地原型只保留结构化入库真题（即点即考）；其余样题入口已移除 */
+const PAPERS=[
+  {id:'gt-html',mod:'G',label:'雅思真题试卷 一月',note:'G类 · 结构化 HTML 直接入库 · 免解析即点即考',tests:[
+    {id:'gt-html-r1',year:2025,m:'雅思阅读真题 1',status:'todo',href:'gt-reading-test.html',only:'reading'},
+    {id:'gt-html-w1',year:2025,m:'雅思写作真题 1',status:'todo',href:'gt-writing-test.html',only:'writing'}
+  ]},
+  {id:'a-2025jan',mod:'A',label:'IELTS Mock Test 2025 January',note:'A类 · 学术类真题 · 结构化 HTML 直接入库',tests:[
+    {id:'a-2025jan-r1',year:2025,m:'Reading Practice Test 1',status:'todo',href:'a-reading-test.html',only:'reading'},
+    {id:'a-2025jan-w1',year:2025,m:'Writing Practice Test 1',status:'todo',href:'a-writing-test.html',only:'writing'},
+    {id:'a-2025jan-l1',year:2025,m:'Listening Practice Test 1',status:'todo',href:'test-sound.html',only:'listening'}
+  ]}
+];
+/* 年份折叠：倒序展示，固定 2026 → 2023 共 4 年。空年份占位显示（不可点）。
+   新增真题时只需在对应 test 上补 year 字段，无需改此处 */
+const YEAR_LIST = [2026, 2025, 2024, 2023];
+const SEC_META=[
+  {key:'listening',name:'听力',dur:'约 30 分钟',n:'40 题',v2:true,desc:'音频播一遍、Part 1-4 · A/G 类同卷'},
+  {key:'reading',name:'阅读',dur:'60 分钟',n:'40 题',v2:false,desc:'3 个 Section：日常短文→职场文本→长文 · 左右分屏、原文高亮'},
+  {key:'writing',name:'写作',dur:'60 分钟',n:'Task 1 + 2',v2:false,desc:'Task 1 书信 + Task 2 议论文 · AI 四维批改'},
+  {key:'speaking',name:'口语',dur:'11–14 分钟',n:'三部分',v2:true,desc:'录音回放、转写、AI 三维点评 · A/G 类同卷'}
+];
+/* 当前选中的 A/G 类（顶部 mod-switch 状态）。默认 A（产品主推方向，见 PRD §1.4）；
+   切换时联动题库树 + 单科列表 + 文案 */
+let currentMod = 'A';
+const MOD_LABEL = { G: 'G类（General Training · 培训类）', A: 'A类（Academic · 学术类）' };
+const MOD_INLINE = { G: 'G类 · 培训类', A: 'A类 · 学术类' };
+function banks(){ return PAPERS.filter(g => g.mod === currentMod); }
+function setExamMod(mod){
+  if(mod !== 'A' && mod !== 'G') return;
+  currentMod = mod;
+  document.querySelectorAll('.mod-switch button').forEach(b=>{
+    const on = b.dataset.mod === mod;
+    b.classList.toggle('active', on);
+    b.classList.toggle('G', b.dataset.mod === 'G' && on);
+    b.classList.toggle('A', b.dataset.mod === 'A' && on);
+  });
+  const sub = document.getElementById('examModLabel');
+  if(sub) sub.textContent = '当前为 ' + MOD_LABEL[mod] + '题库';
+  const inline = document.getElementById('examModInline');
+  if(inline) inline.textContent = MOD_INLINE[mod];
+  // 关闭已打开的套题详情，避免类切换后显示不属于当前类的套题
+  backToPapers();
+  renderPapers();
+  renderSingleLists();
+}
+function examTab(name){
+  document.querySelectorAll('.exam-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('.exam-panel').forEach(p=>p.classList.toggle('active',p.id==='examPanel-'+name));
+}
+function renderPapers(){
+  const el=document.getElementById('papersTree');
+  const gs=banks();
+  if(!gs.length){
+    el.innerHTML = '<div class="empty-hint">当前 ' + MOD_INLINE[currentMod] + ' 暂无入库真题</div>';
+    return;
+  }
+  /* 把所有 test 摊平并按 year 索引；空年份显示占位行 */
+  const byYear = {};
+  YEAR_LIST.forEach(y => byYear[y] = []);
+  gs.forEach(g => g.tests.forEach(t => {
+    if(byYear[t.year]) byYear[t.year].push({ group: g, test: t });
+  }));
+  el.innerHTML = YEAR_LIST.map(year => {
+    const items = byYear[year] || [];
+    if(!items.length){
+      return `<div class="year-empty"><span class="yr">${year} 年</span><span class="yr-hint">· 暂无真题</span></div>`;
+    }
+    /* 同年内按 group 分块渲染（一个 group 一个 year-group，但同年的 tests 在一起） */
+    const groupMap = {};
+    items.forEach(it => {
+      if(!groupMap[it.group.id]) groupMap[it.group.id] = { group: it.group, tests: [] };
+      groupMap[it.group.id].tests.push(it.test);
+    });
+    const groupsHere = Object.values(groupMap);
+    const totalDone = items.filter(it => it.test.status === 'done').length;
+    const totalTests = items.length;
+    /* 用第一个 group 当折叠 key；同年内多个 group 折叠状态共享 */
+    const foldKey = 'yr-' + year;
+    return `<div class="year-group year-by-${year} open" id="grp-${foldKey}">
+      <div class="year-head" onclick="toggleYear('${foldKey}')">
+        <span class="caret">▶</span>
+        <span class="yr">${year} 年</span>
+        <span class="yr-note">${MOD_INLINE[currentMod]}</span>
+        <span class="yr-count">已完成 <b>${totalDone}</b> / ${totalTests} 套</span>
+      </div>
+      <div class="month-grid">
+        ${items.map(it => `<button class="month-card ${it.test.status}" onclick="openPaper('${it.group.id}','${it.test.id}')">
+          <div class="m">${it.test.m}</div>
+          <div class="s">${it.test.status==='done'?'已完成':it.test.status==='part'?'部分完成':'未开始'}</div>
+        </button>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleYear(gid){
+  document.getElementById('grp-'+gid).classList.toggle('open');
+}
+function testOf(tid){
+  for(const g of banks()){ const f=g.tests.find(t=>t.id===tid); if(f) return {g,t:f}; }
+}
+function openPaper(gid,tid){
+  const f=testOf(tid); if(!f) return;
+  const g=f.g, t=f.t;
+  const modBadge = g.mod === 'A' ? 'A类 · 学术类' : 'G类 · 培训类';
+  const wrDesc = g.mod === 'A' ? WR_DESC_A : WR_DESC_G;
+  document.getElementById('pdTitle').textContent=g.label+' · '+t.m+' · '+modBadge;
+  const stMap={done:'已完成',part:'部分完成',todo:'未开始'};
+  const stEl=document.getElementById('pdStatus');
+  stEl.style.display=t.status==='done'?'inline-block':'none';
+  stEl.textContent=stMap[t.status];
+  document.getElementById('pdMeta').textContent='听力 → 阅读 → 写作 → 口语 · 阅读：'+RD_DESC+' · 写作：'+wrDesc+(t.href?' · 本套为 HTML 结构化入库真题，即点即考':(t.status==='part'?'（部分完成：已完成听力、阅读）':''));
+  document.getElementById('pdSections').innerHTML=SEC_META.map(s=>{
+    const onlyOk=!t.only||t.only===s.key;
+    const secDesc=s.key==='writing'?wrDesc:s.desc;
+    /* v2 科目（听/说）一旦该卷有结构化卷页（href+only 匹配）即视为原型可考 */
+    const hasNow=t.href&&t.only===s.key;
+    const v2Blocked=s.v2&&!hasNow;
+    const goBtn=v2Blocked||!onlyOk
+      ?'<button class="btn" disabled>'+(v2Blocked?'V2 提供':'本套未含')+'</button>'
+      :(hasNow
+        ?'<button class="btn primary" onclick="window.open(\''+t.href+'\',\'_blank\')">进入机考</button>'
+        :'<button class="btn primary" onclick="go(\''+s.key+'\')">进入机考</button>');
+    return `
+    <div class="paper-card" style="cursor:default">
+      <div style="font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center">${s.name} ${v2Blocked?'<span class="tag-v2">V2 提供</span>':(onlyOk?'<span class="tag-now">可开始</span>':'<span class="tag-v2">未含</span>')}</div>
+      <div style="font-size:12px;color:var(--ink-2);margin:8px 0">${s.dur} · ${s.n}</div>
+      <div style="font-size:12px;color:var(--ink-3);line-height:1.7">${secDesc}</div>
+      <div style="margin-top:10px">${goBtn}</div>
+    </div>`;}).join('');
+  document.getElementById('papersHome').style.display='none';
+  document.getElementById('paperDetail').style.display='block';
+}
+function backToPapers(){
+  document.getElementById('paperDetail').style.display='none';
+  document.getElementById('papersHome').style.display='block';
+}
+function startCombined(){
+  toast('综合连考（' + MOD_INLINE[currentMod] + '）：听力/口语 V2 开放后启用；当前可先点上方卡片进入阅读或写作单科机考');
+}
+/* 通用年份折叠渲染：用于四科（听/读/写/说）单科列表
+   - key: 'reading' | 'writing' | 'listening' | 'speaking'（匹配 t.only）
+   - name: 中文科目名
+   - 复用综合题库的 .year-group / .year-empty 样式；foldKey 用 'sub-{key}-{year}' 避免与综合题库冲突 */
+function renderYearList(key, name){
+  const items = [];
+  banks().forEach(g => g.tests.filter(t => !t.only || t.only === key).forEach(t => {
+    items.push({ group: g, test: t });
+  }));
+  const byYear = {};
+  YEAR_LIST.forEach(y => byYear[y] = []);
+  items.forEach(it => { if(byYear[it.test.year]) byYear[it.test.year].push(it); });
+  return YEAR_LIST.map(year => {
+    const list = byYear[year] || [];
+    if(!list.length){
+      return `<div class="year-empty"><span class="yr">${year} 年</span><span class="yr-hint">· 暂无真题</span></div>`;
+    }
+    const totalDone = list.filter(it => it.test.status === 'done').length;
+    const foldKey = 'sub-' + key + '-' + year;
+    return `<div class="year-group open" id="grp-${foldKey}">
+      <div class="year-head" onclick="toggleYear('${foldKey}')">
+        <span class="caret">▶</span>
+        <span class="yr">${year} 年</span>
+        <span class="yr-note">${name}真题</span>
+        <span class="yr-count">已完成 <b>${totalDone}</b> / ${list.length} 套</span>
+      </div>
+      <div class="month-grid rows">
+        ${list.map(it => {
+          const t = it.test, g = it.group;
+          const stLabel = t.status==='done'?'已完成':t.status==='part'?'部分完成':'未开始';
+          const modLabel = g.mod === 'A' ? 'A类' : 'G类';
+          const goBtn = (t.href && t.only === key)
+            ? `<button class="btn primary go" onclick="window.open('${t.href}','_blank')">开始机考</button>`
+            : `<button class="btn go" onclick="toast('该卷尚未结构化入库，暂无法进入机考')">开始机考</button>`;
+          return `<div class="single-row">
+            <div>
+              <div class="name">${g.label} ${t.m} · ${name}真题（${modLabel}）</div>
+              <div class="meta">${name} · ${stLabel}</div>
+            </div>
+            ${goBtn}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderSingleLists(){
+  // 四科统一走年份折叠；空年份显示占位行
+  document.getElementById('readingList').innerHTML = renderYearList('reading', '阅读');
+  document.getElementById('writingList').innerHTML = renderYearList('writing', '写作');
+  document.getElementById('listeningList').innerHTML = renderYearList('listening', '听力');
+  document.getElementById('speakingList').innerHTML = renderYearList('speaking', '口语');
+}
+
+/* ===== 仪表盘：题库统计（总/A/G 真题数，点击进机考模拟对应题库） ===== */
+function goExam(mod){
+  if(mod) setExamMod(mod);
+  go('exam');
+}
+function renderBankStats(){
+  const total = PAPERS.reduce((n,g)=>n+g.tests.length,0);
+  const byMod = m => PAPERS.filter(g=>g.mod===m).reduce((n,g)=>n+g.tests.length,0);
+  document.getElementById('dashPaperCount').textContent = total;
+  document.getElementById('bankStats').innerHTML = [
+    {label:'真题总数', num:total, mod:''},
+    {label:'A类真题数', num:byMod('A'), mod:'A'},
+    {label:'G类真题数', num:byMod('G'), mod:'G'}
+  ].map(s=>`<div class="card stat-tile" onclick="goExam('${s.mod}')" title="进入机考模拟">
+      <div style="font-size:26px;font-weight:700;color:var(--blue)">${s.num}</div>
+      <div style="font-size:12px;color:var(--ink-2)">${s.label}</div>
+      <div class="arrow">进入机考模拟 →</div>
+    </div>`).join('');
+}
+
+/* ===== Toast ===== */
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+/* 初始化 */
+go('dashboard');
+renderBankStats();
+renderPapers();
+renderSingleLists();
+</script>
+</body>
+</html>
