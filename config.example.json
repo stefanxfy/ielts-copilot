@@ -1,0 +1,17 @@
+{
+  // 服务:只监听本机回环(host 白名单 127.0.0.1 / localhost / ::1,PRD §7)
+  "server": {
+    "port": 3177, // 1-65535;被占用时启动脚本自动 +1 递增(不写回本文件)
+    "host": "127.0.0.1"
+  },
+
+  // 写作批改 AI:所有 LLM 调用走此处,不写死进代码(PRD §3.2)
+  // apiKey 明文存储仅限本机自用 —— 勿把整个文件夹分享出去
+  "llm": {
+    "provider": "openai", // openai | anthropic | openai-compatible
+    "baseUrl": "https://api.openai.com/v1",
+    "apiKey": "", // 必填,用户自填(界面保存时留空 = 保持现值)
+    "gradingModel": "gpt-4o", // 写作批改用(质量优先)
+    "timeoutSec": 120 // 5-600
+  }
+}
