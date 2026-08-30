@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>需要安装 Node.js — IELTS Copilot</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#f4f6fa;color:#1c2330;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{max-width:560px;background:#fff;border:1px solid #dfe4ec;border-radius:12px;padding:32px 36px;box-shadow:0 4px 16px rgba(13,52,96,.08)}
+  h1{font-size:20px;margin-bottom:10px}
+  p{font-size:14px;line-height:1.8;color:#3a4356;margin-bottom:8px}
+  code{background:#eef2f8;border-radius:4px;padding:1px 6px;font-size:13px}
+  ol{margin:12px 0 16px;padding-left:22px;font-size:14px;line-height:1.9;color:#3a4356}
+  a.btn{display:inline-block;margin-top:6px;background:linear-gradient(180deg,#1a6feb,#0d4fa8);color:#fff;
+    text-decoration:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600}
+  .foot{margin-top:18px;font-size:12px;color:#8a93a3}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>需要安装 Node.js(≥ 22)</h1>
+    <p>IELTS Copilot 依赖 Node.js 运行,你的机器上未检测到(或版本低于 22)。安装后再双击「启动.command」即可。</p>
+    <ol>
+      <li>打开官网下载页:<a href="https://nodejs.org/zh-cn/download" target="_blank">nodejs.org/zh-cn/download</a></li>
+      <li>下载 <b>macOS 安装包(.pkg)</b>,版本选 <b>22 LTS 或更高</b></li>
+      <li>双击安装(一路继续),完成后<b>新开</b>一个终端窗口执行 <code>node -v</code> 确认输出 ≥ v22</li>
+      <li>回到应用文件夹,再次双击 <code>启动.command</code></li>
+    </ol>
+    <a class="btn" href="https://nodejs.org/zh-cn/download" target="_blank">前往下载 Node.js</a>
+    <p class="foot">为什么需要 Node:本应用是一个运行在你电脑上的本地网页服务(数据不出本机),Node 是它的运行时。</p>
+  </div>
+</body>
+</html>

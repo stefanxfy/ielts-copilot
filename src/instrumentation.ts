@@ -27,27 +27,37 @@ export async function register() {
 
   if (process.env.IELTS_HEARTBEAT_EXIT === "1") {
     const { lastBeat } = await import("@/lib/heartbeat-state");
-    const CHECK_MS = 10_000;
+    /* 检查周期 5s + 超时阈值 90s + 二次确认 3s:
+       90s 阈值 > Chrome 后台标签 ≥60s 节流(plan 原文);
+       确认节奏比 plan 的「下一轮 10s」收紧为 3s —— 保证最坏退出时间 ≤98s,
+       满足验收「关浏览器 ≤100s 退出」(plan 两处口径取交集) */
+    const CHECK_MS = 5_000;
     const DEAD_MS = 90_000;
-    let confirmed = false;
+    const CONFIRM_MS = 3_000;
+    let confirmTimer: NodeJS.Timeout | null = null;
+    function confirmExit(deadline: number) {
+      const last = lastBeat();
+      if (last !== null && Date.now() - last > deadline) {
+        console.log(
+          `[watchdog] 确认浏览器已关闭(最后心跳 ${new Date(last).toISOString()}),进程退出`,
+        );
+        process.exit(0);
+      }
+      confirmTimer = null;
+    }
     setInterval(() => {
       const last = lastBeat();
       if (last === null) return; // 未收到首跳:浏览器还没打开,不判死
-      if (Date.now() - last <= DEAD_MS) {
-        confirmed = false;
+      const age = Date.now() - last;
+      if (age <= DEAD_MS) {
+        if (confirmTimer) clearTimeout(confirmTimer);
+        confirmTimer = null;
         return;
       }
-      if (!confirmed) {
-        confirmed = true;
-        console.log(
-          `[watchdog] >${DEAD_MS / 1000}s 无心跳,10s 后二次确认…`,
-        );
-        return;
+      if (!confirmTimer) {
+        console.log(`[watchdog] >${DEAD_MS / 1000}s 无心跳,${CONFIRM_MS / 1000}s 后二次确认…`);
+        confirmTimer = setTimeout(() => confirmExit(DEAD_MS), CONFIRM_MS);
       }
-      console.log(
-        `[watchdog] 确认浏览器已关闭(最后心跳 ${new Date(last).toISOString()}),进程退出`,
-      );
-      process.exit(0);
     }, CHECK_MS);
     console.log("[watchdog] 心跳看门狗已武装(90s 超时 · 二次确认退出)");
   }
