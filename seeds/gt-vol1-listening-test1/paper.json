@@ -1,0 +1,791 @@
+{
+  "paper": {
+    "slug": "gt-vol1-listening-test1",
+    "title": "IELTS 本地机考 · G类听力 · 一月卷 Test 1",
+    "category": "G",
+    "skill": "LISTENING",
+    "source": "ieltsonlinetests.com",
+    "durationSec": 1920,
+    "status": "PUBLISHED",
+    "meta": {},
+    "bandTable": [
+      [
+        39,
+        9
+      ],
+      [
+        37,
+        8.5
+      ],
+      [
+        35,
+        8
+      ],
+      [
+        32,
+        7.5
+      ],
+      [
+        30,
+        7
+      ],
+      [
+        26,
+        6.5
+      ],
+      [
+        23,
+        6
+      ],
+      [
+        18,
+        5.5
+      ],
+      [
+        16,
+        5
+      ],
+      [
+        13,
+        4.5
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        9,
+        3.5
+      ],
+      [
+        5,
+        3
+      ]
+    ]
+  },
+  "sections": [
+    {
+      "sectionNo": 1,
+      "sectionType": "LISTENING",
+      "title": "Part 1",
+      "timeLimitSec": 0
+    },
+    {
+      "sectionNo": 2,
+      "sectionType": "LISTENING",
+      "title": "Part 2",
+      "timeLimitSec": 0
+    },
+    {
+      "sectionNo": 3,
+      "sectionType": "LISTENING",
+      "title": "Part 3",
+      "timeLimitSec": 0
+    },
+    {
+      "sectionNo": 4,
+      "sectionType": "LISTENING",
+      "title": "Part 4",
+      "timeLimitSec": 0
+    }
+  ],
+  "passages": [],
+  "questionGroups": [
+    {
+      "id": "g-q-38-40",
+      "sectionNo": 4,
+      "orderIndex": 1,
+      "scoreMode": "SET_INTERSECTION",
+      "maxSelect": 2,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-21",
+      "sectionNo": 3,
+      "orderIndex": 2,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    }
+  ],
+  "questions": [
+    {
+      "number": 1,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 2,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 3,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 4,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 5,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 6,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 7,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 8,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 9,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 10,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 17,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 18,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 19,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 20,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 22,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 23,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 24,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 25,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 26,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 27,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 28,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 29,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 30,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 31,
+      "type": "FILL_BLANK",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 32,
+      "type": "FILL_BLANK",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 33,
+      "type": "FILL_BLANK",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 34,
+      "type": "FILL_BLANK",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 35,
+      "type": "FILL_BLANK",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 36,
+      "type": "FILL_BLANK",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 37,
+      "type": "FILL_BLANK",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 11,
+      "type": "MATCH_INFO",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 12,
+      "type": "MATCH_INFO",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 13,
+      "type": "MATCH_INFO",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 14,
+      "type": "MATCH_INFO",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 15,
+      "type": "MATCH_INFO",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 16,
+      "type": "MATCH_INFO",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 38,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "number": 39,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "number": 40,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "number": 21,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-21"
+    }
+  ],
+  "choices": [
+    {
+      "label": "A",
+      "textHtml": "unsympathetic landlords",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "label": "B",
+      "textHtml": "unclean water",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "label": "C",
+      "textHtml": "heating problems",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "label": "D",
+      "textHtml": "high rents",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "label": "E",
+      "textHtml": "overcrowding",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "label": "F",
+      "textHtml": "poor standards of building",
+      "orderIndex": 6,
+      "questionId": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "label": "G",
+      "textHtml": "houses catching fire",
+      "orderIndex": 7,
+      "questionId": null,
+      "questionGroupId": "g-q-38-40"
+    },
+    {
+      "label": "A",
+      "textHtml": "attend a class",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-21"
+    },
+    {
+      "label": "A",
+      "textHtml": "attend a class",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-21"
+    },
+    {
+      "label": "B",
+      "textHtml": "write a report",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-21"
+    },
+    {
+      "label": "C",
+      "textHtml": "read a book",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-21"
+    }
+  ],
+  "answers": [
+    {
+      "questionNumber": 1,
+      "value": "(a) Keep-fit (studio)",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 2,
+      "value": "swimming",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 3,
+      "value": "yoga (classes)",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 4,
+      "value": "(a) salad bar",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 5,
+      "value": "500",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 6,
+      "value": "1",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 7,
+      "value": "4:30",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 8,
+      "value": "180",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 9,
+      "value": "assessment",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 10,
+      "value": "Kynchley",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 11,
+      "value": "B",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 12,
+      "value": "G",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 13,
+      "value": "C",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 14,
+      "value": "A",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 15,
+      "value": "E",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 16,
+      "value": "D",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 17,
+      "value": "October 19th",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 18,
+      "value": "7",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 19,
+      "value": "Thursday",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 20,
+      "value": "18",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 21,
+      "value": "A",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 22,
+      "value": "in advance",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 23,
+      "value": "nursery",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 24,
+      "value": "annual fee",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 25,
+      "value": "tutor",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 26,
+      "value": "laptops/printers",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 27,
+      "value": "printers/laptops",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 28,
+      "value": "report writing",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 29,
+      "value": "marketing",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 30,
+      "value": "Individual",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 31,
+      "value": "feed",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 32,
+      "value": "leather",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 33,
+      "value": "restrictions",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 34,
+      "value": "ships",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 35,
+      "value": "England",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 36,
+      "value": "built",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 37,
+      "value": "poverty",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    }
+  ],
+  "writingTasks": []
+}

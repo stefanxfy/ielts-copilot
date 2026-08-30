@@ -1,0 +1,1301 @@
+{
+  "paper": {
+    "slug": "a-2025jan-listening-test1",
+    "title": "IELTS 本地机考 · A类听力 · 2025 January Test 1",
+    "category": "A",
+    "skill": "LISTENING",
+    "source": "ieltsonlinetests.com",
+    "durationSec": 1920,
+    "status": "PUBLISHED",
+    "meta": {},
+    "bandTable": [
+      [
+        39,
+        9
+      ],
+      [
+        37,
+        8.5
+      ],
+      [
+        35,
+        8
+      ],
+      [
+        32,
+        7.5
+      ],
+      [
+        30,
+        7
+      ],
+      [
+        26,
+        6.5
+      ],
+      [
+        23,
+        6
+      ],
+      [
+        18,
+        5.5
+      ],
+      [
+        16,
+        5
+      ],
+      [
+        13,
+        4.5
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        9,
+        3.5
+      ],
+      [
+        5,
+        3
+      ]
+    ]
+  },
+  "sections": [
+    {
+      "sectionNo": 1,
+      "sectionType": "LISTENING",
+      "title": "Part 1",
+      "timeLimitSec": 0
+    },
+    {
+      "sectionNo": 2,
+      "sectionType": "LISTENING",
+      "title": "Part 2",
+      "timeLimitSec": 0
+    },
+    {
+      "sectionNo": 3,
+      "sectionType": "LISTENING",
+      "title": "Part 3",
+      "timeLimitSec": 0
+    },
+    {
+      "sectionNo": 4,
+      "sectionType": "LISTENING",
+      "title": "Part 4",
+      "timeLimitSec": 0
+    }
+  ],
+  "passages": [],
+  "questionGroups": [
+    {
+      "id": "g-q-28-30",
+      "sectionNo": 3,
+      "orderIndex": 1,
+      "scoreMode": "SET_INTERSECTION",
+      "maxSelect": 2,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-6",
+      "sectionNo": 1,
+      "orderIndex": 2,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": null,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-31",
+      "sectionNo": 4,
+      "orderIndex": 3,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-32",
+      "sectionNo": 4,
+      "orderIndex": 4,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-33",
+      "sectionNo": 4,
+      "orderIndex": 5,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-34",
+      "sectionNo": 4,
+      "orderIndex": 6,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-35",
+      "sectionNo": 4,
+      "orderIndex": 7,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-36",
+      "sectionNo": 4,
+      "orderIndex": 8,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-37",
+      "sectionNo": 4,
+      "orderIndex": 9,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-38",
+      "sectionNo": 4,
+      "orderIndex": 10,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-39",
+      "sectionNo": 4,
+      "orderIndex": 11,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    },
+    {
+      "id": "g-q-40",
+      "sectionNo": 4,
+      "orderIndex": 12,
+      "scoreMode": "PER_QUESTION",
+      "maxSelect": 1,
+      "instructionHtml": null,
+      "choiceInputs": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "memberNumbers": {}
+    }
+  ],
+  "questions": [
+    {
+      "number": 1,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 2,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 3,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 4,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 5,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 7,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 8,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 9,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 10,
+      "type": "FILL_BLANK",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 11,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 12,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 13,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 14,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 15,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 16,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 17,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 18,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 19,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 20,
+      "type": "FILL_BLANK",
+      "sectionNo": 2,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 21,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 22,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 23,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 24,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 25,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 26,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 27,
+      "type": "FILL_BLANK",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": null
+    },
+    {
+      "number": 28,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "number": 29,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "number": 30,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 3,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "number": 6,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 1,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-6"
+    },
+    {
+      "number": 31,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-31"
+    },
+    {
+      "number": 32,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-32"
+    },
+    {
+      "number": 33,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-33"
+    },
+    {
+      "number": 34,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-34"
+    },
+    {
+      "number": 35,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-35"
+    },
+    {
+      "number": 36,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-36"
+    },
+    {
+      "number": 37,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-37"
+    },
+    {
+      "number": 38,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-38"
+    },
+    {
+      "number": 39,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-39"
+    },
+    {
+      "number": 40,
+      "type": "MULTI_CHOICE",
+      "sectionNo": 4,
+      "stemHtml": null,
+      "instructionHtml": null,
+      "questionGroupId": "g-q-40"
+    }
+  ],
+  "choices": [
+    {
+      "label": "A",
+      "textHtml": "Books",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "label": "B",
+      "textHtml": "Study materials",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "label": "C",
+      "textHtml": "Foods",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "label": "D",
+      "textHtml": "Trousers",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "label": "E",
+      "textHtml": "Shoes",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "label": "F",
+      "textHtml": "Sportswear",
+      "orderIndex": 6,
+      "questionId": null,
+      "questionGroupId": "g-q-28-30"
+    },
+    {
+      "label": "A",
+      "textHtml": "A big family with many young children",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-6"
+    },
+    {
+      "label": "A",
+      "textHtml": "A big family with many young children",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-6"
+    },
+    {
+      "label": "B",
+      "textHtml": "A family without smoker or drinkers",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-6"
+    },
+    {
+      "label": "C",
+      "textHtml": "A family without any pets",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-6"
+    },
+    {
+      "label": "D",
+      "textHtml": "A family with many animals or pets",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-6"
+    },
+    {
+      "label": "A",
+      "textHtml": "Personal consultation sessions.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-31"
+    },
+    {
+      "label": "A",
+      "textHtml": "Personal consultation sessions.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-31"
+    },
+    {
+      "label": "B",
+      "textHtml": "Extra materials, such as a booklist.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-31"
+    },
+    {
+      "label": "C",
+      "textHtml": "Mid-term examination.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-31"
+    },
+    {
+      "label": "D",
+      "textHtml": "Free glasses.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-31"
+    },
+    {
+      "label": "A",
+      "textHtml": "reduce your stress.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-32"
+    },
+    {
+      "label": "A",
+      "textHtml": "reduce your stress.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-32"
+    },
+    {
+      "label": "B",
+      "textHtml": "plan for every hour of the week.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-32"
+    },
+    {
+      "label": "C",
+      "textHtml": "own a good watch.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-32"
+    },
+    {
+      "label": "D",
+      "textHtml": "set goals and try to achieve these goals.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-32"
+    },
+    {
+      "label": "A",
+      "textHtml": "set goals and work in a systematic way.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-33"
+    },
+    {
+      "label": "A",
+      "textHtml": "set goals and work in a systematic way.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-33"
+    },
+    {
+      "label": "B",
+      "textHtml": "work faster.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-33"
+    },
+    {
+      "label": "C",
+      "textHtml": "set an overview of your assignment.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-33"
+    },
+    {
+      "label": "D",
+      "textHtml": "make a list, plan for everything and try to stick to this plan.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-33"
+    },
+    {
+      "label": "A",
+      "textHtml": "team projects.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-34"
+    },
+    {
+      "label": "A",
+      "textHtml": "team projects.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-34"
+    },
+    {
+      "label": "B",
+      "textHtml": "final term examinations.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-34"
+    },
+    {
+      "label": "C",
+      "textHtml": "essays.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-34"
+    },
+    {
+      "label": "D",
+      "textHtml": "time management courses.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-34"
+    },
+    {
+      "label": "A",
+      "textHtml": "library books go missing.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-35"
+    },
+    {
+      "label": "A",
+      "textHtml": "library books go missing.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-35"
+    },
+    {
+      "label": "B",
+      "textHtml": "students get angry for no reason.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-35"
+    },
+    {
+      "label": "C",
+      "textHtml": "lower class attendance rates.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-35"
+    },
+    {
+      "label": "D",
+      "textHtml": "trouble at the library.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-35"
+    },
+    {
+      "label": "A",
+      "textHtml": "Making a very detailed plan of their daily activities.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-36"
+    },
+    {
+      "label": "A",
+      "textHtml": "Making a very detailed plan of their daily activities.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-36"
+    },
+    {
+      "label": "B",
+      "textHtml": "Not being so stressed just because there is an assignment.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-36"
+    },
+    {
+      "label": "C",
+      "textHtml": "A regular one-hour session in their personal timetables.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-36"
+    },
+    {
+      "label": "D",
+      "textHtml": "Wearing comfortable shoes.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-36"
+    },
+    {
+      "label": "A",
+      "textHtml": "one weekly planner, one daily planner and one hour planner.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-37"
+    },
+    {
+      "label": "A",
+      "textHtml": "one weekly planner, one daily planner and one hour planner.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-37"
+    },
+    {
+      "label": "B",
+      "textHtml": "one yearly planner, one weekly planner and one daily planner.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-37"
+    },
+    {
+      "label": "C",
+      "textHtml": "one term planner, one monthly planner and one weekly planner.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-37"
+    },
+    {
+      "label": "D",
+      "textHtml": "one term planner, one weekly and one daily planner.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-37"
+    },
+    {
+      "label": "A",
+      "textHtml": "one week.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-38"
+    },
+    {
+      "label": "A",
+      "textHtml": "one week.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-38"
+    },
+    {
+      "label": "B",
+      "textHtml": "half a week.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-38"
+    },
+    {
+      "label": "C",
+      "textHtml": "one month.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-38"
+    },
+    {
+      "label": "D",
+      "textHtml": "one term.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-38"
+    },
+    {
+      "label": "A",
+      "textHtml": "the detailed planning.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-39"
+    },
+    {
+      "label": "A",
+      "textHtml": "the detailed planning.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-39"
+    },
+    {
+      "label": "B",
+      "textHtml": "how to plan all available time.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-39"
+    },
+    {
+      "label": "C",
+      "textHtml": "TV schedules.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-39"
+    },
+    {
+      "label": "D",
+      "textHtml": "an overview of everything you need to do for several days.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-39"
+    },
+    {
+      "label": "A",
+      "textHtml": "having more time to spend on relaxation and other activities.",
+      "orderIndex": 1,
+      "questionId": null,
+      "questionGroupId": "g-q-40"
+    },
+    {
+      "label": "A",
+      "textHtml": "having more time to spend on relaxation and other activities.",
+      "orderIndex": 2,
+      "questionId": null,
+      "questionGroupId": "g-q-40"
+    },
+    {
+      "label": "B",
+      "textHtml": "improving your performance in the final term assignment.",
+      "orderIndex": 3,
+      "questionId": null,
+      "questionGroupId": "g-q-40"
+    },
+    {
+      "label": "C",
+      "textHtml": "helping you write better essays.",
+      "orderIndex": 4,
+      "questionId": null,
+      "questionGroupId": "g-q-40"
+    },
+    {
+      "label": "D",
+      "textHtml": "improving your memory.",
+      "orderIndex": 5,
+      "questionId": null,
+      "questionGroupId": "g-q-40"
+    }
+  ],
+  "answers": [
+    {
+      "questionNumber": 1,
+      "value": "Keiko",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 2,
+      "value": "JO6337",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 3,
+      "value": "Advanced English studies",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 4,
+      "value": "5 months/5",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 5,
+      "value": "About 4 months/4 months/4",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 6,
+      "value": "B,D",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 7,
+      "value": "Seafood",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 8,
+      "value": "Tennis",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 9,
+      "value": "Take the train/the train",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 10,
+      "value": "This afternoon",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 11,
+      "value": "90 days/90",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 12,
+      "value": "30 pounds/£30/30",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 13,
+      "value": "Confirm your nationality",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 14,
+      "value": "Page 13/13",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 15,
+      "value": "Currency form",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 16,
+      "value": "Tourist export form",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 17,
+      "value": "BM276",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 18,
+      "value": "International student card",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 19,
+      "value": "12",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 20,
+      "value": "Australian dollar/Australian dollars",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 21,
+      "value": "Cashier",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 22,
+      "value": "£50/50",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 23,
+      "value": "Big department stores/department stores",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 24,
+      "value": "Jeans",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 25,
+      "value": "45 pounds/£45/45",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 26,
+      "value": "75 pounds/£75/75",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 27,
+      "value": "20 pounds/£20/20",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 31,
+      "value": "B",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 32,
+      "value": "B",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 33,
+      "value": "A",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 34,
+      "value": "C",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 35,
+      "value": "D",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 36,
+      "value": "C",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 37,
+      "value": "D",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 38,
+      "value": "A",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 39,
+      "value": "A",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    },
+    {
+      "questionNumber": 40,
+      "value": "A",
+      "alternatives": [],
+      "questionGroupId": null,
+      "explanationHtml": null
+    }
+  ],
+  "writingTasks": []
+}

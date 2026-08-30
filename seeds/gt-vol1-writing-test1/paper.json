@@ -1,0 +1,80 @@
+{
+  "paper": {
+    "slug": "gt-vol1-writing-test1",
+    "title": "IELTS 本地机考 · G类写作 · 一月卷 Test 1",
+    "category": "G",
+    "skill": "WRITING",
+    "source": "ieltsonlinetests.com",
+    "durationSec": 3600,
+    "status": "PUBLISHED",
+    "meta": {},
+    "bandTable": [
+      [
+        39,
+        9
+      ],
+      [
+        37,
+        8.5
+      ],
+      [
+        35,
+        8
+      ],
+      [
+        32,
+        7.5
+      ],
+      [
+        30,
+        7
+      ],
+      [
+        26,
+        6.5
+      ],
+      [
+        23,
+        6
+      ],
+      [
+        18,
+        5.5
+      ],
+      [
+        16,
+        5
+      ],
+      [
+        13,
+        4.5
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        9,
+        3.5
+      ],
+      [
+        5,
+        3
+      ]
+    ]
+  },
+  "sections": [
+    {
+      "sectionNo": 1,
+      "sectionType": "WRITING",
+      "title": "Writing",
+      "timeLimitSec": 3600
+    }
+  ],
+  "passages": [],
+  "questionGroups": [],
+  "questions": [],
+  "choices": [],
+  "answers": [],
+  "writingTasks": []
+}
