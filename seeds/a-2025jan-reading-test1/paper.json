@@ -22,7 +22,7 @@
         8
       ],
       [
-        32,
+        33,
         7.5
       ],
       [
@@ -30,7 +30,7 @@
         7
       ],
       [
-        26,
+        27,
         6.5
       ],
       [
@@ -38,11 +38,11 @@
         6
       ],
       [
-        18,
+        19,
         5.5
       ],
       [
-        16,
+        15,
         5
       ],
       [
@@ -50,16 +50,32 @@
         4.5
       ],
       [
-        11,
+        10,
         4
       ],
       [
-        9,
+        8,
         3.5
       ],
       [
-        5,
+        6,
         3
+      ],
+      [
+        4,
+        2.5
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        2,
+        1.5
+      ],
+      [
+        1,
+        1
       ]
     ]
   },
@@ -338,7 +354,7 @@
     },
     {
       "number": 9,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 1,
       "stemHtml": null,
       "instructionHtml": null,
@@ -346,7 +362,7 @@
     },
     {
       "number": 10,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 1,
       "stemHtml": null,
       "instructionHtml": null,
@@ -354,7 +370,7 @@
     },
     {
       "number": 11,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 1,
       "stemHtml": null,
       "instructionHtml": null,
@@ -362,7 +378,7 @@
     },
     {
       "number": 12,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 1,
       "stemHtml": null,
       "instructionHtml": null,
@@ -370,7 +386,7 @@
     },
     {
       "number": 13,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 1,
       "stemHtml": null,
       "instructionHtml": null,
@@ -410,7 +426,7 @@
     },
     {
       "number": 36,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 3,
       "stemHtml": null,
       "instructionHtml": null,
@@ -418,7 +434,7 @@
     },
     {
       "number": 37,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 3,
       "stemHtml": null,
       "instructionHtml": null,
@@ -426,7 +442,7 @@
     },
     {
       "number": 38,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 3,
       "stemHtml": null,
       "instructionHtml": null,
@@ -434,7 +450,7 @@
     },
     {
       "number": 39,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 3,
       "stemHtml": null,
       "instructionHtml": null,
@@ -442,7 +458,7 @@
     },
     {
       "number": 40,
-      "type": "MATCH_INFO",
+      "type": "TRUE_FALSE_NG",
       "sectionNo": 3,
       "stemHtml": null,
       "instructionHtml": null,
@@ -492,7 +508,7 @@
       "number": 23,
       "type": "MULTI_CHOICE",
       "sectionNo": 2,
-      "stemHtml": null,
+      "stemHtml": "23. According to the information given in the text, choose the correct answer or answers from the choices given.\nThe government has decided",
       "instructionHtml": null,
       "questionGroupId": "g-q-23"
     },
@@ -500,7 +516,7 @@
       "number": 24,
       "type": "MULTI_CHOICE",
       "sectionNo": 2,
-      "stemHtml": null,
+      "stemHtml": "24. Cars are often",
       "instructionHtml": null,
       "questionGroupId": "g-q-24"
     },
@@ -508,7 +524,7 @@
       "number": 25,
       "type": "MULTI_CHOICE",
       "sectionNo": 2,
-      "stemHtml": null,
+      "stemHtml": "25. Fuel costs",
       "instructionHtml": null,
       "questionGroupId": "g-q-25"
     },
@@ -516,7 +532,7 @@
       "number": 26,
       "type": "MULTI_CHOICE",
       "sectionNo": 2,
-      "stemHtml": null,
+      "stemHtml": "26. Using public transport",
       "instructionHtml": null,
       "questionGroupId": "g-q-26"
     },
@@ -524,7 +540,7 @@
       "number": 27,
       "type": "MULTI_CHOICE",
       "sectionNo": 3,
-      "stemHtml": null,
+      "stemHtml": "27. The GSBF lamps",
       "instructionHtml": null,
       "questionGroupId": "g-q-27"
     },
@@ -532,7 +548,7 @@
       "number": 28,
       "type": "MULTI_CHOICE",
       "sectionNo": 3,
-      "stemHtml": null,
+      "stemHtml": "28. More than half of India’s population uses",
       "instructionHtml": null,
       "questionGroupId": "g-q-28"
     },
@@ -540,7 +556,7 @@
       "number": 29,
       "type": "MULTI_CHOICE",
       "sectionNo": 3,
-      "stemHtml": null,
+      "stemHtml": "29. In India, the GSBF lamps are too expensive for most people",
       "instructionHtml": null,
       "questionGroupId": "g-q-29"
     },
@@ -548,7 +564,7 @@
       "number": 30,
       "type": "MULTI_CHOICE",
       "sectionNo": 3,
-      "stemHtml": null,
+      "stemHtml": "30. The GSBF lamps",
       "instructionHtml": null,
       "questionGroupId": "g-q-30"
     }

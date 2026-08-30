@@ -38,11 +38,11 @@
         6
       ],
       [
-        18,
+        19,
         5.5
       ],
       [
-        16,
+        15,
         5
       ],
       [
@@ -60,6 +60,10 @@
       [
         5,
         3
+      ],
+      [
+        3,
+        2.5
       ]
     ]
   },
@@ -68,7 +72,7 @@
       "sectionNo": 1,
       "sectionType": "LISTENING",
       "title": "Part 1",
-      "timeLimitSec": 0
+      "timeLimitSec": 1920
     },
     {
       "sectionNo": 2,
@@ -442,7 +446,7 @@
       "number": 21,
       "type": "MULTI_CHOICE",
       "sectionNo": 3,
-      "stemHtml": null,
+      "stemHtml": "21. What is Brian going to do before the course starts?",
       "instructionHtml": null,
       "questionGroupId": "g-q-21"
     }

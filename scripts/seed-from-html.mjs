@@ -94,10 +94,10 @@ function parsePaper(job, html, answersKeyCount) {
   const document = dom.window.document;
   const { title, durationSec } = parsePaperMeta(document, job);
   const sections = parseSections(document, job);
+  const passages = parsePassages(document, job);
   const { questionGroups, questions, choices } = parseItems(document, job);
-  const answers = loadAnswersFromJs(job, answersKeyCount);
-  const writingTasks = job.skill === "WRITING" ? parseWritingTasks(document) : [];
-  const passages = []; // 听/作留空,阅卷 M2-2 收
+  const answers = loadAnswersFromJs(job, questions.length);
+  const writingTasks = job.skill === "WRITING" ? parseWritingTasks(document, job) : [];
 
   return {
     paper: {
@@ -109,12 +109,7 @@ function parsePaper(job, html, answersKeyCount) {
       durationSec,
       status: "PUBLISHED",
       meta: {}, // 音频/写作字数限制等 M2-2 补
-      bandTable: [
-        // 默认 A 类听力 13 档(prototype 已抽);M2-2 替换为从源页 score tab 抽取
-        [39, 9], [37, 8.5], [35, 8], [32, 7.5], [30, 7],
-        [26, 6.5], [23, 6], [18, 5.5], [16, 5],
-        [13, 4.5], [11, 4], [9, 3.5], [5, 3],
-      ],
+      bandTable: parseBandTable(document, job),
     },
     sections,
     passages,
@@ -127,12 +122,14 @@ function parsePaper(job, html, answersKeyCount) {
 }
 
 function parsePaperMeta(document, job) {
-  // 听力: data-time="1920" → 32 min → 1920 s
-  // 阅读/写作: 留待 M2-2 完善(从 page.js config 或默认 3600)
   let durationSec = 3600;
   if (job.skill === "LISTENING") {
     const t = document.querySelector("[data-time]");
     if (t) durationSec = Number(t.getAttribute("data-time"));
+  } else if (job.skill === "WRITING") {
+    // 写作从 wot task suggestedTimeSec 之和取(无则 3600)
+    const wot = readWotTasks(document);
+    durationSec = wot.reduce((s, t) => s + (t.suggestedTimeSec ?? 0), 0) || 3600;
   }
   const title = document.querySelector("title")?.textContent?.trim() ?? job.slug;
   return { title, durationSec };
@@ -141,24 +138,107 @@ function parsePaperMeta(document, job) {
 function parseSections(document, job) {
   if (job.skill === "WRITING") {
     return [{
-      sectionNo: 1,
-      sectionType: "WRITING",
-      title: "Writing",
-      timeLimitSec: 3600,
+      sectionNo: 1, sectionType: "WRITING", title: "Writing", timeLimitSec: 3600,
     }];
   }
-  // 听/阅:按 .test-panel 数 + title 头取 "Part N" / "Questions 1-10"
-  const panels = document.querySelectorAll("section.test-panel");
-  return Array.from(panels).map((p, idx) => {
+  const panels = Array.from(document.querySelectorAll("section.test-panel"));
+  const dur = (idx) => job.skill === "LISTENING"
+    ? (idx === 0 ? Number(document.querySelector("[data-time]")?.getAttribute("data-time") ?? 0) : 0)
+    : 0;
+  return panels.map((p, idx) => {
     const part = p.querySelector(".test-panel__part-title")?.textContent?.trim()
       ?? (job.skill === "READING" ? `Section ${idx + 1}` : `Part ${idx + 1}`);
     return {
       sectionNo: idx + 1,
       sectionType: job.skill,
       title: part,
-      timeLimitSec: idx === panels.length - 1 ? 0 : 0, // 不细分每段,沿用 paper.durationSec
+      timeLimitSec: dur(idx),
     };
   });
+}
+
+/** 阅卷 passage:每个 panel 顶部 .field--name-field-question 体
+ *  (题号前 / 跨 Part) 整段抽为 passages[].bodyHtml,顺序 orderIndex */
+function parsePassages(document, job) {
+  if (job.skill !== "READING") return [];
+  const panels = Array.from(document.querySelectorAll("section.test-panel"));
+  const out = [];
+  panels.forEach((p, idx) => {
+    // 取 panel 内所有 .field--item 但只在 question-title 之前(题面)
+    // 题号前的内容 = passage body
+    const firstTitle = p.querySelector(".test-panel__question-title, .test-panel__title");
+    const item = p.querySelector(".field--name-field-question .field--item");
+    if (!item) return;
+    const html = item.innerHTML ?? "";
+    out.push({
+      sectionNo: idx + 1,
+      orderIndex: 1,
+      title: firstTitle?.textContent?.trim()?.slice(0, 80) ?? null,
+      subtitle: null,
+      bodyHtml: sanitizeHtml(html),
+      imageUrl: null,
+    });
+  });
+  return out;
+}
+
+
+/** bandTable 抽取:读 window.IELTS_EXAM.bandTable(已在 answers-*.js 里),
+ *  没源 js 的卷用兜底值 */
+function parseBandTable(document, job) {
+  if (job.answersJs) {
+    const p = join(PROTOTYPE_DIR, "exam-assets", job.answersJs);
+    if (existsSync(p)) {
+      try {
+        const src = readFileSync(p, "utf8");
+        const start = src.indexOf("window.IELTS_EXAM = {");
+        if (start >= 0) {
+          let depth = 0; let end = -1;
+          for (let k = start; k < src.length; k++) {
+            if (src[k] === "{") depth++;
+            else if (src[k] === "}") { depth--; if (depth === 0) { end = k + 1; break; } }
+          }
+          if (end >= 0) {
+            let cleaned = src.substring(start, end).replace(/\/\*[\s\S]*?\*\//g, "");
+            cleaned = cleaned.replace(/\/\/[^\n]*/g, "");
+            const objStart = cleaned.indexOf("{");
+            let d2 = 0; let objEnd = -1;
+            for (let k = objStart; k < cleaned.length; k++) {
+              if (cleaned[k] === "{") d2++;
+              else if (cleaned[k] === "}") { d2--; if (d2 === 0) { objEnd = k + 1; break; } }
+            }
+            if (objEnd >= 0) {
+              const objLit = cleaned.substring(objStart, objEnd);
+              const exam = vm.runInNewContext(`(${objLit});`, {}, { filename: p });
+              if (Array.isArray(exam.bandTable) && exam.bandTable.length > 0) {
+                return exam.bandTable.map(([min, band]) => [Number(min), Number(band)]);
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+  }
+  // 兜底:A 听 13 档 / G 听 14 档
+  return [
+    [39, 9], [37, 8.5], [35, 8], [32, 7.5], [30, 7],
+    [26, 6.5], [23, 6], [18, 5.5], [16, 5],
+    [13, 4.5], [11, 4], [9, 3.5], [5, 3],
+  ];
+}
+
+/** 共享:从 drupalSettings.wot2.tasks 抽任务(被 parsePaperMeta / parseWritingTasks 共用) */
+function readWotTasks(document) {
+  // 主路径:drupalSettings JSON 里有 wot.task(title/question/number_of_words/duration/image)
+  for (const s of document.querySelectorAll("script")) {
+    if (s.getAttribute("data-drupal-selector") !== "drupal-settings-json") continue;
+    try {
+      const obj = JSON.parse(s.textContent ?? "{}");
+      const arr = obj?.wot?.task;
+      if (Array.isArray(arr) && arr.length > 0) return arr;
+    } catch {}
+  }
+  return [];
 }
 
 /** 抽出 questionGroups / questions / choices;
@@ -350,16 +430,44 @@ function sectionOfEl(el, job) {
 }
 
 /** 题干 HTML:取到题号对应的"题目 title"周围块;找不到就给空(null)。 */
+/** 题面抽取:取 panel 内 el 上方最近的题号 (.iot-question-number / data-num)
+ *  与下方下一题号之间的 innerHTML;若无明确边界,返回题号前后段。
+ *  听卷:题干通常在 data-num 上方的 .test-panel__question 块内(.field--item)
+ *  阅卷:题干在 .test-panel__question-title 后,到下一 title 前 */
 function stemHtmlFor(el, document) {
+  // 策略1(单题型如 31-40):与 data-num 同级的 .test-panel__question-sm-title
+  const sm = el.closest(".test-panel__question-sm-group");
+  if (sm) {
+    const t = sm.querySelector(".test-panel__question-sm-title");
+    if (t) return sanitizeHtml(t.innerHTML);
+  }
+  // 策略2(整组如 1-5):.test-panel__question > .test-panel__instruction / field--item
   const panel = el.closest("section.test-panel");
   if (!panel) return null;
-  // 题面通常在 el 的前面最近的 .test-panel__question-title 之后到下一个 .test-panel__question-title 之前
-  const titles = panel.querySelectorAll(".test-panel__question-title");
-  const num = el.getAttribute("data-num") ?? "";
-  // 简单:每个题以题号标题分隔;返回整段 panel 的 HTML 太宽,M2-2 用更精细的策略
+  const dn = el.getAttribute("data-num") ?? "";
+  const qNum = Number(dn.split("-")[0]);
+  const titles = Array.from(panel.querySelectorAll(".test-panel__question-title"));
+  for (const t of titles) {
+    const txt = t.textContent ?? "";
+    const m = txt.match(/(?:Questions?|Question)\s+(\d+)(?:\s*-\s*(\d+))?/i);
+    if (!m) continue;
+    const from = Number(m[1]); const to = m[2] ? Number(m[2]) : from;
+    if (qNum < from || qNum > to) continue;
+    const block = t.closest(".test-panel__question") ?? t.parentElement;
+    const desc = block?.querySelector(".test-panel__instruction, .test-panel__question-desc, .field--item");
+    if (desc) return sanitizeHtml(desc.innerHTML);
+    return null;
+  }
   return null;
 }
+
+/** 指令(填词要求)抽取:读题面里 `NO MORE THAN X WORDS` 这类说明 */
 function instructionHtmlFor(el, document) {
+  const panel = el.closest("section.test-panel");
+  if (!panel) return null;
+  // 阅:典型 <p>Complete the notes below. Write NO MORE THAN TWO WORDS for each answer.</p>
+  const noteLike = panel.querySelector(".test-panel__instruction, .test-panel__question-instruction");
+  if (noteLike) return sanitizeHtml(noteLike.innerHTML);
   return null;
 }
 function textHtmlFor(el, document) {
@@ -375,8 +483,14 @@ function textHtmlFor(el, document) {
 
 /** 推断题型(仅靠元素形态);M2-2 用更精细的数据 */
 function inferQuestionType(el) {
-  if (el.tagName === "SELECT") return "MATCH_INFO"; // 默认;阅 28-33 = TRUE_FALSE_NG M2-2 细判
+  if (el.tagName === "SELECT") {
+    // 阅 28-33 = TRUE_FALSE_NG(MATCH 其它情况由 data-template hint)
+    const opts = Array.from(el.querySelectorAll("option")).map(o => o.textContent.trim());
+    if (opts.includes("NOT GIVEN") || opts.includes("TRUE")) return "TRUE_FALSE_NG";
+    return "MATCH_INFO";
+  }
   if (el.type === "radio") return "SINGLE_CHOICE";
+  if (el.type === "checkbox") return "MULTI_CHOICE";
   return "FILL_BLANK";
 }
 
@@ -423,33 +537,31 @@ function loadAnswersFromJs(job, expectedCount) {
 }
 
 /** 写作 task JSON 从 drupalSettings.wot2.tasks 抽 */
-function parseWritingTasks(document) {
-  const scripts = Array.from(document.querySelectorAll("script"));
-  for (const s of scripts) {
-    const text = s.textContent;
-    const m = text.match(/"tasks":\s*(\[[\s\S]+?\])\s*[,\}]/);
-    if (!m) continue;
-    try {
-      const arr = JSON.parse(m[1]);
-      if (Array.isArray(arr) && arr.length > 0) {
-        return arr.map((t, idx) => {
-          const taskNum = String(t.taskTypeId ?? t.task_id ?? (idx + 1));
-          const wordMin = Number(t.wordMin ?? t.word_min ?? (taskNum === "1" ? 150 : 250));
-          return {
-            taskId: idx === 0 ? "T1" : "T2",
-            promptHtml: sanitizeHtml(t.question ?? ""),
-            materialHtml: t.materialImage ? `<img src="${t.materialImage}">` : null,
-            wordMin,
-            suggestedTimeSec: taskNum === "1" ? 1200 : 2400,
-            orderIndex: idx + 1,
-          };
-        });
-      }
-    } catch (e) {
-      // ignore
-    }
-  }
-  return [];
+function parseWritingTasks(document, job) {
+  const arr = readWotTasks(document);
+  if (arr.length === 0) return [];
+  return arr.map((t, idx) => {
+    const wordMin = Number(t.number_of_words ?? t.wordMin ?? 0) || (idx === 0 ? 150 : 250);
+    const suggestedTimeSec = Number(t.duration ?? t.suggestedTimeSec ?? 0) || (idx === 0 ? 1200 : 2400);
+    const images = Array.isArray(t.image) ? t.image : (t.image ? [t.image] : []);
+    // image 路径是 Drupal 绝对路径 (/sites/default/files/.../2_0.jpg),
+    // 仅用 basename 作为本地 /exam-assets/<slug>/<filename> 引用 —— M2-3 入库时
+    // 再拷图并改 src 为最终路径(当前路径是种子阶段的"声明",M2-3 落地)
+    const materialHtml = images.length
+      ? images.map((src) => {
+          const fname = String(src).split("/").pop();
+          return `<img src="/exam-assets/${job.slug}/${fname}">`;
+        }).join("")
+      : null;
+    return {
+      taskId: idx === 0 ? "T1" : "T2",
+      promptHtml: sanitizeHtml(t.question ?? ""),
+      materialHtml: materialHtml ? sanitizeHtml(materialHtml) : null,
+      wordMin,
+      suggestedTimeSec,
+      orderIndex: idx + 1,
+    };
+  });
 }
 
 /* ---------- 拷图 ---------- */
@@ -458,21 +570,42 @@ function parseWritingTasks(document) {
  *  原型 HTML 的图片全在 prototype/exam-assets/(另一会话 reskin 时全拷过去)。
  *  实际只拷与本卷有关的图片+音频;骨架阶段(M2-1)先全拷,M2-2 收口做"按 slug 过滤"。
  *  M2-3 入库脚本会再拷到 public/exam-assets/<slug>/ 并重写 paper.json 里所有引用。 */
-function copyAssets(job) {
+function copyAssets(job, seed) {
   const srcFiles = join(PROTOTYPE_DIR, "exam-assets");
   if (!existsSync(srcFiles)) return { copied: [], skipped: [] };
   const dstAssets = join(SEEDS_DIR, job.slug, "assets");
   mkdirSync(dstAssets, { recursive: true });
+  // 收集 paper.json 里所有引用的图片 / mp3:扫描 stemHtml + bodyHtml + writingTasks
+  const referenced = new Set();
+  const collectFrom = (s) => {
+    if (!s) return;
+    const ms = s.matchAll(/src="([^"]+)"/g);
+    for (const m of ms) {
+      const u = m[1];
+      if (u.startsWith("/exam-assets/")) {
+        // /exam-assets/<slug>/<file> → 找 <file>
+        const fname = u.split("/").pop();
+        if (fname) referenced.add(fname);
+      }
+    }
+  };
+  // 仅 stemHtml 在解析器阶段就有内容(听卷);阅卷 bodyHtml 进来后扫
+  for (const q of seed.questions) collectFrom(q.stemHtml ?? "");
+  for (const p of seed.passages ?? []) collectFrom(p.bodyHtml ?? "");
+  for (const w of seed.writingTasks ?? []) collectFrom(w.materialHtml ?? "");
+  // 听力卷:把 meta.audioUrl 加进引用集合
+  if (job.skill === "LISTENING" && seed.paper?.meta?.audioUrl) {
+    referenced.add(seed.paper.meta.audioUrl.split("/").pop());
+  }
   const dropped = (name) =>
     /\.(css|js|ico|html)$/i.test(name) ||
     name.startsWith(".") ||
     name === "hm.js" ||
-    // 不拷其他卷的 mp3 + answers js(由各自卷的解析单独处理)
-    name.endsWith("-answers.js") ||
     /^answers-/.test(name);
   const fresh = [];
   for (const f of readdirSync(srcFiles)) {
     if (dropped(f)) continue;
+    if (!referenced.has(f)) continue; // 只拷被 paper.json 引用的
     cpSync(join(srcFiles, f), join(dstAssets, f));
     fresh.push(f);
   }
@@ -491,7 +624,7 @@ async function runOne(job) {
   const seed = parsePaper(job, html, null);
 
   // 拷图
-  const { copied } = copyAssets(job);
+  const { copied } = copyAssets(job, seed);
 
   // 输出
   const outDir = join(SEEDS_DIR, job.slug);

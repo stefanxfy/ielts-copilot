@@ -76,5 +76,22 @@
   "questions": [],
   "choices": [],
   "answers": [],
-  "writingTasks": []
+  "writingTasks": [
+    {
+      "taskId": "T1",
+      "promptHtml": "<p class=\"Indent1\">The diagram below shows how ethanol fuel is produced from corn.</p>\n\n<p>Summarise the information by selecting and reporting the main features and make comparisons where relevant.</p>\n",
+      "materialHtml": "<img src=\"/exam-assets/a-2025jan-writing-test1/2_0.jpg\">",
+      "wordMin": 150,
+      "suggestedTimeSec": 1200,
+      "orderIndex": 1
+    },
+    {
+      "taskId": "T2",
+      "promptHtml": "<p class=\"Indent1\">Some people think that physical strength is important for success in sport, while other people think that mental strength is more important. Discuss both views and give your own opinion.</p>\n",
+      "materialHtml": null,
+      "wordMin": 250,
+      "suggestedTimeSec": 2400,
+      "orderIndex": 2
+    }
+  ]
 }

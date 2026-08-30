@@ -68,7 +68,7 @@
       "sectionNo": 1,
       "sectionType": "LISTENING",
       "title": "Part 1",
-      "timeLimitSec": 0
+      "timeLimitSec": 1920
     },
     {
       "sectionNo": 2,
@@ -522,7 +522,7 @@
       "number": 6,
       "type": "MULTI_CHOICE",
       "sectionNo": 1,
-      "stemHtml": null,
+      "stemHtml": "<div class=\"field field--name-field-question field--type-text-long field--label-hidden field--item\"><p><em>Mark <span><strong>TWO </strong></span>letter that represent the correct answer.</em></p><p><em>Whick kind of family does the girls prefer?</em></p></div>",
       "instructionHtml": null,
       "questionGroupId": "g-q-6"
     },
@@ -530,7 +530,7 @@
       "number": 31,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "31. What does the lecturer provide for those who are interested in doing extra reading?",
       "instructionHtml": null,
       "questionGroupId": "g-q-31"
     },
@@ -538,7 +538,7 @@
       "number": 32,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "32. In the past, time management meant you needed to",
       "instructionHtml": null,
       "questionGroupId": "g-q-32"
     },
@@ -546,7 +546,7 @@
       "number": 33,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "33. Today, wise time management means you need to",
       "instructionHtml": null,
       "questionGroupId": "g-q-33"
     },
@@ -554,7 +554,7 @@
       "number": 34,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "34. In this college, students are assigned ____________ at the end of each semester.",
       "instructionHtml": null,
       "questionGroupId": "g-q-34"
     },
@@ -562,7 +562,7 @@
       "number": 35,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "35. One sign he lecturer mentions that students feel under pressure is",
       "instructionHtml": null,
       "questionGroupId": "g-q-35"
     },
@@ -570,7 +570,7 @@
       "number": 36,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "36. What kind of suggestion does the lecturer give to the students?",
       "instructionHtml": null,
       "questionGroupId": "g-q-36"
     },
@@ -578,7 +578,7 @@
       "number": 37,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "37. According to the lecturer, there are three kinds of planners. They are:",
       "instructionHtml": null,
       "questionGroupId": "g-q-37"
     },
@@ -586,7 +586,7 @@
       "number": 38,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "38. If you want to set an overview of your time, you should need at least",
       "instructionHtml": null,
       "questionGroupId": "g-q-38"
     },
@@ -594,7 +594,7 @@
       "number": 39,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "39. The daily planner of time is mainly concerned with",
       "instructionHtml": null,
       "questionGroupId": "g-q-39"
     },
@@ -602,7 +602,7 @@
       "number": 40,
       "type": "MULTI_CHOICE",
       "sectionNo": 4,
-      "stemHtml": null,
+      "stemHtml": "40. According to the lecturer, wise time management may have the following benefit:",
       "instructionHtml": null,
       "questionGroupId": "g-q-40"
     }

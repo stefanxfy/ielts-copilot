@@ -76,5 +76,22 @@
   "questions": [],
   "choices": [],
   "answers": [],
-  "writingTasks": []
+  "writingTasks": [
+    {
+      "taskId": "T1",
+      "promptHtml": "<p><strong>There have been some problems with the bus service, especially its reliability, in your area over the last two weeks.</strong></p>\n\n<p><strong>Write a letter to the manager of the bus company. In your letter</strong></p>\n\n<p class=\"Indent1\">•    describe what the problems are</p>\n\n<p class=\"Indent1\">•    explain how these problems are affecting you</p>\n\n<p class=\"Indent1\">•    suggest what you would like the company to do</p>\n\n<p><strong>You do NOT need to write any addresses.</strong></p>\n\n<p>Begin your letter as follows:</p>\n\n<p><em>Dear ...........,</em></p>\n",
+      "materialHtml": "<img src=\"/exam-assets/gt-vol1-writing-test1/1_1.jpg\">",
+      "wordMin": 150,
+      "suggestedTimeSec": 1200,
+      "orderIndex": 1
+    },
+    {
+      "taskId": "T2",
+      "promptHtml": "<p>Write about the following topic:</p>\n\n<p class=\"Indent1\"><strong>Every country should have a free health service, even if this means that the latest medical treatments may not be available through the service because they are too expensive.</strong></p>\n\n<p class=\"Indent1\"><strong>To what extent do you agree or disagree?</strong></p>\n\n<p>Give reasons for your answer and include any relevant examples from your own knowledge or experience.</p>\n",
+      "materialHtml": "<img src=\"/exam-assets/gt-vol1-writing-test1/Every%20country%20should%20have%20a%20free%20health%20service%2C%20even%20if%20this%20means%20that%20the%20latest%20medical%20treatments%20may%20not%20be%20available%20through%20the%20service%20because%20they%20are%20too%20expensive..jpg\">",
+      "wordMin": 250,
+      "suggestedTimeSec": 2400,
+      "orderIndex": 2
+    }
+  ]
 }
