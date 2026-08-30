@@ -39,7 +39,7 @@ export interface TestResult {
 }
 
 /** 错误分类 → 人话 */
-function humanMessage(cat: ErrorCategory, detail: string): string {
+function humanMessage(cat: ErrorCategory): string {
   switch (cat) {
     case "AUTH":
       return "API Key 无效或无权限(401/403)—— 检查 Key 是否复制完整、是否对该模型有权限";
@@ -52,7 +52,7 @@ function humanMessage(cat: ErrorCategory, detail: string): string {
     case "NETWORK":
       return "网络错误 —— DNS 解析失败或连不上;最常见原因是 baseUrl 写错";
     case "HTTP":
-      return `网关返回错误状态(见 detail)—— 通常是网关侧问题或请求参数不被接受`;
+      return "网关返回错误状态 —— 通常是网关侧问题或请求参数不被接受";
   }
 }
 
@@ -132,7 +132,7 @@ export async function testLlmConnectivity(input: TestInput): Promise<TestResult>
       ok: false,
       latencyMs,
       category,
-      message: humanMessage(category, err.message),
+      message: humanMessage(category),
       detail: `${name}: ${err.message}`,
     };
   }
@@ -146,7 +146,7 @@ export async function testLlmConnectivity(input: TestInput): Promise<TestResult>
       ok: false,
       latencyMs,
       category,
-      message: humanMessage(category, text),
+      message: humanMessage(category),
       detail: `HTTP ${resp.status} ${text}`,
     };
   }
@@ -162,7 +162,7 @@ export async function testLlmConnectivity(input: TestInput): Promise<TestResult>
       ok: false,
       latencyMs,
       category: "HTTP",
-      message: humanMessage("HTTP", "2xx 但响应结构非预期"),
+      message: humanMessage("HTTP"),
       detail: `响应缺少 choices/content: ${JSON.stringify(json)?.slice(0, 300)}`,
     };
   }
