@@ -60,3 +60,18 @@ build/
 
 # ---------- 原型废弃实验(已弃用,不入库) ----------
 prototype/.trash-*
+
+# ---------- Next.js(M1 脚手架) ----------
+/.next/
+/out/
+/coverage
+*.pem
+.env*
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# ---------- M1 工程产物(dev 与双击共存,见 docs/M1-实施计划.md) ----------
+next-server/
+/config.json
+/data
