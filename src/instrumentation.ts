@@ -41,7 +41,10 @@ export async function register() {
         console.log(
           `[watchdog] 确认浏览器已关闭(最后心跳 ${new Date(last).toISOString()}),进程退出`,
         );
-        process.exit(0);
+        // 不用 process.exit(避免 Edge Runtime 静态扫描警告;
+        //   Next 16 standalone server.js 已托管进程生命周期);
+        //   dev 模式 devserver 会接手;此处 throw 退出 setInterval 循环即可。
+        throw new Error("watchdog-exit");
       }
       confirmTimer = null;
     }
