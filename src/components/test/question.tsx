@@ -19,11 +19,11 @@ export interface ChoiceView {
 export interface QuestionView {
   number: number;
   type: QuestionType;
+  sectionId?: number;
+  groupId?: string | number | null;
   stemHtml: string | null;
   instructionHtml: string | null;
   /** 块题共享选项(groupId) → choices 全挂在这 */
-  groupId: string | null;
-  /** 普通题 options(questionId) → choices 挂在这 */
   choices: ChoiceView[];
 }
 

@@ -13,7 +13,7 @@ export interface PaletteProps {
     questionNumbers: number[];
   }>;
   activeSection: number;
-  answered?: Record<number, string>; // qNum -> user value
+  answered?: Record<number, string | string[]>; // qNum -> user value
   onPick?: (qNum: number) => void;
 }
 
