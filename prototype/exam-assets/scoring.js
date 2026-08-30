@@ -8,6 +8,7 @@
  *      · 底部题号板按对错染色
  *      · header「交卷」按钮移除（重做/答案速查入口在成绩条上）
  *  - 时间到自动交卷同样触发 inline 批改
+ *  - 听力页（含 #ielts-local-audio）交卷/时间到同时停掉真考音频并锁音量 UI
  * 依赖：先加载 answers-<exam-id>.js 定义 window.IELTS_EXAM
  */
 (function () {
@@ -79,6 +80,12 @@
         if (el.type === 'radio') {
           type = 'radio';
           if (el.checked) { user = el.value; break; }
+        } else if (el.type === 'checkbox') {
+          // checkbox 单题（如听力 Q6 双选 name="q-6"）：累计勾选值，不 break；
+          // 块题（q-28-30 等）由下方 blocks 单独采集并覆盖 res，互不干扰。
+          // 注意不能用 el.value——checkbox 的 value 是静态选项值，与勾选无关
+          type = 'checkbox';
+          if (el.checked) { user = user ? user + ',' + el.value : el.value; }
         } else if (el.tagName === 'SELECT') {
           type = 'select';
           if (el.value) { user = el.value; break; }
@@ -156,6 +163,7 @@
 
   function gradeInline(auto) {
     if (graded) return; graded = true;
+    stopLocalAudio();
     var res = collect(), j = judge(res), band = rawToBand(j.raw);
     markQuestions(res);
     markPalette(res);
@@ -289,6 +297,16 @@
     var page = $('.page');
     if (page) page.style.paddingTop = '132px';
     bar.querySelector('.gb-retake').addEventListener('click', function () { location.reload(); });
+  }
+
+  /* 听力页：交卷/时间到即停真考音频（阅读页无 #ielts-local-audio，自动 no-op）。
+     body.audio_locked 让 .ielts-vol 音量 UI 变灰不可拖（CSS 在听力页的 audio-lock-style 里，
+     阅读页无此样式表，加类无副作用）。与 audio-lock.js 的 lockHard 终态一致。 */
+  function stopLocalAudio() {
+    var audio = document.getElementById('ielts-local-audio');
+    if (!audio) return;
+    try { audio.pause(); } catch (e) {}
+    document.body.classList.add('audio_locked');
   }
 
   /* 交卷后移除 header 的交卷按钮（重做/答案速查入口都在顶部成绩条，避免两处重复） */

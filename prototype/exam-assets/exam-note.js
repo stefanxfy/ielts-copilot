@@ -4,7 +4,7 @@
  * 按 body class 自适配文案：listening-test → 听力口径；默认写作口径。
  * 与阅读页 scoring.js 的分工差异：写作/听力页不接判分引擎（写作无客观答案；
  * 听力卷源未附答案数据），本脚本把原站的「交卷/保存/时间到」行为拦截为本地练习语义：
- *  - 交卷 / 时间到 → 定格计时器、锁定作答控件、收起提交/保存按钮、给出对应提示
+ *  - 交卷 / 时间到 → 停掉听力音频（若有）、定格计时器、锁定作答控件、收起提交/保存按钮、给出对应提示
  *  - 保存 → 提示本地练习模式无需保存
  *  - 表单 submit 兜底拦截（原站 action 已被换皮脚本中和为 #，此处防手滑）
  *
@@ -105,10 +105,20 @@
       '重新练习请刷新页面。';
   }
 
+  // 听力页：交卷/时间到即停真考音频（写作页无 #ielts-local-audio，自动 no-op）。
+  // body.audio_locked 让 .ielts-vol 音量 UI 变灰不可拖（audio-lock-style 里的既有终态样式）。
+  function stopLocalAudio() {
+    var audio = document.getElementById('ielts-local-audio');
+    if (!audio) return;
+    try { audio.pause(); } catch (e) {}
+    document.body.classList.add('audio_locked');
+  }
+
   // 交卷终态
   function finish(source) {
     if (window.IELTS_EXAM_NOTE_DONE) return;
     window.IELTS_EXAM_NOTE_DONE = true;
+    stopLocalAudio();
     freezeTimer();
     lockEditors();
     removeHeaderButtons();

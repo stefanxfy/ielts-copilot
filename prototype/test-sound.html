@@ -258,7 +258,10 @@
     audio.currentTime = 0;
     // 写 localStorage（clock-defer 模式兼容），并用 URL 参数双保险
     try { localStorage.setItem('ielts_clock_defer', '1'); } catch (e) {}
-    location.href = 'instructions.html?clockdefer=1';
+    // 透传 ?mod= 参数:A 类走默认 a-listening-test.html;G 类入口带 ?mod=G,让 instructions.html 路由到 gt-listening-test.html
+    var modMatch = /[?&]mod=([AG])/.exec(location.search);
+    var target = 'instructions.html?clockdefer=1' + (modMatch ? '&mod=' + modMatch[1] : '');
+    location.href = target;
   });
 
   // 初始未播放

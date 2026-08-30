@@ -9,7 +9,11 @@
    初始化空引用崩溃）；遮罩消失 = 直接进入可用考试状态
 4) 去站点冗余 + 去品牌 + 蓝主题 + 本地 patch（与写作卷同款）
 5) 隐私：drupalSettings 里的 uid/email 置空
-6) 注入 clock-sec.js（倒计时到秒）+ exam-note.js（听力口径练习提示：本套未附答案数据不判分）
+6) 注入 footer 脚本（两档，按卷配置）：
+   - 配了 answers（答案数据已结构化）：answers-*.js + clock-sec.js + scoring.js + audio-lock.js
+     → inline 判分模式（对齐 gt-reading-test.html：交卷/时间到直接批改出 band）
+   - 未配 answers：clock-sec.js + exam-note.js + audio-lock.js
+     → 练习模式（exam-note 兜底拦截交卷：本套未附答案数据不判分）
 
 用法：python3 reskin-listening.py           # 跑 JOBS 里全部卷
       python3 reskin-listening.py a-l1      # 只跑指定 key
@@ -33,6 +37,23 @@ JOBS = [
         "audio_dst": "listening-a-2025jan-test1.mp3",
         # 听力引擎（存档页专属 hash 名）；会被 patch_engine 根除锁/门槛逻辑
         "engine": "js_cL_PFO-VMbqsEVuDp4_vRelXQxye5tq6S7PEmH1m998.js",
+        # 答案数据已结构化（Q6 双选 / Q28-30 blocks）→ footer 走判分模式（answers+scoring）
+        "answers": "answers-a-2025jan-listening-test1.js",
+    },
+    {
+        # p-listen011「雅思真题试卷 一月」= Master IELTS General Training Volume 1 听力卷的
+        # 中文重挂页（音频 OSS 地址同源已核对）；引擎与 a-l1 是同一 hash 副本，patch 幂等跳过
+        "key": "gt-l1",
+        "src_dir": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/questions/听力/培训类/2025年/雅思真题试卷 一月 雅思听力真题 1",
+        "src_html": "雅思真题试卷 一月 Listening Practice Test 1.html",
+        "out": os.path.join(OUT_DIR, "gt-listening-test.html"),
+        "title": "IELTS 本地机考 · G类听力 · 一月卷 Test 1",
+        "brand": "G类 · 听力 · 雅思真题试卷 一月 Test 1",
+        "audio_src": "Practice Test 1.mp3",
+        "audio_dst": "listening-gt-vol1-test1.mp3",
+        "engine": "js_cL_PFO-VMbqsEVuDp4_vRelXQxye5tq6S7PEmH1m998.js",
+        # 答案数据已结构化（Q38-40 blocks 等）→ footer 走判分模式（answers+scoring）
+        "answers": "answers-gt-vol1-listening-test1.js",
     },
 ]
 
@@ -58,10 +79,22 @@ def patch_engine(engine_path):
     幂等:首行 marker(锁类)命中即 return。
     """
     j = open(engine_path, encoding="utf-8").read()
+
+    # 0) 交卷按钮 hover tooltip（"This function is not available in the real IELTS
+    #    on computer test"）移除：本地版交卷由 scoring/exam-note 拦截，该提示语义不成立。
+    #    独立 marker（替换文本自身），已打过锁补丁的旧副本也能增量补上。
+    TOOLTIP_NEEDLE = re.compile(r"\$\('\.realtest-header__bt-submit'\)\.tooltip\(\{[\s\S]*?\}\);")
+    TOOLTIP_PATCH = ("/*[ielts-local-patched] 交卷按钮 tooltip 移除:本地版交卷可用"
+                     "(scoring/exam-note 拦截),原站 not-available 提示不再出现*/;")
+    n_tip = len(TOOLTIP_NEEDLE.findall(j))
+    if n_tip:
+        j = TOOLTIP_NEEDLE.sub(TOOLTIP_PATCH, j)
+        open(engine_path, "w", encoding="utf-8").write(j)
+    print("      engine 交卷 tooltip 移除: %d 处%s" % (n_tip, "" if n_tip else " (已处理/无需)"))
+
     if ENGINE_PATCH_MARKER in j:
         print("      engine already patched (lock marker hit), skip")
         return
-    stats = {}
     stats = {}
     # 1) 删锁：整个表达式替换为加空类（保留语句结构，兼容分号/逗号上下文）。
     #    完全匹配不会碰 addClass('disabled-controls full-test-wrong') 的全测失败分支。
@@ -270,6 +303,10 @@ def normalize_initial_part(html):
         for i, m in reversed(list(enumerate(panels))):
             disp = "block" if i == 0 else "none"
             repl = _re.sub(r'display:\s*[a-z]+', 'display: ' + disp, m.group(0))
+            # 源页首块 style 可能本就没有 display 属性(GT 卷存档即如此)——
+            # 替换落空时显式补上,保证与 A 版终态一致(首块 display: block)
+            if disp == "block" and not _re.search(r'display:', repl):
+                repl = repl[:-1] + ' display: ' + disp + '"'
             # 修复 nicescroll 接管残留的 inline overflow-y: hidden → auto(原生滚接管)
             repl = _re.sub(r'overflow-y:\s*hidden', 'overflow-y: auto', repl)
             html = html[:m.start()] + repl + html[m.end():]
@@ -499,14 +536,24 @@ body.audio_locked .ielts-vol__track{cursor:not-allowed}
     html = re.sub(r'"email":"[^"]*"', '"email":""', html)
     print("[%s] privacy scrubbed: uid x%d, email x%d" % (cfg["key"], n_uid, n_mail))
 
-    # ---- 7. 注入 clock-sec.js + exam-note.js + audio-lock.js ----
+    # ---- 7. 注入 footer 脚本（两档）----
     # 注：锁/门槛已在引擎补丁（patch_engine）根除，无需运行时解锁脚本
     # audio-lock.js 负责：自动播放 + 一次锁死 + 不可拖 + 音量记忆
-    NOTE_TAG = ('\n<!-- 倒计时到秒 + 练习提示（听力口径：未附答案数据不判分，拦截原站交卷） -->\n'
-                '<script src="./exam-assets/clock-sec.js"></script>\n'
-                '<script src="./exam-assets/exam-note.js"></script>\n'
-                '<script src="./exam-assets/audio-lock.js"></script>\n')
-    html = html.replace('</body>', NOTE_TAG + '</body>', 1)
+    # 两档互斥（exam-note 与 scoring 都拦交卷，不能同页加载）：
+    #   answers 已配 → 判分模式：answers + clock-sec + scoring + audio-lock（对齐 gt-reading-test.html）
+    #   未配        → 练习模式：clock-sec + exam-note + audio-lock（exam-note 兜底拦截交卷）
+    if cfg.get("answers"):
+        FOOTER_TAG = ('\n<!-- 答案数据 + 倒计时到秒 + inline 判分（交卷/时间到直接批改）+ 听力音频真考模式 -->\n'
+                      '<script src="./exam-assets/%s"></script>\n'
+                      '<script src="./exam-assets/clock-sec.js"></script>\n'
+                      '<script src="./exam-assets/scoring.js"></script>\n'
+                      '<script src="./exam-assets/audio-lock.js"></script>\n' % cfg["answers"])
+    else:
+        FOOTER_TAG = ('\n<!-- 倒计时到秒 + 练习提示（听力口径：未附答案数据不判分，拦截原站交卷） -->\n'
+                      '<script src="./exam-assets/clock-sec.js"></script>\n'
+                      '<script src="./exam-assets/exam-note.js"></script>\n'
+                      '<script src="./exam-assets/audio-lock.js"></script>\n')
+    html = html.replace('</body>', FOOTER_TAG + '</body>', 1)
 
     with open(cfg["out"], "w", encoding="utf-8") as f:
         f.write(html)

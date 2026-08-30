@@ -3,6 +3,7 @@
 写作卷换皮脚本（多卷配置驱动；复用 reskin-v2 骨架）：
 原 HTML 与 _files 资源原样保留（样式/交互 100% 原味），仅做：
 1) 资源引用重定向到 exam-assets/（新资产拷入，已有则跳过；剔除追踪脚本 hm.js）
+1b)【引擎补丁】交卷按钮 hover tooltip（原站 "not available" 提示）移除 —— 本地版交卷可用
 2) 去站点冗余：Analytics(hm.js/_hmt)、远程 ie 兼容脚本、远程 404 JS、远程字体/favicon、站内跳转中和
 3) 去对方品牌：logo 换自绘 SVG、标题/header 品牌块改为「IELTS 本地机考」
 4) 主题覆盖层：原站色 → 原型蓝（含 --writing-gradient）+ 本地 patch（原生滚动/内联图标）
@@ -39,6 +40,28 @@ JOBS = [
 DROP = {"hm.js"}
 KEEP_EXT = (".css", ".js", ".svg", ".png", ".jpg", ".jpeg", ".woff2", ".html", ".ico")
 
+# 写作引擎（存档页专属 hash 名,两卷共用同一副本）
+WRITING_ENGINE = "js_99kWBb40amBkh-aKfGzc8uj0BHJ2j62AJQLYVc4Jdog.js"
+
+
+def patch_writing_engine():
+    """交卷按钮 hover tooltip（"This function is not available in the real IELTS
+    on computer test"）移除：本地版交卷由 writing-note 拦截，该提示语义不成立。
+    替换文本自身即 marker，幂等；引擎文件已被拷入 exam-assets 后才可补（缺失则跳过）。"""
+    import re as _re
+    path = os.path.join(ASSET_DIR, WRITING_ENGINE)
+    if not os.path.exists(path):
+        print("      ⚠ 写作引擎 %s 不在 exam-assets,跳过 tooltip 补丁" % WRITING_ENGINE[:16])
+        return
+    j = open(path, encoding="utf-8").read()
+    needle = _re.compile(r"\$\('\.realtest-header__bt-submit'\)\.tooltip\(\{[\s\S]*?\}\);")
+    patch = ("/*[ielts-local-patched] 交卷按钮 tooltip 移除:本地版交卷可用"
+             "(scoring/exam-note 拦截),原站 not-available 提示不再出现*/;")
+    n = len(needle.findall(j))
+    if n:
+        open(path, "w", encoding="utf-8").write(needle.sub(patch, j))
+    print("      engine 交卷 tooltip 移除: %d 处%s" % (n, "" if n else " (已处理/无需)"))
+
 
 def reskin(cfg):
     src_html = os.path.join(cfg["src_dir"], "参加测试 _ IELTS Online Tests.html")
@@ -59,6 +82,10 @@ def reskin(cfg):
     print("[%s] assets present: %d, newly copied: %s, skipped: %s"
           % (cfg["key"], len(copied), fresh or "无",
              sorted(set(os.listdir(src_files)) - set(copied))))
+
+    # ---- 0b. 引擎补丁：交卷按钮 tooltip 移除（幂等） ----
+    print("[%s] patching engine:" % cfg["key"])
+    patch_writing_engine()
 
     html = open(src_html, encoding="utf-8").read()
 

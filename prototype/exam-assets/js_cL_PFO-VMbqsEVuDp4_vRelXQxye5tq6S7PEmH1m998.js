@@ -2844,11 +2844,7 @@
     if ($('.-practice-mode').length) {
       return;
     }
-    $('.realtest-header__bt-submit').tooltip({
-      title: 'This function is not available in the real IELTS on computer test',
-      placement: "bottom",
-      trigger: "hover"
-    });
+    /*[ielts-local-patched] 交卷按钮 tooltip 移除:本地版交卷可用(scoring/exam-note 拦截),原站 not-available 提示不再出现*/;
 
   }
 
