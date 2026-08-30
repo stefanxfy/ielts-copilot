@@ -98,16 +98,20 @@ db.pragma("foreign_keys = ON");
 const paper = seed.paper;
 const status = publish ? "PUBLISHED" : (paper.status ?? "PUBLISHED");
 const paperRow = db.prepare(
-  `INSERT INTO papers (slug, title, category, skill, source, status, meta_json, created_at, updated_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?, unixepoch(), unixepoch())
+  `INSERT INTO papers (slug, title, category, skill, source, status, duration_sec, band_table, meta_json, created_at, updated_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, unixepoch(), unixepoch())
    ON CONFLICT(slug) DO UPDATE SET
      title=excluded.title, category=excluded.category, skill=excluded.skill,
-     source=excluded.source, status=excluded.status, meta_json=excluded.meta_json,
+     source=excluded.source, status=excluded.status,
+     duration_sec=excluded.duration_sec, band_table=excluded.band_table,
+     meta_json=excluded.meta_json,
      updated_at=unixepoch()
    RETURNING id`,
 ).get(
   paper.slug, paper.title, paper.category, paper.skill,
   paper.source ?? null, status,
+  Number(paper.durationSec ?? 0),
+  JSON.stringify(paper.bandTable ?? []),
   JSON.stringify(paper.meta ?? {}),
 );
 const paperId = paperRow.id;
