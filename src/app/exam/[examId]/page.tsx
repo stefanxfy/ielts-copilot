@@ -36,6 +36,9 @@ export default async function ExamPage({
       <iframe
         src={paper.assetsJson.entry}
         title={paper.title}
+        // 允许 iframe 内音频自动播放(听力真考模式:autoplay muted 起,play 后解静音;
+        // 无此声明浏览器默认拒绝 iframe 内自动播放)
+        allow="autoplay"
         className="min-h-0 w-full flex-1 border-0"
       />
     </main>
