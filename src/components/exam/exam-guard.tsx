@@ -58,7 +58,39 @@ export function ExamGuard() {
     // 路径 C:iframe 内 guard 脚本显式上报(最快通知,便于日志观察)
     // (在 onMessage 里统一处理 ielts-user-active)
 
-    /* ---------- 1) 刷新/关闭/跳离:beforeunload ---------- */
+    /* ---------- 1a) 刷新快捷键拦截(硬方案,不依赖浏览器弹窗策略) ----------
+       beforeunload 弹窗受浏览器「用户激活」策略与各家实现差异影响
+       (Safari/Arc 常不显示),改为 keydown 阶段直接拦下刷新快捷键:
+       F5 / Cmd+R / Cmd+Shift+R / Ctrl+R / Ctrl+F5 / Cmd+W 前先弹自定义
+       英文 confirm。preventDefault 后刷新不发生,弹窗必显示。 */
+    const CONFIRM_MSG =
+      "You are about to refresh or leave the exam.\n\n" +
+      "Your answers will NOT be saved.\n\n" +
+      "Click OK to abandon the exam, or Cancel to continue.";
+    const onReloadKeys = (e: KeyboardEvent) => {
+      if (!armedRef.current) return;
+      const key = e.key?.toLowerCase() ?? "";
+      const isF5 = key === "f5";
+      // Cmd/Ctrl + R(刷新,含 Shift 变体)
+      const isReloadCombo = key === "r" && (e.metaKey || e.ctrlKey);
+      if (!isF5 && !isReloadCombo) return;
+      e.preventDefault();
+      e.stopPropagation();
+      console.warn("[exam-guard][top] 拦截刷新快捷键(" + (isF5 ? "F5" : "Cmd/Ctrl+R") + "),弹确认");
+      const leave = w.confirm(CONFIRM_MSG);
+      if (leave) {
+        try {
+          sessionStorage.removeItem(PLAYED_KEY);
+        } catch {}
+        console.log("[exam-guard][top] 确认放弃:清标记并放行刷新");
+        location.reload();
+      } else {
+        console.log("[exam-guard][top] 继续考试:刷新已被阻止");
+      }
+    };
+    w.addEventListener("keydown", onReloadKeys, true);
+
+    /* ---------- 1b) 兜底:beforeunload(地址栏刷新/关闭标签页/跳离) ---------- */
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!armedRef.current) {
         console.log("[exam-guard][top] beforeunload:已交卷,放行刷新");
@@ -124,6 +156,7 @@ export function ExamGuard() {
 
     return () => {
       w.removeEventListener("beforeunload", onBeforeUnload);
+      w.removeEventListener("keydown", onReloadKeys, true);
       w.removeEventListener("popstate", onPopState);
       w.removeEventListener("message", onMessage);
       w.removeEventListener("pointerdown", onPointerDown);
