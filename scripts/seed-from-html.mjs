@@ -157,28 +157,37 @@ function parseSections(document, job) {
   });
 }
 
-/** 阅卷 passage:每个 panel 顶部 .field--name-field-question 体
- *  (题号前 / 跨 Part) 整段抽为 passages[].bodyHtml,顺序 orderIndex */
+/** 阅卷 passage:Reading 卷有 N 个 Reading Passage 1..N;每个 passage 由
+ *  - .field--name-field-passage-desc(说明 + Reading Passage 1 + A/B 标题等) +
+ *  - .field--name-field-passage(正文 paragraphs A-E) 两个同级 .field--item 容器组成。
+ *  desc 与 body 都是 panel 之前的兄弟节点。 */
 function parsePassages(document, job) {
   if (job.skill !== "READING") return [];
-  const panels = Array.from(document.querySelectorAll("section.test-panel"));
   const out = [];
-  panels.forEach((p, idx) => {
-    // 取 panel 内所有 .field--item 但只在 question-title 之前(题面)
-    // 题号前的内容 = passage body
-    const firstTitle = p.querySelector(".test-panel__question-title, .test-panel__title");
-    const item = p.querySelector(".field--name-field-question .field--item");
-    if (!item) return;
-    const html = item.innerHTML ?? "";
+  const descBlocks = Array.from(document.querySelectorAll(".field--name-field-passage-desc"));
+  for (const desc of descBlocks) {
+    // body 是 desc 紧邻的下一个 .field--name-field-passage 兄弟节点
+    let body = desc.nextElementSibling;
+    while (body && !body.classList?.contains("field--name-field-passage")) {
+      body = body.nextElementSibling;
+    }
+    if (!body) continue;
+    const titleEl = desc.querySelector("h1");
+    const parts = [];
+    if (titleEl) parts.push(`<h2>${titleEl.textContent?.trim() ?? ""}</h2>`);
+    // desc 内容(说明文字 + 副标题)
+    Array.from(desc.querySelectorAll("p, h2, h3, h4")).forEach((el) => parts.push(el.outerHTML));
+    // body 内容(段落 A-E)
+    Array.from(body.querySelectorAll("p, h2, h3, h4, table")).forEach((el) => parts.push(el.outerHTML));
     out.push({
-      sectionNo: idx + 1,
+      sectionNo: out.length + 1,
       orderIndex: 1,
-      title: firstTitle?.textContent?.trim()?.slice(0, 80) ?? null,
+      title: titleEl?.textContent?.trim() ?? `Passage ${out.length + 1}`,
       subtitle: null,
-      bodyHtml: sanitizeHtml(html),
+      bodyHtml: sanitizeHtml(parts.join("\n")),
       imageUrl: null,
     });
-  });
+  }
   return out;
 }
 

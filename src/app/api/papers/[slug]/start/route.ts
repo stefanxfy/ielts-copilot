@@ -167,6 +167,7 @@ export async function POST(_req: Request, ctx: { params: Promise<{ slug: string 
     },
     sections,
     passages,
+    groups,
     questions: questionsView,
     writingTasks,
   });
