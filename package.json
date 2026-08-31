@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
+    "db:import": "node scripts/import-papers.mjs",
     "db:studio": "drizzle-kit studio",
     "postbuild": "node scripts/postbuild.mjs"
   },
