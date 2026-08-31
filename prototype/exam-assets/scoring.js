@@ -160,6 +160,7 @@
 
   /* ---------- inline 批改 ---------- */
   var graded = false;
+  var reported = false;
 
   function gradeInline(auto) {
     if (graded) return; graded = true;
@@ -170,7 +171,36 @@
     showBar(j, band, auto);
     removeSubmitButton();
     freezeTimer();
+    reportResult(res);
     console.log('[scoring] 批改完成：', j.raw + '/' + EXAM.total, '· band', band);
+  }
+
+  /* ---------- 交卷上报（工程版入库：POST /api/exam-records，判分以服务端复核为准；
+     file:// 直开原型时无后端，静默忽略） ---------- */
+  function usedSeconds() {
+    var el = $('.realtest-header__time-val');
+    var t = el ? el.textContent.trim() : '';
+    var leftSec = 0;
+    var mmss = t.match(/^([0-9]+):([0-9]+)$/);
+    var mmonly = t.match(/^([0-9]+)$/);
+    if (mmss) leftSec = (+mmss[1]) * 60 + (+mmss[2]);
+    else if (mmonly) leftSec = (+mmonly[1]) * 60;
+    return Math.max(0, EXAM.duration * 60 - leftSec);
+  }
+
+  function reportResult(res) {
+    if (reported) return; reported = true;
+    var values = {};
+    for (var n in res) values[n] = res[n].user || '';
+    try {
+      fetch('/api/exam-records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ examId: EXAM.id, usedSec: usedSeconds(), values: values })
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.ok) console.log('[scoring] 成绩已入库：record', d.recordId, '· band', d.band);
+      }).catch(function () { /* 无后端环境：忽略 */ });
+    } catch (e) { /* file:// 下 fetch 相对路径可能直接抛错：忽略 */ }
   }
 
   /* 每题标注 + 锁定 */

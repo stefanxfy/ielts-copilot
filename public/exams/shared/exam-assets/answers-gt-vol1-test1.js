@@ -1,6 +1,6 @@
 /* G类阅读 · 一月卷 Test 1 · 正确答案数据（源自官方 score-result 页解析） */
 window.IELTS_EXAM = {
-  id: 'gt-vol1-test1',
+  id: 'gt-vol1-reading-test1',
   title: '雅思真题试卷 一月 · 雅思阅读真题 1',
   module: 'G',
   skill: 'reading',

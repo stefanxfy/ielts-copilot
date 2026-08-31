@@ -113,11 +113,20 @@ function copyStatic() {
   for (const f of readdirSync(join(PROTO, "exam-assets"))) {
     cpSync(join(PROTO, "exam-assets", f), join(SHARED_ASSETS, f));
   }
-  // answers-*.js 的答案速查链接统一指向同目录 answers.html
+  // answers-*.js:答案速查链接统一指向同目录 answers.html;
+  // id 改写为五表体系下的 exam_id(scoring.js 交卷上报以此定位卷)
+  const examIdByAnswersFile = new Map(
+    EXAM_SETS.flatMap((set) =>
+      set.papers.filter((p) => p.answersJs).map((p) => [p.answersJs, `${set.examSetId}-${p.subject}-test1`]),
+    ),
+  );
   for (const f of readdirSync(SHARED_ASSETS)) {
     if (!f.startsWith("answers-") || !f.endsWith(".js")) continue;
     const p = join(SHARED_ASSETS, f);
-    writeFileSync(p, readFileSync(p, "utf8").replace(/answersUrl:\s*'[^']*'/, "answersUrl: 'answers.html'"));
+    let code = readFileSync(p, "utf8").replace(/answersUrl:\s*'[^']*'/, "answersUrl: 'answers.html'");
+    const examId = examIdByAnswersFile.get(f);
+    if (examId) code = code.replace(/id:\s*'[^']*'/, `id: '${examId}'`);
+    writeFileSync(p, code);
   }
   // 各卷页面:exam-assets/ → ../shared/exam-assets/
   const rewrite = (html) => html.replace(/(\.\/)?exam-assets\//g, "../shared/exam-assets/");

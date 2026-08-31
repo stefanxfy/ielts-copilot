@@ -18,6 +18,8 @@ const eslintConfig = defineConfig([
     "exam-analysis/**",
     "docs/**",
     "next-server/**",
+    // 换皮产物托管目录(原站代码 + 判分引擎副本,由 scripts/import-papers.mjs 生成)
+    "public/exams/**",
   ]),
 ]);
 

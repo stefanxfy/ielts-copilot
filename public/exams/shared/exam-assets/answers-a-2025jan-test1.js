@@ -1,6 +1,6 @@
 /* A类阅读 · IELTS Mock Test 2025 January · Test 1 · 正确答案数据（源自官方 score/60025558 成绩页解析） */
 window.IELTS_EXAM = {
-  id: 'a-2025jan-test1',
+  id: 'a-2025jan-reading-test1',
   title: 'IELTS Mock Test 2025 January · Reading Practice Test 1',
   module: 'A',
   skill: 'reading',
