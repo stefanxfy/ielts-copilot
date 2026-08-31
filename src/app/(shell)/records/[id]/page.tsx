@@ -90,7 +90,8 @@ export default async function RecordDetailPage({
   );
   writingTasks.sort((a, b) => (a.task === "T1" ? -1 : b.task === "T1" ? 1 : 0));
 
-  const jumpHref = (anchor: string) => `/exam/${row.examId}?jump=${encodeURIComponent(anchor)}`;
+  const jumpHref = (anchor: string) =>
+    `/exam/${row.examId}?jump=${encodeURIComponent(anchor)}&record=${row.id}`;
 
   return (
     <>

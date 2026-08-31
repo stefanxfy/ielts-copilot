@@ -1,12 +1,13 @@
 /**
- * /exam/[examId] — 机考页壳(P2 + P3 跳转增强)
+ * /exam/[examId] — 机考页壳(P2 + P3 回看增强)
  *
  * 整页 iframe 加载换皮产物(assets_json.entry,零改造,效果 = 原型 100%);
  * 顶部窄条:返回仪表盘 + 卷标题。交卷上报由静态页内 scoring.js 直发 /api/exam-records。
  *
- * P3:?jump=<anchor> 为错题回看模式(成绩页跳入):
- * - ExamJump 向 iframe 发锚点定位指令(卷页滚动到题目并高亮)
- * - ExamGuard 跳转模式不武装(回看不该被离开防护拦)
+ * P3 回看模式:?jump=<anchor>&record=<id> 从成绩页跳入:
+ * - 壳层先向 /api/exam-records/<id> 取答题卡,再发给 iframe 回填并 inline 批改
+ * - 卷面直接呈现考生作答 + ✓/✗ 标注 + 标准答案,与交卷时刻一致
+ * - ExamGuard 不武装(回看不该被离开防护拦)
  */
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -25,23 +26,24 @@ export default async function ExamPage({
   searchParams,
 }: {
   params: Promise<{ examId: string }>;
-  searchParams: Promise<{ jump?: string }>;
+  searchParams: Promise<{ jump?: string; record?: string }>;
 }) {
   const { examId } = await params;
-  const { jump } = await searchParams;
+  const { jump, record } = await searchParams;
   const paper = getDb().select().from(papers).where(eq(papers.examId, examId)).get();
   if (!paper) notFound();
 
-  const isReview = Boolean(jump);
+  const isReview = Boolean(jump || record);
+  const reviewRecordId = record ? Number(record) : null;
 
   return (
     <main className="flex h-screen flex-col">
       {/* 离开防护:拦截刷新/关闭/后退,iframe 交卷后 postMessage 解除;
-          ?jump= 错题回看模式不武装 */}
+          回看模式不武装 */}
       {!isReview && <ExamGuard />}
       {isReview && (
         <Suspense fallback={null}>
-          <ExamJump />
+          <ExamJump recordId={reviewRecordId} anchor={jump ?? null} />
         </Suspense>
       )}
       <div className="flex items-center gap-3 border-b px-4 py-2">

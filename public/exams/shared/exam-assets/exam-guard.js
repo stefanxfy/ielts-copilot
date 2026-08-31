@@ -71,6 +71,57 @@
       console.log('[exam-guard][iframe] 已定位锚点:', d.anchor);
     });
 
+    /* ============ 回看模式:回填答题卡 + inline 批改(P3) ============
+       顶层壳发来 {type:'ielts-review-record', values:{题号:作答串}}。
+       把 DB 里的作答灌回卷面控件(填空/单选/多选/块题/下拉),再调
+       scoring.js 的 gradeInline —— 与交卷时刻同一条渲染路径:✓/✗ 标注、
+       标准答案、题号板染色、成绩条全部还原。 */
+    window.addEventListener('message', function (ev) {
+      var d = ev.data;
+      if (!d || d.type !== 'ielts-review-record' || !d.values) return;
+
+      // 等待 scoring.js 就绪(它在 DOMContentLoaded 之前同步注入,一般已到位)
+      var waited = 0;
+      (function waitForScoring() {
+        if (window.IELTS_SCORING) { fillAndGrade(d.values); return; }
+        if (++waited > 50) { console.warn('[exam-guard][iframe] scoring.js 未就绪,放弃回看回填'); return; }
+        setTimeout(waitForScoring, 100);
+      })();
+
+      function fillAndGrade(values) {
+        var filled = 0;
+        Object.keys(values).forEach(function (n) {
+          var user = String(values[n] || '');
+          if (!user) return;
+          // 1) 单选/多选/块题:radio/checkbox 按 name 匹配勾选
+          var checks = document.querySelectorAll('input[name="q-' + n + '"]');
+          if (checks.length) {
+            var picked = user.replace(/\s/g, '').split(',');
+            for (var i = 0; i < checks.length; i++) {
+              checks[i].checked = picked.indexOf(checks[i].value) >= 0;
+            }
+            filled++;
+            return;
+          }
+          // 2) 填空/下拉:input/select 按 data-num 匹配赋值
+          var els = document.querySelectorAll('[data-num="' + n + '"]');
+          for (var j = 0; j < els.length; j++) {
+            var el = els[j];
+            if (el.tagName === 'SELECT' && user) { el.value = user; filled++; break; }
+            if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'textarea')) {
+              el.value = user; filled++;
+            }
+          }
+        });
+        console.log('[exam-guard][iframe] 回看回填完成:' + filled + ' 题已灌入,触发批改渲染');
+        try {
+          window.IELTS_SCORING.gradeInline(true);
+        } catch (e) {
+          console.warn('[exam-guard][iframe] 批改渲染失败:', e);
+        }
+      }
+    });
+
     console.log('[exam-guard][iframe] 静态卷页信号模式已启用(防护在顶层壳)');
     return;
   }
