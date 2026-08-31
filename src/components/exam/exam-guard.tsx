@@ -89,7 +89,11 @@ export function ExamGuard() {
         try {
           sessionStorage.removeItem(PLAYED_KEY);
         } catch {}
-        console.log("[exam-guard][top] 确认放弃:清标记并放行刷新");
+        // [patch] 用户已经在我们自己 confirm 里确认放弃 —— 解除防护避免
+        // location.reload() 触发 beforeunload 又弹一次 Chrome 原生弹窗
+        armedRef.current = false;
+        setArmed(false);
+        console.log("[exam-guard][top] 确认放弃:清标记并放行刷新(解除 beforeunload)");
         location.reload();
       } else {
         console.log("[exam-guard][top] 继续考试:刷新已被阻止");

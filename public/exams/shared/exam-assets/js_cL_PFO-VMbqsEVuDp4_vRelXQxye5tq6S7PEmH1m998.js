@@ -2853,6 +2853,9 @@
     if ($('body').hasClass('anonymous-user')) {
       return;
     }
+    // [ielts-local-patched] 早退:本地机考由顶层 exam-guard.tsx 自己管 beforeunload
+    return;
+    /* ---- 以下原站逻辑保留但不会再执行 ----
     var unloadCallback = function (event) {
       if ($('.-test_time-up').length || event.target.id === 'edit-submit') {
         return;
@@ -2863,7 +2866,7 @@
     };
 
     window.addEventListener("beforeunload", unloadCallback);
-    var someButton = $('.realtest-header__bt-submit, .modal-view-solution__btn, .waiting-card__btn.iot-grbt, #take-test-form #edit-submit, .speaking-test-page .realtest-header__btn-exit, .modal__button-wrap a, .writing-test .modal-body .iot-bt, .writing-test .modal-exit-test__footer a, #step-test-mic a#js-next-part, .wot2-take-test-form button#edit-submit, .practice-menu__submit, .modal-exit-test .modal--yes');
+    var someButton = $('.realtest-header__bt-submit, .modal-view-solution__btn, .waiting-card__btn.iot-grbt, #take-test-form #edit-submit, .speaking-test-page .realtest-header__btn-exit, .modal__buttonwrap a, .writing-test .modal-body .iot-bt, .writing-test .modal-exit-test__footer a, #step-test-mic a#js-next-part, .wot2-take-test-form button#edit-submit, .practice-menu__submit, .modal-exit-test .modal--yes');
     someButton.on("click", function () {
       window.removeEventListener("beforeunload", unloadCallback);
     });
@@ -2875,6 +2878,7 @@
         window.removeEventListener('beforeunload', unloadCallback);
       });
     }
+    */
   }
 
   function togglePracticeMenu() {

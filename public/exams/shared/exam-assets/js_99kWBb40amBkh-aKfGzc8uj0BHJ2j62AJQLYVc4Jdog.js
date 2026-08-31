@@ -419,7 +419,10 @@ var currentTask = 0,
   var btnReviewEssay = $('[data-drupal-selector="review-essay"]');
   var btnRetakeTest = $('[data-drupal-selector="retake-test"]');
   var timerInterval;
-  var shouldShowBeforeUnload = true;
+  // [ielts-local-patched] 原站 beforeunload 由我们 exam-guard 在顶层统一处理,这里直接关闭开关
+  // (Chrome 90+ 把任何 returnValue 都翻译成同一条系统弹窗,且原站 Drupal.t
+  //  这条还会和我们的 keydown confirm 形成双重弹窗,体验更糟)
+  var shouldShowBeforeUnload = false;
 
   // ── Task time tracking ────────────────────────────────────────────────────
   // Tổng số giây học sinh đã làm trên từng task.
@@ -3383,12 +3386,13 @@ var currentTask = 0,
   }
 
   function reloadPage() {
-    if ($('.-practice-mode').length) {
-      return;
-    }
-    if ($('body').hasClass('anonymous-user')) {
-      return;
-    }
+    // [ielts-local-patched] 早退:本地机考由顶层 exam-guard.tsx 自己管 beforeunload
+    // (keydown 拦截 F5/Cmd+R + 自定义 confirm + ielts-exam-finished 解除)
+    if ($('.-practice-mode').length) return;
+    if ($('body').hasClass('anonymous-user')) return;
+    // 原站 beforeunload 注册链路整段关闭 ↓
+    return;
+    /* ---- 以下原站逻辑保留但不会再执行 ----
     var unloadCallback = function (event) {
       if ($('.-test_time-up').length || event.target.id === 'edit-submit') {
         return;
@@ -3411,6 +3415,7 @@ var currentTask = 0,
         window.removeEventListener('beforeunload', unloadCallback);
       });
     }
+    */
   }
 
   function togglePracticeMenu() {

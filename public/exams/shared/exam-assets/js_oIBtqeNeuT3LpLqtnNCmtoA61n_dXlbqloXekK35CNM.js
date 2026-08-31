@@ -2843,6 +2843,9 @@
     if ($('body').hasClass('anonymous-user')) {
       return;
     }
+    // [ielts-local-patched] 早退:本地机考由顶层 exam-guard.tsx 自己管 beforeunload
+    return;
+    /* ---- 以下原站逻辑保留但不会再执行 ----
     var unloadCallback = function (event) {
       if ($('.-test_time-up').length || event.target.id === 'edit-submit') {
         return;
@@ -2865,6 +2868,7 @@
         window.removeEventListener('beforeunload', unloadCallback);
       });
     }
+    */
   }
 
   function togglePracticeMenu() {
