@@ -3715,10 +3715,13 @@
   }
 
   // Reset data when exit test, reload page, close tab.
+  // Local edition: pagehide replaces onunload — Chrome's permissions policy
+  // forbids unload handlers in cross-origin iframes, logging a Violation.
+  // pagehide fires on the same lifecycle events and is policy-compliant.
   function resetDataTakeTest() {
-    window.onunload = function () {
+    window.addEventListener("pagehide", function () {
       Drupal.deleteDataLocalStorage(quiz_id)
-    }
+    })
   }
 
   Drupal.behaviors.ListeningReadingTakeTest = {

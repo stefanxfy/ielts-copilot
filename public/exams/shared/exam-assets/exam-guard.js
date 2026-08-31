@@ -43,6 +43,34 @@
       } catch (e) {}
     }, { capture: true });
 
+    /* ============ 错题锚点跳转(P3,成绩页回看) ============
+       顶层壳 ExamJump 发来 {type:'ielts-jump-anchor', anchor:'q-23'},
+       按 id 直找控件;找不到再按 name / data-num 回退(块题/单选组等
+       多个控件共享同一锚点的情况,滚到第一个)。 */
+    window.addEventListener('message', function (ev) {
+      var d = ev.data;
+      if (!d || d.type !== 'ielts-jump-anchor' || !d.anchor) return;
+      var el =
+        document.getElementById(d.anchor) ||
+        document.querySelector('[name="' + d.anchor + '"]') ||
+        document.querySelector('[data-num="' + d.anchor.replace(/^q-/, '') + '"]');
+      if (!el) {
+        console.warn('[exam-guard][iframe] 锚点未找到:', d.anchor);
+        return;
+      }
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // 短暂高亮提示定位(纯视觉,2 秒后淡出)
+      try {
+        var prevBg = el.style.boxShadow;
+        el.style.boxShadow = '0 0 0 3px rgba(26,111,235,0.55)';
+        el.style.transition = 'box-shadow 0.6s ease 1.4s';
+        setTimeout(function () {
+          el.style.boxShadow = prevBg;
+        }, 2000);
+      } catch (e) {}
+      console.log('[exam-guard][iframe] 已定位锚点:', d.anchor);
+    });
+
     console.log('[exam-guard][iframe] 静态卷页信号模式已启用(防护在顶层壳)');
     return;
   }

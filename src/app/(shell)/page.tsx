@@ -130,6 +130,7 @@ export default function DashboardPage() {
                 <th className="px-2.5 py-2 font-medium">答对</th>
                 <th className="px-2.5 py-2 font-medium">用时</th>
                 <th className="px-2.5 py-2 font-medium">交卷时间</th>
+                <th className="px-2.5 py-2 font-medium">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -146,6 +147,14 @@ export default function DashboardPage() {
                     {r.usedSec != null ? fmtDuration(r.usedSec) : "—"}
                   </td>
                   <td className="px-2.5 py-2.5 text-[#8a93a2]">{fmtTime(r.submittedAt)}</td>
+                  <td className="px-2.5 py-2.5">
+                    <Link
+                      href={`/records/${r.id}`}
+                      className="text-[#1a6feb] hover:underline"
+                    >
+                      成绩详情 →
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>

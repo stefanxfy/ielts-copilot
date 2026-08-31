@@ -18,11 +18,18 @@
  * - 可见徽标:右下角常驻状态条(ARMED/OFF),无需开控制台即可确认防护在线
  */
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const PLAYED_KEY = "ielts_audio_played";
 
 export function ExamGuard() {
+  const router = useRouter();
   const armedRef = useRef(true);
+  // ref 持有 router:让退出处理器稳定引用,避免整组监听随 router 实例重建
+  const routerRef = useRef(router);
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
   const [armed, setArmed] = useState(true);
   const [activated, setActivated] = useState(false); // 顶层是否收到过用户交互
 
@@ -154,12 +161,28 @@ export function ExamGuard() {
     };
     w.addEventListener("message", onMessage);
 
+    /* ---------- 4) 页面内「← Back」按钮:自定义弹窗确认退出(方案 A) ----------
+       exam-back-button 弹窗确认后派发 ielts-exit-exam,由本组件统一处理:
+       解除防护 + 清听力已播标记 + 跳回仪表盘(与后退/刷新拦截共用退出路径)。 */
+    const onExitExam = () => {
+      console.log("[exam-guard][top] 收到页面内退出确认,解除防护并返回仪表盘");
+      armedRef.current = false;
+      setArmed(false);
+      try {
+        sessionStorage.removeItem(PLAYED_KEY);
+      } catch {}
+      // SPA 内跳转:解除防护后 router.push 不会触发 beforeunload
+      routerRef.current.push("/");
+    };
+    w.addEventListener("ielts-exit-exam", onExitExam);
+
     return () => {
       w.removeEventListener("beforeunload", onBeforeUnload);
       w.removeEventListener("keydown", onReloadKeys, true);
       w.removeEventListener("popstate", onPopState);
       w.removeEventListener("message", onMessage);
       w.removeEventListener("pointerdown", onPointerDown);
+      w.removeEventListener("ielts-exit-exam", onExitExam);
       window.clearInterval(poll);
       console.log("[exam-guard][top] 顶层防护卸载");
     };
