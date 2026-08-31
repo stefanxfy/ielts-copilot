@@ -139,6 +139,21 @@ function copyStatic() {
       if (p.answersSrc) {
         writeFileSync(join(dir, "answers.html"), rewrite(readFileSync(join(PROTO, `${p.answersSrc}.html`), "utf8")));
       }
+      // 听力卷:复刻原型进入链路 test-sound.html(试音) → instructions.html(须知) → listening.html
+      // 原型用 ?mod=A/G 跨页路由;工程版每卷独立目录,直接改写跳转目标 + 副标题为该卷标题
+      if (p.subject === "listening") {
+        const sub = `${set.category}类 听力 · ${set.title.split("·")[1]?.trim() ?? set.title}`;
+        let ts = rewrite(readFileSync(join(PROTO, "test-sound.html"), "utf8"));
+        ts = ts
+          .replace(/(<div class="ts-sub">)[^<]*(<\/div>)/, `$1${sub} · Test sound$2`)
+          .replace(/var target = 'instructions\.html\?clockdefer=1'[^;]*;/, "var target = 'instructions.html?clockdefer=1';");
+        writeFileSync(join(dir, "test-sound.html"), ts);
+        let ins = rewrite(readFileSync(join(PROTO, "instructions.html"), "utf8"));
+        ins = ins
+          .replace(/(<div class="ts-sub">)[^<]*(<\/div>)/, `$1${sub} · Instructions$2`)
+          .replace(/var targetTest = [^;]*;/, "var targetTest = 'listening.html';");
+        writeFileSync(join(dir, "instructions.html"), ins);
+      }
     }
   }
   console.log(`[import] 静态托管完成:${EXAMS_OUT.replace(ROOT + "/", "")}/(共享资源 ${(readdirSync(SHARED_ASSETS)).length} 个文件)`);
@@ -183,7 +198,9 @@ function importDb() {
       upSet.run({ examSetId: set.examSetId, title: set.title, category: set.category, testPeriod: set.testPeriod });
       for (const p of set.papers) {
         const examId = `${set.examSetId}-${p.subject}-test1`;
-        const assets = { entry: `/exams/${examId}/${p.subject}.html` };
+        // 听力卷进入链路对齐原型:试音页为入口(Continue → instructions.html → Start test → 主体页)
+        const entryFile = p.subject === "listening" ? "test-sound.html" : `${p.subject}.html`;
+        const assets = { entry: `/exams/${examId}/${entryFile}` };
         if (p.audio) assets.audio = `/exams/shared/exam-assets/${p.audio}`;
         if (p.answersSrc) assets.answersPage = `/exams/${examId}/answers.html`;
 
