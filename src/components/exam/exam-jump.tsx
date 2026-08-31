@@ -73,7 +73,8 @@ export function ExamJump({
       const frame = document.querySelector("iframe");
       if (!frame?.contentWindow) return false;
       try {
-        // 先回填批改,再锚点定位(顺序保证批改标记渲染后再滚动)
+        // 先通知 iframe 进入回看模式(放行刷新拦截),再回填批改,再锚点定位
+        frame.contentWindow.postMessage({ type: "ielts-review-mode" }, "*");
         frame.contentWindow.postMessage(
           { type: "ielts-review-record", values: stateRef.current.values },
           "*",

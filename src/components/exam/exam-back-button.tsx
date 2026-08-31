@@ -8,12 +8,14 @@
  *     统一处理(解除防护 + 清听力已播标记 + 跳回仪表盘),
  *     保证与后退/刷新拦截共用同一条退出路径;
  *   - Continue exam → 关闭弹窗继续作答。
+ *
+ * 回看模式(isReview):已交卷的卷面回放,无未保存答案,直接跳转不弹窗。
  */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExamConfirmDialog } from "@/components/exam/exam-confirm-dialog";
 
-export function ExamBackButton() {
+export function ExamBackButton({ isReview = false }: { isReview?: boolean }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -29,19 +31,21 @@ export function ExamBackButton() {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => (isReview ? router.push("/") : setOpen(true))}
         className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
       >
         ← Back
       </button>
 
-      <ExamConfirmDialog
-        open={open}
-        onOpenChange={setOpen}
-        title="Leave this exam?"
-        confirmLabel="Leave exam"
-        onConfirm={handleLeave}
-      />
+      {!isReview && (
+        <ExamConfirmDialog
+          open={open}
+          onOpenChange={setOpen}
+          title="Leave this exam?"
+          confirmLabel="Leave exam"
+          onConfirm={handleLeave}
+        />
+      )}
     </>
   );
 }

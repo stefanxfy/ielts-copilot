@@ -87,7 +87,7 @@ export default async function ExamPage({
         />
       )}
       <div className="flex items-center gap-3 border-b px-4 py-2">
-        <ExamBackButton />
+        <ExamBackButton isReview={isReview} />
         <h1 className="text-sm font-medium">{paper.title}</h1>
         {isReview && (
           <span className="rounded bg-[#eef4ff] px-2 py-0.5 text-[11px] text-[#1a6feb]">

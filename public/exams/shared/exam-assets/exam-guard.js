@@ -120,6 +120,18 @@
       console.log('[exam-guard][iframe] 已请求顶层确认提交');
     };
 
+    /* ============ 回看模式:放行刷新拦截(P3) ============
+       顶层壳 ExamJump 发来 {type:'ielts-review-mode'}。
+       回看页面 = 已交卷的卷面回放,没有未保存答案,不该拦刷新/后退。
+       收到后置 IELTS_EXAM_FINISHED=true,上面 onReloadKeys 的早退分支
+       即放行 Cmd+R / F5,用户可自由刷新卷面。 */
+    window.addEventListener('message', function (ev) {
+      var d = ev.data;
+      if (!d || d.type !== 'ielts-review-mode') return;
+      window.IELTS_EXAM_FINISHED = true;
+      console.log('[exam-guard][iframe] 回看模式:刷新拦截已放行');
+    });
+
     /* ============ 错题锚点跳转(P3,成绩页回看) ============
        顶层壳 ExamJump 发来 {type:'ielts-jump-anchor', anchor:'q-23'},
        按 id 直找控件;找不到再按 name / data-num 回退(块题/单选组等
