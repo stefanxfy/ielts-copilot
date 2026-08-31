@@ -68,12 +68,39 @@ export function ExamGuard() {
     /* ---------- 1a) 刷新快捷键拦截(硬方案,不依赖浏览器弹窗策略) ----------
        beforeunload 弹窗受浏览器「用户激活」策略与各家实现差异影响
        (Safari/Arc 常不显示),改为 keydown 阶段直接拦下刷新快捷键:
-       F5 / Cmd+R / Cmd+Shift+R / Ctrl+R / Ctrl+F5 / Cmd+W 前先弹自定义
-       英文 confirm。preventDefault 后刷新不发生,弹窗必显示。 */
+       F5 / Cmd+R / Cmd+Shift+R / Ctrl+R / Ctrl+F5 前先弹自定义英文 confirm。
+       preventDefault 后刷新不发生,弹窗必显示。
+
+       ⚠️ 关键:本监听器只覆盖「焦点在顶层」的情况。用户答题时焦点在
+       iframe 内,键盘事件直接派发给 iframe 的 document,不会传播到顶层
+       window,这份 keydown 收不到 —— 那一半由 iframe 内 exam-guard.js
+       在 capture 阶段拦下并 postMessage({type:'ielts-reload-request'})
+       转发,最终同样走下面的 handleReloadRequest。 */
     const CONFIRM_MSG =
       "You are about to refresh or leave the exam.\n\n" +
       "Your answers will NOT be saved.\n\n" +
       "Click OK to abandon the exam, or Cancel to continue.";
+
+    // 统一的刷新确认入口:顶层 keydown 与 iframe 转发共用,行为一致
+    const handleReloadRequest = (via: string) => {
+      if (!armedRef.current) return;
+      console.warn("[exam-guard][top] 拦截刷新快捷键(" + via + "),弹确认");
+      const leave = w.confirm(CONFIRM_MSG);
+      if (leave) {
+        try {
+          sessionStorage.removeItem(PLAYED_KEY);
+        } catch {}
+        // 用户已在我们自己 confirm 里确认放弃 —— 解除防护,避免
+        // location.reload() 触发 beforeunload 又弹一次 Chrome 原生弹窗
+        armedRef.current = false;
+        setArmed(false);
+        console.log("[exam-guard][top] 确认放弃:清标记并放行刷新(解除 beforeunload)");
+        location.reload();
+      } else {
+        console.log("[exam-guard][top] 继续考试:刷新已被阻止");
+      }
+    };
+
     const onReloadKeys = (e: KeyboardEvent) => {
       if (!armedRef.current) return;
       const key = e.key?.toLowerCase() ?? "";
@@ -83,21 +110,7 @@ export function ExamGuard() {
       if (!isF5 && !isReloadCombo) return;
       e.preventDefault();
       e.stopPropagation();
-      console.warn("[exam-guard][top] 拦截刷新快捷键(" + (isF5 ? "F5" : "Cmd/Ctrl+R") + "),弹确认");
-      const leave = w.confirm(CONFIRM_MSG);
-      if (leave) {
-        try {
-          sessionStorage.removeItem(PLAYED_KEY);
-        } catch {}
-        // [patch] 用户已经在我们自己 confirm 里确认放弃 —— 解除防护避免
-        // location.reload() 触发 beforeunload 又弹一次 Chrome 原生弹窗
-        armedRef.current = false;
-        setArmed(false);
-        console.log("[exam-guard][top] 确认放弃:清标记并放行刷新(解除 beforeunload)");
-        location.reload();
-      } else {
-        console.log("[exam-guard][top] 继续考试:刷新已被阻止");
-      }
+      handleReloadRequest(isF5 ? "F5" : "Cmd/Ctrl+R");
     };
     w.addEventListener("keydown", onReloadKeys, true);
 
@@ -153,12 +166,16 @@ export function ExamGuard() {
 
     /* ---------- 3) iframe 消息:交卷解除 / 用户激活上报 ---------- */
     const onMessage = (ev: MessageEvent) => {
-      const data = ev.data as { type?: string } | null;
+      const data = ev.data as { type?: string; via?: string } | null;
       if (!data?.type) return;
       if (data.type === "ielts-exam-finished") {
         armedRef.current = false;
         setArmed(false);
         console.log("[exam-guard][top] 收到 iframe 交卷信号,防护解除");
+      } else if (data.type === "ielts-reload-request") {
+        // iframe 内焦点下按 F5/Cmd+R:顶层 keydown 收不到(键盘事件直接
+        // 派发给 iframe document),由 iframe guard 拦截后转发到此
+        handleReloadRequest("iframe内 " + (data.via ?? "刷新键"));
       } else if (data.type === "ielts-user-active") {
         markActivated("iframe显式上报");
       }

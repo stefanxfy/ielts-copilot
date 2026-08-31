@@ -29,6 +29,9 @@
   if (!IS_TOP) {
     // 静态卷页交卷完成 → 通知顶层解除防护
     window.IELTS_EXAM_GUARD_OFF = function () {
+      // 同时给本层打标记:交卷后不再拦截刷新快捷键(否则看成绩时按
+      // Cmd+R 还会被弹"放弃考试?"确认框)
+      window.IELTS_EXAM_FINISHED = true;
       try {
         window.parent.postMessage({ type: 'ielts-exam-finished' }, '*');
       } catch (e) {}
@@ -42,6 +45,36 @@
         window.parent.postMessage({ type: 'ielts-user-active' }, '*');
       } catch (e) {}
     }, { capture: true });
+
+    /* ============ 刷新快捷键拦截(焦点在 iframe 内也能拦) ============
+       为什么必须在这里拦:用户答题时焦点在 iframe 内,键盘事件直接
+       派发给 iframe 的 document,不会传播到顶层 window —— 顶层
+       exam-guard.tsx 那个 keydown(capture)永远收不到 F5/Cmd+R,
+       浏览器按默认行为直接刷新 → 只弹 Chrome 原生 beforeunload 窗,
+       我们自定义的英文 confirm 从不出现(日志里也确实没有
+       "[exam-guard][top] 拦截刷新快捷键")。
+       因此这里在 capture 阶段抢先 preventDefault 掐掉浏览器默认刷新,
+       再 postMessage 交顶层统一弹确认;顶层或 iframe 只需一份生效,
+       顶层那份保留用于焦点在顶栏/徽标时的场景。 */
+    var onReloadKeys = function (e) {
+      if (window.IELTS_EXAM_FINISHED) return; // 已交卷:不拦,放行刷新
+      var key = (e.key || '').toLowerCase();
+      var isF5 = key === 'f5';
+      var isReloadCombo = key === 'r' && (e.metaKey || e.ctrlKey);
+      if (!isF5 && !isReloadCombo) return;
+      e.preventDefault();
+      e.stopPropagation();
+      console.warn('[exam-guard][iframe] 拦截刷新快捷键(' + (isF5 ? 'F5' : 'Cmd/Ctrl+R') + '),转顶层弹确认');
+      try {
+        window.parent.postMessage({
+          type: 'ielts-reload-request',
+          via: isF5 ? 'F5' : 'Cmd/Ctrl+R'
+        }, '*');
+      } catch (err) {}
+    };
+    // capture 阶段:早于卷页自身脚本(jQuery 等)的处理器
+    document.addEventListener('keydown', onReloadKeys, true);
+    window.addEventListener('keydown', onReloadKeys, true);
 
     /* ============ 连考场次注入(P4) ============
        顶层壳发来 {type:'ielts-session', sessionId} → 存入 window.IELTS_SESSION_ID,
