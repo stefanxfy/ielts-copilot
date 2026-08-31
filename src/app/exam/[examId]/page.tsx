@@ -77,9 +77,14 @@ export default async function ExamPage({
           <ExamJump recordId={reviewRecordId} anchor={jump ?? null} />
         </Suspense>
       )}
-      {/* 连考编排:注入 sessionId + 交卷推进 */}
+      {/* 连考编排:注入 sessionId/examId + 交卷推进(确认弹窗 + 丝滑转场) */}
       {isSessionMode && (
-        <ExamSessionLink sessionId={session!} nextExamId={nextExamId} />
+        <ExamSessionLink
+          sessionId={session!}
+          examId={examId}
+          nextExamId={nextExamId}
+          subject={paper.subject}
+        />
       )}
       <div className="flex items-center gap-3 border-b px-4 py-2">
         <ExamBackButton />

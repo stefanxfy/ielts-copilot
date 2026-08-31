@@ -51,6 +51,9 @@ export function createSession(examSetId: string) {
  * 每科交卷后调用:检查该场次下三科(听/读/写)是否都有已交卷记录,
  * 齐全则回写 overall_band + total_used_sec 并置 COMPLETED。
  * 返回是否完成(用于交卷接口决定是否带 overall 快照返回)。
+ *
+ * 完成判定按「科目集合」而非记录条数:同科重复提交(重试/兜底)会产生多条记录,
+ * 若按条数比对套卷科目数会误判完成。这里检查已交卷记录覆盖了套卷的全部科目。
  */
 export function finalizeIfComplete(sessionId: string): boolean {
   const db = getDb();
@@ -68,19 +71,34 @@ export function finalizeIfComplete(sessionId: string): boolean {
     .all();
   // 交卷才算(SUBMITTED/COMPLETED);IN_PROGRESS/ABANDONED 不计
   const submitted = rows.filter((r) => r.status === "SUBMITTED" || r.status === "COMPLETED");
-  // 三科齐全判断:该场次所属套卷下的全部单科卷都交了(写作也算,即使占位 0 分)
+  // 套卷下应有科目集合(写作也算,即使占位 0 分)
   const papersOfSet = db
     .select({ subject: papers.subject })
     .from(papers)
     .where(eq(papers.examSetId, session.examSetId))
     .all();
-  const subjectCount = papersOfSet.length;
-  if (submitted.length < subjectCount) return false;
+  const requiredSubjects = new Set(papersOfSet.map((p) => p.subject));
+  const submittedSubjects = new Set(submitted.map((r) => r.subject));
+  let complete = true;
+  for (const s of requiredSubjects) {
+    if (!submittedSubjects.has(s)) { complete = false; break; }
+  }
+  if (!complete) return false;
 
-  // 三科齐全 → 算快照。写作 band 可能为 null(P5 才真实批改),占位按 0 参与平均
-  const bands = submitted.map((r) => r.bandScore ?? 0);
+  // 三科齐全 → 算快照。同一科目若有多条记录,取最新一条(submittedAt 最大)参与计算,
+  // 避免重试产生的旧记录污染总分。
+  const latestBySubject = new Map<string, (typeof submitted)[number]>();
+  for (const r of submitted) {
+    const prev = latestBySubject.get(r.subject);
+    if (!prev || (r.submittedAt?.getTime() ?? 0) > (prev.submittedAt?.getTime() ?? 0)) {
+      latestBySubject.set(r.subject, r);
+    }
+  }
+  const latest = [...latestBySubject.values()];
+  // 写作 band 可能为 null(P5 才真实批改),占位按 0 参与平均
+  const bands = latest.map((r) => r.bandScore ?? 0);
   const overall = roundToHalf(bands.reduce((a, b) => a + b, 0) / Math.max(bands.length, 1));
-  const totalUsed = submitted.reduce((a, r) => a + (r.usedSec ?? 0), 0);
+  const totalUsed = latest.reduce((a, r) => a + (r.usedSec ?? 0), 0);
 
   db.update(examSessions)
     .set({

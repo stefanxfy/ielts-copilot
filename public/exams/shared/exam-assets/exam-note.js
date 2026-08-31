@@ -126,6 +126,75 @@
     if (window.IELTS_EXAM_GUARD_OFF) window.IELTS_EXAM_GUARD_OFF(); // 考试结束,解除离开防护
   }
 
+  /* ---------- 交卷调度(连考丝滑转场) ----------
+     连考模式(window.IELTS_SESSION_ID 存在):静默采集 T1/T2 上报入库 → 转下一科,
+       不显示本地练习提示;用户点交卷先经顶层英文确认,时间到则直接静默入库。
+     单科模式:维持原 finish(显示「已交卷」本地练习提示)。 */
+  function submitExam(source) {
+    if (window.IELTS_SESSION_ID) {
+      if (source === 'timeup') {
+        silentSubmit();
+      } else if (window.IELTS_SUBMIT_GATE) {
+        window.IELTS_SUBMIT_GATE({}, function (approved) {
+          if (approved) silentSubmit();
+        });
+      } else {
+        silentSubmit();
+      }
+      return;
+    }
+    finish(source);
+  }
+
+  /* 写作用时:clock-sec.js 接管后 .realtest-header__time-val 显示 mm:ss,
+     总时长取 .realtest-header__time-clock 的 data-time(写作恒 3600s)。 */
+  function usedSeconds() {
+    var clock = document.querySelector('.realtest-header__time-clock');
+    var total = parseInt(clock && clock.getAttribute('data-time') || '3600', 10);
+    var el = document.querySelector('.realtest-header__time-val');
+    var t = el ? (el.textContent || '').trim() : '';
+    var leftSec = 0;
+    var mmss = t.match(/(\d+):(\d+)/);
+    if (mmss) leftSec = (+mmss[1]) * 60 + (+mmss[2]);
+    return Math.max(0, Math.min(total, total - leftSec));
+  }
+
+  function notifySaved(ok) {
+    try { window.parent.postMessage({ type: 'ielts-exam-saved', ok: ok }, '*'); } catch (e) {}
+    if (window.IELTS_EXAM_GUARD_OFF) window.IELTS_EXAM_GUARD_OFF();
+  }
+
+  /* 连考静默提交:采集 T1/T2 → POST /api/exam-records → 通知顶层转场。
+     examId 由顶层经 ielts-session 消息注入(写作页无 answers-*.js,自身拿不到卷 id)。 */
+  function silentSubmit() {
+    if (window.IELTS_EXAM_NOTE_DONE) return;
+    window.IELTS_EXAM_NOTE_DONE = true;
+    stopLocalAudio();
+    freezeTimer();
+    lockEditors();
+    var t1 = document.querySelector('#input1, [data-question-item="1"]');
+    var t2 = document.querySelector('#input2, [data-question-item="2"]');
+    var values = { T1: t1 ? t1.value : '', T2: t2 ? t2.value : '' };
+    var examId = window.IELTS_EXAM_ID;
+    if (!examId) {
+      // 无 examId 无法入库:仍通知顶层转场,避免卡死
+      console.warn('[exam-note] 连考模式缺 examId,跳过入库直接转场');
+      notifySaved(false);
+      return;
+    }
+    var payload = { examId: examId, usedSec: usedSeconds(), values: values, sessionId: window.IELTS_SESSION_ID };
+    try {
+      fetch('/api/exam-records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.ok) console.log('[exam-note] 写作已入库:record', d.recordId, d.sessionCompleted ? '· 场次已完成' : '');
+        notifySaved(!!(d && d.ok));
+      }).catch(function () { notifySaved(false); });
+    } catch (e) { notifySaved(false); }
+  }
+
   /* ---------- 事件拦截（捕获阶段，先于原站 handlers） ---------- */
   document.addEventListener('click', function (ev) {
     var t = ev.target;
@@ -133,7 +202,7 @@
 
     if (t.closest('.realtest-header__bt-submit')) {
       ev.preventDefault(); ev.stopPropagation();
-      finish('submit');
+      submitExam('submit');
       return;
     }
     if (t.closest('.realtest-header__bt-save')) {
@@ -146,7 +215,7 @@
     if (inSubmitModal || inTimeupModal) {
       ev.preventDefault(); ev.stopPropagation();
       closeModal(inSubmitModal || inTimeupModal);
-      finish(inTimeupModal ? 'timeup' : 'submit');
+      submitExam(inTimeupModal ? 'timeup' : 'submit');
     }
   }, true);
 
@@ -164,7 +233,7 @@
     if (up) {
       watchedTimeup = true;
       closeModal(up);
-      finish('timeup');
+      submitExam('timeup');
     }
   }, 500);
 })();

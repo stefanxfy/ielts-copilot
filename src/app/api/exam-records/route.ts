@@ -7,7 +7,7 @@
  * GET :最近考试记录列表(带卷标题,仪表盘「考试记录」数据源)。
  */
 import { NextResponse } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { examRecords, papers } from "@/db/schema";
 import type { AnswerSheetJson } from "@/db/schema";
@@ -65,6 +65,33 @@ export async function POST(request: Request) {
           },
         ]),
     );
+    // 幂等:同场次同卷已有记录则覆盖(防重试产生重复行,污染完成判定)
+    const existing = db
+      .select({ id: examRecords.id })
+      .from(examRecords)
+      .where(and(eq(examRecords.sessionId, sessionId), eq(examRecords.examId, paper.examId)))
+      .get();
+    if (existing) {
+      db.update(examRecords)
+        .set({
+          status: "SUBMITTED",
+          startedAt: new Date(now.getTime() - used * 1000),
+          submittedAt: now,
+          usedSec: used,
+          answerSheetJson: sheet,
+        })
+        .where(eq(examRecords.id, existing.id))
+        .run();
+      const completed = finalizeIfComplete(sessionId);
+      return NextResponse.json({
+        ok: true,
+        recordId: existing.id,
+        correctCount: 0,
+        band: 0,
+        writingPlaceholder: true,
+        sessionCompleted: completed,
+      });
+    }
     const result = db
       .insert(examRecords)
       .values({
@@ -98,6 +125,37 @@ export async function POST(request: Request) {
     values,
   );
   const band = rawToBand(correctCount, paper.bandTableJson);
+
+  // 幂等:连考模式下同场次同卷已有记录则覆盖(防重试产生重复行)
+  if (sessionId) {
+    const existing = db
+      .select({ id: examRecords.id })
+      .from(examRecords)
+      .where(and(eq(examRecords.sessionId, sessionId), eq(examRecords.examId, paper.examId)))
+      .get();
+    if (existing) {
+      db.update(examRecords)
+        .set({
+          status: "SUBMITTED",
+          startedAt: new Date(now.getTime() - used * 1000),
+          submittedAt: now,
+          usedSec: used,
+          correctCount,
+          bandScore: band,
+          answerSheetJson: sheet,
+        })
+        .where(eq(examRecords.id, existing.id))
+        .run();
+      const completed = finalizeIfComplete(sessionId);
+      return NextResponse.json({
+        ok: true,
+        recordId: existing.id,
+        correctCount,
+        band,
+        sessionCompleted: completed,
+      });
+    }
+  }
 
   const result = db
     .insert(examRecords)

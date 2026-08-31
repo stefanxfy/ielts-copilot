@@ -229,6 +229,18 @@ export function ExamGuard() {
     };
     w.addEventListener("ielts-exit-exam", onExitExam);
 
+    /* ---------- 5) 连考转场:ExamSessionLink 整页导航前同步解除防护 ----------
+       连考模式下交卷转场用 window.location.assign(硬导航),会触发 beforeunload。
+       若防护仍武装,浏览器弹原生「重新加载/离开此网站」框,打断丝滑转场。
+       ExamSessionLink 在导航前 dispatchEvent('ielts-disarm-guard'),本监听同步置
+       armed=false,原生框不弹。 */
+    const onDisarm = () => {
+      armedRef.current = false;
+      setArmed(false);
+      console.log("[exam-guard][top] 收到 disarm 信号,防护解除(连考转场)");
+    };
+    w.addEventListener("ielts-disarm-guard", onDisarm);
+
     return () => {
       w.removeEventListener("beforeunload", onBeforeUnload);
       w.removeEventListener("keydown", onReloadKeys, true);
@@ -236,6 +248,7 @@ export function ExamGuard() {
       w.removeEventListener("message", onMessage);
       w.removeEventListener("pointerdown", onPointerDown);
       w.removeEventListener("ielts-exit-exam", onExitExam);
+      w.removeEventListener("ielts-disarm-guard", onDisarm);
       window.clearInterval(poll);
       console.log("[exam-guard][top] 顶层防护卸载");
     };

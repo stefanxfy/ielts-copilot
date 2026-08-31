@@ -189,8 +189,9 @@
     return Math.max(0, EXAM.duration * 60 - leftSec);
   }
 
-  function reportResult(res) {
-    if (reported) return; reported = true;
+  function reportResult(res, onDone) {
+    if (reported) { if (onDone) onDone(false); return; }
+    reported = true;
     var values = {};
     for (var n in res) values[n] = res[n].user || '';
     // P4 连考:壳层通过 postMessage 注入 sessionId(见 exam-guard.js 的 ielts-session 消息),
@@ -205,8 +206,56 @@
         body: JSON.stringify(payload)
       }).then(function (r) { return r.json(); }).then(function (d) {
         if (d && d.ok) console.log('[scoring] 成绩已入库：record', d.recordId, '· band', d.band, d.sessionCompleted ? '· 场次已完成' : '');
-      }).catch(function () { /* 无后端环境：忽略 */ });
-    } catch (e) { /* file:// 下 fetch 相对路径可能直接抛错：忽略 */ }
+        if (onDone) onDone(!!(d && d.ok), d);
+      }).catch(function () { if (onDone) onDone(false); /* 无后端环境：忽略 */ });
+    } catch (e) { if (onDone) onDone(false); /* file:// 下 fetch 相对路径可能直接抛错：忽略 */ }
+  }
+
+  /* ---------- 交卷调度(连考丝滑转场) ----------
+     连考模式(window.IELTS_SESSION_ID 存在):
+       - 用户点交卷 → 请求顶层英文确认 → 确认后静默入库(不渲染批改) → 转下一科
+       - 时间到 → 直接静默入库(超时不再确认) → 转下一科
+     单科模式:维持原 inline 批改(gradeInline),直接在卷面呈现成绩。 */
+  function submitExam(source) {
+    if (window.IELTS_SESSION_ID) {
+      if (source === 'timeup') {
+        silentSubmit();
+      } else if (window.IELTS_SUBMIT_GATE) {
+        window.IELTS_SUBMIT_GATE({ examId: EXAM.id }, function (approved) {
+          if (approved) silentSubmit();
+          // 取消:继续作答,什么都不做
+        });
+      } else {
+        silentSubmit(); // 兜底:无闸门脚本则直接静默提交
+      }
+      return;
+    }
+    // 单科模式:直接 inline 批改(原行为)
+    gradeInline(source === 'timeup');
+  }
+
+  /* 连考静默提交:采集作答 → POST 入库(不渲染批改 UI)→ 通知顶层转场。
+     不调 markQuestions/showBar,卷面保持原样,由顶层遮罩覆盖转场过程。 */
+  function silentSubmit() {
+    if (reported) return;
+    stopLocalAudio();
+    freezeTimer();
+    lockControls();
+    var res = collect();
+    reportResult(res, function (ok) {
+      try {
+        window.parent.postMessage({ type: 'ielts-exam-saved', examId: EXAM.id, ok: ok }, '*');
+      } catch (e) {}
+      // 解除离开防护(顶层会再解一次,双保险;同时置 IELTS_EXAM_FINISHED 停拦刷新键)
+      if (window.IELTS_EXAM_GUARD_OFF) window.IELTS_EXAM_GUARD_OFF();
+    });
+  }
+
+  function lockControls() {
+    $$('input, select, textarea').forEach(function (el) {
+      if (el.type === 'hidden') return;
+      el.disabled = true;
+    });
   }
 
   /* 每题标注 + 锁定 */
@@ -415,14 +464,14 @@
   document.head.appendChild(css);
 
   /* ---------- 拦截交卷 ---------- */
-  // 捕获阶段拦截：header「交卷」直接批改（阻止原站确认弹窗）
+  // 捕获阶段拦截：header「交卷」→ submitExam 调度(连考走闸门/静默,单科走 inline 批改)
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('button, .iot-grbt, a');
     if (!btn) return;
-    // header 交卷按钮 → 直接 inline 批改
+    // header 交卷按钮
     if (btn.classList.contains('realtest-header__bt-submit')) {
       e.preventDefault(); e.stopPropagation();
-      gradeInline(false);
+      submitExam('submit');
       return;
     }
     // 兜底：原站确认弹窗内的确认按钮（若弹窗经由其他路径打开）
@@ -430,7 +479,7 @@
     if (inModal) {
       e.preventDefault(); e.stopPropagation();
       closeModal(inModal);
-      gradeInline(inModal.classList.contains('modal-time-up'));
+      submitExam(inModal.classList.contains('modal-time-up') ? 'timeup' : 'submit');
     }
   }, true);
 
@@ -441,8 +490,8 @@
     $$('.modal-backdrop').forEach(function (b) { b.remove(); });
   }
 
-  // 时间到：原站自动弹 time-up modal → 关掉并批改；
-  // 交卷后站点倒计时其实还在闭包里跑，若之后到 0 仍会弹窗，这里一并关掉（不再重复批改）
+  // 时间到：原站自动弹 time-up modal → 关掉并交卷；
+  // 交卷后站点倒计时其实还在闭包里跑，若之后到 0 仍会弹窗，这里一并关掉（不再重复交卷）
   var watchedTimeup = false;
   setInterval(function () {
     var timeup = $('.modal-time-up.in') || $$('.modal-time-up').filter(function (m) {
@@ -452,7 +501,7 @@
     closeModal(timeup);
     if (!graded && !watchedTimeup) {
       watchedTimeup = true;
-      gradeInline(true);
+      submitExam('timeup');
     }
   }, 500);
 

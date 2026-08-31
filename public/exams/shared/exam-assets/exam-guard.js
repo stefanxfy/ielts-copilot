@@ -76,15 +76,49 @@
     document.addEventListener('keydown', onReloadKeys, true);
     window.addEventListener('keydown', onReloadKeys, true);
 
-    /* ============ 连考场次注入(P4) ============
-       顶层壳发来 {type:'ielts-session', sessionId} → 存入 window.IELTS_SESSION_ID,
-       供 scoring.js 交卷上报时带上,归入对应 exam_sessions 场次。 */
+    /* ============ 连考场次注入(P4 + 连考丝滑转场) ============
+       顶层壳发来 {type:'ielts-session', sessionId, examId} → 存入
+       window.IELTS_SESSION_ID / window.IELTS_EXAM_ID。
+       - sessionId:供 scoring.js 交卷上报时带上,归入对应 exam_sessions 场次;
+         其存在性也是连考模式的判定标志(有 = 连考,无 = 单科)。
+       - examId:写作页(exam-note.js)无 answers-*.js,拿不到卷 id,由顶层注入,
+         供写作静默上报 /api/exam-records 时使用。 */
     window.addEventListener('message', function (ev) {
       var d = ev.data;
       if (!d || d.type !== 'ielts-session' || !d.sessionId) return;
       window.IELTS_SESSION_ID = d.sessionId;
-      console.log('[exam-guard][iframe] 已注入场次:', d.sessionId);
+      if (d.examId) window.IELTS_EXAM_ID = d.examId;
+      console.log('[exam-guard][iframe] 已注入场次:', d.sessionId, d.examId ? '· 卷 ' + d.examId : '');
     });
+
+    /* ============ 连考提交闸门(连考丝滑转场) ============
+       连考模式下,卷页点「交卷」不直接判分/转场,而是先请求顶层弹英文确认:
+         iframe → 顶层: {type:'ielts-submit-request', examId}
+         顶层 → iframe: {type:'ielts-submit-decision', approved:true|false}
+       approved=true 时卷页静默入库(不渲染批改 UI),入库完成再发
+       ielts-exam-saved 通知顶层转场。
+       单科模式(window.IELTS_SESSION_ID 不存在)不走本闸门,维持原 inline 批改。
+       时间到自动交卷也不走闸门(无法让超时用户再确认),直接静默入库。 */
+    window.IELTS_SUBMIT_GATE = function (payload, onDecision) {
+      payload = payload || {};
+      var handler = function (ev) {
+        var d = ev.data;
+        if (!d || d.type !== 'ielts-submit-decision') return;
+        window.removeEventListener('message', handler);
+        if (onDecision) onDecision(d.approved === true);
+      };
+      window.addEventListener('message', handler);
+      try {
+        window.parent.postMessage({
+          type: 'ielts-submit-request',
+          examId: payload.examId || window.IELTS_EXAM_ID || null
+        }, '*');
+      } catch (e) {
+        // 跨域或无 parent:直接放行(兜底,等同于单科)
+        if (onDecision) onDecision(true);
+      }
+      console.log('[exam-guard][iframe] 已请求顶层确认提交');
+    };
 
     /* ============ 错题锚点跳转(P3,成绩页回看) ============
        顶层壳 ExamJump 发来 {type:'ielts-jump-anchor', anchor:'q-23'},
