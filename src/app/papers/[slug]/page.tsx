@@ -1,12 +1,12 @@
 /**
- * /papers/[slug] — 单卷详情页(M2 步骤 4,M3-4 升级为机考页)
- * M2 仅展示卷元 / sections / bandTable + "开始考试"按钮(M3 上线后指向 /papers/[slug]/test)。
+ * /papers/[slug] — 单卷详情页(SSR 直接读 API)
+ * 列表页 /papers 仍为客户端 fetch(因为要切 A/G 和 tab 状态);详情页改为 SSR 让首屏
+ * 包含完整内容(C 选项要求 prototype paperDetail 风格:返回箭头 + 标题 + 元信息 +
+ * 试卷结构 + 评分标准 + 开始考试按钮)。
  */
-"use client";
-
-import { useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -15,32 +15,34 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { usePapers } from "@/stores/papers";
+import type { PaperDetail } from "@/stores/papers";
 
-export default function PaperDetailPage() {
-  const params = useParams<{ slug: string }>();
-  const slug = params?.slug ?? "";
-  const { detail, detailLoading, error, loadDetail } = usePapers();
-
-  useEffect(() => {
-    if (slug) void loadDetail(slug);
-  }, [slug, loadDetail]);
-
-  if (detailLoading && !detail) {
-    return <p className="p-8 text-sm text-muted-foreground">加载详情中…</p>;
+async function fetchPaper(slug: string): Promise<PaperDetail | null> {
+  const h = await headers();
+  const host = h.get("host") ?? "127.0.0.1:3177";
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  try {
+    const r = await fetch(`${proto}://${host}/api/papers/${encodeURIComponent(slug)}`, {
+      cache: "no-store",
+    });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return data.paper ?? null;
+  } catch {
+    return null;
   }
-  if (!detail) {
-    return (
-      <main className="mx-auto max-w-2xl p-6">
-        <p className="text-sm text-muted-foreground">
-          未找到该卷。{error && <span className="text-destructive"> · {error}</span>}
-        </p>
-        <Button variant="outline" className="mt-4" nativeButton={false} render={<Link href="/papers" />}>
-          返回题库
-        </Button>
-      </main>
-    );
-  }
+}
+
+export default async function PaperDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const detail = await fetchPaper(slug);
+  if (!detail) notFound();
+
+  const minutes = Math.round(detail.durationSec / 60);
 
   return (
     <main className="mx-auto max-w-2xl p-6 pb-16">
@@ -52,16 +54,20 @@ export default function PaperDetailPage() {
           <h1 className="text-xl font-semibold">{detail.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {detail.category === "A" ? "A 类 · 学术类" : "G 类 · 培训类"} · {detail.skill} ·{" "}
-            {Math.round(detail.durationSec / 60)} 分钟
+            {minutes} 分钟
           </p>
         </div>
-        <Button disabled title="M3 完成后开放">开始考试</Button>
+        <Button render={<Link href={`/papers/${detail.slug}/test`} />}>开始考试</Button>
       </div>
 
+      {/* 试卷结构(对齐 prototype pdSections 4-card grid,简化为列) */}
       <Card className="mb-4">
         <CardHeader>
           <CardTitle className="text-sm">试卷结构</CardTitle>
-          <CardDescription>{detail.sections.length} 节 · {detail.questionCount} 题</CardDescription>
+          <CardDescription>
+            {detail.sections.length} 节 · {detail.questionCount} 题
+            {detail.writingTaskCount > 0 ? ` · ${detail.writingTaskCount} 写作任务` : ""}
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-2">
           {detail.sections.map((s) => (
@@ -76,6 +82,7 @@ export default function PaperDetailPage() {
         </CardContent>
       </Card>
 
+      {/* 评分标准 */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">评分标准</CardTitle>

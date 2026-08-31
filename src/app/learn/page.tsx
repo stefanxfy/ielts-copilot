@@ -6,12 +6,12 @@
 import Link from "next/link";
 
 const ITEMS = [
-  { title: "错题本", desc: "按题型/题号分类回顾", tag: "V2" },
-  { title: "专项训练", desc: "按题型组合", tag: "V2" },
-  { title: "精听训练", desc: "按音频段对位复听", tag: "V2" },
-  { title: "弱项雷达", desc: "按题型统计正确率", tag: "V3" },
-  { title: "分数曲线", desc: "随时间的成绩趋势", tag: "V3" },
-  { title: "生词本", desc: "Anki 导出", tag: "V3" },
+  { title: "错题本", desc: "按题型/题号分类回顾", tag: "V2", href: undefined },
+  { title: "专项训练", desc: "按题型组合", tag: "V2", href: undefined },
+  { title: "精听训练", desc: "按音频段对位复听", tag: "V2", href: undefined },
+  { title: "弱项雷达", desc: "按题型统计正确率", tag: "V3", href: undefined },
+  { title: "分数曲线", desc: "随时间的成绩趋势", tag: "V3", href: undefined },
+  { title: "生词本", desc: "Anki 导出", tag: "V3", href: undefined },
 ];
 
 export default function LearnPage() {
@@ -24,33 +24,36 @@ export default function LearnPage() {
       <div
         style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}
       >
-        {ITEMS.map((it) => (
-          <div
-            key={it.title}
-            style={{
-              border: "1px solid var(--line)",
-              borderRadius: 12,
-              padding: 16,
-              background: "#fff",
-            }}
-          >
-            <span
+        {ITEMS.map((it) => {
+          const body = (
+            <div
               style={{
-                display: "inline-block",
-                fontSize: 11,
-                padding: "2px 8px",
-                borderRadius: 999,
-                marginBottom: 8,
-                color: "var(--ink-3)",
                 border: "1px solid var(--line)",
+                borderRadius: 12,
+                padding: 16,
+                background: "#fff",
+                height: "100%",
               }}
             >
-              {it.tag}
-            </span>
-            <h3 className="text-[15px] font-semibold text-[var(--ink)]">{it.title}</h3>
-            <p className="text-[12px] text-[var(--ink-3)]">{it.desc}</p>
-          </div>
-        ))}
+              <span
+                style={{
+                  display: "inline-block",
+                  fontSize: 11,
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                  marginBottom: 8,
+                  color: "var(--ink-3)",
+                  border: "1px solid var(--line)",
+                }}
+              >
+                {it.tag}
+              </span>
+              <h3 className="text-[15px] font-semibold text-[var(--ink)]">{it.title}</h3>
+              <p className="text-[12px] text-[var(--ink-3)]">{it.desc}</p>
+            </div>
+          );
+          return it.href ? <Link key={it.title} href={it.href}>{body}</Link> : <div key={it.title}>{body}</div>;
+        })}
         <div
           style={{
             gridColumn: "1 / -1",
