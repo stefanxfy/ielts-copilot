@@ -72,6 +72,10 @@ export function ExamJump({
       if (sentRef.current || !valuesFetchedRef.current) return false;
       const frame = document.querySelector("iframe");
       if (!frame?.contentWindow) return false;
+      // 确认 iframe 已到试题主体页(exam-guard.js 已加载 = IELTS_EXAM_GUARD 标记存在)。
+      // 避免消息发到试音/须知等中间跳转页(无 scoring.js,消息丢失)。
+      const fw = frame.contentWindow as Window & { IELTS_EXAM_GUARD?: boolean };
+      if (!fw.IELTS_EXAM_GUARD) return false;
       try {
         // 先通知 iframe 进入回看模式(放行刷新拦截),再回填批改,再锚点定位
         frame.contentWindow.postMessage({ type: "ielts-review-mode" }, "*");

@@ -51,6 +51,15 @@ export default async function ExamPage({
   const isReview = Boolean(jump || record);
   const reviewRecordId = record ? Number(record) : null;
 
+  // 回看模式:听力卷直接进试题主体页(listening.html),跳过试音/须知流程。
+  // 原因:test-sound.html 不加载 scoring.js,ExamJump 的回填+批改消息发过去无效;
+  // 用户手动点到 listening.html 时消息已发过(sentRef=true)不会重发 → 批改不渲染。
+  // listening.html 不检查试音状态,可直接加载。
+  let iframeSrc = paper.assetsJson.entry;
+  if (isReview && paper.subject === "listening") {
+    iframeSrc = iframeSrc.replace(/test-sound\.html.*$/, "listening.html");
+  }
+
   // 连考模式:session 存在时,服务端算好下一科卷 id(next 参数覆盖)
   let nextExamId: string | null = null;
   if (session && next !== "done") {
@@ -101,7 +110,7 @@ export default async function ExamPage({
         )}
       </div>
       <iframe
-        src={paper.assetsJson.entry}
+        src={iframeSrc}
         title={paper.title}
         // 允许 iframe 内音频自动播放(听力真考模式:autoplay muted 起,play 后解静音;
         // 无此声明浏览器默认拒绝 iframe 内自动播放)
