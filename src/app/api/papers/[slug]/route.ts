@@ -38,9 +38,24 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
     .prepare("SELECT COUNT(*) AS n FROM writing_tasks WHERE paper_id = ?")
     .get((paper as { id: number }).id) as { n: number }).n;
 
+  // bandTable 在 DB 里是 JSON 文本,parse 回 [min, band] 数组
+  let bandTable: Array<[number, number]> = [];
+  try {
+    const raw = (paper as { band_table?: string | null }).band_table;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) bandTable = parsed as Array<[number, number]>;
+    }
+  } catch {
+    // 忽略 parse 错误,bandTable 留空
+  }
+  const { band_table: _bt, duration_sec: _ds, ...paperRest } = paper as Record<string, unknown>;
+
   return NextResponse.json({
     paper: {
-      ...paper,
+      ...paperRest,
+      durationSec: Number(_ds ?? 0),
+      bandTable,
       writingTaskCount,
       sections,
     },
