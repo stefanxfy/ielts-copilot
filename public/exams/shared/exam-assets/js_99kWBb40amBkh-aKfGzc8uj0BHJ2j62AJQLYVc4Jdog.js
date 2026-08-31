@@ -3354,14 +3354,12 @@ var currentTask = 0,
     var windowWidth = $(window).width();
     var elements = $('.test-panel, .test-contents');
     if (windowWidth > 1024) {
-      elements.niceScroll({
-        autohidemode: false,
-        cursorborderradius: 6,
-        cursorwidth: "8px",
-        cursorcolor: "#dfdfdf",
-        horizrailenabled: false,
-      });
-      initNiceScroll = true;
+      // 本地机考改造：桌面端改用浏览器原生滚动。
+      // nicescroll 会把两栏 overflow 改成 hidden，再用主线程 JS 步进动画模拟滚动，
+      // 每个滚轮事件独立重启缓动，导致滚动一卡一卡；不初始化即可回落到
+      // 站点 CSS 的 overflow-y:scroll 原生滚动（合成器线程驱动，顺滑）。
+      // initNiceScroll 保持 false：切换 Part 时走 jQuery animate 回退分支，逻辑不变。
+      initNiceScroll = false;
     } else {
       elements.each(function(index, el) {
         $(el).getNiceScroll().remove();
