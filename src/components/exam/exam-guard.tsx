@@ -28,6 +28,7 @@ export function ExamGuard() {
 
   useEffect(() => {
     const w = window;
+    let activatedSeen = false;
     console.log("[exam-guard][top] 顶层防护挂载(beforeunload + 后退拦截)");
 
     /* ---------- 0) 用户激活监控(诊断 Chrome 弹窗资格) ---------- */
@@ -37,11 +38,25 @@ export function ExamGuard() {
     };
     console.log("[exam-guard][top] 初始用户激活状态(决定刷新弹窗资格):", ua());
 
-    const onPointerDown = () => {
+    const markActivated = (via: string) => {
+      if (activatedSeen) return;
+      activatedSeen = true;
       setActivated(true);
-      console.log("[exam-guard][top] 顶层收到用户点击 → 刷新/关闭弹窗资格就绪, hasBeenActive=" + ua());
+      console.log("[exam-guard][top] 用户激活到位(" + via + ") → 刷新/关闭弹窗资格就绪, hasBeenActive=" + ua());
     };
+
+    // 路径 A:顶层文档自身被点击(顶栏/徽标区域)
+    const onPointerDown = () => markActivated("顶层点击");
     w.addEventListener("pointerdown", onPointerDown);
+
+    // 路径 B:iframe 内答题点击(激活按规范会传播到顶层,轮询检测兜底;
+    //         轮询同时覆盖试音页/须知页等未注入 guard 脚本的页面)
+    const poll = window.setInterval(() => {
+      if (ua() === true) markActivated("iframe内点击/键盘(激活传播)");
+    }, 400);
+
+    // 路径 C:iframe 内 guard 脚本显式上报(最快通知,便于日志观察)
+    // (在 onMessage 里统一处理 ielts-user-active)
 
     /* ---------- 1) 刷新/关闭/跳离:beforeunload ---------- */
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -93,12 +108,16 @@ export function ExamGuard() {
     };
     w.addEventListener("popstate", onPopState);
 
-    /* ---------- 3) iframe 交卷信号 → 解除 ---------- */
+    /* ---------- 3) iframe 消息:交卷解除 / 用户激活上报 ---------- */
     const onMessage = (ev: MessageEvent) => {
-      if ((ev.data as { type?: string } | null)?.type === "ielts-exam-finished") {
+      const data = ev.data as { type?: string } | null;
+      if (!data?.type) return;
+      if (data.type === "ielts-exam-finished") {
         armedRef.current = false;
         setArmed(false);
         console.log("[exam-guard][top] 收到 iframe 交卷信号,防护解除");
+      } else if (data.type === "ielts-user-active") {
+        markActivated("iframe显式上报");
       }
     };
     w.addEventListener("message", onMessage);
@@ -108,6 +127,7 @@ export function ExamGuard() {
       w.removeEventListener("popstate", onPopState);
       w.removeEventListener("message", onMessage);
       w.removeEventListener("pointerdown", onPointerDown);
+      window.clearInterval(poll);
       console.log("[exam-guard][top] 顶层防护卸载");
     };
   }, []);

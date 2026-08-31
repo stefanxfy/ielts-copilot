@@ -25,7 +25,7 @@
   var IS_TOP = window === window.top;
   var PLAYED_KEY = 'ielts_audio_played';
 
-  /* ============ iframe 内(静态卷页):交卷信号 + 清听力已播标记 ============ */
+  /* ============ iframe 内(静态卷页):交卷信号 + 用户激活上报 ============ */
   if (!IS_TOP) {
     // 静态卷页交卷完成 → 通知顶层解除防护
     window.IELTS_EXAM_GUARD_OFF = function () {
@@ -34,6 +34,15 @@
       } catch (e) {}
       console.log('[exam-guard][iframe] 已通知顶层:考试结束,防护解除');
     };
+
+    // 卷页内任意点击 → 上报顶层(激活徽标即时更新;激活本身按规范也会
+    // 传播到顶层使 beforeunload 弹窗有资格,这里只是让可观测性更及时)
+    document.addEventListener('pointerdown', function () {
+      try {
+        window.parent.postMessage({ type: 'ielts-user-active' }, '*');
+      } catch (e) {}
+    }, { capture: true });
+
     console.log('[exam-guard][iframe] 静态卷页信号模式已启用(防护在顶层壳)');
     return;
   }
