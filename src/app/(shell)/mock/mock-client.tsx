@@ -8,6 +8,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export type MockPaper = {
@@ -90,10 +91,49 @@ function YearHead({
 }
 
 export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: MockSet[] }) {
+  const router = useRouter();
   const [mod, setMod] = useState<"A" | "G">(initialMod);
   const [tab, setTab] = useState<"combined" | "listening" | "reading" | "writing" | "speaking">("combined");
   const [openYears, setOpenYears] = useState<Record<string, boolean>>({});
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
+
+  // 连考顺序:听力→阅读→写作(口语无卷,不计)
+  const SESSION_ORDER = ["listening", "reading", "writing"] as const;
+
+  // 开始全套模考:POST 建场次 → 跳第一科(听力)连考模式
+  async function startFullExam(set: MockSet) {
+    if (starting) return;
+    setStarting(true);
+    try {
+      const r = await fetch("/api/exam-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ examSetId: set.examSetId }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.session) {
+        toast.error(d.error ?? "建场次失败，请重试");
+        return;
+      }
+      const sessionId = d.session.sessionId;
+      // 找第一科(听力)卷;若该套无听力则取顺序第一个存在的科目
+      const first =
+        set.papers.find((p) => p.subject === "listening") ??
+        SESSION_ORDER.map((sub) => set.papers.find((p) => p.subject === sub)).find(Boolean);
+      if (!first) {
+        toast.error("该套卷暂无可用科目");
+        return;
+      }
+      toast.success("场次已创建，开始听力");
+      router.push(`/exam/${first.examId}?session=${sessionId}`);
+    } catch (e) {
+      toast.error("建场次请求失败，请检查服务");
+      console.error("[mock] 建场次失败:", e);
+    } finally {
+      setStarting(false);
+    }
+  }
 
   const banks = useMemo(() => sets.filter((s) => s.category === mod), [sets, mod]);
   const byYear = useMemo(() => {
@@ -286,12 +326,11 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
               </div>
               <button
                 type="button"
-                className={BTN_PRIMARY}
-                onClick={() =>
-                  toast.info(`综合连考（${MOD_INLINE[mod]}）：场次编排将在完整套卷版本开放；当前可先点上方卡片进入单科机考`)
-                }
+                className={`${BTN_PRIMARY} ${starting ? "opacity-60" : ""}`}
+                disabled={starting}
+                onClick={() => startFullExam(detailSet)}
               >
-                开始全套模考
+                {starting ? "创建场次中…" : "开始全套模考"}
               </button>
             </div>
           ) : (

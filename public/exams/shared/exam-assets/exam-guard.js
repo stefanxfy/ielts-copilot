@@ -43,6 +43,16 @@
       } catch (e) {}
     }, { capture: true });
 
+    /* ============ 连考场次注入(P4) ============
+       顶层壳发来 {type:'ielts-session', sessionId} → 存入 window.IELTS_SESSION_ID,
+       供 scoring.js 交卷上报时带上,归入对应 exam_sessions 场次。 */
+    window.addEventListener('message', function (ev) {
+      var d = ev.data;
+      if (!d || d.type !== 'ielts-session' || !d.sessionId) return;
+      window.IELTS_SESSION_ID = d.sessionId;
+      console.log('[exam-guard][iframe] 已注入场次:', d.sessionId);
+    });
+
     /* ============ 错题锚点跳转(P3,成绩页回看) ============
        顶层壳 ExamJump 发来 {type:'ielts-jump-anchor', anchor:'q-23'},
        按 id 直找控件;找不到再按 name / data-num 回退(块题/单选组等

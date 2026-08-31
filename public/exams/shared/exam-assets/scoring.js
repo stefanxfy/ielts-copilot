@@ -193,13 +193,18 @@
     if (reported) return; reported = true;
     var values = {};
     for (var n in res) values[n] = res[n].user || '';
+    // P4 连考:壳层通过 postMessage 注入 sessionId(见 exam-guard.js 的 ielts-session 消息),
+    // 交卷上报时带上,让服务端把本记录归入该场次并做三科齐全/总分回写。
+    var sessionId = window.IELTS_SESSION_ID || null;
+    var payload = { examId: EXAM.id, usedSec: usedSeconds(), values: values };
+    if (sessionId) payload.sessionId = sessionId;
     try {
       fetch('/api/exam-records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ examId: EXAM.id, usedSec: usedSeconds(), values: values })
+        body: JSON.stringify(payload)
       }).then(function (r) { return r.json(); }).then(function (d) {
-        if (d && d.ok) console.log('[scoring] 成绩已入库：record', d.recordId, '· band', d.band);
+        if (d && d.ok) console.log('[scoring] 成绩已入库：record', d.recordId, '· band', d.band, d.sessionCompleted ? '· 场次已完成' : '');
       }).catch(function () { /* 无后端环境：忽略 */ });
     } catch (e) { /* file:// 下 fetch 相对路径可能直接抛错：忽略 */ }
   }

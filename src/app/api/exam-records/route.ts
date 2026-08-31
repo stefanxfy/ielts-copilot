@@ -10,7 +10,9 @@ import { NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { examRecords, papers } from "@/db/schema";
+import type { AnswerSheetJson } from "@/db/schema";
 import { judgePaper, rawToBand } from "@/lib/scoring";
+import { finalizeIfComplete } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +21,7 @@ interface SubmitBody {
   examId?: string;
   usedSec?: number;
   values?: Record<string, string>;
+  sessionId?: string;
 }
 
 export async function POST(request: Request) {
@@ -28,7 +31,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "请求体不是合法 JSON" }, { status: 400 });
   }
-  const { examId, usedSec, values } = body;
+  const { examId, usedSec, values, sessionId } = body;
   if (!examId || !values) {
     return NextResponse.json({ error: "缺少 examId 或 values" }, { status: 400 });
   }
@@ -38,8 +41,55 @@ export async function POST(request: Request) {
   if (!paper) {
     return NextResponse.json({ error: `卷不存在:${examId}` }, { status: 404 });
   }
+
+  const now = new Date();
+  const used = Math.max(0, Math.min(Math.round(usedSec ?? 0), paper.durationSec));
+
+  // 写作卷:仅连考模式(sessionId 存在)允许上报,占位 0 分;单科模式仍 400
   if (paper.subject === "writing" || !paper.answersJson) {
-    return NextResponse.json({ error: "写作卷无客观判分,不支持上报" }, { status: 400 });
+    if (!sessionId) {
+      return NextResponse.json({ error: "写作卷无客观判分,不支持单科上报" }, { status: 400 });
+    }
+    // 写作答题卡:T1/T2 全文(值来自 values 的 T1/T2 键),不判分
+    const sheet: AnswerSheetJson = Object.fromEntries(
+      Object.entries(paper.questionsJson)
+        .filter(([, q]) => q.type === "WRITING_TASK")
+        .map(([k]) => [
+          k,
+          {
+            task: k as "T1" | "T2",
+            type: "WRITING_TASK" as const,
+            value: values[k] ?? null,
+            correct: null,
+            points: null,
+          },
+        ]),
+    );
+    const result = db
+      .insert(examRecords)
+      .values({
+        examId: paper.examId,
+        subject: paper.subject,
+        sessionId,
+        status: "SUBMITTED",
+        startedAt: new Date(now.getTime() - used * 1000),
+        submittedAt: now,
+        usedSec: used,
+        correctCount: 0,
+        bandScore: 0, // 占位,P5 AI 批改后回写
+        answerSheetJson: sheet,
+      })
+      .returning({ id: examRecords.id })
+      .all();
+    const completed = finalizeIfComplete(sessionId);
+    return NextResponse.json({
+      ok: true,
+      recordId: result[0].id,
+      correctCount: 0,
+      band: 0,
+      writingPlaceholder: true,
+      sessionCompleted: completed,
+    });
   }
 
   const { sheet, correctCount } = judgePaper(
@@ -48,15 +98,13 @@ export async function POST(request: Request) {
     values,
   );
   const band = rawToBand(correctCount, paper.bandTableJson);
-  const now = new Date();
-  const used = Math.max(0, Math.min(Math.round(usedSec ?? 0), paper.durationSec));
 
   const result = db
     .insert(examRecords)
     .values({
       examId: paper.examId,
       subject: paper.subject,
-      sessionId: null, // 完整套卷模式(P4)开考前创建场次后回填
+      sessionId: sessionId ?? null, // 完整套卷模式(P4)由连考编排传入
       status: "SUBMITTED",
       startedAt: new Date(now.getTime() - used * 1000),
       submittedAt: now,
@@ -68,7 +116,16 @@ export async function POST(request: Request) {
     .returning({ id: examRecords.id })
     .all();
 
-  return NextResponse.json({ ok: true, recordId: result[0].id, correctCount, band });
+  // 连考模式:交卷后检查场次是否三科齐全,齐全则回写 overall 快照
+  const completed = sessionId ? finalizeIfComplete(sessionId) : false;
+
+  return NextResponse.json({
+    ok: true,
+    recordId: result[0].id,
+    correctCount,
+    band,
+    sessionCompleted: completed,
+  });
 }
 
 export async function GET() {

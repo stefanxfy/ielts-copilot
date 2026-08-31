@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { desc, eq, isNotNull, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { examRecords, examSets, papers } from "@/db/schema";
+import { examRecords, examSets, papers, examSessions } from "@/db/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,6 +92,22 @@ export default function DashboardPage() {
     .limit(10)
     .all();
 
+  // 完整模考场次列表(P4)
+  const sessions = db
+    .select({
+      sessionId: examSessions.sessionId,
+      status: examSessions.status,
+      overallBand: examSessions.overallBand,
+      totalUsedSec: examSessions.totalUsedSec,
+      startedAt: examSessions.startedAt,
+      setTitle: examSets.title,
+    })
+    .from(examSessions)
+    .leftJoin(examSets, eq(examSets.examSetId, examSessions.examSetId))
+    .orderBy(desc(examSessions.startedAt))
+    .limit(5)
+    .all();
+
   void db.select().from(examSets).all(); // 预热连接(与旧版一致,保留无害)
 
   return (
@@ -112,6 +128,63 @@ export default function DashboardPage() {
         <StatCard num={paperCount} label="真题总数" href="/mock" arrow="进入机考模拟 →" />
         <StatCard num={aCount} label="A类真题数" href="/mock?mod=A" arrow="进入机考模拟 →" />
         <StatCard num={gCount} label="G类真题数" href="/mock?mod=G" arrow="进入机考模拟 →" />
+      </div>
+
+      <h3 className="mb-3 text-[15px]">完整模考</h3>
+      <div className="mb-6 rounded-xl border border-[#dfe4ec] bg-white px-4 py-2">
+        {sessions.length === 0 ? (
+          <div className="py-4 text-center text-xs text-[#8a93a2]">
+            <p>暂无完整模考场次 · 从「机考模拟」选一套真题点「开始全套模考」</p>
+          </div>
+        ) : (
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr className="border-b border-[#dfe4ec] text-left text-xs text-[#5b6574]">
+                <th className="px-2.5 py-2 font-medium">套卷</th>
+                <th className="px-2.5 py-2 font-medium">状态</th>
+                <th className="px-2.5 py-2 font-medium">总分</th>
+                <th className="px-2.5 py-2 font-medium">总用时</th>
+                <th className="px-2.5 py-2 font-medium">开始时间</th>
+                <th className="px-2.5 py-2 font-medium">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sessions.map((s) => (
+                <tr key={s.sessionId} className="border-b border-[#dfe4ec] last:border-0">
+                  <td className="px-2.5 py-2.5">{s.setTitle ?? s.sessionId}</td>
+                  <td className="px-2.5 py-2.5">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] ${
+                        s.status === "COMPLETED"
+                          ? "bg-[#eefaf3] text-[#18925c]"
+                          : s.status === "ABANDONED"
+                            ? "bg-[#fdf1f1] text-[#c0392b]"
+                            : "bg-[#fff7e6] text-[#c07d10]"
+                      }`}
+                    >
+                      {s.status === "COMPLETED" ? "已完成" : s.status === "ABANDONED" ? "已放弃" : "进行中"}
+                    </span>
+                  </td>
+                  <td className="px-2.5 py-2.5 font-semibold text-[#1a6feb]">
+                    {s.overallBand != null ? s.overallBand.toFixed(1) : "—"}
+                  </td>
+                  <td className="px-2.5 py-2.5">
+                    {s.totalUsedSec != null ? fmtDuration(s.totalUsedSec) : "—"}
+                  </td>
+                  <td className="px-2.5 py-2.5 text-[#8a93a2]">{fmtTime(s.startedAt)}</td>
+                  <td className="px-2.5 py-2.5">
+                    <Link
+                      href={`/session/${s.sessionId}`}
+                      className="text-[#1a6feb] hover:underline"
+                    >
+                      场次成绩单 →
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <h3 className="mb-3 text-[15px]">历史成绩</h3>
