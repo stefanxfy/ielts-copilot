@@ -132,10 +132,57 @@ export function ExamGuard() {
     };
   }, []);
 
+  /**
+   * 内置自检:点击徽标触发,逐项体检并弹报告(自查利器,不依赖控制台)
+   * 检查项:处理器挂载/武装状态/历史哨兵/用户激活/iframe加载/信号脚本
+   */
+  const runSelfCheck = () => {
+    const nav = navigator as Navigator & { userActivation?: { hasBeenActive: boolean } };
+    const hasUA = typeof nav.userActivation === "object";
+    const lines: string[] = [];
+
+    // 1. beforeunload 处理器(用合成事件测监听链路)
+    let handlerFired = false;
+    const probe = () => { handlerFired = true; };
+    window.addEventListener("beforeunload", probe, { once: true });
+    const synth = new Event("beforeunload");
+    window.dispatchEvent(synth);
+    lines.push(`${handlerFired ? "PASS" : "FAIL"} · beforeunload 监听链路 ${handlerFired ? "正常" : "断开"}`);
+
+    // 2. 武装状态
+    lines.push(`${armedRef.current ? "PASS" : "WARN"} · 防护 armed=${armedRef.current}${armedRef.current ? "" : " (已交卷解除)"}`);
+
+    // 3. 历史哨兵
+    const sent = (history.state as { ieltsGuard?: number } | null)?.ieltsGuard === 1;
+    lines.push(`${sent ? "PASS" : "FAIL"} · 后退哨兵 ${sent ? "就位" : "丢失(刷新过页面?重进考试页可恢复)"}`);
+
+    // 4. 用户激活(弹窗资格)
+    if (hasUA) {
+      lines.push(`${nav.userActivation!.hasBeenActive ? "PASS" : "WARN"} · 用户激活=${nav.userActivation!.hasBeenActive}${nav.userActivation!.hasBeenActive ? " → 刷新会弹窗" : " → 刷新不弹窗(浏览器策略,先点击题目区)"}`);
+    } else {
+      lines.push("INFO · 浏览器不支持激活查询,弹窗行为未知");
+    }
+
+    // 5. iframe 与信号脚本
+    const f = document.querySelector("iframe");
+    if (f) {
+      const fw = f.contentWindow as (Window & { IELTS_EXAM_GUARD?: boolean }) | null;
+      const fs = fw?.IELTS_EXAM_GUARD === true;
+      lines.push(`${fs ? "PASS" : "WARN"} · iframe 信号脚本 ${fs ? "已加载" : "未加载(试音/须知页正常,主体页应加载)"}`);
+    } else {
+      lines.push("FAIL · 未找到 iframe");
+    }
+
+    console.log("[exam-guard][self-check]\n" + lines.join("\n"));
+    alert("Exam Guard Self-Check\n\n" + lines.join("\n"));
+  };
+
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed right-3 bottom-3 z-50 rounded-full border px-2.5 py-1 text-[11px] font-medium shadow-sm select-none"
+    <button
+      type="button"
+      onClick={runSelfCheck}
+      title="点击运行防护自检"
+      className="fixed right-3 bottom-3 z-50 cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium shadow-sm select-none"
       style={{
         background: armed ? "#eefaf3" : "#f2f3f5",
         borderColor: armed ? "#cde8da" : "#dfe4ec",
@@ -145,6 +192,6 @@ export function ExamGuard() {
       {armed
         ? `Exam protection: ON${activated ? "" : " · click anywhere to enable refresh-guard"}`
         : "Exam protection: OFF (submitted)"}
-    </div>
+    </button>
   );
 }
