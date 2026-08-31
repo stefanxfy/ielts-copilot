@@ -110,8 +110,8 @@ export default function DashboardPage() {
 
       <CardContent className="px-0">
         <div className="flex flex-wrap items-center gap-3">
-          <Button render={<Link href="/settings" />}>打开设置</Button>
-          <Button variant="outline" render={<Link href="/papers" />}>题库</Button>
+          <Button nativeButton={false} render={<Link href="/settings" />}>打开设置</Button>
+          <Button variant="outline" nativeButton={false} render={<Link href="/papers" />}>题库</Button>
           <Button variant="outline" disabled>
             做题历史(M3)
           </Button>

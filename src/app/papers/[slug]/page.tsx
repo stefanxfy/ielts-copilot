@@ -35,7 +35,7 @@ export default function PaperDetailPage() {
         <p className="text-sm text-muted-foreground">
           未找到该卷。{error && <span className="text-destructive"> · {error}</span>}
         </p>
-        <Button variant="outline" className="mt-4" render={<Link href="/papers" />}>
+        <Button variant="outline" className="mt-4" nativeButton={false} render={<Link href="/papers" />}>
           返回题库
         </Button>
       </main>
@@ -44,7 +44,7 @@ export default function PaperDetailPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6 pb-16">
-      <Button variant="ghost" size="sm" render={<Link href="/papers" />} className="mb-3">
+      <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/papers" />} className="mb-3">
         ← 题库
       </Button>
       <div className="mb-4 flex items-start justify-between gap-4">

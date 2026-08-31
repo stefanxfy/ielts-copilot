@@ -59,7 +59,7 @@ export default function PapersPage() {
                   <div className="text-muted-foreground">
                     {p.questionCount} 题{p.writingTaskCount > 0 ? ` · ${p.writingTaskCount} 写作任务` : ""}
                   </div>
-                  <Button size="sm" variant="outline" render={<Link href={`/papers/${p.slug}`} />}>
+                  <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/papers/${p.slug}`} />}>
                     详情
                   </Button>
                 </CardContent>
