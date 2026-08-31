@@ -6,7 +6,7 @@
  */
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDb } from "@/db";
 import { examRecords, examSets, papers } from "@/db/schema";
@@ -57,9 +57,10 @@ export default function DashboardPage() {
           <h1 className="text-xl font-semibold">IELTS Copilot</h1>
           <p className="text-sm text-muted-foreground">本地雅思机考 · 数据全在本机</p>
         </div>
-        <Button variant="outline" render={<Link href="/settings" />}>
+        {/* 链接型按钮:直接用 Link + buttonVariants,保留 <a> 原生语义 */}
+        <Link href="/settings" className={buttonVariants({ variant: "outline" })}>
           设置
-        </Button>
+        </Link>
       </div>
 
       {sets.length === 0 && (
@@ -88,12 +89,12 @@ export default function DashboardPage() {
                       <p className="mb-3 text-xs text-muted-foreground">
                         限时 {fmtDuration(p.durationSec)}
                       </p>
-                      <Button
-                        size="sm"
-                        render={<Link href={`/exam/${p.examId}`} />}
+                      <Link
+                        href={`/exam/${p.examId}`}
+                        className={buttonVariants({ size: "sm" })}
                       >
                         开始考试
-                      </Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 ))}
