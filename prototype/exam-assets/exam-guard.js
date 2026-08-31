@@ -1,66 +1,91 @@
 /**
- * exam-guard.js — 考试页离开防护（阅读/听力/写作机考页通用）
+ * exam-guard.js — 考试页离开防护(顶层壳 + 静态卷页双层配合)
  *
- * 触发场景（全部弹原生 confirm 拦截，提示为英文，对齐真考 UI 语言习惯）：
- *   - 刷新页面（F5 / Cmd+R / 地址栏回车）
- *   - 关闭标签页 / 关闭浏览器窗口
- *   - 点击浏览器后退按钮（popstate 拦截）
- *   - 页面内跳离考试（点击外链等 beforeunload 场景）
+ * 本脚本运行在两层,职责不同:
  *
- * 行为：
- *   - 「确定/OK」= 继续离开/刷新（作答不保存，视为放弃本次考试）
- *   - 「取消/Cancel」= 留在考试页继续作答
- *   - 交卷完成后自动解除防护（scoring.js 的 gradeInline / writing 页提交后
- *     调 window.IELTS_EXAM_GUARD_OFF()）
- *   - 听力卷：刷新/离开视为放弃 → 额外清掉 sessionStorage 已播标记，
- *     下次进入可重新播放音频（真考锁随"放弃考试"重置）
+ * 【顶层(React 机考页壳注入)】—— 防护主阵地
+ *   - beforeunload:拦截刷新/关闭标签页/关闭浏览器/跳离
+ *   - popstate + 历史哨兵:拦截浏览器后退,弹英文 confirm
+ *   - 交卷信号:iframe 内 postMessage({type:'ielts-exam-finished'})
+ *     到顶层后解除防护
  *
- * 注：beforeunload 的提示文案由浏览器渲染（各浏览器自定义样式，
- *     我们只能提供 direction），popstate 与页面内链接拦截用 confirm 弹窗。
+ * 【iframe 内(静态卷页注入)】—— 只负责信号
+ *   - 交卷(scoring.gradeInline / exam-note.finish)后向顶层
+ *     postMessage 解除防护;若顶层同源可直达 window.parent
+ *
+ * 为什么防护必须在顶层:浏览器的后退/刷新/关闭操作的是顶层文档,
+ * iframe 内部的 popstate/beforeunload 对顶层导航无能为力。
+ * (旧版把哨兵推在 iframe history 里,后退根本触发不到,已废弃)
  */
 (function () {
   'use strict';
-  if (window.IELTS_EXAM_GUARD) return; // 防重复注入
+  if (window.IELTS_EXAM_GUARD) return;
   window.IELTS_EXAM_GUARD = true;
 
-  var armed = true;
+  var IS_TOP = window === window.top;
   var PLAYED_KEY = 'ielts_audio_played';
 
-  /* ---------- 1) 刷新 / 关闭页面 / 外链跳离：beforeunload 拦截 ---------- */
+  /* ============ iframe 内(静态卷页):交卷信号 + 清听力已播标记 ============ */
+  if (!IS_TOP) {
+    // 静态卷页交卷完成 → 通知顶层解除防护
+    window.IELTS_EXAM_GUARD_OFF = function () {
+      try {
+        window.parent.postMessage({ type: 'ielts-exam-finished' }, '*');
+      } catch (e) {}
+      console.log('[exam-guard][iframe] 已通知顶层:考试结束,防护解除');
+    };
+    console.log('[exam-guard][iframe] 静态卷页信号模式已启用(防护在顶层壳)');
+    return;
+  }
+
+  /* ============ 顶层(机考页壳):防护主阵地 ============ */
+  var armed = true;
+
+  // 1) 刷新 / 关闭页面 / 跳离:beforeunload 拦截
+  //    注:Chrome 要求页面先发生过用户交互才弹;iframe 内答题交互也算,
+  //    但保险起见顶层也监听一次 click 以激活弹窗资格
   window.addEventListener('beforeunload', function (e) {
     if (!armed) return;
-    // 听力卷离开时清已播标记：离开即放弃，下次进入音频可重播
+    // 听力卷离开即放弃:清已播标记,下次进入音频可重播
     try { sessionStorage.removeItem(PLAYED_KEY); } catch (err) {}
-    e.preventDefault();          // Chrome/Edge/Safari 标准触发方式
-    e.returnValue = '';          // 老版 Firefox 触发方式
-    return '';                   // 兜底
+    console.warn('[exam-guard][top] 拦截到刷新/关闭/跳离,armed=' + armed);
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
   });
 
-  /* ---------- 2) 浏览器后退按钮：popstate 拦截 + confirm ---------- */
-  // 先推一个哨兵历史记录,后退时弹 confirm;「取消」则把用户推回考试页
+  // 2) 浏览器后退:popstate 拦截 + 英文 confirm
   history.pushState({ ieltsGuard: 1 }, '', location.href);
-  window.addEventListener('popstate', function (e) {
-    if (!armed) return;
+  window.addEventListener('popstate', function () {
+    if (!armed) { console.log('[exam-guard][top] popstate:已交卷,放行'); return; }
+    console.warn('[exam-guard][top] 拦截到后退,弹确认');
     var leave = window.confirm(
       'You are about to leave the exam.\n\n' +
       'Your answers will NOT be saved.\n\n' +
       'Click OK to abandon the exam, or Cancel to continue.'
     );
     if (leave) {
-      // 视为放弃:清听力已播标记,并回退到上一页(仪表盘/须知页)
       try { sessionStorage.removeItem(PLAYED_KEY); } catch (err) {}
+      console.log('[exam-guard][top] 用户选择放弃:清已播标记并回退');
       history.back();
     } else {
-      // 继续考试:推回考试页
+      console.log('[exam-guard][top] 用户选择继续考试:推回哨兵');
       history.pushState({ ieltsGuard: 1 }, '', location.href);
     }
   });
 
-  /* ---------- 3) 交卷后解除（由 scoring.js / writing 页调用） ---------- */
+  // 3) iframe 交卷信号 → 解除防护
+  window.addEventListener('message', function (ev) {
+    if (ev.data && ev.data.type === 'ielts-exam-finished') {
+      armed = false;
+      console.log('[exam-guard][top] 收到 iframe 交卷信号,防护解除');
+    }
+  });
+
   window.IELTS_EXAM_GUARD_OFF = function () {
     armed = false;
-    console.log('[exam-guard] 防护已解除(考试已结束)');
+    console.log('[exam-guard][top] 防护已解除(顶层直调)');
   };
 
-  console.log('[exam-guard] 考试离开防护已启用');
+  console.log('[exam-guard][top] 顶层防护已启用(beforeunload + 后退拦截)');
 })();

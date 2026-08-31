@@ -9,6 +9,7 @@ import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { papers } from "@/db/schema";
+import { ExamGuard } from "@/components/exam/exam-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,8 @@ export default async function ExamPage({
 
   return (
     <main className="flex h-screen flex-col">
+      {/* 离开防护:拦截刷新/关闭/后退,iframe 交卷后 postMessage 解除 */}
+      <ExamGuard />
       <div className="flex items-center gap-3 border-b px-4 py-2">
         <Link
           href="/"
