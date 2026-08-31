@@ -128,8 +128,16 @@ function copyStatic() {
     if (examId) code = code.replace(/id:\s*'[^']*'/, `id: '${examId}'`);
     writeFileSync(p, code);
   }
-  // 各卷页面:exam-assets/ → ../shared/exam-assets/
-  const rewrite = (html) => html.replace(/(\.\/)?exam-assets\//g, "../shared/exam-assets/");
+  // 各卷页面:exam-assets/ → ../shared/exam-assets/;
+  // 注入 exam-guard.js(考试离开防护:刷新/关闭/后退拦截,交卷后由 scoring/exam-note 解除)
+  // 阅读页末支脚本 = scoring.js;写作/听力页 = exam-note.js,两种锚点都试
+  const rewrite = (html) =>
+    html
+      .replace(/(\.\/)?exam-assets\//g, "../shared/exam-assets/")
+      .replace(
+        /(<script src="[^"]*(?:scoring|exam-note)\.js"[^>]*><\/script>)/,
+        '$1\n<script src="../shared/exam-assets/exam-guard.js" defer></script>',
+      );
   for (const set of EXAM_SETS) {
     for (const p of set.papers) {
       const dir = join(EXAMS_OUT, `${set.examSetId}-${p.subject}-test1`);

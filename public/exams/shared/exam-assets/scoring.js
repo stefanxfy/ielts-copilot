@@ -172,6 +172,7 @@
     removeSubmitButton();
     freezeTimer();
     reportResult(res);
+    if (window.IELTS_EXAM_GUARD_OFF) window.IELTS_EXAM_GUARD_OFF(); // 交卷完成,解除离开防护
     console.log('[scoring] 批改完成：', j.raw + '/' + EXAM.total, '· band', band);
   }
 

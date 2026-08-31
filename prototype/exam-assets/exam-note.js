@@ -123,6 +123,7 @@
     lockEditors();
     removeHeaderButtons();
     notice(finishTitle(source), true);
+    if (window.IELTS_EXAM_GUARD_OFF) window.IELTS_EXAM_GUARD_OFF(); // 考试结束,解除离开防护
   }
 
   /* ---------- 事件拦截（捕获阶段，先于原站 handlers） ---------- */
