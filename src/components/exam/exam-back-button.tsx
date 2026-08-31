@@ -3,7 +3,7 @@
 /**
  * ExamBackButton — 机考页顶栏「← 返回」按钮(方案 A)
  *
- * 点击不直接跳转,先弹自定义确认弹窗(英文文案):
+ * 点击不直接跳转,先弹统一确认弹窗(ExamConfirmDialog):
  *   - Leave exam → 派发自定义事件 ielts-exit-exam,由 ExamGuard
  *     统一处理(解除防护 + 清听力已播标记 + 跳回仪表盘),
  *     保证与后退/刷新拦截共用同一条退出路径;
@@ -11,15 +11,7 @@
  */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { ExamConfirmDialog } from "@/components/exam/exam-confirm-dialog";
 
 export function ExamBackButton() {
   const [open, setOpen] = useState(false);
@@ -43,24 +35,13 @@ export function ExamBackButton() {
         ← Back
       </button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Leave this exam?</DialogTitle>
-            <DialogDescription>
-              Your answers will NOT be saved. This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Continue exam
-            </Button>
-            <Button variant="destructive" onClick={handleLeave}>
-              Leave exam
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ExamConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Leave this exam?"
+        confirmLabel="Leave exam"
+        onConfirm={handleLeave}
+      />
     </>
   );
 }

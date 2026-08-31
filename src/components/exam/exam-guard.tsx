@@ -9,8 +9,8 @@
  * - beforeunload:拦截刷新/关闭标签页/关闭浏览器(浏览器原生确认框。
  *   ⚠️ Chrome/Safari 策略:页面必须发生过真实用户交互(点击/按键)才弹,
  *   纯打开页面后直接 F5 不弹——这是浏览器规范,任何网站都无法绕过)
- * - popstate + 历史哨兵:拦截浏览器后退,弹英文 confirm
- *   (OK = 放弃考试并回退;Cancel = 留在考试页继续作答)
+ * - popstate + 历史哨兵:拦截浏览器后退,弹统一确认弹窗
+ *   (Leave exam = 放弃并回退;Continue exam = 留在考试页继续作答)
  * - iframe 交卷信号:静态卷页 scoring/exam-note 交卷后
  *   postMessage({type:'ielts-exam-finished'}),收到即解除防护
  * - 听力场景:放弃/离开时清 sessionStorage.ielts_audio_played,
@@ -19,8 +19,17 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ExamConfirmDialog } from "@/components/exam/exam-confirm-dialog";
 
 const PLAYED_KEY = "ielts_audio_played";
+
+/**
+ * 待确认的危险动作。事件回调(keydown / popstate / iframe 转发)只负责置位,
+ * 真正的放行动作(location.reload / history.go)延后到用户点弹窗确认 ——
+ * 这样弹窗开关与副作用解耦,也顺带解决了「popstate 是同步事件、而 Dialog
+ * 是异步受控组件」的时序冲突。
+ */
+type PendingAction = "reload" | "back" | null;
 
 export function ExamGuard() {
   const router = useRouter();
@@ -32,6 +41,42 @@ export function ExamGuard() {
   }, [router]);
   const [armed, setArmed] = useState(true);
   const [activated, setActivated] = useState(false); // 顶层是否收到过用户交互
+  const [pending, setPending] = useState<PendingAction>(null);
+  // ref 镜像 pending:供 popstate/keydown 等同步回调读取当前值(state 闭包会过期)
+  const pendingRef = useRef<PendingAction>(null);
+
+  /** 关闭弹窗(用户选择继续考试) */
+  const closePending = () => {
+    pendingRef.current = null;
+    setPending(null);
+  };
+
+  /** 用户在弹窗上点确认:执行真正的放行动作 */
+  const confirmPending = () => {
+    const action = pending;
+    closePending();
+
+    // 两种动作都先解除防护:
+    // - reload:beforeunload 会拦住 location.reload() 再弹一次浏览器原生窗
+    // - back:history.go 若落到整页导航(从外部链接进来时)同样会被拦
+    armedRef.current = false;
+    setArmed(false);
+    try {
+      sessionStorage.removeItem(PLAYED_KEY); // 听力:离开即放弃,音频可重播
+    } catch {}
+
+    if (action === "reload") {
+      console.log("[exam-guard][top] 确认放弃:清标记并放行刷新(解除 beforeunload)");
+      location.reload();
+    } else if (action === "back") {
+      // 栈结构恒为 [进入前的页面, 考试页, 哨兵]:
+      // 每次 popstate 我们都立刻 pushState 补回哨兵(会截断 forward 条目),
+      // 所以无论用户在弹窗上犹豫时按了几次后退,栈长度恒为 3,
+      // 确认离开固定回退 2 步即可回到进入考试前的那页。
+      console.log("[exam-guard][top] 放弃考试:清已播标记并回退 2 步");
+      history.go(-2);
+    }
+  };
 
   useEffect(() => {
     const w = window;
@@ -76,29 +121,14 @@ export function ExamGuard() {
        window,这份 keydown 收不到 —— 那一半由 iframe 内 exam-guard.js
        在 capture 阶段拦下并 postMessage({type:'ielts-reload-request'})
        转发,最终同样走下面的 handleReloadRequest。 */
-    const CONFIRM_MSG =
-      "You are about to refresh or leave the exam.\n\n" +
-      "Your answers will NOT be saved.\n\n" +
-      "Click OK to abandon the exam, or Cancel to continue.";
-
-    // 统一的刷新确认入口:顶层 keydown 与 iframe 转发共用,行为一致
+    // 统一的刷新确认入口:顶层 keydown 与 iframe 转发共用,行为一致。
+    // 只置位 pending,真正的 location.reload() 延后到用户点弹窗确认。
     const handleReloadRequest = (via: string) => {
       if (!armedRef.current) return;
-      console.warn("[exam-guard][top] 拦截刷新快捷键(" + via + "),弹确认");
-      const leave = w.confirm(CONFIRM_MSG);
-      if (leave) {
-        try {
-          sessionStorage.removeItem(PLAYED_KEY);
-        } catch {}
-        // 用户已在我们自己 confirm 里确认放弃 —— 解除防护,避免
-        // location.reload() 触发 beforeunload 又弹一次 Chrome 原生弹窗
-        armedRef.current = false;
-        setArmed(false);
-        console.log("[exam-guard][top] 确认放弃:清标记并放行刷新(解除 beforeunload)");
-        location.reload();
-      } else {
-        console.log("[exam-guard][top] 继续考试:刷新已被阻止");
-      }
+      if (pendingRef.current) return; // 已有弹窗在等确认,忽略重复触发
+      console.warn("[exam-guard][top] 拦截刷新(" + via + "),弹统一确认弹窗");
+      pendingRef.current = "reload";
+      setPending("reload");
     };
 
     const onReloadKeys = (e: KeyboardEvent) => {
@@ -145,22 +175,24 @@ export function ExamGuard() {
         "[exam-guard][top] popstate 触发 · state=" + JSON.stringify(ev.state)?.slice(0, 60) + " · armed=" + armedRef.current,
       );
       if (!armedRef.current) return;
-      console.warn("[exam-guard][top] 拦截后退,弹确认");
-      const leave = w.confirm(
-        "You are about to leave the exam.\n\n" +
-          "Your answers will NOT be saved.\n\n" +
-          "Click OK to abandon the exam, or Cancel to continue.",
-      );
-      if (leave) {
-        try {
-          sessionStorage.removeItem(PLAYED_KEY);
-        } catch {}
-        console.log("[exam-guard][top] 放弃考试:清已播标记并回退");
-        history.back();
-      } else {
-        console.log("[exam-guard][top] 继续考试:推回哨兵");
-        history.pushState({ ieltsGuard: 1 }, "", location.href);
+
+      /* 立刻补回哨兵。两个原因:
+         1. popstate 已消耗掉一个哨兵,不补的话弹窗等待期间再按后退就直接出去了;
+         2. 弹窗是异步的,而 popstate 发生时地址栏已指向上一页 —— 不马上把
+            URL 拉回考试页,Next router 可能在用户点按钮前就把页面切走。
+         pushState 会截断 forward 条目,所以栈长度恒为 3(进入前页/考试页/哨兵),
+         确认离开时固定 history.go(-2) 即可。 */
+      history.pushState({ ieltsGuard: 1 }, "", location.href);
+
+      if (pendingRef.current) {
+        // 弹窗已开着还在按后退:哨兵刚补回,直接吞掉这次后退即可
+        console.log("[exam-guard][top] 等待确认期间的后退已抵消(哨兵补回)");
+        return;
       }
+
+      console.warn("[exam-guard][top] 拦截后退,弹统一确认弹窗");
+      pendingRef.current = "back";
+      setPending("back");
     };
     w.addEventListener("popstate", onPopState);
 
@@ -255,20 +287,45 @@ export function ExamGuard() {
   };
 
   return (
-    <button
-      type="button"
-      onClick={runSelfCheck}
-      title="点击运行防护自检"
-      className="fixed right-3 bottom-3 z-50 cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium shadow-sm select-none"
-      style={{
-        background: armed ? "#eefaf3" : "#f2f3f5",
-        borderColor: armed ? "#cde8da" : "#dfe4ec",
-        color: armed ? "#18925c" : "#8a93a2",
-      }}
-    >
-      {armed
-        ? `Exam protection: ON${activated ? "" : " · click anywhere to enable refresh-guard"}`
-        : "Exam protection: OFF (submitted)"}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={runSelfCheck}
+        title="点击运行防护自检"
+        className="fixed right-3 bottom-3 z-50 cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium shadow-sm select-none"
+        style={{
+          background: armed ? "#eefaf3" : "#f2f3f5",
+          borderColor: armed ? "#cde8da" : "#dfe4ec",
+          color: armed ? "#18925c" : "#8a93a2",
+        }}
+      >
+        {armed
+          ? `Exam protection: ON${activated ? "" : " · click anywhere to enable refresh-guard"}`
+          : "Exam protection: OFF (submitted)"}
+      </button>
+
+      {/* 刷新确认:覆盖 F5 / Cmd+R / Cmd+Shift+R(顶层与 iframe 内两条路径) */}
+      <ExamConfirmDialog
+        open={pending === "reload"}
+        onOpenChange={(o) => {
+          if (!o) closePending();
+        }}
+        title="Reload this exam?"
+        description="Reloading will discard all your answers. This action cannot be undone."
+        confirmLabel="Reload"
+        onConfirm={confirmPending}
+      />
+
+      {/* 后退确认:覆盖浏览器后退键 / 后退手势 / 鼠标侧键 */}
+      <ExamConfirmDialog
+        open={pending === "back"}
+        onOpenChange={(o) => {
+          if (!o) closePending();
+        }}
+        title="Leave this exam?"
+        confirmLabel="Leave exam"
+        onConfirm={confirmPending}
+      />
+    </>
   );
 }
