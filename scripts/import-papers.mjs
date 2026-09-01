@@ -93,6 +93,48 @@ function parsePaperHtml(srcName) {
   return { qTypeByNum, partOf, totalQ: n - 1 };
 }
 
+/**
+ * 写作卷:从页面内嵌的 drupal-settings-json 提取 T1/T2 题干。
+ *
+ * 页面把题目全量塞在 <script type="application/json" data-drupal-selector="drupal-settings-json">
+ * 的 wot.task 数组里(title / question HTML / number_of_words / duration),比解析 DOM 稳
+ * —— 换皮改动 DOM 结构不影响这里。
+ *
+ * 为什么必须入库:AI 批改的 Task Response 维度要判断「是否回应了题目要求」,
+ * 没有题干只能盲批语言质量,TR 评不准(PRD §3.6 四维之首)。
+ */
+function loadWritingTasks(srcName) {
+  const html = readFileSync(join(PROTO, `${srcName}.html`), "utf8");
+  const m = html.match(
+    /<script type="application\/json" data-drupal-selector="drupal-settings-json">([\s\S]*?)<\/script>/,
+  );
+  if (!m) throw new Error(`${srcName}.html 未找到 drupal-settings-json`);
+  const tasks = JSON.parse(m[1])?.wot?.task;
+  if (!Array.isArray(tasks) || tasks.length < 2) {
+    throw new Error(`${srcName}.html 的 wot.task 缺失或不足 2 条`);
+  }
+  const stripHtml = (s) =>
+    String(s ?? "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const out = {};
+  tasks.slice(0, 2).forEach((t, i) => {
+    const key = i === 0 ? "T1" : "T2";
+    out[key] = {
+      part: null,
+      type: "WRITING_TASK",
+      anchor: null,
+      max: null,
+      prompt: stripHtml(t.question),
+      wordMin: Number(t.number_of_words) || (i === 0 ? 150 : 250),
+      suggestedSec: Number(t.duration) || (i === 0 ? 1200 : 2400),
+    };
+  });
+  return out;
+}
+
 const LETTER_ANS = /^[A-D](\s*,\s*[A-D])?$/;
 
 /** 题型归一(scoring.js 语义:判分策略由答案形状 + blocks 决定,见文件头注释) */
@@ -214,10 +256,8 @@ function importDb() {
 
         let questionsJson, answersJson = null, bandTable = [], durationSec = 3600;
         if (p.subject === "writing") {
-          questionsJson = {
-            T1: { part: null, type: "WRITING_TASK", anchor: null, max: null },
-            T2: { part: null, type: "WRITING_TASK", anchor: null, max: null },
-          };
+          // 题干 + 字数下限 + 建议用时一并入库(AI 批改评 Task Response 需要题干)
+          questionsJson = loadWritingTasks(p.src);
         } else {
           const ex = loadAnswers(p.answersJs);
           const { qTypeByNum, partOf, totalQ } = parsePaperHtml(p.src);
@@ -272,5 +312,17 @@ if (!existsSync(PROTO)) {
   console.error(`[import] 找不到 ${PROTO} —— 请在仓库根目录执行`);
   process.exit(1);
 }
-copyStatic();
+
+/* --db-only:只刷 DB,跳过静态托管。
+   ⚠️ copyStatic() 会 rmSync 整个 public/exams/shared/exam-assets/ 再重建,
+   而该目录下有导入之后手工打过的补丁(exam-guard.js 的连考闸门/回看放行、
+   scoring.js 静默入库、exam-note.js 写作上报、nicescroll 与 beforeunload 关闭等),
+   这些补丁在 prototype/ 里并不存在 —— 重跑完整导入会把它们抹掉。
+   只更新题目档案(如补写作题干)时必须用 --db-only。 */
+const DB_ONLY = process.argv.includes("--db-only");
+if (DB_ONLY) {
+  console.log("[import] --db-only:跳过静态托管步骤(public/exams/ 保持不动)");
+} else {
+  copyStatic();
+}
 importDb();

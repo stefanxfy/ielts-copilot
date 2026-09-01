@@ -9,6 +9,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSessionDetail } from "@/lib/session";
+import { getGradingStatus } from "@/lib/grading/service";
+import { extractEssayPresence } from "@/lib/writing-sheet";
+import WritingGradingCard from "@/components/writing/grading-card";
+import type { AnswerSheetJson, WritingSheetEntry } from "@/db/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -122,9 +126,14 @@ export default async function SessionPage({
                   </td>
                   <td className="px-4 py-3">
                     {done && record?.bandScore != null ? (
-                      <span className="text-base font-bold text-[#1a6feb]">
-                        {record.bandScore.toFixed(1)}
-                      </span>
+                      subject === "writing" ? (
+                        /* AI 批改完成后才有真实 band;0 分 = 批改尚未完成,不误导 */
+                        <BandCell recordId={record.id} fallback="—" />
+                      ) : (
+                        <span className="text-base font-bold text-[#1a6feb]">
+                          {record.bandScore.toFixed(1)}
+                        </span>
+                      )
                     ) : (
                       <span className="text-[#8a93a2]">—</span>
                     )}
@@ -132,7 +141,7 @@ export default async function SessionPage({
                   <td className="px-4 py-3">
                     {subject === "writing" ? (
                       <span className="text-xs text-[#8a93a2]">
-                        {done ? "待 AI 批改" : "—"}
+                        {done ? (record.bandScore ? "已批改" : "待 AI 批改") : "—"}
                       </span>
                     ) : (
                       <span>{done && record?.correctCount != null ? `${record.correctCount} / 40` : "—"}</span>
@@ -185,12 +194,51 @@ export default async function SessionPage({
         </div>
       )}
 
-      {/* 写作占位说明 */}
-      {session.status === "COMPLETED" && (
-        <div className="mt-4 rounded-xl border border-[#e8f0fe] bg-[#f6f9ff] px-4 py-3 text-sm text-[#0d4fa8]">
-          注：写作卷当前为占位评分（0 分），AI 四维批改将在后续版本开放，届时自动回写并重新汇总总分。
-        </div>
-      )}
+      {/* 写作 AI 批改(P5):本场已交写作卷时展示,批改完成后总分自动重算 */}
+      {session.status === "COMPLETED" &&
+        ordered
+          .filter((x) => x.subject === "writing" && x.record)
+          .map(({ record }) => {
+            const sheet = record!.answerSheetJson as AnswerSheetJson | null;
+            const tasks = Object.values(sheet ?? {}).filter(
+              (e): e is WritingSheetEntry => e?.type === "WRITING_TASK",
+            );
+            return (
+              <div className="mt-6" key={`grading-${record!.id}`}>
+                <WritingGradingCard
+                  initial={
+                    getGradingStatus(record!.id) ?? {
+                      recordId: record!.id,
+                      subject: "writing" as const,
+                      bandScore: record!.bandScore,
+                      T1: null,
+                      T2: null,
+                      sessionId: session.sessionId,
+                      running: false,
+                      done: false,
+                    }
+                  }
+                  essays={extractEssayPresence(tasks)}
+                />
+              </div>
+            );
+          })}
     </div>
   );
+}
+
+/** 写作行 Band 单元格:批改完成后显示真实 band,未完成显示占位提示 */
+function BandCell({ recordId, fallback }: { recordId: number; fallback: string }) {
+  const status = getGradingStatus(recordId);
+  if (status?.done && status.bandScore != null && status.bandScore > 0) {
+    return (
+      <span className="text-base font-bold text-[#1a6feb]">
+        {status.bandScore.toFixed(1)}
+      </span>
+    );
+  }
+  if (status?.running) {
+    return <span className="text-xs text-[#c07d10]">批改中…</span>;
+  }
+  return <span className="text-xs text-[#8a93a2]">{fallback}</span>;
 }

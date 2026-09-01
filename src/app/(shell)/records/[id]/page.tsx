@@ -1,9 +1,10 @@
 /**
- * /records/[id] — 成绩详情页(P3)
+ * /records/[id] — 成绩详情页(P3 + P5)
  *
  * 数据:exam_records(answer_sheet_json 答题卡)+ papers(title/answers_json/questions_json/assets_json)
  * 布局:成绩摘要卡(band/答对/用时/交卷时间) + 按 Part 分组的逐题明细
  * 错题跳转:题目号链接到 /exam/[examId]?jump=<anchor> ,由机考页壳滚动定位
+ * 写作卷:AI 四维批改卡(雷达图 + 逐维诊断 + 范文,P5)+ 作文全文
  */
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -16,6 +17,9 @@ import type {
   ObjectiveSheetEntry,
   WritingSheetEntry,
 } from "@/db/schema";
+import { getGradingStatus } from "@/lib/grading/service";
+import { extractEssayPresence } from "@/lib/writing-sheet";
+import WritingGradingCard from "@/components/writing/grading-card";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -129,7 +133,14 @@ export default async function RecordDetailPage({
           </>
         )}
         {isWriting && <div className="hidden sm:block" />}
-        {isWriting && <div className="hidden sm:block" />}
+        {isWriting && (
+          <div className="rounded-xl border border-[#dfe4ec] bg-white p-5 text-center">
+            <div className="text-[30px] font-bold text-[#1c2330]">
+              {writingTasks.some((t) => t.value) ? "AI" : "—"}
+            </div>
+            <div className="mt-1 text-xs text-[#5b6574]">四维批改</div>
+          </div>
+        )}
         <div className="rounded-xl border border-[#dfe4ec] bg-white p-5 text-center">
           <div className="text-[30px] font-bold text-[#1c2330]">
             {fmtDuration(row.usedSec)}
@@ -202,28 +213,46 @@ export default async function RecordDetailPage({
         </div>
       )}
 
-      {/* 写作卷:任务全文 */}
+      {/* 写作卷:AI 四维批改卡(P5)+ 任务全文 */}
       {isWriting && (
-        <div className="rounded-xl border border-[#dfe4ec] bg-white">
-          <div className="border-b border-[#dfe4ec] px-4 py-3 text-[15px] font-medium">
-            作文全文 · AI 批改将在 V2 提供
-          </div>
-          {writingTasks.map((t) => (
-            <div key={t.task} className="border-b border-[#dfe4ec] px-4 py-4 last:border-0">
-              <div className="mb-2 text-xs font-medium text-[#5b6574]">
-                Task {t.task === "T1" ? "1" : "2"}
-                {t.value ? ` · ${t.value.length} 字符` : " · 未作答"}
-              </div>
-              {t.value ? (
-                <pre className="max-h-[360px] overflow-auto rounded-lg bg-[#f7f9fc] p-3 text-[13px] leading-relaxed whitespace-pre-wrap">
-                  {t.value}
-                </pre>
-              ) : (
-                <div className="text-xs text-[#8a93a2]">未提交内容</div>
-              )}
+        <>
+          <WritingGradingCard
+            initial={
+              getGradingStatus(row.id) ?? {
+                recordId: row.id,
+                subject: row.subject,
+                bandScore: row.bandScore,
+                T1: null,
+                T2: null,
+                sessionId: row.sessionId,
+                running: false,
+                done: false,
+              }
+            }
+            essays={extractEssayPresence(writingTasks)}
+          />
+
+          <div className="mt-6 rounded-xl border border-[#dfe4ec] bg-white">
+            <div className="border-b border-[#dfe4ec] px-4 py-3 text-[15px] font-medium">
+              作文全文
             </div>
-          ))}
-        </div>
+            {writingTasks.map((t) => (
+              <div key={t.task} className="border-b border-[#dfe4ec] px-4 py-4 last:border-0">
+                <div className="mb-2 text-xs font-medium text-[#5b6574]">
+                  Task {t.task === "T1" ? "1" : "2"}
+                  {t.value ? ` · ${t.value.length} 字符` : " · 未作答"}
+                </div>
+                {t.value ? (
+                  <pre className="max-h-[360px] overflow-auto rounded-lg bg-[#f7f9fc] p-3 text-[13px] leading-relaxed whitespace-pre-wrap">
+                    {t.value}
+                  </pre>
+                ) : (
+                  <div className="text-xs text-[#8a93a2]">未提交内容</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </>
   );

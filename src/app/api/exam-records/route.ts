@@ -6,13 +6,14 @@
  *       band 由 papers.band_table_json 换算(快照定格)。
  * GET :最近考试记录列表(带卷标题,仪表盘「考试记录」数据源)。
  */
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { examRecords, papers } from "@/db/schema";
 import type { AnswerSheetJson } from "@/db/schema";
 import { judgePaper, rawToBand } from "@/lib/scoring";
 import { finalizeIfComplete } from "@/lib/session";
+import { gradeWritingRecord } from "@/lib/grading/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,34 @@ interface SubmitBody {
   usedSec?: number;
   values?: Record<string, string>;
   sessionId?: string;
+}
+
+/**
+ * 写作卷入库后自动触发 AI 批改(P5,用户选定「交卷后自动批改」)。
+ *
+ * 用 after() 后台执行:交卷响应不等批改(10–60 秒),立刻返回让前端转场,
+ * 批改进度由成绩页轮询 GET /api/grading/[recordId] 呈现。
+ * 批改完成会回写 exam_records.band_score 并重算场次总分。
+ */
+function triggerAutoGrading(recordId: number, sheet: AnswerSheetJson) {
+  // 两篇都空白就别烧 token 了(正常连考不会走到这,防异常上报产生无意义调用)
+  const hasContent = Object.values(sheet).some(
+    (e) => typeof (e as { value?: string | null }).value === "string"
+      && (e as { value?: string }).value!.trim().length >= 10,
+  );
+  if (!hasContent) {
+    console.log(`[grading] record=${recordId} 两篇作文均空白,跳过自动批改`);
+    return;
+  }
+  after(() => {
+    gradeWritingRecord(recordId)
+      .then((r) => {
+        console.log(
+          `[grading] 自动批改结束 record=${recordId} ok=${r.ok} band=${r.band ?? "-"} ${r.error ?? ""}`,
+        );
+      })
+      .catch((e) => console.error("[grading] 自动批改异常:", e));
+  });
 }
 
 export async function POST(request: Request) {
@@ -83,6 +112,7 @@ export async function POST(request: Request) {
         .where(eq(examRecords.id, existing.id))
         .run();
       const completed = finalizeIfComplete(sessionId);
+      triggerAutoGrading(existing.id, sheet);
       return NextResponse.json({
         ok: true,
         recordId: existing.id,
@@ -109,6 +139,7 @@ export async function POST(request: Request) {
       .returning({ id: examRecords.id })
       .all();
     const completed = finalizeIfComplete(sessionId);
+    triggerAutoGrading(result[0].id, sheet);
     return NextResponse.json({
       ok: true,
       recordId: result[0].id,

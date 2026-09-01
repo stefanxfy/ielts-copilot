@@ -55,7 +55,11 @@ export function createSession(examSetId: string) {
  * 完成判定按「科目集合」而非记录条数:同科重复提交(重试/兜底)会产生多条记录,
  * 若按条数比对套卷科目数会误判完成。这里检查已交卷记录覆盖了套卷的全部科目。
  */
-export function finalizeIfComplete(sessionId: string): boolean {
+/**
+ * 判断场次是否已交齐全部科目(按科目集合判定,非记录条数 —— 同科重复提交
+ * 会产生多条记录,按条数比对会误判完成)。
+ */
+export function isSessionComplete(sessionId: string): boolean {
   const db = getDb();
   const session = db
     .select()
@@ -79,14 +83,29 @@ export function finalizeIfComplete(sessionId: string): boolean {
     .all();
   const requiredSubjects = new Set(papersOfSet.map((p) => p.subject));
   const submittedSubjects = new Set(submitted.map((r) => r.subject));
-  let complete = true;
   for (const s of requiredSubjects) {
-    if (!submittedSubjects.has(s)) { complete = false; break; }
+    if (!submittedSubjects.has(s)) return false;
   }
-  if (!complete) return false;
+  return true;
+}
 
-  // 三科齐全 → 算快照。同一科目若有多条记录,取最新一条(submittedAt 最大)参与计算,
-  // 避免重试产生的旧记录污染总分。
+/**
+ * 计算场次总分快照(只算不写)。
+ * 同一科目若有多条记录,取最新一条(submittedAt 最大)参与计算,避免重试产生的
+ * 旧记录污染总分。写作 band 未批改时按 0 占位参与平均(与 P4 一致)。
+ */
+export function computeSessionOverall(
+  sessionId: string,
+): { overall: number; totalUsed: number } | null {
+  const db = getDb();
+  const rows = db
+    .select()
+    .from(examRecords)
+    .where(eq(examRecords.sessionId, sessionId))
+    .all();
+  const submitted = rows.filter((r) => r.status === "SUBMITTED" || r.status === "COMPLETED");
+  if (!submitted.length) return null;
+
   const latestBySubject = new Map<string, (typeof submitted)[number]>();
   for (const r of submitted) {
     const prev = latestBySubject.get(r.subject);
@@ -95,18 +114,45 @@ export function finalizeIfComplete(sessionId: string): boolean {
     }
   }
   const latest = [...latestBySubject.values()];
-  // 写作 band 可能为 null(P5 才真实批改),占位按 0 参与平均
+  // 写作 band 未批改(P5 未完成/失败)时为 null 或 0,按 0 参与平均
   const bands = latest.map((r) => r.bandScore ?? 0);
   const overall = roundToHalf(bands.reduce((a, b) => a + b, 0) / Math.max(bands.length, 1));
   const totalUsed = latest.reduce((a, r) => a + (r.usedSec ?? 0), 0);
+  return { overall, totalUsed };
+}
+
+export function finalizeIfComplete(sessionId: string): boolean {
+  const db = getDb();
+  if (!isSessionComplete(sessionId)) return false;
+
+  const snap = computeSessionOverall(sessionId);
+  if (!snap) return false;
 
   db.update(examSessions)
     .set({
       status: "COMPLETED",
-      overallBand: overall,
-      totalUsedSec: totalUsed,
+      overallBand: snap.overall,
+      totalUsedSec: snap.totalUsed,
       finishedAt: new Date(),
     })
+    .where(eq(examSessions.sessionId, sessionId))
+    .run();
+  return true;
+}
+
+/**
+ * P5:写作 AI 批改完成后重算场次总分。
+ *
+ * 为什么需要:P4 结算时写作是 0 分占位,总分已被写入 exam_sessions.overall_band。
+ * 批改出真实 band 后若只回写 exam_records.band_score,场次总分会永远停在旧值。
+ * 这里保持 COMPLETED 状态不变,只刷新 overall_band / total_used_sec。
+ */
+export function refreshSessionOverall(sessionId: string): boolean {
+  const db = getDb();
+  const snap = computeSessionOverall(sessionId);
+  if (!snap) return false;
+  db.update(examSessions)
+    .set({ overallBand: snap.overall, totalUsedSec: snap.totalUsed })
     .where(eq(examSessions.sessionId, sessionId))
     .run();
   return true;

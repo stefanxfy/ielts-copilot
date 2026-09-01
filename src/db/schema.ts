@@ -75,13 +75,51 @@ export interface QuestionProfile {
   anchor: string | null;
   /** 该题满分:普通题 1,块题 = 块内题数;写作卷无 */
   max: number | null;
+  /** 写作卷题干(纯文本,导入时从页面 wot.task.question 剥 HTML 得到);客观卷无 */
+  prompt?: string;
+  /** 写作卷字数下限(T1=150 / T2=250);客观卷无 */
+  wordMin?: number;
+  /** 写作卷建议用时(秒,T1=1200 / T2=2400);客观卷无 */
+  suggestedSec?: number;
 }
 export type QuestionsJson = Record<string, QuestionProfile>;
 
 /** papers.answers_json — 答案键(键 = 锚点,值 = 官方答案原串,'/' 备选与 '()' 可选原样保留;写作卷整列缺省) */
 export type AnswersJson = Record<string, string>;
 
-/** 写作 AI 批改元数据(answer_sheet_json 写作条目的 ai 子对象,批改结果可复现有据可查) */
+/** 四维维度名(PRD §3.6 评分维度) */
+export type GradingDimensionName = "TR" | "CC" | "LR" | "GRA";
+
+/** 单维度批改详情(PRD §3.6 dimensions[] 元素) */
+export interface GradingDimension {
+  name: GradingDimensionName;
+  /** 该维度得分(0–9,0.5 进制) */
+  band: number;
+  /** 该维度评语 */
+  comment: string;
+  /** 引用考生原文作为评分依据 */
+  evidence: string[];
+  /** 针对性的改进建议 */
+  improvement: string;
+}
+
+/** 标注出的具体问题(语法/用词/衔接/任务回应) */
+export interface FlaggedIssue {
+  type: "grammar" | "vocabulary" | "cohesion" | "task" | "other";
+  /** 考生原句 */
+  quote: string;
+  /** 改法建议 */
+  suggestion: string;
+}
+
+/**
+ * 写作 AI 批改元数据(answer_sheet_json 写作条目的 ai 子对象,批改结果可复现有据可查)
+ *
+ * 前 8 个字段是任务状态与调用元数据(数据模型设计 §4.4);
+ * bands/overall 是四维精简视图(雷达图与总分用);
+ * dimensions/strengths/weaknesses/rewrittenSample/wordCount/flaggedIssues 是
+ * PRD §3.6 定义的完整批改内容。全部可选 —— 批改未完成或失败时只写状态字段。
+ */
 export interface AiGrading {
   status: "PENDING" | "RUNNING" | "DONE" | "FAILED";
   model?: string;
@@ -90,8 +128,18 @@ export interface AiGrading {
   retryCount?: number;
   error?: string | null;
   gradedAt?: string;
-  bands?: { TR: number; CC: number; LR: number; GRA: number };
+  /** 四维分数精简视图(雷达图/总分用) */
+  bands?: Record<GradingDimensionName, number>;
+  /** 综合 band(T1/T2 各自的 overall,由四维按官方口径综合) */
   overall?: number;
+  /** 四维完整批改详情(含评语/依据/建议) */
+  dimensions?: GradingDimension[];
+  strengths?: string[];
+  weaknesses?: string[];
+  /** 整篇改写范文(保留原意,展示同题高分写法) */
+  rewrittenSample?: string | null;
+  wordCount?: number;
+  flaggedIssues?: FlaggedIssue[];
 }
 
 /** answer_sheet_json 客观题条目(未答的题也要有条目:value=null, correct=false) */
