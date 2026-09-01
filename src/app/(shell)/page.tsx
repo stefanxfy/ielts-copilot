@@ -6,7 +6,7 @@
  *   ② 分数曲线(总分/听力/阅读/写作切换 + 目标线) + 四科能力雷达(最近 vs 均值)
  *   ③ 薄弱真题清单(卷×科目,最近 band < 目标−0.5,「再练一次」直达)
  * 保留精简版最近模考列表(场次成绩单入口)。
- * 原「题库 tile」已挪到机考模拟页;目标分 P7 计划表就绪后自动接线(现恒 null)。
+ * 原「题库 tile」已挪到机考模拟页;目标分已接线 ACTIVE 备考计划(P7)。
  */
 
 import Link from "next/link";
@@ -16,6 +16,7 @@ import {
   examSessions,
   examSets,
   papers,
+  studyPlans,
 } from "@/db/schema";
 import { getDashboardData, SUBJECT_LABEL } from "@/lib/dashboard";
 import ScoreCurveChart from "@/components/dashboard/score-curve";
@@ -25,7 +26,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export default function DashboardPage() {
-  const data = getDashboardData(null); // P7: 传 ACTIVE 计划的 target_overall_band
+  // P7 接线:目标分取 ACTIVE 备考计划;无计划传 null(「目标差距」卡显示「未设定」)
+  const activePlan = getDb()
+    .select({ targetOverallBand: studyPlans.targetOverallBand })
+    .from(studyPlans)
+    .where(eq(studyPlans.status, "ACTIVE"))
+    .get();
+  const data = getDashboardData(activePlan?.targetOverallBand ?? null);
   const { overview, curve, radar, weakItems, effectiveTarget } = data;
   const hasSessions = curve.length > 0;
 

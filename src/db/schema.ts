@@ -309,3 +309,230 @@ export const appSettings = sqliteTable("app_settings", {
     .notNull()
     .default(sql`(unixepoch())`),
 });
+
+/* ================================================================
+ * P7 备考计划三表(docs/V2-P7-数据模型与实施.md v1.6 §1)
+ * ================================================================ */
+
+/* ---------- P7 JSON 契约(与 docs 同名接口一字不差) ---------- */
+
+/** 计划生成来源:确认页徽标用 */
+export const PLAN_SOURCES = ["llm", "template"] as const;
+export type PlanSource = (typeof PLAN_SOURCES)[number];
+
+export const PLAN_STATUSES = ["ACTIVE", "ARCHIVED"] as const;
+export type PlanStatus = (typeof PLAN_STATUSES)[number];
+
+/** 时段四值(phases weeklyTasks[].slot 与 study_preferences.subjectSlots 的值域;
+ *  availability.slots 已改为精确范围数组,见 AvailableRange) */
+export const TIME_SLOTS = ["morning", "noon", "afternoon", "evening"] as const;
+export type TimeSlot = (typeof TIME_SLOTS)[number];
+
+/** 可用时段范围(v2.8):HH:mm 24h 制,start<end;重叠/相邻<30min 合并,最多 6 条;
+ *  范围→四段按中点归属(段边界由 wake/bed 推导) */
+export interface AvailableRange {
+  start: string;
+  end: string;
+}
+
+/** 周任务类型 —— 与 study_activities 统计列一一对应 */
+export const TASK_TYPES = [
+  "words",
+  "listening",
+  "reading",
+  "writing",
+  "speaking",
+  "set",
+] as const;
+export type TaskType = (typeof TASK_TYPES)[number];
+
+/** study_plans.availability_json —— 这轮备考的节奏(换计划即换;申报每日量也在此) */
+export interface PlanAvailability {
+  /** 全职/在职 */
+  mode: "fulltime" | "working";
+  /** 每天可投入小时数(0.5 步进) */
+  dailyHours: number;
+  /** 可安排时段(v2.8:精确范围数组;空数组 = 任务不填时段渲染灰色) */
+  slots: AvailableRange[];
+  /** 用户申报的每日背词数(可选;未填由默认模板/LLM 定) */
+  dailyWords?: number;
+  /** 英语水平自述(可选自由文本;限 200 中文字符以内;原样注入 LLM;默认模板不解析) */
+  englishLevel?: string;
+}
+
+/** study_plans.target_scores_json —— 四科目标,缺省项读取时用总分−0.5 兜底 */
+export interface TargetScores {
+  listening?: number;
+  reading?: number;
+  writing?: number;
+  speaking?: number;
+}
+
+/** study_plans.phases_json 元素 —— 分阶段方案(LLM 与默认模板同一形状) */
+export interface PlanPhase {
+  /** 阶段名:基础期/强化期/冲刺期(LLM 可自拟,渲染原样展示) */
+  name: string;
+  /** 相对周数(从计划创建周起算第 1 周),各阶段连续不重叠覆盖 1..N */
+  weeks: number[];
+  /** 阶段重点,≤20 字 */
+  focus: string;
+  /** 周任务模板 */
+  weeklyTasks: {
+    type: TaskType;
+    /** 量:words=个/天,其余=套(次)/周 */
+    count: number;
+    unit: "个/天" | "套/周" | "次/周";
+    /** 建议时段;无偏好且无可时段时缺省 */
+    slot?: TimeSlot;
+  }[];
+}
+
+/** app_settings.study_preferences —— 个人习惯(人的属性,跨计划持久) */
+export interface StudyPreferences {
+  /** 作息 "HH:MM";缺省 07:00 / 23:00 */
+  wakeTime?: string;
+  bedTime?: string;
+  /** 各科偏好时段,键 ∈ TASK_TYPES,值 ∈ TIME_SLOTS;未声明的不出现 */
+  subjectSlots?: Partial<Record<TaskType, TimeSlot>>;
+}
+
+/** app_settings.punch_rules —— 打卡规则(可配置;默认值兜底,设置页可改) */
+export interface PunchRules {
+  /** 当日交卷达标线(默认 1) */
+  submissionMin: number;
+  /** 当日背词达标线(默认 5) */
+  wordsMin: number;
+  /** 双达标才满卡(默认 true;false = 任一达标即满卡) */
+  bothForFull: boolean;
+}
+
+/** app_settings.template_rules —— 默认模板规则引擎查表数值(v2.9;
+ *  与规划 §4.4 表格一一对应;单字段非法回退默认;整键删除 = 全恢复默认) */
+export interface TemplateRules {
+  /** 阶段划分比例:long=≥10 周[基础,强化,冲刺]百分比;mid=6–9 周[周数];short=3–5 周[周数] */
+  phaseRatios: {
+    long: [number, number, number];
+    mid: [number, number, number];
+    short: [number, number, number];
+  };
+  /** 基准任务表(每天 2h 基准;words=个/天,listening/reading/writing/set=套/周,speaking=次/周) */
+  baseWeekly: Record<
+    "basic" | "strengthen" | "sprint",
+    Record<TaskType, number>
+  >;
+  /** 缩放基准小时数(默认 2) */
+  scaleBaseHours: number;
+  /** words 每日上限(默认 80) */
+  wordsCeil: number;
+  /** 单科每周上限(默认 7) */
+  perSubjectCeil: number;
+  /** 整块阈值分钟数(默认 60) */
+  blockMinMinutes: number;
+  /** 相邻范围合并间隔分钟数(默认 30) */
+  mergeGapMinutes: number;
+}
+
+/** study_journals.ai_summary_json —— AI 昨日总结 */
+export interface AiSummary {
+  summary: string;
+  suggestions: string[];
+  basedOn: { submissions: number; words: number; journalExcerpt: boolean };
+  model: string;
+  generatedAt: string;
+}
+
+/* ---------- study_plans:备考计划(1 行 = 一份作战计划,同一时刻仅一条 ACTIVE) ---------- */
+
+export const studyPlans = sqliteTable(
+  "study_plans",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** 考试日期 YYYY-MM-DD(向导日历直选,必晚于创建日) */
+    examDate: text("exam_date").notNull(),
+    /** 目标总分(0–9,0.5 步进) */
+    targetOverallBand: real("target_overall_band").notNull(),
+    /** 四科目标(缺省项读取时用总分−0.5 兜底,不存兜底值) */
+    targetScoresJson: text("target_scores_json", { mode: "json" })
+      .$type<TargetScores>()
+      .notNull(),
+    /** 备考节奏(全职/在职+小时数+可时段+申报每日背词量 dailyWords+英语自述 englishLevel) */
+    availabilityJson: text("availability_json", { mode: "json" })
+      .$type<PlanAvailability>()
+      .notNull(),
+    /** 计划内容本体(确认页过目后落库;调整计划整体重写) */
+    phasesJson: text("phases_json", { mode: "json" })
+      .$type<PlanPhase[]>()
+      .notNull(),
+    /** 生成来源:确认页徽标「AI 定制 / 默认模板」 */
+    generatedBy: text("generated_by", { enum: PLAN_SOURCES }).notNull(),
+    /** ACTIVE/ARCHIVED;单 ACTIVE 由写入方保证(建新计划时归档旧计划) */
+    status: text("status", { enum: PLAN_STATUSES }).notNull().default("ACTIVE"),
+    /** 周基准点:phase.weeks 相对此时段所属周(调整计划只改未来,基准不动) */
+    planStartWeekMonday: text("plan_start_week_monday").notNull(),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [index("idx_plans_status").on(t.status)],
+);
+
+/* ---------- study_activities:备考活动(1 行 = 一天的活动汇总,activity_date unique) ---------- */
+
+export const studyActivities = sqliteTable(
+  "study_activities",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** 统计日 YYYY-MM-DD(本地时区) */
+    activityDate: text("activity_date").notNull(),
+    /** 完整套卷(连考)完成数 */
+    examSetCompletionCount: int("exam_set_completion_count")
+      .notNull()
+      .default(0),
+    listeningSubmissionCount: int("listening_submission_count")
+      .notNull()
+      .default(0),
+    readingSubmissionCount: int("reading_submission_count").notNull().default(0),
+    writingSubmissionCount: int("writing_submission_count").notNull().default(0),
+    /** 口语练习次数(P8 前恒 0,列先建好) */
+    speakingSubmissionCount: int("speaking_submission_count")
+      .notNull()
+      .default(0),
+    /** 当日背过的词累计(P8 前恒 0) */
+    memorizedWordCount: int("memorized_word_count").notNull().default(0),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex("uq_activities_date").on(t.activityDate)],
+);
+
+/* ---------- study_journals:备考日记(1 行 = 一篇心得,unique(journal_date, period)) ---------- */
+
+export const studyJournals = sqliteTable(
+  "study_journals",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** 心得所属日 YYYY-MM-DD */
+    journalDate: text("journal_date").notNull(),
+    /** daily/weekly/monthly */
+    period: text("period", { enum: ["daily", "weekly", "monthly"] }).notNull(),
+    /** 自己写的心得,任何时候可写可改 */
+    content: text("content").notNull().default(""),
+    /** AI 昨日总结(可空;只在昨日有活动时生成,幂等不覆盖) */
+    aiSummaryJson: text("ai_summary_json", { mode: "json" })
+      .$type<AiSummary>(),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex("uq_journals_date_period").on(t.journalDate, t.period)],
+);
