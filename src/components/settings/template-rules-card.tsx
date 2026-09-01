@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/dialog";
 
 const CARD = "mb-4 max-w-[680px] rounded-xl border border-[#dfe4ec] bg-white p-5";
-const ROW = "mb-3 flex items-center gap-2.5";
+const ROW = "mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5";
 const LABEL = "w-[130px] shrink-0 text-[13px] text-[#5b6574]";
 const INPUT =
-  "h-9 flex-1 rounded-md border border-[#dfe4ec] bg-white px-2.5 text-[13px] outline-none focus:border-[#1a6feb]";
+  "h-9 min-w-0 flex-1 rounded-md border border-[#dfe4ec] bg-white px-2.5 text-[13px] outline-none focus:border-[#1a6feb]";
 const BTN =
   "rounded-md border border-[#dfe4ec] bg-white px-3 py-1.5 text-[13px] text-[#1c2330] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
@@ -237,11 +237,12 @@ export function TemplateRulesCard() {
           {(["long", "mid", "short"] as const).map((key) => (
             <div key={key} className={ROW}>
               <span className={LABEL}>{RATIO_LABEL[key]}</span>
-              <div className="flex flex-1 items-center gap-2">
+              {/* 定宽 w-16 + 各层 min-w-0:input 固有宽度会撑大嵌套 flex 的 min-content,把行尾「冲刺期」顶出卡片 */}
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1.5">
                 {(["basic", "strengthen", "sprint"] as const).map((phase, i) => (
-                  <div key={phase} className="flex flex-1 items-center gap-1.5">
+                  <div key={phase} className="flex min-w-0 items-center gap-1.5">
                     <input
-                      className={`${INPUT} min-w-0`}
+                      className="h-9 w-16 min-w-0 rounded-md border border-[#dfe4ec] bg-white px-2 text-center text-[13px] outline-none focus:border-[#1a6feb]"
                       inputMode="numeric"
                       value={ratios[`${key}.${i}`] ?? ""}
                       onChange={(e) =>
