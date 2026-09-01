@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 
 const NAV = [
   { href: "/", label: "仪表盘" },
+  { href: "/plan", label: "备考计划" },
   { href: "/mock", label: "机考模拟" },
   { href: "/learn", label: "学习中心" },
   { href: "/settings", label: "设置" },

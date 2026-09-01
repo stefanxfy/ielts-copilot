@@ -46,5 +46,16 @@ export default async function MockPage({
       })),
   }));
 
-  return <MockClient initialMod={mod === "G" ? "G" : "A"} sets={data} />;
+  // 题库统计(原仪表盘「题库 tile」职责并入本页页脚)
+  const aCount = allPapers.filter((p) => p.category === "A").length;
+  const gCount = allPapers.filter((p) => p.category === "G").length;
+
+  return (
+    <>
+      <MockClient initialMod={mod === "G" ? "G" : "A"} sets={data} />
+      <p className="mt-4 text-center text-[11px] text-[#b6bdc9]">
+        本地题库:共 {allPapers.length} 份单科卷(A类 {aCount} · G类 {gCount}),{sets.length} 套完整真题
+      </p>
+    </>
+  );
 }
