@@ -1,0 +1,16 @@
+/* audio-ui.css — 听力相关页面共用的自定义音量 UI 样式
+ * 抽出来让 test-sound.html 与 a-listening-test.html 共用同一份视觉
+ * (听力页同时在 OVERRIDE style 块内联了一份以保持单页独立运行;两处同步维护)
+ */
+.ielts-vol{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 4px 0 6px;user-select:none}
+.ielts-vol__btn{width:28px;height:28px;border:0;background:transparent;padding:0;cursor:pointer;color:#17AFC4;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:opacity .15s}
+.ielts-vol__btn:hover{opacity:.75}
+.ielts-vol__btn svg{width:20px;height:20px}
+.ielts-vol__btn[disabled]{cursor:not-allowed;opacity:.4}
+.ielts-vol__track{position:relative;width:140px;height:6px;background:#dde5f0;border-radius:3px;cursor:pointer;outline:none}
+.ielts-vol__track:focus-visible{box-shadow:0 0 0 2px rgba(23,175,196,.4)}
+.ielts-vol__fill{position:absolute;top:0;left:0;height:100%;width:100%;background:linear-gradient(90deg,#17AFC4 0%,#1a8fa3 100%);border-radius:3px;pointer-events:none}
+.ielts-vol__thumb{position:absolute;top:50%;left:100%;width:14px;height:14px;background:#fff;border:2px solid #17AFC4;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 1px 2px rgba(13,52,96,.15)}
+/* 锁死态 */
+.ielts-vol.ielts-vol--locked{opacity:.4;pointer-events:none;cursor:not-allowed}
+.ielts-vol.ielts-vol--locked .ielts-vol__track{cursor:not-allowed}

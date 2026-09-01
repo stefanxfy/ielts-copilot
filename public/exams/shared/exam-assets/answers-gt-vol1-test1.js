@@ -1,0 +1,58 @@
+/* G类阅读 · 一月卷 Test 1 · 正确答案数据（源自官方 score-result 页解析） */
+window.IELTS_EXAM = {
+  id: 'gt-vol1-reading-test1',
+  title: '雅思真题试卷 一月 · 雅思阅读真题 1',
+  module: 'G',
+  skill: 'reading',
+  duration: 60,
+  total: 40,
+  /* 官方阅读原始分→band 换算（Academic/General Training 同表，半分制）
+     bandTable[i] = [最低原始分, band]，从高到低，取第一个满足 raw>=min 的档位 */
+  bandTable: [
+    [39, 9], [37, 8.5], [35, 8], [33, 7.5], [30, 7], [27, 6.5], [23, 6],
+    [19, 5.5], [15, 5], [13, 4.5], [10, 4], [8, 3.5], [6, 3], [4, 2.5],
+    [3, 2], [2, 1.5], [1, 1]
+  ],
+  answers: {
+  "1": "A,C",
+  "2": "B",
+  "3": "A",
+  "4": "D",
+  "5": "A",
+  "6": "C",
+  "7": "B",
+  "8": "C",
+  "9": "during business hours",
+  "10": "in writing",
+  "11": "97765489",
+  "12": "driver's licence",
+  "13": "two referees",
+  "14": "year 10 Maths",
+  "15": "tutorial",
+  "16": "Course B",
+  "17": "8 hours",
+  "18": "D",
+  "19": "A",
+  "20": "B",
+  "21": "C",
+  "22": "B",
+  "23": "interview",
+  "24": "articulates",
+  "25": "achievement",
+  "26": "experience",
+  "27": "permission",
+  "28": "TRUE",
+  "29": "FALSE",
+  "30": "TRUE",
+  "31": "FALSE",
+  "32": "TRUE",
+  "33": "NOT GIVEN",
+  "34": "industry",
+  "35": "customers",
+  "36": "relevant",
+  "37": "accessible",
+  "38": "organisational structure",
+  "39": "financial",
+  "40": "external factors"
+}
+};

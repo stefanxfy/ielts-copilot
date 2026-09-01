@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IELTS 本地机考 · 听力 · Test sound</title>
+<link rel="stylesheet" href="../shared/exam-assets/audio-ui.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:#e9eef5;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#1c2330}
+  body{display:flex;flex-direction:column;min-height:100vh}
+  /* 顶栏（仿 a-listening 的 realtest-header 主色） */
+  .ts-header{height:56px;background:linear-gradient(180deg,#1a6feb 0%,#0d4fa8 100%);color:#fff;display:flex;align-items:center;padding:0 22px;box-shadow:0 2px 6px rgba(13,52,96,.18)}
+  .ts-header .ts-logo{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-weight:700;margin-right:10px}
+  .ts-header .ts-title{font-size:15px;font-weight:600}
+  .ts-header .ts-sub{font-size:12px;opacity:.85;margin-left:10px}
+
+  /* 主区：浅蓝灰背景 + 居中卡片 */
+  .ts-main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:#dde5f0}
+  .ts-card{width:100%;max-width:720px;background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(13,52,96,.08);padding:36px 44px 32px}
+
+  /* 标题：耳机图标 + Test sound + 右侧音量块 */
+  .ts-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
+  .ts-head-left{display:flex;align-items:center;gap:12px}
+  .ts-head-icon{width:40px;height:40px;border-radius:8px;background:#f0f4fa;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ts-head-icon svg{width:26px;height:26px;color:#5a6472}
+  .ts-head h1{margin:0;font-size:22px;font-weight:700;color:#1c2330}
+
+  /* 提示块（圆角浅蓝灰，跟参考图同款） */
+  .ts-notice{background:#eef3fa;border-radius:8px;padding:22px 26px;color:#1c2330;font-size:14px;line-height:1.7}
+  .ts-notice ul{margin:0;padding-left:22px}
+  .ts-notice li{margin:6px 0}
+  .ts-notice b{color:#1c2330}
+  .ts-notice b.ts-accent{color:#0d4fa8}
+
+  /* 警告行 */
+  .ts-warn{display:flex;align-items:center;gap:8px;margin-top:18px;color:#1c2330;font-size:14px}
+  .ts-warn-dot{width:18px;height:18px;border-radius:50%;background:#d64545;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+
+  /* 按钮区：靠右，Play/Pause 与 Continue 上下两行 */
+  .ts-actions{display:flex;flex-direction:column;align-items:flex-end;gap:14px;margin-top:24px}
+  .ts-btn{min-width:170px;height:42px;padding:0 24px;border-radius:6px;border:1px solid #c9d2df;background:#fff;color:#1c2330;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .ts-btn:hover{background:#f0f4fa;border-color:#a8b3c5}
+  .ts-btn:active{transform:translateY(1px)}
+  .ts-btn-primary{background:linear-gradient(180deg,#1a6feb 0%,#0d4fa8 100%);color:#fff;border-color:#0d4fa8}
+  .ts-btn-primary:hover{background:linear-gradient(180deg,#2680ff 0%,#0d4fa8 100%);border-color:#0d4fa8}
+  .ts-btn-primary:disabled{background:#a8b3c5;border-color:#a8b3c5;color:#fff;cursor:not-allowed;opacity:.85}
+  .ts-btn .ts-ic{width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center}
+
+  /* Continue 行：图标（圆圈 → ） */
+  .ts-btn-primary .ts-ic{width:12px;height:12px}
+
+  /* 隐藏原生 audio 控件（参考图无控件条，仅 Play/Pause 按钮） */
+  #ts-audio{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0}
+
+  /* 底部小字 */
+  .ts-foot{text-align:center;padding:14px 0 18px;color:#7a8597;font-size:12px}
+</style>
+</head>
+<body>
+  <header class="ts-header">
+    <div class="ts-logo">雅</div>
+    <div class="ts-title">IELTS 本地机考</div>
+    <div class="ts-sub">A类 听力 · 2025年1月真题 Test 1 · Test sound</div>
+  </header>
+
+  <main class="ts-main">
+    <div class="ts-card">
+      <div class="ts-head">
+        <div class="ts-head-left">
+          <div class="ts-head-icon" aria-hidden="true">
+            <!-- 耳机图标（线性，stroke 灰） -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+              <path d="M21 19a2 2 0 0 1-2 2h-1v-7h3v5z"/>
+              <path d="M3 19a2 2 0 0 0 2 2h1v-7H3v5z"/>
+            </svg>
+          </div>
+          <h1>Test sound</h1>
+        </div>
+        <div class="ielts-vol" id="ts-vol">
+          <button type="button" class="ielts-vol__btn" id="ts-vol-btn" aria-label="音量">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </button>
+          <div class="ielts-vol__track" id="ts-vol-track" role="slider" aria-label="音量调节" aria-valuemin="0" aria-valuemax="100">
+            <div class="ielts-vol__fill" id="ts-vol-fill"></div>
+            <div class="ielts-vol__thumb" id="ts-vol-thumb"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ts-notice">
+        <ul>
+          <li>Put on your headphones and click the <b class="ts-accent">Play sound</b> button to play a sample sound.</li>
+        </ul>
+
+        <div class="ts-actions">
+          <button id="ts-play" class="ts-btn" type="button" aria-label="Play sound">
+            <span class="ts-ic" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </span>
+            <span id="ts-play-label">Play sound</span>
+          </button>
+        </div>
+
+        <div class="ts-warn">
+          <span class="ts-warn-dot" aria-hidden="true">!</span>
+          <span>if you can not hear the sound clearly, please tell the invigilator</span>
+        </div>
+
+        <div class="ts-actions" style="margin-top:18px">
+          <button id="ts-continue" class="ts-btn ts-btn-primary" type="button" disabled>
+            <span>Continue</span>
+            <span class="ts-ic" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="ts-foot">本机考原型 · 听力试音 · 样本音频循环播放</div>
+
+  <!-- 隐藏 audio 元素：loop 循环 + preload 自动缓冲 -->
+  <audio id="ts-audio" src="../shared/exam-assets/test-sound.mp3" preload="auto" loop></audio>
+
+<script>
+(function () {
+  'use strict';
+  var audio = document.getElementById('ts-audio');
+  var btnPlay = document.getElementById('ts-play');
+  var lblPlay = document.getElementById('ts-play-label');
+  var icPlay = btnPlay.querySelector('.ts-ic');
+  var btnContinue = document.getElementById('ts-continue');
+  var PLAY_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  var PAUSE_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+
+  /* ---------- 音量 UI 控制（与听力页共用 localStorage.ielts_audio_volume 互通） ---------- */
+  var VOL_KEY = 'ielts_audio_volume';
+  var DEFAULT_VOL = 0.8;  // Test sound 首次默认 0.8（听力页默认 1.0,首次不同 = 防止考生 Test sound 听到全音量误判）
+  var volTrack = document.getElementById('ts-vol-track');
+  var volFill = document.getElementById('ts-vol-fill');
+  var volThumb = document.getElementById('ts-vol-thumb');
+  var volBtn = document.getElementById('ts-vol-btn');
+
+  function renderVol(v) {
+    if (volFill) volFill.style.width = (v * 100).toFixed(1) + '%';
+    if (volThumb) volThumb.style.left = (v * 100).toFixed(1) + '%';
+    if (volTrack) volTrack.setAttribute('aria-valuenow', Math.round(v * 100));
+  }
+  function applyVol(v) {
+    try { audio.volume = v; } catch (e) {}
+    try { localStorage.setItem(VOL_KEY, String(v)); } catch (e) {}
+    renderVol(v);
+  }
+
+  var savedVol = parseFloat(localStorage.getItem(VOL_KEY));
+  if (isNaN(savedVol) || savedVol < 0 || savedVol > 1) savedVol = DEFAULT_VOL;
+  applyVol(savedVol);
+
+  // audio.volume / muted 变化(可能来自其他源) → 同步 UI
+  audio.addEventListener('volumechange', function () {
+    if (audio.volume !== savedVol) {
+      savedVol = audio.volume;
+      try { localStorage.setItem(VOL_KEY, String(savedVol)); } catch (e) {}
+    }
+    renderVol(savedVol);
+  });
+
+  // 拖动/点击改音量
+  function volFromEvent(e) {
+    var rect = volTrack.getBoundingClientRect();
+    var clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  }
+  var dragging = false;
+  volTrack.addEventListener('mousedown', function (e) {
+    dragging = true;
+    applyVol(volFromEvent(e));
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (!dragging) return;
+    applyVol(volFromEvent(e));
+  });
+  document.addEventListener('mouseup', function () { dragging = false; });
+  volTrack.addEventListener('keydown', function (e) {
+    var step = e.shiftKey ? 0.1 : 0.05;
+    var v = audio.volume;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') v = Math.max(0, v - step);
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') v = Math.min(1, v + step);
+    else if (e.key === 'Home') v = 0;
+    else if (e.key === 'End') v = 1;
+    else return;
+    applyVol(v);
+    e.preventDefault();
+  });
+  volTrack.setAttribute('tabindex', '0');
+
+  // 喇叭按钮 → mute/unmute
+  volBtn.addEventListener('click', function () {
+    if (audio.muted) {
+      try { audio.muted = false; } catch (e) {}
+      // 解静音：用记忆中的音量,0 时 fallback 到 0.5
+      var v = parseFloat(localStorage.getItem(VOL_KEY));
+      if (!v || v <= 0) v = 0.5;
+      applyVol(v);
+    } else {
+      try { audio.muted = true; } catch (e) {}
+      renderVol(audio.volume);
+    }
+  });
+
+  // 默认状态：未播（用户点 Play 后才开始循环）
+  var isPlaying = false;
+
+  function setPlaying(p) {
+    isPlaying = p;
+    icPlay.innerHTML = p ? PAUSE_SVG : PLAY_SVG;
+    lblPlay.textContent = p ? 'Pause sound' : 'Play sound';
+    btnPlay.setAttribute('aria-label', p ? 'Pause sound' : 'Play sound');
+    // Continue 始终可点（用户即使没点 Play 也能直接进主体）
+    btnContinue.disabled = false;
+  }
+
+  btnPlay.addEventListener('click', function () {
+    if (isPlaying) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      // 显式 play() 处理浏览器自动播放策略
+      var p = audio.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(function () { setPlaying(false); });
+      }
+      setPlaying(true);
+    }
+  });
+
+  // 缓冲中但未播放、播放结束、暂停等状态的兜底
+  audio.addEventListener('pause', function () { if (isPlaying) setPlaying(false); });
+  audio.addEventListener('play',  function () { if (!isPlaying) setPlaying(true); });
+  audio.addEventListener('ended', function () {
+    // loop 属性通常会自动重播,这里兜底:如果 ended 触发说明没循环,手动重置
+    if (isPlaying) { audio.currentTime = 0; audio.play(); }
+  });
+
+  // Continue → 标记 defer + 跳 instructions 页（看说明 + 点 Start test 才开考）
+  // 倒计时在 instructions 阶段不启动,直到 Start test 跳主体页才走（defer 模式跨页传参）
+  btnContinue.addEventListener('click', function () {
+    // 先停掉样本音,避免新页加载时背景还在响
+    audio.pause();
+    audio.currentTime = 0;
+    // 写 localStorage（clock-defer 模式兼容），并用 URL 参数双保险
+    try { localStorage.setItem('ielts_clock_defer', '1'); } catch (e) {}
+    // 透传 ?mod= 参数:A 类走默认 a-listening-test.html;G 类入口带 ?mod=G,让 instructions.html 路由到 gt-listening-test.html
+    var modMatch = /[?&]mod=([AG])/.exec(location.search);
+    var target = 'instructions.html?clockdefer=1';
+    location.href = target;
+  });
+
+  // 初始未播放
+  setPlaying(false);
+})();
+</script>
+</body>
+</html>

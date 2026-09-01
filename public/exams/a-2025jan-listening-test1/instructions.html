@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IELTS Listening · Instructions</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;min-height:100%;background:#dde5f0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:#1c2330}
+  body{display:flex;flex-direction:column;min-height:100vh}
+
+  /* 顶栏：跟 test-sound.html 同款蓝渐变，跨页视觉一致 */
+  .ts-header{height:56px;background:linear-gradient(180deg,#1a6feb 0%,#0d4fa8 100%);color:#fff;display:flex;align-items:center;padding:0 22px;box-shadow:0 2px 6px rgba(13,52,96,.18);flex-shrink:0}
+  .ts-header .ts-logo{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-weight:700;margin-right:10px}
+  .ts-header .ts-title{font-size:15px;font-weight:600}
+  .ts-header .ts-sub{font-size:12px;opacity:.85;margin-left:10px}
+
+  /* 主区：浅蓝灰背景 + 居中白卡（跟 test-sound 容器同款,内容是纯英文文字 + 按钮） */
+  .ts-main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:#dde5f0}
+  .ts-card{width:100%;max-width:820px;background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(13,52,96,.08);padding:36px 48px 32px}
+
+  /* 文字样式：标题加粗黑色,小字次级灰,列表用项目符号 */
+  .ts-card h1{margin:0 0 6px;font-size:22px;font-weight:700;color:#1c2330}
+  .ts-card .ts-time{margin:0 0 26px;font-size:14px;color:#5a6472}
+  .ts-card h2{margin:24px 0 10px;font-size:15px;font-weight:700;color:#1c2330;letter-spacing:.3px}
+  .ts-card ul{margin:0;padding-left:22px;font-size:14px;line-height:1.85;color:#1c2330}
+  .ts-card ul li{margin:2px 0}
+
+  /* 按钮区：右下角 Start test 按钮（参考图样式：白底 + 灰边 + 阴影） */
+  .ts-actions{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-top:28px}
+  .ts-hint{font-size:13px;color:#1c2330}
+  .ts-btn{min-width:130px;height:42px;padding:0 22px;border-radius:6px;border:1px solid #c9d2df;background:#fff;color:#1c2330;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease;box-shadow:0 1px 2px rgba(13,52,96,.08);display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .ts-btn:hover{background:#f0f4fa;border-color:#a8b3c5}
+  .ts-btn:active{transform:translateY(1px)}
+  .ts-btn-primary{background:linear-gradient(180deg,#1a6feb 0%,#0d4fa8 100%);color:#fff;border-color:#0d4fa8}
+  .ts-btn-primary:hover{background:linear-gradient(180deg,#2680ff 0%,#0d4fa8 100%);border-color:#0d4fa8}
+  .ts-btn .ts-ic{width:12px;height:12px;display:inline-flex;align-items:center;justify-content:center}
+
+  /* 底部 */
+  .ts-foot{text-align:center;padding:14px 0 18px;color:#7a8597;font-size:12px;flex-shrink:0}
+</style>
+</head>
+<body>
+  <header class="ts-header">
+    <div class="ts-logo">雅</div>
+    <div class="ts-title">IELTS 本地机考</div>
+    <div class="ts-sub">A类 听力 · 2025年1月真题 Test 1 · Instructions</div>
+  </header>
+
+  <main class="ts-main">
+    <div class="ts-card">
+      <h1>IELTS Listening</h1>
+      <p class="ts-time">Time: Approximately 30 minutes</p>
+
+      <h2>INSTRUCTIONS TO CANDIDATES</h2>
+      <ul>
+        <li>Answer all the questions.</li>
+        <li>You can change your answers at any time during the test.</li>
+      </ul>
+
+      <h2>INFORMATION FOR CANDIDATES</h2>
+      <ul>
+        <li>There are 40 questions in this test.</li>
+        <li>Each question carries one mark.</li>
+        <li>There are four parts to the test</li>
+        <li>You will hear each part once.</li>
+        <li>For each part of the test there will be time for you to look through the questions and time for you to check your answers.</li>
+      </ul>
+
+      <div class="ts-actions">
+        <div class="ts-hint">Do not click &lsquo;Start test&rsquo; until you are told to do so.</div>
+        <button id="ts-start" class="ts-btn ts-btn-primary" type="button">
+          <span>Start test</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="ts-foot">本机考原型 · 听力考前说明</div>
+
+<script>
+(function () {
+  'use strict';
+  // 路由决策:?mod=G → gt-listening-test.html(培训类);默认走 a-listening-test.html(学术类)
+  // 透传机制由 test-sound.html 透传 ?mod= 进来,这里只看 URL 一次
+  var modMatch = /[?&]mod=([AG])/.exec(location.search);
+  var targetTest = 'listening.html';
+  // 同步副标题文案(让用户看清楚当前走哪一类)
+  var sub = document.querySelector('.ts-header .ts-sub');
+  if (sub && modMatch && modMatch[1] === 'G') {
+    sub.textContent = 'G类 · 听力 · 雅思真题试卷 一月 Test 1 · Instructions';
+  }
+
+  // 跳主体页:写 localStorage 标记 + URL ?clockdefer=1（双保险）
+  // clock-sec.js 的 defer 模式会在新页加载完成后 setTimeout(0) 自动启动计时
+  // —— 语义上"Start test = 开考",用户点击瞬间 = 倒计时开始
+  var btnStart = document.getElementById('ts-start');
+  btnStart.addEventListener('click', function () {
+    try { localStorage.setItem('ielts_clock_defer', '1'); } catch (e) {}
+    location.href = targetTest + '?clockdefer=1';
+  });
+})();
+</script>
+</body>
+</html>

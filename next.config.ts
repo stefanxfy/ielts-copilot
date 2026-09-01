@@ -7,6 +7,22 @@ const nextConfig: NextConfig = {
   /* better-sqlite3 是原生模块(.node),不进 bundle —— 否则 standalone 运行时加载失败
      (docs/M1-实施计划.md 风险 #1) */
   serverExternalPackages: ["better-sqlite3"],
+  async rewrites() {
+    return [
+      /* 静态卷页是从 Drupal 站抓取的原样页面,卷页 JS 会向原站后端发访问统计:
+         POST /core/modules/statistics/statistics.php
+         POST /zh-hans/history/<nid>/read (已读上报)
+         本地无 Drupal 后端,直接 404 刷屏。重写到 /api/noop(204)静默吞掉。 */
+      {
+        source: "/core/modules/statistics/statistics.php",
+        destination: "/api/noop",
+      },
+      {
+        source: "/zh-hans/history/:nid/read",
+        destination: "/api/noop",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

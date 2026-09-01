@@ -38,8 +38,8 @@ export interface TestResult {
   detail?: string;
 }
 
-/** 错误分类 → 人话 */
-function humanMessage(cat: ErrorCategory): string {
+/** 错误分类 → 人话(chat.ts 复用:批改失败提示与连通性测试口径一致) */
+export function humanMessage(cat: ErrorCategory): string {
   switch (cat) {
     case "AUTH":
       return "API Key 无效或无权限(401/403)—— 检查 Key 是否复制完整、是否对该模型有权限";
@@ -56,7 +56,8 @@ function humanMessage(cat: ErrorCategory): string {
   }
 }
 
-function classifyHttpStatus(status: number): ErrorCategory {
+/** HTTP 状态码 → 错误分类(chat.ts 复用) */
+export function classifyHttpStatus(status: number): ErrorCategory {
   if (status === 401 || status === 403) return "AUTH";
   if (status === 404) return "NOT_FOUND";
   if (status === 429) return "RATE_LIMIT";

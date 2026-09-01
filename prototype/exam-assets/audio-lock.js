@@ -75,6 +75,7 @@
       try { localStorage.setItem(VOL_KEY, String(v)); } catch (e) {}
       renderVol(v);
     }
+    console.log('[audio-lock] 音量变化: volume=' + audio.volume.toFixed(2) + ' · muted=' + audio.muted);
   });
 
   /* ---------- 3) 自定义 UI 拖动/点击 → 改 audio.volume ---------- */
@@ -93,6 +94,7 @@
       dragging = true;
       var v = volFromEvent(e);
       try { audio.volume = v; } catch (err) {}
+      console.log('[audio-lock] 音量条按下: 目标音量=' + v.toFixed(2) + ' · 实际生效=' + audio.volume.toFixed(2) + (document.body.classList.contains('audio_locked') ? ' · ⚠️ 已锁死,改动无听觉效果' : ''));
       e.preventDefault();
     });
     // mouseup/mousemove 绑在 document(防止鼠标拖出 track 丢失)
@@ -120,6 +122,7 @@
   // 喇叭按钮：mute/unmute 切换
   if (volBtn) {
     volBtn.addEventListener('click', function () {
+      console.log('[audio-lock] 喇叭按钮点击: 当前 muted=' + audio.muted + (document.body.classList.contains('audio_locked') ? ' · ⚠️ 已锁死(UI 禁用,点击无效)' : ''));
       if (audio.muted) {
         try { audio.muted = false; } catch (e) {}
         // 解静音后用上次的音量(0 也行),或者 0.5 兜底
@@ -133,29 +136,38 @@
   /* ---------- 4) 真考模式:全量锁死检查(本会话已播过 → 直接锁,不播) ---------- */
   var alreadyPlayed = false;
   try { alreadyPlayed = sessionStorage.getItem(PLAYED_KEY) === '1'; } catch (e) {}
+  console.log('[audio-lock] 状态检查: alreadyPlayed=' + alreadyPlayed +
+              ' · audio.paused=' + audio.paused + ' · muted=' + audio.muted +
+              ' · volume=' + audio.volume + ' · currentTime=' + audio.currentTime.toFixed(1));
 
   if (alreadyPlayed) {
+    console.warn('[audio-lock] 本会话已播过 → 全量锁死(真考模式仅播一次)。重听需关闭本标签页后新开,或 DevTools Console 执行 sessionStorage.removeItem("' + PLAYED_KEY + '")');
     lockHard();
     return;
   }
 
   /* ---------- 5) 首播:auto play(autoplay muted 在浏览器里默认可过),拿到 promise 后解静音 ---------- */
   var playPromise;
-  try { playPromise = audio.play(); } catch (e) { playPromise = null; }
+  try { playPromise = audio.play(); } catch (e) { playPromise = null; console.error('[audio-lock] audio.play() 同步抛异常:', e); }
 
   function unmuteAndMark() {
     try { audio.muted = false; } catch (e) {}
     try { sessionStorage.setItem(PLAYED_KEY, '1'); } catch (e) {}
+    console.log('[audio-lock] 解静音并标记已播: paused=' + audio.paused + ' · muted=' + audio.muted + ' · volume=' + audio.volume);
   }
 
   if (playPromise && typeof playPromise.then === 'function') {
     playPromise.then(function () {
+      console.log('[audio-lock] autoplay 成功,音频播放中: currentTime=' + audio.currentTime.toFixed(1) + 's · duration=' + (audio.duration || '未知'));
       unmuteAndMark();
-    }).catch(function () {
+    }).catch(function (err) {
       // 静默降级,仍标记 played(刷新后锁死)
+      console.warn('[audio-lock] autoplay 被浏览器拒绝(' + (err && err.name) + ': ' + (err && err.message) + ')。' +
+                   '若在 iframe 内,请检查外层 <iframe allow="autoplay"> 声明');
       unmuteAndMark();
     });
   } else {
+    console.warn('[audio-lock] audio.play() 未返回 promise(旧浏览器?),直接标记已播');
     unmuteAndMark();
   }
 
@@ -176,6 +188,7 @@
 
   /* ---------- 7) 全量锁死的兜底函数(本页内播完/本会话已播/自动播放被拒 都用) ---------- */
   function lockHard() {
+    console.warn('[audio-lock] lockHard(): 音频锁死。锁死原因 = 本会话已播过 或 已播完一次(真考模式仅播一次)');
     document.body.classList.add('audio_locked');
     try { audio.pause(); } catch (e) {}
     try { audio.muted = true; } catch (e) {}
