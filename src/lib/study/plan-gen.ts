@@ -346,16 +346,15 @@ export function validatePhasesOutput(raw: unknown, weeks: number): ValidateResul
         return { ok: false, reason: `任务 ${String(task.type)} count 非法` };
       }
       const type = task.type as TaskType;
-      if (task.unit !== TASK_UNIT[type]) {
-        return { ok: false, reason: `任务 ${type} unit 应为「${TASK_UNIT[type]}」` };
-      }
       if (task.slot != null && !TIME_SLOTS.includes(task.slot as TimeSlot)) {
         return { ok: false, reason: `任务 ${type} slot 非法:${String(task.slot)}` };
       }
+      // unit 是纯展示字段、由 type 唯一决定:无论 LLM 写什么(如 writing 写成「次/周」)
+      // 一律覆写为规范值,不为它拒整份输出——提示词无法约束死量词,曾致生成稳定失败
       tasks.push({
         type,
         count: task.count,
-        unit: task.unit as PlanPhase["weeklyTasks"][number]["unit"],
+        unit: TASK_UNIT[type],
         ...(task.slot != null ? { slot: task.slot as TimeSlot } : {}),
       });
     }

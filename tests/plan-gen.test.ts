@@ -203,7 +203,17 @@ test("validatePhasesOutput:合法输出通过且周升序归一", () => {
   ]);
 });
 
-test("validatePhasesOutput:周缺漏 / 重复 / 未知 type / 错 unit 均拒绝", () => {
+test("validatePhasesOutput:unit 由 type 查表覆写(LLM 量词写错不拒整份)", () => {
+  const fixed = structuredClone(GOOD);
+  fixed[0].weeklyTasks[0].unit = "个/日"; // words 写成别的量词
+  fixed[0].weeklyTasks[1].unit = "次/周"; // listening 写成口语量词(曾致生成稳定失败)
+  const r = validatePhasesOutput(fixed, 3);
+  assert.ok(r.ok);
+  assert.equal(r.phases![0].weeklyTasks[0].unit, "个/天");
+  assert.equal(r.phases![0].weeklyTasks[1].unit, "套/周");
+});
+
+test("validatePhasesOutput:周缺漏 / 重复 / 未知 type / 错 slot 均拒绝", () => {
   const miss = structuredClone(GOOD);
   miss[1].weeks = [4]; // 缺第 3 周
   assert.equal(validatePhasesOutput(miss, 3).ok, false);
@@ -215,10 +225,6 @@ test("validatePhasesOutput:周缺漏 / 重复 / 未知 type / 错 unit 均拒绝
   const badType = structuredClone(GOOD);
   badType[0].weeklyTasks[0].type = "grammar";
   assert.equal(validatePhasesOutput(badType, 3).ok, false);
-
-  const badUnit = structuredClone(GOOD);
-  badUnit[0].weeklyTasks[0].unit = "套/周";
-  assert.equal(validatePhasesOutput(badUnit, 3).ok, false);
 
   const badSlot = structuredClone(GOOD);
   badSlot[0].weeklyTasks[0].slot = "midnight";
