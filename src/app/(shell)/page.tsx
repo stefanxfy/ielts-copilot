@@ -25,7 +25,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export default function DashboardPage() {
-  const data = getDashboardData(null); // P7: 传 ACTIVE 计划的 target_overall
+  const data = getDashboardData(null); // P7: 传 ACTIVE 计划的 target_overall_band
   const { overview, curve, radar, weakItems, effectiveTarget } = data;
   const hasSessions = curve.length > 0;
 
