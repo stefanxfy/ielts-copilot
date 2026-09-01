@@ -150,10 +150,10 @@ export function BattleHome({
             type="button"
             aria-label="考前须知"
             title="考前须知"
-            className="flex h-5 w-5 items-center justify-center rounded-full border border-[#dfe4ec] text-[11px] text-[#8a93a2] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb]"
+            className="flex h-5 w-5 items-center justify-center rounded-full border border-[#dfe4ec] font-serif text-[11px] italic leading-none text-[#8a93a2] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb]"
             onClick={() => setNoticeOpen(true)}
           >
-            ⓘ
+            i
           </button>
         </div>
         <div className="mt-3 flex items-baseline gap-2">
