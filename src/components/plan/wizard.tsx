@@ -78,6 +78,37 @@ const SUBJECT_SLOT_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "不指定" },
 ];
 
+/** 调整模式回填(现有 ACTIVE 计划的关键输入) */
+export interface PlanWizardInitial {
+  examDate: string;
+  targetOverallBand: number;
+  targetScores: TargetScores;
+  availability: PlanAvailability;
+}
+
+export interface PlanWizardProps {
+  /** create=全新建档(POST 整体落库);adjust=调整现有计划(PATCH 只重排未来周) */
+  variant?: "create" | "adjust";
+  planId?: number;
+  /** adjust 模式的回填数据 */
+  initial?: PlanWizardInitial;
+}
+
+/** slots(合并后范围数组)→ 四段勾选/范围回填:按与段默认窗口是否有重叠判断 */
+function prefillSegments(slots: AvailableRange[]): {
+  checked: Record<TimeSlot, boolean>;
+  ranges: Record<TimeSlot, AvailableRange>;
+} {
+  const checked = {} as Record<TimeSlot, boolean>;
+  const ranges = {} as Record<TimeSlot, AvailableRange>;
+  for (const seg of SEGMENTS) {
+    const hit = slots.find((s) => s.start < seg.range.end && s.end > seg.range.start);
+    checked[seg.key] = Boolean(hit);
+    ranges[seg.key] = hit ? { start: hit.start, end: hit.end } : { ...seg.range };
+  }
+  return { checked, ranges };
+}
+
 interface PreviewResult {
   phases: PlanPhase[];
   generatedBy: PlanSource;
@@ -200,34 +231,52 @@ function ExamCalendar({
 
 /* ---------- 主组件 ---------- */
 
-export function PlanWizard() {
+export function PlanWizard({ variant = "create", planId, initial }: PlanWizardProps) {
   const router = useRouter();
 
   const [step, setStep] = useState(1);
   const [noticeOpen, setNoticeOpen] = useState(true); // STEP1 自动弹考前须知
 
   // STEP1 考试日期
-  const [examDate, setExamDate] = useState("");
+  const [examDate, setExamDate] = useState(initial?.examDate ?? "");
 
   // STEP2 目标
-  const [overall, setOverall] = useState("6.5");
-  const [targets, setTargets] = useState<Record<string, string>>({});
-  const [englishLevel, setEnglishLevel] = useState("");
+  const [overall, setOverall] = useState(
+    initial ? String(initial.targetOverallBand) : "6.5",
+  );
+  const [targets, setTargets] = useState<Record<string, string>>(() => {
+    if (!initial) return {};
+    const out: Record<string, string> = {};
+    for (const k of ["listening", "reading", "writing", "speaking"] as const) {
+      if (initial.targetScores[k] != null) out[k] = String(initial.targetScores[k]);
+    }
+    return out;
+  });
+  const [englishLevel, setEnglishLevel] = useState(initial?.availability.englishLevel ?? "");
 
   // STEP3 节奏
-  const [mode, setMode] = useState<"fulltime" | "working">("working");
-  const [dailyHours, setDailyHours] = useState("2");
-  const [segChecked, setSegChecked] = useState<Record<TimeSlot, boolean>>({
-    morning: true,
-    noon: false,
-    afternoon: false,
-    evening: true,
-  });
-  const [segRanges, setSegRanges] = useState<Record<TimeSlot, AvailableRange>>(() =>
-    Object.fromEntries(SEGMENTS.map((s) => [s.key, { ...s.range }])) as Record<
-      TimeSlot,
-      AvailableRange
-    >,
+  const prefill = initial ? prefillSegments(initial.availability.slots ?? []) : null;
+  const [mode, setMode] = useState<"fulltime" | "working">(initial?.availability.mode ?? "working");
+  const [dailyHours, setDailyHours] = useState(String(initial?.availability.dailyHours ?? 2));
+  const [dailyWords, setDailyWords] = useState(
+    initial?.availability.dailyWords != null ? String(initial.availability.dailyWords) : "",
+  );
+  const [segChecked, setSegChecked] = useState<Record<TimeSlot, boolean>>(
+    () =>
+      prefill?.checked ?? {
+        morning: true,
+        noon: false,
+        afternoon: false,
+        evening: true,
+      },
+  );
+  const [segRanges, setSegRanges] = useState<Record<TimeSlot, AvailableRange>>(
+    () =>
+      prefill?.ranges ??
+      (Object.fromEntries(SEGMENTS.map((s) => [s.key, { ...s.range }])) as Record<
+        TimeSlot,
+        AvailableRange
+      >),
   );
 
   // STEP4 个人习惯(进入时回填)
@@ -237,8 +286,7 @@ export function PlanWizard() {
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [prefsSaving, setPrefsSaving] = useState(false);
 
-  // STEP5 每日量 → preview
-  const [dailyWords, setDailyWords] = useState("");
+  // STEP5 每日量 → preview(dailyWords 在 STEP3 上方已初始化:调整模式回填)
   const [previewing, setPreviewing] = useState(false);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [failReason, setFailReason] = useState<string | null>(null);
@@ -294,14 +342,19 @@ export function PlanWizard() {
   async function generate(source?: "template") {
     setPreviewing(true);
     try {
-      const resp = await fetch(
-        source ? "/api/study-plans/preview?source=template" : "/api/study-plans/preview",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(buildPayload()),
-        },
-      );
+      // 调整模式:PATCH ?preview=1 干跑——服务端生成未来周并与已过周合并后回预览,
+      // 确认时把同一份 phases 直传,避免确认瞬间 LLM 重新生成出另一份计划
+      const isAdjust = variant === "adjust" && planId != null;
+      const url = isAdjust
+        ? `/api/study-plans/${planId}?preview=1${source ? "&source=template" : ""}`
+        : source
+          ? "/api/study-plans/preview?source=template"
+          : "/api/study-plans/preview";
+      const resp = await fetch(url, {
+        method: isAdjust ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildPayload()),
+      });
       const data = (await resp.json()) as Partial<PreviewResult> & {
         failed?: boolean;
         reason?: string;
@@ -372,20 +425,26 @@ export function PlanWizard() {
     if (!preview) return;
     setSubmitting(true);
     try {
-      const resp = await fetch("/api/study-plans", {
-        method: "POST",
+      const isAdjust = variant === "adjust" && planId != null;
+      const resp = await fetch(isAdjust ? `/api/study-plans/${planId}` : "/api/study-plans", {
+        method: isAdjust ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...buildPayload(), phases: preview.phases, generatedBy: preview.generatedBy }),
+        body: JSON.stringify({
+          ...buildPayload(),
+          // 两种模式都直传 preview phases:创建走整体落库,调整保证「所见即所得」
+          phases: preview.phases,
+          generatedBy: preview.generatedBy,
+        }),
       });
       const data = (await resp.json()) as { ok?: boolean; error?: string };
       if (!resp.ok || !data.ok) {
-        toast.error(data.error ?? "计划保存失败");
+        toast.error(data.error ?? (isAdjust ? "计划调整失败" : "计划保存失败"));
         return;
       }
-      toast.success("备考计划已开启");
+      toast.success(isAdjust ? "计划已调整,今日任务按新方案执行" : "备考计划已开启");
       router.refresh(); // 父页面(服务端)重读 ACTIVE 计划 → 切作战主页
     } catch {
-      toast.error("计划保存失败(服务未响应)");
+      toast.error(variant === "adjust" ? "计划调整失败(服务未响应)" : "计划保存失败(服务未响应)");
     } finally {
       setSubmitting(false);
     }
@@ -393,10 +452,11 @@ export function PlanWizard() {
 
   /* ---------- 确认页(preview 到手后覆盖向导) ---------- */
   if (preview) {
+    const isAdjust = variant === "adjust";
     return (
       <div className={CARD}>
         <div className="mb-1 flex items-center gap-2.5">
-          <h3 className="text-[15px]">确认你的备考计划</h3>
+          <h3 className="text-[15px]">{isAdjust ? "确认调整后的计划" : "确认你的备考计划"}</h3>
           <span
             className={`rounded-full px-2 py-0.5 text-[11px] ${
               preview.generatedBy === "llm"
@@ -408,7 +468,9 @@ export function PlanWizard() {
           </span>
         </div>
         <p className={`${HINT} mb-4`}>
-          共 {preview.weeks} 周 · 距考试 {preview.days} 天 · 确认后立即生效(原计划自动归档)
+          {isAdjust
+            ? `共 ${preview.weeks} 周 · 距考试 ${preview.days} 天 · 已过周与打卡历史保持不变,仅重排未来周;确认后立即生效`
+            : `共 ${preview.weeks} 周 · 距考试 ${preview.days} 天 · 确认后立即生效(原计划自动归档)`}
         </p>
 
         <div className="grid gap-3">
@@ -441,7 +503,7 @@ export function PlanWizard() {
 
         <div className="mt-4 flex gap-2.5">
           <button type="button" className={BTN_PRIMARY} onClick={confirmCreate} disabled={submitting}>
-            {submitting ? "开启中…" : "确认开启计划"}
+            {submitting ? (isAdjust ? "调整中…" : "开启中…") : isAdjust ? "确认调整" : "确认开启计划"}
           </button>
           <button
             type="button"
@@ -454,6 +516,16 @@ export function PlanWizard() {
           >
             重新生成
           </button>
+          {isAdjust && (
+            <button
+              type="button"
+              className={BTN}
+              disabled={submitting}
+              onClick={() => router.push("/plan")}
+            >
+              放弃修改
+            </button>
+          )}
         </div>
       </div>
     );

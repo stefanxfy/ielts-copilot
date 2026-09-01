@@ -17,6 +17,14 @@ import type { TaskCheck } from "@/lib/study/checklist";
 import { daysBetween, todayStr } from "@/lib/study/date";
 import { ExamNoticeDialog } from "@/components/plan/exam-notice";
 import { PunchCalendar } from "@/components/plan/punch-calendar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const CARD = "rounded-xl border border-[#dfe4ec] bg-white p-5";
 const BTN =
@@ -41,6 +49,8 @@ const SLOT_LABEL: Record<string, string> = {
 };
 
 export interface BattleHomeProps {
+  /** ACTIVE 计划 id(归档 DELETE 用) */
+  planId: number;
   examDate: string;
   weekNo: number;
   phase?: { name: string; focus: string };
@@ -53,6 +63,7 @@ export interface BattleHomeProps {
 }
 
 export function BattleHome({
+  planId,
   examDate,
   weekNo,
   phase,
@@ -63,6 +74,8 @@ export function BattleHome({
 }: BattleHomeProps) {
   const router = useRouter();
   const [noticeOpen, setNoticeOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [journal, setJournal] = useState(initialJournal);
   const [journalSaving, setJournalSaving] = useState(false);
   const [aiSummary, setAiSummary] = useState<AiSummary | null>(initialAiSummary);
@@ -140,6 +153,26 @@ export function BattleHome({
     }
   }
 
+  /** 归档计划:DELETE 后回 /plan,服务端无 ACTIVE → 自然落到全新向导 */
+  async function archivePlan() {
+    setArchiving(true);
+    try {
+      const resp = await fetch(`/api/study-plans/${planId}`, { method: "DELETE" });
+      const data = (await resp.json()) as { ok?: boolean; error?: string };
+      if (!resp.ok || !data.ok) {
+        toast.error(data.error ?? "归档失败");
+        return;
+      }
+      toast.success("计划已归档,学习记录保留");
+      router.push("/plan");
+      router.refresh();
+    } catch {
+      toast.error("归档请求失败(服务未响应)");
+    } finally {
+      setArchiving(false);
+    }
+  }
+
   return (
     <div className="grid items-start gap-4 lg:grid-cols-3">
       {/* ===== 左栏:倒计时 + 考前须知 ===== */}
@@ -164,7 +197,7 @@ export function BattleHome({
         </div>
         <p className={`${HINT} mt-2`}>考试日期 {examDate}</p>
         {daysLeft < 0 && (
-          <p className="mt-1 text-xs text-[#a06a12]">考试日已过,考完可归档再战(设置页/调整计划)</p>
+          <p className="mt-1 text-xs text-[#a06a12]">考试日已过,可归档再战或调整日期继续</p>
         )}
 
         <div className="mt-4 rounded-lg bg-[#f7f9fc] p-3.5">
@@ -174,8 +207,24 @@ export function BattleHome({
           </div>
           {phase && <p className="mt-1.5 text-[13px] leading-relaxed text-[#3c4656]">{phase.focus}</p>}
           {!phase && (
-            <p className="mt-1.5 text-[13px] text-[#8a93a2]">当前周已超出计划范围,可调整计划续期</p>
+            <p className="mt-1.5 text-[13px] text-[#8a93a2]">
+              当前周已超出计划范围,<button type="button" className="text-[#1a6feb] hover:underline" onClick={() => router.push("/plan?adjust=1")}>调整计划</button>可续期
+            </p>
           )}
+        </div>
+
+        {/* 计划管理入口:调整(只重排未来周)/ 归档(考完再战) */}
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            className={`${BTN} flex-1`}
+            onClick={() => router.push("/plan?adjust=1")}
+          >
+            调整计划
+          </button>
+          <button type="button" className={BTN} onClick={() => setArchiveOpen(true)}>
+            归档
+          </button>
         </div>
       </div>
 
@@ -303,6 +352,26 @@ export function BattleHome({
       </div>
 
       <ExamNoticeDialog open={noticeOpen} onClose={() => setNoticeOpen(false)} />
+
+      {/* 归档确认:归档后学习记录保留,页面回到全新向导 */}
+      <Dialog open={archiveOpen} onOpenChange={(o) => !o && setArchiveOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>归档当前备考计划?</DialogTitle>
+            <DialogDescription>
+              归档后本计划不再生效,页面回到全新向导;已保存的学习记录与打卡历史保留。考前归档一般用于推考后重开计划。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button type="button" className={BTN} onClick={() => setArchiveOpen(false)}>
+              取消
+            </button>
+            <button type="button" className={BTN_PRIMARY} disabled={archiving} onClick={archivePlan}>
+              {archiving ? "归档中…" : "确认归档"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

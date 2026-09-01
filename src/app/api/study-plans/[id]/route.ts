@@ -2,9 +2,12 @@
  * /api/study-plans/[id] — 调整 / 归档计划(P7)
  *
  * PATCH:调整计划(改考试日期/目标/节奏任意项)→ 重新 preview 级生成
- *        → **只重排锚点后的周**(已过周与打卡历史不动,规划决议 #4)
- *        → 回写 phases_json + updatedAt。支持 ?source=template 直连;
- *        LLM 失败返回 {failed:true, reason} 由前端弹窗询问。
+ *        → **只重排锚点后的周**(已过周与打卡历史不动,规划决议 #4)。
+ *        两种用法:
+ *          - ?preview=1     干跑:生成+合并但不落库,回 {phases, generatedBy, weeks, days}
+ *          - 无参数(确认)  body 必须带 preview 阶段返回的 phases+generatedBy,
+ *                           服务端校验后原样落库(所见即所得,避免确认瞬间重新生成)。
+ *        均支持 ?source=template 直连;LLM 失败返回 {failed:true, reason} 由前端弹窗询问。
  * DELETE:归档(考完再战;活动与日记保留关联)。
  */
 import { NextResponse } from "next/server";
@@ -54,6 +57,49 @@ export async function PATCH(
     return NextResponse.json({ error: "请求体不是合法 JSON" }, { status: 400 });
   }
 
+  /* 确认直传:把 preview=1 时服务端合并好的 phases 原样落库(所见即所得) */
+  const previewApply = new URL(request.url).searchParams.get("preview");
+  if (previewApply !== "1") {
+    const b = body as Record<string, unknown>;
+    const phases = b?.phases;
+    const generatedBy = b?.generatedBy;
+    if (!Array.isArray(phases) || phases.length === 0 || typeof generatedBy !== "string") {
+      return NextResponse.json(
+        { error: "缺少确认数据(phases/generatedBy),请先走 ?preview=1 预览" },
+        { status: 400 },
+      );
+    }
+    const db = getDb();
+    const plan = db.select().from(studyPlans).where(eq(studyPlans.id, planId)).get();
+    if (!plan || plan.status !== "ACTIVE") {
+      return NextResponse.json({ error: "ACTIVE 计划不存在" }, { status: 404 });
+    }
+    const input = parseWizardInput(body);
+    if (!input.ok) {
+      return NextResponse.json({ error: input.error }, { status: 400 });
+    }
+    const newTotalWeeks = totalWeeks(input.value.examDate, plan.planStartWeekMonday);
+    const check = validatePhasesOutput(phases, newTotalWeeks);
+    if (!check.ok) {
+      return NextResponse.json({ error: `计划数据不合法:${check.reason}` }, { status: 400 });
+    }
+    db.update(studyPlans)
+      .set({
+        examDate: input.value.examDate,
+        targetOverallBand: input.value.targetOverallBand,
+        targetScoresJson: input.value.targetScores,
+        availabilityJson: input.value.availability,
+        phasesJson: check.phases as PlanPhase[],
+        generatedBy: generatedBy === "template" ? "template" : "llm",
+        updatedAt: new Date(),
+      })
+      .where(eq(studyPlans.id, planId))
+      .run();
+    const updated = db.select().from(studyPlans).where(eq(studyPlans.id, planId)).get();
+    return NextResponse.json({ ok: true, plan: updated });
+  }
+
+  /* ---- 以下为 ?preview=1 干跑:生成+合并,不落库 ---- */
   const parsed = parseWizardInput(body);
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -157,6 +203,16 @@ export async function PATCH(
       { error: `合并后的计划不合法:${finalCheck.reason}` },
       { status: 500 },
     );
+  }
+
+  /* ?preview=1:干跑不落库,回预览(weeks/days 供确认页展示) */
+  if (previewApply === "1") {
+    return NextResponse.json({
+      phases: finalCheck.phases as PlanPhase[],
+      generatedBy: source === "template" ? ("template" as const) : ("llm" as const),
+      weeks: newTotalWeeks,
+      days: daysBetween(input.examDate, today),
+    });
   }
 
   db.update(studyPlans)
