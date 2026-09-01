@@ -5,13 +5,15 @@
  * 目标分通过可空入参传入(P7 计划表建好后由 ACTIVE 计划提供;现恒为 null,
  * 曲线不出目标线、薄弱清单按 6.0 兜底判定)。
  *
- * 口径:
- * - 曲线数据点 = COMPLETED 场次按 finishedAt 升序;同场次各科取最新一条
- *   已交卷记录的 band(与 computeSessionOverall 同一「按科目取最新」原则)
- * - 雷达 = 最近一场各科 band vs 历史已完成场次的均值(口语无数据不出维度)
+ * 口径(P6.1 修订):
+ * - 总分曲线数据点 = COMPLETED 完整套卷场次按 finishedAt 升序;同场次各科取
+ *   最新一条已交卷记录的 band(与 computeSessionOverall 同一「按科目取最新」原则)
+ * - 单科曲线 = 场次内该科成绩 + 单科散考交卷记录一并统计(每次交卷都是一个点,
+ *   kind 区分 full/single,前端实线/虚线区分渲染)
+ * - 雷达 = 各科最近成绩 vs 该科全部交卷记录均值(含散考;口语无数据不出维度)
  * - 薄弱清单 = 卷×科目粒度:该卷该科「最近一次 band」< 目标 − 0.5 → 列入
  */
-import { and, desc, eq, isNotNull, or } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   examRecords,
@@ -32,18 +34,24 @@ export const SUBJECT_LABEL: Record<string, string> = {
   speaking: "口语",
 };
 
-/** 曲线一个数据点(一场 COMPLETED 场次) */
+/** 曲线一个数据点 */
 export interface CurvePoint {
-  sessionId: string;
+  /** 完整场次点为 sessionId;散考点为 null */
+  sessionId: string | null;
+  /** 散考点对应单科卷 examId;完整场次点 null */
+  examId: string | null;
   /** 时间轴标签(M/D) */
   label: string;
   finishedAtMs: number;
-  overall: number;
-  listening: number;
-  reading: number;
-  writing: number;
-  /** tooltip 用:套卷名 */
+  /** 仅完整场次有值;散考 null */
+  overall: number | null;
+  listening: number | null;
+  reading: number | null;
+  writing: number | null;
+  /** tooltip 用:套卷名/单科卷名 */
   setTitle: string;
+  /** full=完整套卷场次点;single=单科散考点 */
+  kind: "full" | "single";
 }
 
 /** 薄弱清单一项(卷 × 科目) */
@@ -78,12 +86,12 @@ export interface DashboardData {
     weekSessions: number;
     totalUsedSec: number;
   };
-  /** ② 分数曲线(升序) */
+  /** ② 分数曲线(升序;full=完整场次点,single=单科散考点) */
   curve: CurvePoint[];
-  /** ③ 雷达:最近 vs 历史均值 */
+  /** ③ 雷达:各科最近成绩 vs 该科全部交卷均值(含散考) */
   radar: {
     items: { subject: ChartSubject; latest: number; avg: number }[];
-    /** 参与均值统计的场次数 */
+    /** 参与均值统计的记录总数(场次内成绩 + 散考) */
     sampleCount: number;
   };
   /** ④ 薄弱真题清单 */
@@ -166,11 +174,52 @@ function loadCompletedSessions(): SessionRows[] {
   }));
 }
 
+/**
+ * 取全部单科散考交卷记录(session_id 为空,即未走完整套卷流程的单科练习)。
+ * 与场次内成绩一起构成单科曲线/雷达的数据源。
+ */
+function loadStandaloneRecords(): {
+  examId: string;
+  subject: Subject;
+  bandScore: number;
+  submittedAtMs: number;
+  title: string;
+}[] {
+  const db = getDb();
+  const rows = db
+    .select({
+      examId: examRecords.examId,
+      subject: examRecords.subject,
+      bandScore: examRecords.bandScore,
+      submittedAt: examRecords.submittedAt,
+      title: papers.title,
+    })
+    .from(examRecords)
+    .leftJoin(papers, eq(papers.examId, examRecords.examId))
+    .where(
+      and(
+        isNull(examRecords.sessionId),
+        isNotNull(examRecords.bandScore),
+        or(eq(examRecords.status, "SUBMITTED"), eq(examRecords.status, "COMPLETED")),
+      ),
+    )
+    .orderBy(desc(examRecords.submittedAt))
+    .all();
+  return rows.map((r) => ({
+    examId: r.examId,
+    subject: r.subject,
+    bandScore: r.bandScore as number,
+    submittedAtMs: r.submittedAt?.getTime() ?? 0,
+    title: r.title ?? r.examId,
+  }));
+}
+
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** 组装仪表盘全部数据。targetOverall 来自 ACTIVE 备考计划(P7),可空。 */
 export function getDashboardData(targetOverall: number | null = null): DashboardData {
   const sessions = loadCompletedSessions();
+  const standalones = loadStandaloneRecords();
   const now = Date.now();
   const weekAgo = now - 7 * 86400_000;
 
@@ -199,38 +248,76 @@ export function getDashboardData(targetOverall: number | null = null): Dashboard
     }
   }
 
-  // ② 曲线(按完成时间升序)
-  const curve: CurvePoint[] = [...sessions]
+  // ② 曲线(按时间升序)。总分维度只认完整场次点;单科维度两类点都画。
+  const fullPoints: CurvePoint[] = [...sessions]
     .sort((a, b) => a.finishedAtMs - b.finishedAtMs)
     .map((s) => {
       const d = new Date(s.finishedAtMs);
       return {
         sessionId: s.sessionId,
+        examId: null,
         label: `${d.getMonth() + 1}/${d.getDate()}`,
         finishedAtMs: s.finishedAtMs,
         overall: s.overall,
-        listening: s.subjects.get("listening") ?? 0,
-        reading: s.subjects.get("reading") ?? 0,
-        writing: s.subjects.get("writing") ?? 0,
+        listening: s.subjects.get("listening") ?? null,
+        reading: s.subjects.get("reading") ?? null,
+        writing: s.subjects.get("writing") ?? null,
         setTitle: s.setTitle,
+        kind: "full" as const,
       };
     });
+  const singlePoints: CurvePoint[] = standalones
+    .map((r) => {
+      const d = new Date(r.submittedAtMs);
+      return {
+        sessionId: null,
+        examId: r.examId,
+        label: `${d.getMonth() + 1}/${d.getDate()}`,
+        finishedAtMs: r.submittedAtMs,
+        overall: null,
+        listening: r.subject === "listening" ? r.bandScore : null,
+        reading: r.subject === "reading" ? r.bandScore : null,
+        writing: r.subject === "writing" ? r.bandScore : null,
+        setTitle: r.title,
+        kind: "single" as const,
+      };
+    })
+    .sort((a, b) => a.finishedAtMs - b.finishedAtMs);
+  const curve: CurvePoint[] = [...fullPoints, ...singlePoints].sort(
+    (a, b) => a.finishedAtMs - b.finishedAtMs,
+  );
 
-  // ③ 雷达:最近 vs 历史均值(各科有值的场次才参与该科均值)
-  const radarItems: DashboardData["radar"]["items"] = [];
-  if (latest) {
+  // ③ 雷达:各科最近成绩 vs 该科全部交卷均值(场次内成绩 + 散考一并统计)。
+  // 最近成绩 = 场次与散考合并后该科时间最新的 band;均值同样跨两类记录。
+  const bandTimeSeries = new Map<ChartSubject, { band: number; ts: number }[]>();
+  for (const p of fullPoints) {
     for (const s of CHART_SUBJECTS) {
-      const latestVal = latest.subjects.get(s);
-      if (latestVal == null) continue;
-      const vals = sessions
-        .map((x) => x.subjects.get(s))
-        .filter((v): v is number => v != null);
-      const avg = vals.length
-        ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10
-        : latestVal;
-      radarItems.push({ subject: s, latest: latestVal, avg });
+      const v = p[s];
+      if (v == null) continue;
+      if (!bandTimeSeries.has(s)) bandTimeSeries.set(s, []);
+      bandTimeSeries.get(s)!.push({ band: v, ts: p.finishedAtMs });
     }
   }
+  for (const p of singlePoints) {
+    for (const s of CHART_SUBJECTS) {
+      const v = p[s];
+      if (v == null) continue;
+      if (!bandTimeSeries.has(s)) bandTimeSeries.set(s, []);
+      bandTimeSeries.get(s)!.push({ band: v, ts: p.finishedAtMs });
+    }
+  }
+  const radarItems: DashboardData["radar"]["items"] = [];
+  let radarSampleCount = 0;
+  for (const s of CHART_SUBJECTS) {
+    const series = bandTimeSeries.get(s) ?? [];
+    if (!series.length) continue;
+    radarSampleCount += series.length;
+    const latestVal = series.reduce((a, b) => (b.ts >= a.ts ? b : a)).band;
+    const avg =
+      Math.round((series.reduce((a, b) => a + b.band, 0) / series.length) * 10) / 10;
+    radarItems.push({ subject: s, latest: latestVal, avg });
+  }
+  radarItems.sort((a, b) => a.subject.localeCompare(b.subject));
 
   // ④ 薄弱清单(卷×科目:最近一次 band < 目标−0.5;仅已交卷且有 band 的记录)
   const effectiveTarget = targetOverall ?? 6.0;
@@ -309,7 +396,7 @@ export function getDashboardData(targetOverall: number | null = null): Dashboard
       totalUsedSec,
     },
     curve,
-    radar: { items: radarItems, sampleCount: sessions.length },
+    radar: { items: radarItems, sampleCount: radarSampleCount },
     weakItems,
     effectiveTarget,
   };

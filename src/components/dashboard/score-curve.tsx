@@ -2,8 +2,10 @@
  * ScoreCurveChart — 分数曲线(P6 仪表盘)
  *
  * 维度切换:总分 / 听力 / 阅读 / 写作(口语无真题数据不出维度)
+ * 口径:总分 = 仅 COMPLETED 完整套卷场次;单科 = 场次内成绩 + 单科散考交卷一并统计
+ *       (实心点 = 完整场次,空心点 = 散考)
  * 目标线:targetOverall 非空时叠加对应虚线(总分→总目标;分科→该科目标)
- * tooltip:该场四科 band + 成绩单链接
+ * tooltip:该点四科 band + 来源标记 + 成绩单/试卷链接
  * 空态由父级(服务端)渲染,本组件收到的 data 保证非空。
  */
 "use client";
@@ -46,23 +48,44 @@ interface CustomTipProps {
 function CurveTooltip({ active, payload }: CustomTipProps) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
+  const fmt = (v: number | null) => (v != null ? v.toFixed(1) : "—");
   return (
     <div className="rounded-lg border border-[#dfe4ec] bg-white px-3 py-2 text-xs shadow-lg">
-      <div className="font-medium text-[#10233f]">{p.setTitle}</div>
+      <div className="flex items-center gap-1.5 font-medium text-[#10233f]">
+        {p.setTitle}
+        <span
+          className={`rounded px-1 py-px text-[10px] ${
+            p.kind === "full"
+              ? "bg-[#e8f0fe] text-[#1a6feb]"
+              : "bg-[#fff7e6] text-[#c07d10]"
+          }`}
+        >
+          {p.kind === "full" ? "完整场次" : "单科练习"}
+        </span>
+      </div>
       <div className="mt-1 space-y-0.5 text-[#5b6574]">
         <div>
-          总分 <span className="font-semibold text-[#1a6feb]">{p.overall.toFixed(1)}</span>
+          总分 <span className="font-semibold text-[#1a6feb]">{fmt(p.overall)}</span>
         </div>
-        <div>听力 {p.listening ? p.listening.toFixed(1) : "—"}</div>
-        <div>阅读 {p.reading ? p.reading.toFixed(1) : "—"}</div>
-        <div>写作 {p.writing ? p.writing.toFixed(1) : "—"}</div>
+        <div>听力 {fmt(p.listening)}</div>
+        <div>阅读 {fmt(p.reading)}</div>
+        <div>写作 {fmt(p.writing)}</div>
       </div>
-      <Link
-        href={`/session/${p.sessionId}`}
-        className="mt-1.5 inline-block text-[#1a6feb] hover:underline"
-      >
-        查看成绩单 →
-      </Link>
+      {p.sessionId ? (
+        <Link
+          href={`/session/${p.sessionId}`}
+          className="mt-1.5 inline-block text-[#1a6feb] hover:underline"
+        >
+          查看成绩单 →
+        </Link>
+      ) : p.examId ? (
+        <Link
+          href={`/exam/${p.examId}`}
+          className="mt-1.5 inline-block text-[#1a6feb] hover:underline"
+        >
+          再练这份卷 →
+        </Link>
+      ) : null}
     </div>
   );
 }
@@ -78,10 +101,15 @@ export default function ScoreCurveChart({
   const meta = DIM_META[dim];
 
   const chartData = useMemo(
-    () => data.map((p) => ({ ...p, value: p[dim] || null })),
+    () =>
+      data
+        // 总分维度只统计完整套卷场次;单科维度含单科散考
+        .filter((p) => (dim === "overall" ? p.kind === "full" : true))
+        .map((p) => ({ ...p, value: p[dim] })),
     [data, dim],
   );
   const target = targets[dim] ?? null;
+  const hasSingle = dim !== "overall" && chartData.some((p) => p.kind === "single");
 
   return (
     <div className="rounded-xl border border-[#dfe4ec] bg-white">
@@ -135,9 +163,12 @@ export default function ScoreCurveChart({
                 }}
               />
             )}
+            {/* 完整套卷场次点:实线 + 实心点(散考点对该系列为 null) */}
             <Line
               type="monotone"
-              dataKey="value"
+              dataKey={(row: (typeof chartData)[number]) =>
+                row.kind === "full" ? row.value : null
+              }
               name={meta.label}
               stroke={meta.color}
               strokeWidth={2.5}
@@ -145,8 +176,35 @@ export default function ScoreCurveChart({
               activeDot={{ r: 6 }}
               connectNulls
             />
+            {/* 单科散考点:虚线 + 空心点,与场次点视觉区分 */}
+            {hasSingle && (
+              <Line
+                type="monotone"
+                dataKey={(row: (typeof chartData)[number]) =>
+                  row.kind === "single" ? row.value : null
+                }
+                name={`${meta.label}·散考`}
+                stroke={meta.color}
+                strokeWidth={2}
+                strokeDasharray="5 4"
+                strokeOpacity={0.75}
+                dot={{
+                  r: 3.5,
+                  fill: "#ffffff",
+                  stroke: meta.color,
+                  strokeWidth: 2,
+                }}
+                activeDot={{ r: 6 }}
+                connectNulls
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
+      </div>
+      <div className="border-t border-[#f2f4f8] px-4 py-2 text-[11px] text-[#8a93a2]">
+        {dim === "overall"
+          ? "总分仅统计完整套卷场次"
+          : `● 完整套卷场次 · ○ 单科散考(两类成绩均计入)`}
       </div>
     </div>
   );

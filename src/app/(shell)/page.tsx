@@ -38,7 +38,7 @@ export default function DashboardPage() {
     <>
       <h2 className="text-xl">仪表盘 · 成绩分析</h2>
       <p className="mb-5 text-[13px] text-[#5b6574]">
-        基于历史成绩分析 · 曲线与薄弱项由每场模考数据驱动
+        基于历史成绩分析 · 总分曲线看完整模考,单科曲线/雷达含单科练习
       </p>
 
       {/* ① 能力总览 4 卡 */}
@@ -114,7 +114,7 @@ export default function DashboardPage() {
               <>
                 <AbilityRadar items={radar.items} />
                 <div className="px-4 pb-3 text-[11px] text-[#8a93a2]">
-                  最近一场 vs 历史均值(共 {radar.sampleCount} 场) · 口语暂无真题数据
+                  最近成绩 vs 历史均值(共 {radar.sampleCount} 条记录,含单科练习) · 口语暂无真题数据
                 </div>
               </>
             ) : (

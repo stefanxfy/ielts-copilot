@@ -1,7 +1,8 @@
 /**
  * AbilityRadar — 四科能力雷达(P6 仪表盘)
  *
- * 双系列:最近一场 vs 历史均值;无数据维度自动隐藏(口语无真题恒不出现)。
+ * 双系列:各科最近成绩 vs 该科全部交卷均值(含完整场次与单科散考);
+ * 无数据维度自动隐藏(口语无真题恒不出现)。
  * 与写作批改卡雷达同一视觉语言(#1a6feb/#e8871e)。
  */
 "use client";
@@ -51,7 +52,7 @@ export default function AbilityRadar({ items }: { items: RadarEntry[] }) {
             axisLine={false}
           />
           <Radar
-            name="最近一场"
+            name="最近成绩"
             dataKey="最近"
             stroke="#1a6feb"
             fill="#1a6feb"
@@ -59,7 +60,7 @@ export default function AbilityRadar({ items }: { items: RadarEntry[] }) {
             strokeWidth={2}
           />
           <Radar
-            name="历史均值"
+            name="历史均值(含散考)"
             dataKey="均值"
             stroke="#e8871e"
             fill="#e8871e"
