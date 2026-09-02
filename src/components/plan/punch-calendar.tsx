@@ -42,9 +42,9 @@ function levelOf(a: ActivityRow | undefined, rules: PunchRules): 0 | 1 | 2 {
 }
 
 const LEVEL_CLS: Record<0 | 1 | 2, string> = {
-  0: "text-[#3c4656]",
-  1: "bg-[#c9efdc] text-[#116b45]",
-  2: "bg-[#1a9e5c] text-white",
+  0: "text-muted-foreground",
+  1: "bg-success/25 text-success",
+  2: "bg-success text-white",
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -114,7 +114,7 @@ export function PunchCalendar({
           <button
             type="button"
             aria-label="上一月"
-            className="flex h-6 w-6 items-center justify-center rounded-md text-[#5b6574] transition-colors hover:bg-[#f1f4f9] hover:text-[#1a6feb]"
+            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
             onClick={() => nav(-1)}
           >
             ‹
@@ -123,7 +123,7 @@ export function PunchCalendar({
             type="button"
             aria-label="下一月"
             disabled={isCurrentMonth}
-            className="flex h-6 w-6 items-center justify-center rounded-md text-[#5b6574] transition-colors hover:bg-[#f1f4f9] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
             onClick={() => nav(1)}
           >
             ›
@@ -133,7 +133,7 @@ export function PunchCalendar({
 
       <div className="grid grid-cols-7 gap-y-1 text-center">
         {WEEK_HEADS.map((h) => (
-          <div key={h} className="pb-1 text-[11px] text-[#8a93a2]">
+          <div key={h} className="pb-1 text-[11px] text-muted-foreground">
             {h}
           </div>
         ))}
@@ -150,9 +150,9 @@ export function PunchCalendar({
             <div key={date} className="flex justify-center">
               <div
                 className={`relative flex h-7 w-7 items-center justify-center rounded-full text-[12px] ${LEVEL_CLS[level]} ${
-                  date === today ? "ring-1 ring-[#1a6feb] ring-offset-1" : ""
+                  date === today ? "ring-1 ring-primary ring-offset-1" : ""
                 } ${
-                  date === examDate ? "outline outline-1 outline-dashed outline-[#f0a03c] outline-offset-2" : ""
+                  date === examDate ? "outline outline-1 outline-dashed outline-warning outline-offset-2" : ""
                 } ${future ? "opacity-40" : ""}`}
                 title={
                   level > 0
@@ -162,7 +162,7 @@ export function PunchCalendar({
               >
                 {day}
                 {hasJournal && (
-                  <span className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-[#f0a03c]" />
+                  <span className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-warning" />
                 )}
               </div>
             </div>
@@ -170,21 +170,21 @@ export function PunchCalendar({
         })}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#8a93a2]">
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#c9efdc]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-success/25" />
           单达标
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#1a9e5c]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-success" />
           双达标
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#f0a03c]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-warning" />
           有心得
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-full outline outline-1 outline-dashed outline-[#f0a03c]" />
+          <span className="h-2.5 w-2.5 rounded-full outline outline-1 outline-dashed outline-warning" />
           考试日
         </span>
       </div>

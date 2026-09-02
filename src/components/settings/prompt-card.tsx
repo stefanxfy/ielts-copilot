@@ -10,12 +10,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const CARD = "mb-4 max-w-[680px] rounded-xl border border-[#dfe4ec] bg-white p-5";
+const CARD = "mb-4 max-w-[680px] rounded-xl border border-border bg-card p-5";
 const BTN =
-  "rounded-md border border-[#dfe4ec] bg-white px-3 py-1.5 text-[13px] text-[#1c2330] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
-  "rounded-md bg-[#1a6feb] px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-[#0d4fa8] disabled:cursor-not-allowed disabled:opacity-50";
-const HINT = "text-xs text-[#8a93a2]";
+  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+const HINT = "text-xs text-muted-foreground";
 
 interface PromptItem {
   key: string;
@@ -120,42 +120,42 @@ export function PromptCard() {
           const dirty = draft !== item.text;
           const err = errors[item.key] ?? null;
           return (
-            <div key={item.key} className="rounded-lg border border-[#e7ecf3]">
+            <div key={item.key} className="rounded-lg border border-border">
               <button
                 type="button"
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
                 onClick={() => setOpenKey(open ? null : item.key)}
               >
-                <span className="text-[13px] font-medium text-[#1c2330]">{item.label}</span>
+                <span className="text-[13px] font-medium text-foreground">{item.label}</span>
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-[10px] ${
                     item.isDefault
-                      ? "bg-[#f1f4f9] text-[#8a93a2]"
-                      : "bg-[#eef3fb] text-[#1a6feb]"
+                      ? "bg-secondary text-muted-foreground"
+                      : "bg-primary/10 text-primary"
                   }`}
                 >
                   {item.isDefault ? "默认" : "已自定义"}
                 </span>
-                <span className="flex-1 truncate text-[12px] text-[#8a93a2]">{item.description}</span>
-                <span className="text-[#8a93a2]">{open ? "⌃" : "⌄"}</span>
+                <span className="flex-1 truncate text-[12px] text-muted-foreground">{item.description}</span>
+                <span className="text-muted-foreground">{open ? "⌃" : "⌄"}</span>
               </button>
 
               {open && (
-                <div className="border-t border-[#eef0f4] px-3 pb-3 pt-2.5">
+                <div className="border-t border-border px-3 pb-3 pt-2.5">
                   <div className="mb-2 grid gap-1">
                     {item.placeholders.map((p) => (
-                      <div key={p.name} className="text-[11px] text-[#8a93a2]">
-                        <code className="rounded bg-[#f1f4f9] px-1 text-[#1a6feb]">{p.name}</code>
+                      <div key={p.name} className="text-[11px] text-muted-foreground">
+                        <code className="rounded bg-secondary px-1 text-primary">{p.name}</code>
                         {" "}
                         {p.desc}
                         {!item.required.includes(p.name) && (
-                          <span className="ml-1 text-[#b6bdc9]">(可选,写了就近注入)</span>
+                          <span className="ml-1 text-muted-foreground/60">(可选,写了就近注入)</span>
                         )}
                       </div>
                     ))}
                   </div>
                   <textarea
-                    className="min-h-[180px] w-full resize-y rounded-md border border-[#dfe4ec] bg-white px-2.5 py-2 font-mono text-[12px] leading-relaxed outline-none focus:border-[#1a6feb]"
+                    className="min-h-[180px] w-full resize-y rounded-md border border-border bg-card px-2.5 py-2 font-mono text-[12px] leading-relaxed outline-none focus:border-primary"
                     value={draft}
                     onChange={(e) => {
                       setDrafts((d) => ({ ...d, [item.key]: e.target.value }));

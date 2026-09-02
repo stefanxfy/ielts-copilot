@@ -3,7 +3,7 @@
  *
  * 双系列:各科最近成绩 vs 该科全部交卷均值(含完整场次与单科散考);
  * 无数据维度自动隐藏(口语无真题恒不出现)。
- * 与写作批改卡雷达同一视觉语言(#1a6feb/#e8871e)。
+ * 与写作批改卡雷达同一视觉语言(primary/warning 语义变量)。
  */
 "use client";
 
@@ -43,27 +43,27 @@ export default function AbilityRadar({ items }: { items: RadarEntry[] }) {
     <div className="h-[300px] w-full px-2 py-3">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
-          <PolarGrid stroke="#e3e8f0" />
-          <PolarAngleAxis dataKey="dim" tick={{ fill: "#5b6574", fontSize: 12 }} />
+          <PolarGrid stroke="var(--border)" />
+          <PolarAngleAxis dataKey="dim" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
           <PolarRadiusAxis
             domain={[0, 9]}
             tickCount={4}
-            tick={{ fill: "#b6bdc9", fontSize: 10 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 10, opacity: 0.6 }}
             axisLine={false}
           />
           <Radar
             name="最近成绩"
             dataKey="最近"
-            stroke="#1a6feb"
-            fill="#1a6feb"
+            stroke="var(--chart-1)"
+            fill="var(--chart-1)"
             fillOpacity={0.22}
             strokeWidth={2}
           />
           <Radar
             name="历史均值(含散考)"
             dataKey="均值"
-            stroke="#e8871e"
-            fill="#e8871e"
+            stroke="var(--chart-4)"
+            fill="var(--chart-4)"
             fillOpacity={0.18}
             strokeWidth={2}
           />

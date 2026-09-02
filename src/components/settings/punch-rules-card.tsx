@@ -11,14 +11,14 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { PunchRules } from "@/db/schema";
 
-const CARD = "mb-4 max-w-[680px] rounded-xl border border-[#dfe4ec] bg-white p-5";
+const CARD = "mb-4 max-w-[680px] rounded-xl border border-border bg-card p-5";
 const ROW = "mb-3 flex items-center gap-2.5";
-const LABEL = "w-[150px] shrink-0 text-[13px] text-[#5b6574]";
+const LABEL = "w-[150px] shrink-0 text-[13px] text-muted-foreground";
 const INPUT =
-  "h-9 w-[110px] rounded-md border border-[#dfe4ec] bg-white px-2.5 text-[13px] outline-none focus:border-[#1a6feb]";
+  "h-9 w-[110px] rounded-md border border-border bg-card px-2.5 text-[13px] outline-none focus:border-primary";
 const BTN_PRIMARY =
-  "rounded-md bg-[#1a6feb] px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-[#0d4fa8] disabled:cursor-not-allowed disabled:opacity-50";
-const HINT = "text-xs text-[#8a93a2]";
+  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+const HINT = "text-xs text-muted-foreground";
 
 export function PunchRulesCard() {
   const [loaded, setLoaded] = useState(false);
@@ -108,7 +108,7 @@ export function PunchRulesCard() {
             <label className={LABEL}>两项同时达标才算满格</label>
             <input
               type="checkbox"
-              className="accent-[#1a6feb]"
+              className="accent-primary"
               checked={bothForFull}
               onChange={(e) => setBothForFull(e.target.checked)}
             />

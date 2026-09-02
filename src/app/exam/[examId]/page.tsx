@@ -99,12 +99,12 @@ export default async function ExamPage({
         <ExamBackButton isReview={isReview} />
         <h1 className="text-sm font-medium">{paper.title}</h1>
         {isReview && (
-          <span className="rounded bg-[#eef4ff] px-2 py-0.5 text-[11px] text-[#1a6feb]">
+          <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
             错题回看模式
           </span>
         )}
         {isSessionMode && (
-          <span className="rounded bg-[#eefaf3] px-2 py-0.5 text-[11px] text-[#18925c]">
+          <span className="rounded bg-success/10 px-2 py-0.5 text-[11px] text-success">
             全套模考 · {paper.subject === "listening" ? "第 1 科" : paper.subject === "reading" ? "第 2 科" : "第 3 科"} / 3
           </span>
         )}

@@ -20,22 +20,22 @@ export default function LearnPage() {
   return (
     <>
       <h2 className="text-xl">学习中心</h2>
-      <p className="mb-5 text-[13px] text-[#5b6574]">提分闭环功能 · 按版本逐步开放</p>
+      <p className="mb-5 text-[13px] text-muted-foreground">提分闭环功能 · 按版本逐步开放</p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((f) => (
           <button
             key={f.name}
             type="button"
             onClick={() => toast.info(`${f.name} ${f.ver} 提供`)}
-            className="cursor-pointer rounded-xl border border-[#dfe4ec] bg-white p-4 text-left transition-shadow hover:shadow-[0_4px_14px_rgba(16,35,63,0.08)]"
+            className="card-float cursor-pointer rounded-xl border border-border bg-card p-4 text-left"
           >
             <div className="flex items-center justify-between text-sm font-semibold">
               {f.name}
-              <span className="rounded-full border border-[#dfe4ec] px-[7px] py-px text-[10px] font-normal text-[#8a93a2]">
+              <span className="rounded-full border border-border px-[7px] py-px text-[10px] font-normal text-muted-foreground">
                 {f.ver}
               </span>
             </div>
-            <div className="mt-2 text-xs text-[#5b6574]">{f.desc}</div>
+            <div className="mt-2 text-xs text-muted-foreground">{f.desc}</div>
           </button>
         ))}
       </div>

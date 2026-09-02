@@ -53,7 +53,7 @@ export default async function MockPage({
   return (
     <>
       <MockClient initialMod={mod === "G" ? "G" : "A"} sets={data} />
-      <p className="mt-4 text-center text-[11px] text-[#b6bdc9]">
+      <p className="mt-4 text-center text-[11px] text-muted-foreground/60">
         本地题库:共 {allPapers.length} 份单科卷(A类 {aCount} · G类 {gCount}),{sets.length} 套完整真题
       </p>
     </>

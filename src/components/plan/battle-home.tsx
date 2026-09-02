@@ -26,12 +26,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const CARD = "rounded-xl border border-[#dfe4ec] bg-white p-5";
+const CARD = "card-float rounded-xl border border-border bg-card p-5";
 const BTN =
-  "rounded-md border border-[#dfe4ec] bg-white px-3 py-1.5 text-[13px] text-[#1c2330] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-50";
+  "press-bubble rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
-  "rounded-md bg-[#1a6feb] px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-[#0d4fa8] disabled:cursor-not-allowed disabled:opacity-50";
-const HINT = "text-xs text-[#8a93a2]";
+  "press-bubble rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+const HINT = "text-xs text-muted-foreground";
 
 const TASK_LABEL: Record<string, string> = {
   words: "背单词",
@@ -183,32 +183,32 @@ export function BattleHome({
             type="button"
             aria-label="考前须知"
             title="考前须知"
-            className="flex h-5 w-5 items-center justify-center rounded-full border border-[#dfe4ec] font-serif text-[11px] italic leading-none text-[#8a93a2] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb]"
+            className="flex h-5 w-5 items-center justify-center rounded-full border border-border font-serif text-[11px] italic leading-none text-muted-foreground transition-colors hover:border-primary hover:text-primary"
             onClick={() => setNoticeOpen(true)}
           >
             i
           </button>
         </div>
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-[44px] font-semibold leading-none text-[#1a6feb]">
+          <span className="text-[44px] font-semibold leading-none text-primary">
             {Math.max(0, daysLeft)}
           </span>
-          <span className="text-[13px] text-[#5b6574]">天</span>
+          <span className="text-[13px] text-muted-foreground">天</span>
         </div>
         <p className={`${HINT} mt-2`}>考试日期 {examDate}</p>
         {daysLeft < 0 && (
-          <p className="mt-1 text-xs text-[#a06a12]">考试日已过,可归档再战或调整日期继续</p>
+          <p className="mt-1 text-xs text-warning">考试日已过,可归档再战或调整日期继续</p>
         )}
 
-        <div className="mt-4 rounded-lg bg-[#f7f9fc] p-3.5">
+        <div className="mt-4 rounded-lg bg-muted/60 p-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-[12px] text-[#8a93a2]">第 {weekNo} 周</span>
-            {phase && <span className="text-[12px] font-medium text-[#1c2330]">{phase.name}</span>}
+            <span className="text-[12px] text-muted-foreground">第 {weekNo} 周</span>
+            {phase && <span className="text-[12px] font-medium text-foreground">{phase.name}</span>}
           </div>
-          {phase && <p className="mt-1.5 text-[13px] leading-relaxed text-[#3c4656]">{phase.focus}</p>}
+          {phase && <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{phase.focus}</p>}
           {!phase && (
-            <p className="mt-1.5 text-[13px] text-[#8a93a2]">
-              当前周已超出计划范围,<button type="button" className="text-[#1a6feb] hover:underline" onClick={() => router.push("/plan?adjust=1")}>调整计划</button>可续期
+            <p className="mt-1.5 text-[13px] text-muted-foreground">
+              当前周已超出计划范围,<button type="button" className="text-primary hover:underline" onClick={() => router.push("/plan?adjust=1")}>调整计划</button>可续期
             </p>
           )}
         </div>
@@ -234,7 +234,7 @@ export function BattleHome({
           <h3 className="text-[15px]">今日任务</h3>
           <button
             type="button"
-            className={HINT + " hover:text-[#1a6feb]"}
+            className={HINT + " hover:text-primary"}
             onClick={() => router.refresh()}
           >
             刷新
@@ -242,7 +242,7 @@ export function BattleHome({
         </div>
         <p className={`${HINT} mt-1 mb-3`}>科目任务按本周累计判定;背单词按当日判定</p>
         {tasks.length === 0 ? (
-          <p className="py-8 text-center text-[13px] text-[#8a93a2]">当前周没有排期任务</p>
+          <p className="py-8 text-center text-[13px] text-muted-foreground">当前周没有排期任务</p>
         ) : (
           <div className="grid gap-2.5">
             {tasks.map((t, i) => (
@@ -250,30 +250,30 @@ export function BattleHome({
                 key={i}
                 className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 ${
                   t.exempt
-                    ? "border-[#eef0f4] bg-[#fafbfd] opacity-70"
+                    ? "border-border bg-muted/40 opacity-70"
                     : t.done
-                      ? "border-[#cde8da] bg-[#f3fbf7]"
-                      : "border-[#e7ecf3] bg-white"
+                      ? "border-success/30 bg-success/10"
+                      : "border-border bg-card"
                 }`}
               >
                 <span
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
                     t.exempt
-                      ? "border border-[#dfe4ec] text-[#c3cad4]"
+                      ? "border border-border text-muted-foreground/50"
                       : t.done
-                        ? "bg-[#1a9e5c] text-white"
-                        : "border border-[#c3cad4] text-transparent"
+                        ? "bg-success text-white"
+                        : "border border-border text-transparent"
                   }`}
                 >
                   ✓
                 </span>
                 <div className="flex-1">
-                  <div className="text-[13px] text-[#1c2330]">
+                  <div className="text-[13px] text-foreground">
                     {TASK_LABEL[t.type] ?? t.type} {t.count}
                     {t.unit}
-                    {t.slot ? <span className="ml-1.5 text-[#8a93a2]">· {SLOT_LABEL[t.slot] ?? t.slot}</span> : null}
+                    {t.slot ? <span className="ml-1.5 text-muted-foreground">· {SLOT_LABEL[t.slot] ?? t.slot}</span> : null}
                   </div>
-                  <div className="mt-0.5 text-[11px] text-[#8a93a2]">
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
                     {t.exempt
                       ? "暂无追踪(P8 口语上线后开启)"
                       : `进度 ${t.progress}/${t.count}`}
@@ -282,7 +282,7 @@ export function BattleHome({
                 {!t.exempt && (
                   <span
                     className={`text-[12px] font-medium ${
-                      t.done ? "text-[#18925c]" : "text-[#a06a12]"
+                      t.done ? "text-success" : "text-warning"
                     }`}
                   >
                     {t.done ? "已完成" : "进行中"}
@@ -304,7 +304,7 @@ export function BattleHome({
         <div className={CARD}>
           <h3 className="mb-2.5 text-[15px]">今日心得</h3>
           <textarea
-            className="min-h-[72px] w-full resize-y rounded-md border border-[#dfe4ec] bg-white px-2.5 py-2 text-[13px] outline-none focus:border-[#1a6feb]"
+            className="min-h-[72px] w-full resize-y rounded-md border border-border bg-card px-2.5 py-2 text-[13px] outline-none focus:border-primary"
             maxLength={5000}
             placeholder="今天练了什么、卡在哪、有什么收获…(选填)"
             value={journal}
@@ -327,12 +327,12 @@ export function BattleHome({
           </div>
           {aiSummary ? (
             <div className="mt-2.5">
-              <p className="text-[13px] leading-relaxed text-[#3c4656]">{aiSummary.summary}</p>
+              <p className="text-[13px] leading-relaxed text-muted-foreground">{aiSummary.summary}</p>
               {aiSummary.suggestions.length > 0 && (
                 <ul className="mt-2.5 grid gap-1.5">
                   {aiSummary.suggestions.map((s, i) => (
-                    <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-[#3c4656]">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#1a6feb]" />
+                    <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-muted-foreground">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                       <span>{s}</span>
                     </li>
                   ))}

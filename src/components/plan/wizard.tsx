@@ -37,14 +37,14 @@ import { ExamNoticeDialog } from "@/components/plan/exam-notice";
 
 /* ---------- 常量 ---------- */
 
-const CARD = "rounded-xl border border-[#dfe4ec] bg-white p-5";
+const CARD = "card-float rounded-xl border border-border bg-card p-5";
 const BTN =
-  "rounded-md border border-[#dfe4ec] bg-white px-3 py-1.5 text-[13px] text-[#1c2330] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-50";
+  "press-bubble rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
-  "rounded-md bg-[#1a6feb] px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-[#0d4fa8] disabled:cursor-not-allowed disabled:opacity-50";
+  "press-bubble rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
 const INPUT =
-  "h-9 flex-1 rounded-md border border-[#dfe4ec] bg-white px-2.5 text-[13px] outline-none focus:border-[#1a6feb]";
-const HINT = "text-xs text-[#8a93a2]";
+  "h-9 flex-1 rounded-md border border-border bg-card px-2.5 text-[13px] outline-none focus:border-primary";
+const HINT = "text-xs text-muted-foreground";
 
 const STEPS = ["考试日期", "目标分数", "备考节奏", "个人习惯", "每日任务量"];
 
@@ -179,7 +179,7 @@ function ExamCalendar({
             type="button"
             aria-label="上一月"
             disabled={beforeCurrentMonth}
-            className="flex h-6 w-6 items-center justify-center rounded-md text-[#5b6574] transition-colors hover:bg-[#f1f4f9] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
             onClick={() => nav(-1)}
           >
             ‹
@@ -187,7 +187,7 @@ function ExamCalendar({
           <button
             type="button"
             aria-label="下一月"
-            className="flex h-6 w-6 items-center justify-center rounded-md text-[#5b6574] transition-colors hover:bg-[#f1f4f9] hover:text-[#1a6feb]"
+            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
             onClick={() => nav(1)}
           >
             ›
@@ -196,7 +196,7 @@ function ExamCalendar({
       </div>
       <div className="grid grid-cols-7 gap-y-1 text-center">
         {WEEK_HEADS.map((h) => (
-          <div key={h} className="pb-1 text-[11px] text-[#8a93a2]">
+          <div key={h} className="pb-1 text-[11px] text-muted-foreground">
             {h}
           </div>
         ))}
@@ -215,11 +215,11 @@ function ExamCalendar({
                 disabled={past}
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] transition-colors ${
                   selected
-                    ? "bg-[#1a6feb] text-white"
+                    ? "bg-primary text-white"
                     : past
-                      ? "cursor-not-allowed text-[#c3cad4]"
-                      : "text-[#3c4656] hover:bg-[#eef3fb]"
-                } ${date === today && !selected ? "ring-1 ring-[#1a6feb] ring-offset-1" : ""}`}
+                      ? "cursor-not-allowed text-muted-foreground/50"
+                      : "text-muted-foreground hover:bg-primary/10"
+                } ${date === today && !selected ? "ring-1 ring-primary ring-offset-1" : ""}`}
                 onClick={() => onChange(date)}
               >
                 {day}
@@ -529,8 +529,8 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
           <span
             className={`rounded-full px-2 py-0.5 text-[11px] ${
               preview.generatedBy === "llm"
-                ? "bg-[#eef3fb] text-[#1a6feb]"
-                : "bg-[#fdf3e3] text-[#a06a12]"
+                ? "bg-primary/10 text-primary"
+                : "bg-warning/15 text-warning"
             }`}
           >
             {preview.generatedBy === "llm" ? "AI 定制" : "默认模板"}
@@ -548,20 +548,20 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             const locked =
               isAdjust && preview.currentWeek != null && p.weeks.some((w) => w < preview.currentWeek!);
             return (
-              <div key={i} className="rounded-lg border border-[#e7ecf3] bg-[#fafbfd] p-3.5">
+              <div key={i} className="rounded-lg border border-border bg-muted/40 p-3.5">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0 text-[13px] font-medium text-[#1c2330]">
+                  <div className="min-w-0 text-[13px] font-medium text-foreground">
                     {p.name}
-                    <span className="ml-2 text-[12px] font-normal text-[#8a93a2]">
+                    <span className="ml-2 text-[12px] font-normal text-muted-foreground">
                       {formatWeeks(p.weeks)}
                     </span>
                     {locked && (
-                      <span className="ml-2 rounded-full bg-[#f1f4f9] px-2 py-0.5 text-[11px] font-normal text-[#8a93a2]">
+                      <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
                         已过周 · 不可改
                       </span>
                     )}
                   </div>
-                  <span className="shrink-0 text-[12px] text-[#5b6574]">{p.focus}</span>
+                  <span className="shrink-0 text-[12px] text-muted-foreground">{p.focus}</span>
                 </div>
                 <div className="mt-2 grid gap-1.5">
                   {p.weeklyTasks.length === 0 && (
@@ -570,7 +570,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                   {p.weeklyTasks.map((t, j) => (
                     <div key={j} className="flex flex-wrap items-center gap-1.5">
                       {locked ? (
-                        <span className="rounded-md border border-[#e7ecf3] bg-white px-2 py-1 text-[12px] text-[#3c4656]">
+                        <span className="rounded-md border border-border bg-muted px-2 py-1 text-[12px] text-muted-foreground">
                           {TASK_LABEL[t.type]} {t.count}
                           {t.unit}
                           {t.slot ? ` · ${SLOT_LABEL[t.slot]}` : ""}
@@ -579,7 +579,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                         <>
                           <select
                             aria-label="任务类型"
-                            className="h-7 rounded-md border border-[#dfe4ec] bg-white px-1.5 text-[12px] text-[#1c2330] outline-none focus:border-[#1a6feb]"
+                            className="h-7 rounded-md border border-border bg-card px-1.5 text-[12px] text-foreground outline-none focus:border-primary"
                             value={t.type}
                             onChange={(e) => onTaskTypeChange(i, j, e.target.value as TaskType)}
                           >
@@ -591,7 +591,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                           </select>
                           <input
                             aria-label="任务量"
-                            className="h-7 w-16 rounded-md border border-[#dfe4ec] bg-white px-1.5 text-center text-[12px] text-[#1c2330] outline-none focus:border-[#1a6feb]"
+                            className="h-7 w-16 rounded-md border border-border bg-card px-1.5 text-center text-[12px] text-foreground outline-none focus:border-primary"
                             inputMode="decimal"
                             value={countDrafts[`${i}-${j}`] ?? String(t.count)}
                             onChange={(e) => {
@@ -615,10 +615,10 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                               });
                             }}
                           />
-                          <span className="text-[12px] text-[#8a93a2]">{t.unit}</span>
+                          <span className="text-[12px] text-muted-foreground">{t.unit}</span>
                           <select
                             aria-label="建议时段"
-                            className="h-7 rounded-md border border-[#dfe4ec] bg-white px-1.5 text-[12px] text-[#1c2330] outline-none focus:border-[#1a6feb]"
+                            className="h-7 rounded-md border border-border bg-card px-1.5 text-[12px] text-foreground outline-none focus:border-primary"
                             value={t.slot ?? ""}
                             onChange={(e) => {
                               const v = e.target.value;
@@ -634,7 +634,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                           <button
                             type="button"
                             aria-label={`删除${TASK_LABEL[t.type]}任务`}
-                            className="flex h-7 w-7 items-center justify-center rounded-md text-[14px] text-[#8a93a2] transition-colors hover:bg-[#fdeeec] hover:text-[#d5453c]"
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-[14px] text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                             onClick={() => removeTask(i, j)}
                           >
                             ×
@@ -646,7 +646,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                   {!locked && (
                     <button
                       type="button"
-                      className="mt-0.5 w-fit rounded-md border border-dashed border-[#c9d2e0] px-2 py-1 text-[12px] text-[#5b6574] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-40"
+                      className="mt-0.5 w-fit rounded-md border border-dashed border-border px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                       disabled={p.weeklyTasks.length >= TASK_TYPES.length}
                       onClick={() => addTask(i)}
                     >
@@ -700,15 +700,15 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
           const passed = no < step;
           return (
             <div key={label} className="flex items-center gap-1.5">
-              {i > 0 && <span className="mx-0.5 h-px w-4 bg-[#dfe4ec]" />}
+              {i > 0 && <span className="mx-0.5 h-px w-4 bg-border" />}
               <button
                 type="button"
                 className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] transition-colors ${
                   active
-                    ? "bg-[#1a6feb] text-white"
+                    ? "bg-primary text-white"
                     : passed
-                      ? "text-[#1a6feb]"
-                      : "text-[#8a93a2]"
+                      ? "text-primary"
+                      : "text-muted-foreground"
                 }`}
                 onClick={() => passed && setStep(no)}
               >
@@ -717,8 +717,8 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                     active
                       ? "bg-white/20"
                       : passed
-                        ? "bg-[#eef3fb]"
-                        : "bg-[#f1f4f9]"
+                        ? "bg-primary/10"
+                        : "bg-secondary"
                   }`}
                 >
                   {no}
@@ -738,7 +738,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             机考每日可考,选一个目标日;过去日期不可选。
             <button
               type="button"
-              className="ml-1 text-[#1a6feb] hover:underline"
+              className="ml-1 text-primary hover:underline"
               onClick={() => setNoticeOpen(true)}
             >
               查看考前须知
@@ -748,7 +748,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             <ExamCalendar value={examDate} onChange={setExamDate} />
           </div>
           {examDate && (
-            <p className="mt-2.5 text-[13px] text-[#1c2330]">
+            <p className="mt-2.5 text-[13px] text-foreground">
               已选:<span className="font-medium">{examDate}</span>
             </p>
           )}
@@ -760,7 +760,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         <div>
           <h3 className="mb-3 text-[15px]">目标分数</h3>
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="w-[110px] shrink-0 text-[13px] text-[#5b6574]">目标总分</span>
+            <span className="w-[110px] shrink-0 text-[13px] text-muted-foreground">目标总分</span>
             <select
               className={INPUT}
               value={overall}
@@ -777,7 +777,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             const label = { listening: "听力", reading: "阅读", writing: "写作", speaking: "口语" }[k];
             return (
               <div key={k} className="mb-3 flex items-center gap-2.5">
-                <span className="w-[110px] shrink-0 text-[13px] text-[#5b6574]">{label}目标</span>
+                <span className="w-[110px] shrink-0 text-[13px] text-muted-foreground">{label}目标</span>
                 <select
                   className={INPUT}
                   value={targets[k] ?? ""}
@@ -796,11 +796,11 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             );
           })}
           <div className="mb-1.5 flex items-center justify-between">
-            <span className="text-[13px] text-[#5b6574]">英语水平自述(选填,帮助 AI 更准地定制)</span>
+            <span className="text-[13px] text-muted-foreground">英语水平自述(选填,帮助 AI 更准地定制)</span>
             <span className={HINT}>{englishLevel.length}/200</span>
           </div>
           <textarea
-            className="min-h-[76px] w-full resize-y rounded-md border border-[#dfe4ec] bg-white px-2.5 py-2 text-[13px] outline-none focus:border-[#1a6feb]"
+            className="min-h-[76px] w-full resize-y rounded-md border border-border bg-card px-2.5 py-2 text-[13px] outline-none focus:border-primary"
             maxLength={200}
             value={englishLevel}
             placeholder="例:在职备考,每天晚上学习;四级 520 分,阅读还行,写作没系统练过,口语开口少。"
@@ -814,7 +814,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         <div>
           <h3 className="mb-3 text-[15px]">备考节奏</h3>
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="w-[110px] shrink-0 text-[13px] text-[#5b6574]">当前状态</span>
+            <span className="w-[110px] shrink-0 text-[13px] text-muted-foreground">当前状态</span>
             <select
               className={INPUT}
               value={mode}
@@ -825,7 +825,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             </select>
           </div>
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="w-[110px] shrink-0 text-[13px] text-[#5b6574]">每日可投入</span>
+            <span className="w-[110px] shrink-0 text-[13px] text-muted-foreground">每日可投入</span>
             <select
               className={INPUT}
               value={dailyHours}
@@ -838,16 +838,16 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
               ))}
             </select>
           </div>
-          <div className="mb-1.5 text-[13px] text-[#5b6574]">可安排时段(勾选并调整起止时间)</div>
+          <div className="mb-1.5 text-[13px] text-muted-foreground">可安排时段(勾选并调整起止时间)</div>
           {SEGMENTS.map((seg) => {
             const checked = segChecked[seg.key];
             const range = segRanges[seg.key];
             return (
               <div key={seg.key} className="mb-2 flex items-center gap-2.5">
-                <label className="flex w-[110px] shrink-0 cursor-pointer items-center gap-2 text-[13px] text-[#1c2330]">
+                <label className="flex w-[110px] shrink-0 cursor-pointer items-center gap-2 text-[13px] text-foreground">
                   <input
                     type="checkbox"
-                    className="accent-[#1a6feb]"
+                    className="accent-primary"
                     checked={checked}
                     onChange={(e) =>
                       setSegChecked((s) => ({ ...s, [seg.key]: e.target.checked }))
@@ -868,7 +868,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                       }))
                     }
                   />
-                  <span className="text-[#8a93a2]">–</span>
+                  <span className="text-muted-foreground">–</span>
                   <input
                     type="time"
                     className={INPUT}
@@ -897,7 +897,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             作息用于划分上午/中午/下午/晚上;各科偏好时段会优先安排对应任务。点「下一步」时保存,设置页可随时改。
           </p>
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="w-[110px] shrink-0 text-[13px] text-[#5b6574]">起床时间</span>
+            <span className="w-[110px] shrink-0 text-[13px] text-muted-foreground">起床时间</span>
             <input
               type="time"
               className={INPUT}
@@ -906,7 +906,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             />
           </div>
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="w-[110px] shrink-0 text-[13px] text-[#5b6574]">睡觉时间</span>
+            <span className="w-[110px] shrink-0 text-[13px] text-muted-foreground">睡觉时间</span>
             <input
               type="time"
               className={INPUT}
@@ -914,10 +914,10 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
               onChange={(e) => setBedTime(e.target.value)}
             />
           </div>
-          <div className="mb-1.5 text-[13px] text-[#5b6574]">各科偏好时段(选填)</div>
+          <div className="mb-1.5 text-[13px] text-muted-foreground">各科偏好时段(选填)</div>
           {TASK_TYPES.map((t) => (
             <div key={t} className="mb-2 flex items-center gap-2.5">
-              <span className="w-[110px] shrink-0 text-[13px] text-[#5b6574]">{TASK_LABEL[t]}</span>
+              <span className="w-[110px] shrink-0 text-[13px] text-muted-foreground">{TASK_LABEL[t]}</span>
               <select
                 className={INPUT}
                 value={subjectSlots[t] ?? ""}
@@ -945,7 +945,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
             申报每日背词数(选填);不填由 AI / 默认模板按你的可用时段安排。
           </p>
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="w-[130px] shrink-0 text-[13px] text-[#5b6574]">每日背单词(个)</span>
+            <span className="w-[130px] shrink-0 text-[13px] text-muted-foreground">每日背单词(个)</span>
             <input
               className={INPUT}
               inputMode="numeric"
@@ -954,7 +954,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
               onChange={(e) => setDailyWords(e.target.value.replace(/\D/g, ""))}
             />
           </div>
-          <div className="mb-4 rounded-lg bg-[#f7f9fc] px-3 py-2.5 text-[12px] leading-relaxed text-[#5b6574]">
+          <div className="mb-4 rounded-lg bg-muted/60 px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
             点「生成计划」后,AI 将结合你的考试日期、目标分、历史成绩与可用时段生成
             分阶段方案;生成后可先过目再确认开启。
           </div>

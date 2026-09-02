@@ -8,7 +8,7 @@ import { Topbar } from "@/components/shell/topbar";
 
 export default function ShellLayout({ children }: PropsWithChildren) {
   return (
-    <div className="min-h-screen bg-[#f4f6fa]">
+    <div className="min-h-screen bg-background">
       <Topbar />
       <main className="mx-auto max-w-[1180px] px-5 pt-6 pb-[90px]">{children}</main>
     </div>

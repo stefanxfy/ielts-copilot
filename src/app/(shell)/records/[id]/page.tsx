@@ -106,65 +106,65 @@ export default async function RecordDetailPage({
       </div>
 
       <h2 className="text-xl">{paper.title} · 成绩单</h2>
-      <p className="mb-5 text-[13px] text-[#5b6574]">
+      <p className="mb-5 text-[13px] text-muted-foreground">
         {SUBJECT_LABEL[row.subject] ?? row.subject} · 交卷于 {fmtTime(row.submittedAt)}
       </p>
 
       {/* 成绩摘要 */}
       <div className="mb-6 grid gap-4 sm:grid-cols-4">
-        <div className="rounded-xl border border-[#dfe4ec] bg-white p-5 text-center">
-          <div className="text-[30px] font-bold text-[#1a6feb]">
+        <div className="rounded-xl border border-border bg-card p-5 text-center">
+          <div className="text-[30px] font-bold text-primary">
             {row.bandScore ?? "—"}
           </div>
-          <div className="mt-1 text-xs text-[#5b6574]">Band 分数</div>
+          <div className="mt-1 text-xs text-muted-foreground">Band 分数</div>
         </div>
         {!isWriting && (
           <>
-            <div className="rounded-xl border border-[#dfe4ec] bg-white p-5 text-center">
-              <div className="text-[30px] font-bold text-[#1c2330]">
+            <div className="rounded-xl border border-border bg-card p-5 text-center">
+              <div className="text-[30px] font-bold text-foreground">
                 {row.correctCount ?? "—"}/40
               </div>
-              <div className="mt-1 text-xs text-[#5b6574]">答对题数</div>
+              <div className="mt-1 text-xs text-muted-foreground">答对题数</div>
             </div>
-            <div className="rounded-xl border border-[#dfe4ec] bg-white p-5 text-center">
-              <div className="text-[30px] font-bold text-[#e05252]">{wrongCount}</div>
-              <div className="mt-1 text-xs text-[#5b6574]">错题 / 未答</div>
+            <div className="rounded-xl border border-border bg-card p-5 text-center">
+              <div className="text-[30px] font-bold text-destructive">{wrongCount}</div>
+              <div className="mt-1 text-xs text-muted-foreground">错题 / 未答</div>
             </div>
           </>
         )}
         {isWriting && <div className="hidden sm:block" />}
         {isWriting && (
-          <div className="rounded-xl border border-[#dfe4ec] bg-white p-5 text-center">
-            <div className="text-[30px] font-bold text-[#1c2330]">
+          <div className="rounded-xl border border-border bg-card p-5 text-center">
+            <div className="text-[30px] font-bold text-foreground">
               {writingTasks.some((t) => t.value) ? "AI" : "—"}
             </div>
-            <div className="mt-1 text-xs text-[#5b6574]">四维批改</div>
+            <div className="mt-1 text-xs text-muted-foreground">四维批改</div>
           </div>
         )}
-        <div className="rounded-xl border border-[#dfe4ec] bg-white p-5 text-center">
-          <div className="text-[30px] font-bold text-[#1c2330]">
+        <div className="rounded-xl border border-border bg-card p-5 text-center">
+          <div className="text-[30px] font-bold text-foreground">
             {fmtDuration(row.usedSec)}
           </div>
-          <div className="mt-1 text-xs text-[#5b6574]">用时</div>
+          <div className="mt-1 text-xs text-muted-foreground">用时</div>
         </div>
       </div>
 
       {/* 客观卷逐题明细 */}
       {!isWriting && (
-        <div className="rounded-xl border border-[#dfe4ec] bg-white">
-          <div className="border-b border-[#dfe4ec] px-4 py-3 text-[15px] font-medium">
+        <div className="rounded-xl border border-border bg-card">
+          <div className="border-b border-border px-4 py-3 text-[15px] font-medium">
             逐题明细 · 点击题号跳回真题
           </div>
           {[...byPart.entries()]
             .sort((a, b) => a[0] - b[0])
             .map(([part, list]) => (
               <div key={part}>
-                <div className="bg-[#f7f9fc] px-4 py-2 text-xs font-medium text-[#5b6574]">
+                <div className="bg-muted/60 px-4 py-2 text-xs font-medium text-muted-foreground">
                   Part {part}
                 </div>
                 <table className="w-full border-collapse text-[13px]">
                   <thead>
-                    <tr className="border-b border-[#dfe4ec] text-left text-xs text-[#5b6574]">
+                    <tr className="border-b border-border text-left text-xs text-muted-foreground">
                       <th className="px-2.5 py-2 font-medium">题号</th>
                       <th className="px-2.5 py-2 font-medium">结果</th>
                       <th className="px-2.5 py-2 font-medium">你的作答</th>
@@ -179,25 +179,25 @@ export default async function RecordDetailPage({
                       return (
                         <tr
                           key={anchor}
-                          className={`border-b border-[#dfe4ec] last:border-0 ${
-                            e.correct ? "" : "bg-[#fdf3f3]"
+                          className={`border-b border-border last:border-0 ${
+                            e.correct ? "" : "bg-destructive/10"
                           }`}
                         >
                           <td className="px-2.5 py-2">
                             <Link
                               href={jumpHref(anchor)}
-                              className="font-medium text-[#1a6feb] hover:underline"
+                              className="font-medium text-primary hover:underline"
                             >
                               Q{e.number}
                             </Link>
                           </td>
                           <td className="px-2.5 py-2">
                             {e.correct ? (
-                              <span className="text-[#18925c]">✓ 正确</span>
+                              <span className="text-success">✓ 正确</span>
                             ) : e.value ? (
-                              <span className="text-[#e05252]">✗ 错误</span>
+                              <span className="text-destructive">✗ 错误</span>
                             ) : (
-                              <span className="text-[#8a93a2]">— 未答</span>
+                              <span className="text-muted-foreground">— 未答</span>
                             )}
                           </td>
                           <td className="px-2.5 py-2">{fmtValue(e.value)}</td>
@@ -232,22 +232,22 @@ export default async function RecordDetailPage({
             essays={extractEssayPresence(writingTasks)}
           />
 
-          <div className="mt-6 rounded-xl border border-[#dfe4ec] bg-white">
-            <div className="border-b border-[#dfe4ec] px-4 py-3 text-[15px] font-medium">
+          <div className="mt-6 rounded-xl border border-border bg-card">
+            <div className="border-b border-border px-4 py-3 text-[15px] font-medium">
               作文全文
             </div>
             {writingTasks.map((t) => (
-              <div key={t.task} className="border-b border-[#dfe4ec] px-4 py-4 last:border-0">
-                <div className="mb-2 text-xs font-medium text-[#5b6574]">
+              <div key={t.task} className="border-b border-border px-4 py-4 last:border-0">
+                <div className="mb-2 text-xs font-medium text-muted-foreground">
                   Task {t.task === "T1" ? "1" : "2"}
                   {t.value ? ` · ${t.value.length} 字符` : " · 未作答"}
                 </div>
                 {t.value ? (
-                  <pre className="max-h-[360px] overflow-auto rounded-lg bg-[#f7f9fc] p-3 text-[13px] leading-relaxed whitespace-pre-wrap">
+                  <pre className="max-h-[360px] overflow-auto rounded-lg bg-muted/60 p-3 text-[13px] leading-relaxed whitespace-pre-wrap">
                     {t.value}
                   </pre>
                 ) : (
-                  <div className="text-xs text-[#8a93a2]">未提交内容</div>
+                  <div className="text-xs text-muted-foreground">未提交内容</div>
                 )}
               </div>
             ))}

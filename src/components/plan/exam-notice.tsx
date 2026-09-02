@@ -42,9 +42,9 @@ export function ExamNoticeDialog({
           {EXAM_NOTICE_ITEMS.map((t, i) => (
             <li
               key={i}
-              className="flex gap-2.5 text-[13px] leading-relaxed text-[#3c4656]"
+              className="flex gap-2.5 text-[13px] leading-relaxed text-muted-foreground"
             >
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#eef3fb] text-[11px] font-medium text-[#1a6feb]">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">
                 {i + 1}
               </span>
               <span>{t}</span>

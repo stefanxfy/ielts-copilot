@@ -35,18 +35,18 @@ import { TemplateRulesCard } from "@/components/settings/template-rules-card";
 import { useSettings } from "@/stores/settings";
 
 /* ---------- 原型同款基础样式 ---------- */
-const CARD = "rounded-xl border border-[#dfe4ec] bg-white p-5";
+const CARD = "rounded-xl border border-border bg-card p-5";
 const SECTION = "mb-10";
 const ROW = "mb-3 flex items-center gap-2.5";
-const LABEL = "w-[130px] shrink-0 text-[13px] text-[#5b6574]";
+const LABEL = "w-[130px] shrink-0 text-[13px] text-muted-foreground";
 const INPUT =
-  "h-9 flex-1 rounded-md border border-[#dfe4ec] bg-white px-2.5 text-[13px] outline-none focus:border-[#1a6feb] aria-invalid:border-destructive";
+  "h-9 flex-1 rounded-md border border-border bg-card px-2.5 text-[13px] outline-none focus:border-primary aria-invalid:border-destructive";
 const BTN =
-  "rounded-md border border-[#dfe4ec] bg-white px-3 py-1.5 text-[13px] text-[#1c2330] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
-  "rounded-md bg-[#1a6feb] px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-[#0d4fa8] disabled:cursor-not-allowed disabled:opacity-50";
-const HINT = "text-xs text-[#8a93a2]";
-const H2 = "mb-3 text-[15px] font-medium text-[#1c2330]";
+  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+const HINT = "text-xs text-muted-foreground";
+const H2 = "mb-3 text-[15px] font-medium text-foreground";
 const CARD_W = "mb-4 max-w-[680px]";
 
 /* 分区锚点 */
@@ -254,7 +254,7 @@ export default function SettingsPage() {
   return (
     <>
       <h2 className="text-xl">设置</h2>
-      <p className="mb-5 text-[13px] text-[#5b6574]">
+      <p className="mb-5 text-[13px] text-muted-foreground">
         AI 配置存于本机 <code>config.json</code> · 界面修改与直接编辑文件均生效
         （以文件修改时间较新者为准）
         {fileError && (
@@ -268,7 +268,7 @@ export default function SettingsPage() {
           <a
             key={s.id}
             href={`#${s.id}`}
-            className="rounded-full border border-[#dfe4ec] bg-white px-3 py-1 text-[13px] text-[#5b6574] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb]"
+            className="rounded-full border border-border bg-card px-3 py-1 text-[13px] text-muted-foreground transition-colors hover:border-primary hover:text-primary"
           >
             {s.label}
           </a>
@@ -356,7 +356,7 @@ export default function SettingsPage() {
               <div
                 className={`mb-3.5 rounded-lg border px-3 py-2 text-[13px] ${
                   testResult.ok
-                    ? "border-[#cde8da] bg-[#eefaf3] text-[#18925c]"
+                    ? "border-success/30 bg-success/10 text-success"
                     : "border-destructive/40 bg-destructive/10 text-destructive"
                 }`}
               >
@@ -376,7 +376,7 @@ export default function SettingsPage() {
             </div>
 
             {portChanged && (
-              <p className="mt-3 rounded-lg border border-[#f0e3b8] bg-[#fdf6e3] px-3 py-2 text-xs text-[#7a5c10]">
+              <p className="mt-3 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs font-medium text-warning">
                 端口已变更：重启应用（或重新双击启动）后生效。
               </p>
             )}

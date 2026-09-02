@@ -19,16 +19,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const CARD = "mb-4 max-w-[680px] rounded-xl border border-[#dfe4ec] bg-white p-5";
+const CARD = "mb-4 max-w-[680px] rounded-xl border border-border bg-card p-5";
 const ROW = "mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5";
-const LABEL = "w-[130px] shrink-0 text-[13px] text-[#5b6574]";
+const LABEL = "w-[130px] shrink-0 text-[13px] text-muted-foreground";
 const INPUT =
-  "h-9 min-w-0 flex-1 rounded-md border border-[#dfe4ec] bg-white px-2.5 text-[13px] outline-none focus:border-[#1a6feb]";
+  "h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-2.5 text-[13px] outline-none focus:border-primary";
 const BTN =
-  "rounded-md border border-[#dfe4ec] bg-white px-3 py-1.5 text-[13px] text-[#1c2330] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
-  "rounded-md bg-[#1a6feb] px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-[#0d4fa8] disabled:cursor-not-allowed disabled:opacity-50";
-const HINT = "text-xs text-[#8a93a2]";
+  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+const HINT = "text-xs text-muted-foreground";
 
 const PHASE_LABEL: Record<"basic" | "strengthen" | "sprint", string> = {
   basic: "基础期",
@@ -233,7 +233,7 @@ export function TemplateRulesCard() {
       ) : (
         <>
           {/* 阶段比例 */}
-          <div className="mb-1.5 text-[13px] font-medium text-[#1c2330]">阶段划分</div>
+          <div className="mb-1.5 text-[13px] font-medium text-foreground">阶段划分</div>
           {(["long", "mid", "short"] as const).map((key) => (
             <div key={key} className={ROW}>
               <span className={LABEL}>{RATIO_LABEL[key]}</span>
@@ -242,14 +242,14 @@ export function TemplateRulesCard() {
                 {(["basic", "strengthen", "sprint"] as const).map((phase, i) => (
                   <div key={phase} className="flex min-w-0 items-center gap-1.5">
                     <input
-                      className="h-9 w-16 min-w-0 rounded-md border border-[#dfe4ec] bg-white px-2 text-center text-[13px] outline-none focus:border-[#1a6feb]"
+                      className="h-9 w-16 min-w-0 rounded-md border border-border bg-card px-2 text-center text-[13px] outline-none focus:border-primary"
                       inputMode="numeric"
                       value={ratios[`${key}.${i}`] ?? ""}
                       onChange={(e) =>
                         setRatios((r) => ({ ...r, [`${key}.${i}`]: e.target.value }))
                       }
                     />
-                    <span className="shrink-0 text-[12px] text-[#8a93a2]">{PHASE_LABEL[phase]}</span>
+                    <span className="shrink-0 text-[12px] text-muted-foreground">{PHASE_LABEL[phase]}</span>
                   </div>
                 ))}
               </div>
@@ -257,13 +257,13 @@ export function TemplateRulesCard() {
           ))}
 
           {/* 基准任务表 */}
-          <div className="mb-1.5 mt-4 text-[13px] font-medium text-[#1c2330]">
+          <div className="mb-1.5 mt-4 text-[13px] font-medium text-foreground">
             基准任务表(每天 2h 基准)
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
               <thead>
-                <tr className="text-left text-[#8a93a2]">
+                <tr className="text-left text-muted-foreground">
                   <th className="py-1 pr-2 font-normal">阶段</th>
                   {TASK_TYPES.map((t) => (
                     <th key={t} className="py-1 pr-2 font-normal">
@@ -275,11 +275,11 @@ export function TemplateRulesCard() {
               <tbody>
                 {(["basic", "strengthen", "sprint"] as const).map((phase) => (
                   <tr key={phase}>
-                    <td className="py-1 pr-2 text-[#5b6574]">{PHASE_LABEL[phase]}</td>
+                    <td className="py-1 pr-2 text-muted-foreground">{PHASE_LABEL[phase]}</td>
                     {TASK_TYPES.map((t) => (
                       <td key={t} className="py-1 pr-2">
                         <input
-                          className="h-8 w-16 rounded-md border border-[#dfe4ec] bg-white px-2 text-[12px] outline-none focus:border-[#1a6feb]"
+                          className="h-8 w-16 rounded-md border border-border bg-card px-2 text-[12px] outline-none focus:border-primary"
                           inputMode="decimal"
                           value={base[`${phase}.${t}`] ?? ""}
                           onChange={(e) =>
@@ -298,7 +298,7 @@ export function TemplateRulesCard() {
           </p>
 
           {/* 上限与阈值 */}
-          <div className="mb-1.5 mt-4 text-[13px] font-medium text-[#1c2330]">上限与阈值</div>
+          <div className="mb-1.5 mt-4 text-[13px] font-medium text-foreground">上限与阈值</div>
           {SMALL_FIELDS.map(([key, label]) => (
             <div key={key} className={ROW}>
               <span className={LABEL}>{label}</span>

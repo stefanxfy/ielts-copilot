@@ -46,15 +46,15 @@ const SEC_META = [
 ] as const;
 
 /* ---------- 原型同款基础样式 ---------- */
-const CARD = "rounded-xl border border-[#dfe4ec] bg-white p-5";
-const BTN = "rounded-md border border-[#dfe4ec] bg-white px-3 py-1.5 text-[13px] text-[#1c2330] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb]";
-const BTN_PRIMARY = "rounded-md bg-[#1a6feb] px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-[#0d4fa8]";
+const CARD = "card-float rounded-xl border border-border bg-card p-5";
+const BTN = "press-bubble rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary";
+const BTN_PRIMARY = "press-bubble rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90";
 
 function YearEmpty({ year }: { year: number }) {
   return (
-    <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-[#dfe4ec] bg-[#fafbfc] px-[18px] py-3 opacity-65">
-      <span className="text-sm font-semibold text-[#8a93a2]">{year} 年</span>
-      <span className="text-xs text-[#8a93a2]">· 暂无真题</span>
+    <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-border bg-muted/50 px-[18px] py-3 opacity-65">
+      <span className="text-sm font-semibold text-muted-foreground">{year} 年</span>
+      <span className="text-xs text-muted-foreground">· 暂无真题</span>
     </div>
   );
 }
@@ -78,13 +78,13 @@ function YearHead({
     <button
       type="button"
       onClick={onToggle}
-      className="flex w-full cursor-pointer select-none items-center gap-2.5 px-[18px] py-3.5 text-left transition-colors hover:bg-[#e8f0fe]"
+      className="flex w-full cursor-pointer select-none items-center gap-2.5 px-[18px] py-3.5 text-left transition-colors hover:bg-primary/10"
     >
-      <span className={`text-xs text-[#8a93a2] transition-transform ${open ? "rotate-90" : ""}`}>▶</span>
+      <span className={`text-xs text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}>▶</span>
       <span className="text-base font-bold">{year} 年</span>
-      <span className="text-xs font-normal text-[#8a93a2]">{note}</span>
-      <span className="ml-auto text-xs text-[#8a93a2]">
-        已完成 <b className="text-sm text-[#0d4fa8]">{done}</b> / {total} 套
+      <span className="text-xs font-normal text-muted-foreground">{note}</span>
+      <span className="ml-auto text-xs text-muted-foreground">
+        已完成 <b className="text-sm text-primary">{done}</b> / {total} 套
       </span>
     </button>
   );
@@ -168,7 +168,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       const key = `sub-${subject}-${year}`;
       const open = openYears[key] ?? true;
       return (
-        <div key={year} className="mb-3 overflow-hidden rounded-xl border border-[#dfe4ec] bg-white">
+        <div key={year} className="mb-3 overflow-hidden rounded-xl border border-border bg-card">
           <YearHead
             year={year}
             note={`${SUBJECT_LABEL[subject]}真题`}
@@ -182,11 +182,11 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
               {list.map(({ set, paper }) => (
                 <div
                   key={paper.examId}
-                  className="flex items-center gap-3.5 rounded-lg border border-[#dfe4ec] bg-white px-4 py-3"
+                  className="flex items-center gap-3.5 rounded-lg border border-border bg-card px-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold">{paper.title}</div>
-                    <div className="mt-0.5 text-xs text-[#8a93a2]">
+                    <div className="mt-0.5 text-xs text-muted-foreground">
                       {SUBJECT_LABEL[subject]} · {STATUS_TEXT[paper.recordCount > 0 ? "done" : "todo"]} ·{" "}
                       {paper.durationMin} 分钟
                     </div>
@@ -207,12 +207,12 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
   return (
     <>
       <h2 className="text-xl">机考模拟</h2>
-      <p className="mb-5 text-[13px] text-[#5b6574]">
+      <p className="mb-5 text-[13px] text-muted-foreground">
         选择考试科目 · 全程还原官方机考体验 · 当前为 {MOD_SUB[mod]}题库
       </p>
 
       {/* A/G 切换(原型 mod-switch) */}
-      <div className="mb-2.5 inline-flex gap-1 rounded-[10px] border border-[#dfe4ec] bg-white p-1">
+      <div className="mb-2.5 inline-flex gap-1 rounded-xl border border-border bg-card p-1">
         {(["A", "G"] as const).map((m) => (
           <button
             key={m}
@@ -224,14 +224,14 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
             className={`flex cursor-pointer items-center gap-1.5 rounded-md px-[18px] py-[7px] text-[13px] ${
               mod === m
                 ? m === "A"
-                  ? "bg-[#fdf1e6] font-semibold text-[#a8540c]"
-                  : "bg-[#e8f0fe] font-semibold text-[#0d4fa8]"
-                : "text-[#5b6574]"
+                  ? "bg-warning/20 font-semibold text-warning"
+                  : "bg-primary/10 font-semibold text-primary"
+                : "text-muted-foreground"
             }`}
           >
             <span
               className={`inline-block size-2 rounded-full ${
-                mod === m ? (m === "A" ? "bg-[#d97b1a]" : "bg-[#1a6feb]") : "bg-[#8a93a2]"
+                mod === m ? (m === "A" ? "bg-warning" : "bg-primary") : "bg-muted-foreground/50"
               }`}
             />
             {m === "A" ? "A类 · 学术类" : "G类 · 培训类"}
@@ -240,7 +240,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       </div>
 
       {/* 科目 tab(原型 exam-tabs) */}
-      <div className="mb-[18px] flex max-w-[660px] gap-1 rounded-[10px] border border-[#dfe4ec] bg-white p-1">
+      <div className="mb-[18px] flex max-w-[660px] gap-1 rounded-xl border border-border bg-card p-1">
         {(
           [
             ["combined", "雅思综合"],
@@ -258,7 +258,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
               setDetailId(null);
             }}
             className={`flex-1 cursor-pointer rounded-md py-2 text-[13px] ${
-              tab === key ? "bg-[#e8f0fe] font-semibold text-[#0d4fa8]" : "text-[#5b6574]"
+              tab === key ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground"
             }`}
           >
             {label}
@@ -278,12 +278,12 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
                 </button>
                 <div>
                   <div className="text-[17px] font-bold">{detailSet.title}</div>
-                  <div className="mt-0.5 text-xs text-[#8a93a2]">
+                  <div className="mt-0.5 text-xs text-muted-foreground">
                     听力 → 阅读 → 写作 → 口语 · 结构化入库真题，即点即考
                   </div>
                 </div>
                 {setStatus(detailSet) === "done" && (
-                  <span className="rounded-full border border-[#cde8da] bg-[#eefaf3] px-2.5 py-0.5 text-[11px] text-[#18925c]">
+                  <span className="rounded-full border border-success/30 bg-success/10 px-2.5 py-0.5 text-[11px] text-success">
                     已完成
                   </span>
                 )}
@@ -292,23 +292,23 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
                 {SEC_META.map((sec) => {
                   const paper = detailSet.papers.find((p) => p.subject === sec.key);
                   return (
-                    <div key={sec.key} className="rounded-xl border border-[#dfe4ec] bg-white p-4">
+                    <div key={sec.key} className="rounded-xl border border-border bg-card p-4">
                       <div className="flex items-center justify-between text-[13px] font-semibold">
                         {sec.name}
                         {paper ? (
-                          <span className="rounded-full bg-[#e8f0fe] px-[7px] py-px text-[10px] text-[#0d4fa8]">
+                          <span className="rounded-full bg-primary/10 px-[7px] py-px text-[10px] text-primary">
                             可开始
                           </span>
                         ) : (
-                          <span className="rounded-full border border-[#dfe4ec] px-[7px] py-px text-[10px] text-[#8a93a2]">
+                          <span className="rounded-full border border-border px-[7px] py-px text-[10px] text-muted-foreground">
                             V2 提供
                           </span>
                         )}
                       </div>
-                      <div className="my-2 text-xs text-[#5b6574]">
+                      <div className="my-2 text-xs text-muted-foreground">
                         {sec.dur} · {sec.n}
                       </div>
-                      <div className="text-xs leading-relaxed text-[#8a93a2]">{sec.desc}</div>
+                      <div className="text-xs leading-relaxed text-muted-foreground">{sec.desc}</div>
                       <div className="mt-2.5">
                         {paper ? (
                           <Link href={`/exam/${paper.examId}`} className={BTN_PRIMARY}>
@@ -342,15 +342,15 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
                   {["听力 · 约30分钟", "阅读 · 60分钟", "写作 · 60分钟", "口语 · 11–14分钟"].map(
                     (step, i) => (
                       <span key={step} className="flex items-center gap-2">
-                        {i > 0 && <span className="text-[#8a93a2]">→</span>}
-                        <span className="rounded-md bg-[#e8f0fe] px-2.5 py-1 text-xs text-[#0d4fa8]">
+                        {i > 0 && <span className="text-muted-foreground">→</span>}
+                        <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs text-primary">
                           {step}
                         </span>
                       </span>
                     ),
                   )}
                 </div>
-                <div className="mt-2.5 text-xs text-[#8a93a2]">
+                <div className="mt-2.5 text-xs text-muted-foreground">
                   当前：<b>{MOD_INLINE[mod]}</b> · 按题库分组选择一套真题 → 点开查看四科详情 →
                   开始全套模考。已完成套题绿色标注。
                 </div>
@@ -364,7 +364,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
                   const key = `yr-${year}`;
                   const open = openYears[key] ?? true;
                   return (
-                    <div key={year} className="mb-3 overflow-hidden rounded-xl border border-[#dfe4ec] bg-white">
+                    <div key={year} className="mb-3 overflow-hidden rounded-xl border border-border bg-card">
                       <YearHead
                         year={year}
                         note={MOD_INLINE[mod]}
@@ -382,16 +382,16 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
                                 key={s.examSetId}
                                 type="button"
                                 onClick={() => setDetailId(s.examSetId)}
-                                className="cursor-pointer rounded-[9px] border border-[#dfe4ec] bg-white px-3 py-2.5 text-left transition-all hover:border-[#1a6feb] hover:shadow-[0_3px_10px_rgba(16,35,63,0.08)]"
+                                className="cursor-pointer rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-all hover:border-primary hover:shadow-lg hover:shadow-primary/10"
                               >
                                 <div className="text-[13px] font-semibold">{s.title}</div>
                                 <div
                                   className={`mt-0.5 text-[11px] ${
                                     st === "done"
-                                      ? "text-[#18925c]"
+                                      ? "text-success"
                                       : st === "part"
-                                        ? "text-[#c07d10]"
-                                        : "text-[#8a93a2]"
+                                        ? "text-warning"
+                                        : "text-muted-foreground"
                                   }`}
                                 >
                                   {STATUS_TEXT[st]}
@@ -413,7 +413,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       {/* ===== 单科面板 ===== */}
       {tab === "listening" && (
         <div>
-          <div className="mb-3.5 text-[13px] text-[#5b6574]">
+          <div className="mb-3.5 text-[13px] text-muted-foreground">
             选择一套听力真题开始机考 · 约 30 分钟 · Part 1-4 · A/G 类同卷
           </div>
           {singleList("listening")}
@@ -421,7 +421,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       )}
       {tab === "reading" && (
         <div>
-          <div className="mb-3.5 text-[13px] text-[#5b6574]">
+          <div className="mb-3.5 text-[13px] text-muted-foreground">
             选择一套阅读真题开始机考 · 60 分钟 · 3 个 Section（日常短文→职场文本→长文）· 40 题 ·
             左右分屏 + 原文高亮
           </div>
@@ -430,7 +430,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       )}
       {tab === "writing" && (
         <div>
-          <div className="mb-3.5 text-[13px] text-[#5b6574]">
+          <div className="mb-3.5 text-[13px] text-muted-foreground">
             选择一套写作真题开始机考 · 60 分钟 · Task 1 + Task 2 议论文 · 交卷后 AI 四维批改（批改功能即将开放）
           </div>
           {singleList("writing")}
@@ -438,7 +438,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       )}
       {tab === "speaking" && (
         <div>
-          <div className="mb-3.5 text-[13px] text-[#5b6574]">
+          <div className="mb-3.5 text-[13px] text-muted-foreground">
             选择一套口语真题开始机考 · 11–14 分钟 · Part 1-3 · A/G 类同卷（V2 待开放）
           </div>
           {YEAR_LIST.map((y) => (

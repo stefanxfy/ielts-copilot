@@ -56,7 +56,7 @@ export default async function PlanPage({
     return (
       <>
         <h2 className="text-xl">备考计划 · 调整</h2>
-        <p className="mb-5 text-[13px] text-[#5b6574]">
+        <p className="mb-5 text-[13px] text-muted-foreground">
           当前:距考试 {Math.max(0, Math.ceil((new Date(`${plan.examDate}T00:00:00`).getTime() - new Date(`${today}T00:00:00`).getTime()) / 86400000))} 天
           {currentPhase ? ` · ${currentPhase.name}` : ""}
           ;已过周与打卡历史保持不变,仅重排未来周
@@ -80,7 +80,7 @@ export default async function PlanPage({
     return (
       <>
         <h2 className="text-xl">备考计划</h2>
-        <p className="mb-5 text-[13px] text-[#5b6574]">
+        <p className="mb-5 text-[13px] text-muted-foreground">
           开启雅思备考作战计划 · 定考试日期 → 定目标 → 定节奏 → AI 生成分阶段方案
         </p>
         <PlanWizard />
@@ -129,7 +129,7 @@ export default async function PlanPage({
   return (
     <>
       <h2 className="text-xl">备考计划 · 作战主页</h2>
-      <p className="mb-5 text-[13px] text-[#5b6574]">
+      <p className="mb-5 text-[13px] text-muted-foreground">
         第 {weekNo} 周 · 阶段:{phase?.name ?? "超出计划范围"}
       </p>
       <BattleHome

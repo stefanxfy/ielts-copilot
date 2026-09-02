@@ -80,28 +80,28 @@ function RadarBlock({ t1, t2 }: { t1: AiGrading | null; t2: AiGrading | null }) 
   }));
 
   return (
-    <div className="border-b border-[#dfe4ec] px-4 py-4">
+    <div className="border-b border-border px-4 py-4">
       <div className="mb-1 text-[13px] font-medium">四维雷达图</div>
-      <div className="mb-2 text-[11px] text-[#8a93a2]">
+      <div className="mb-2 text-[11px] text-muted-foreground">
         TR 任务回应 · CC 连贯衔接 · LR 词汇 · GRA 语法(满分 9)
       </div>
       <div className="h-[260px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={data} cx="50%" cy="50%" outerRadius="72%">
-            <PolarGrid stroke="#e3e8f0" />
-            <PolarAngleAxis dataKey="dim" tick={{ fill: "#5b6574", fontSize: 12 }} />
+            <PolarGrid stroke="var(--border)" />
+            <PolarAngleAxis dataKey="dim" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
             <PolarRadiusAxis
               domain={[0, 9]}
               tickCount={4}
-              tick={{ fill: "#b6bdc9", fontSize: 10 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 10, opacity: 0.6 }}
               axisLine={false}
             />
             {hasT1 && (
               <Radar
                 name="Task 1"
                 dataKey="T1"
-                stroke="#1a6feb"
-                fill="#1a6feb"
+                stroke="var(--chart-1)"
+                fill="var(--chart-1)"
                 fillOpacity={0.22}
                 strokeWidth={2}
               />
@@ -110,8 +110,8 @@ function RadarBlock({ t1, t2 }: { t1: AiGrading | null; t2: AiGrading | null }) 
               <Radar
                 name="Task 2"
                 dataKey="T2"
-                stroke="#e8871e"
-                fill="#e8871e"
+                stroke="var(--chart-4)"
+                fill="var(--chart-4)"
                 fillOpacity={0.22}
                 strokeWidth={2}
               />
@@ -131,7 +131,7 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
 
   if (!ai || ai.status === "PENDING") {
     return (
-      <div className="border-b border-[#dfe4ec] px-4 py-4 text-[13px] text-[#8a93a2]">
+      <div className="border-b border-border px-4 py-4 text-[13px] text-muted-foreground">
         {label} · 等待批改
       </div>
     );
@@ -139,7 +139,7 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
 
   if (ai.status === "RUNNING") {
     return (
-      <div className="border-b border-[#dfe4ec] px-4 py-4 text-[13px] text-[#c07d10]">
+      <div className="border-b border-border px-4 py-4 text-[13px] text-warning">
         <Spinner className="mr-2 align-[-2px]" />
         {label} · AI 正在批改…
       </div>
@@ -149,9 +149,9 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
   if (ai.status === "FAILED") {
     const empty = ai.error?.includes("未作答");
     return (
-      <div className="border-b border-[#dfe4ec] px-4 py-4">
-        <div className="text-[13px] font-medium text-[#c0392b]">{label} · 批改失败</div>
-        <div className="mt-1 break-all text-xs text-[#8a93a2]">
+      <div className="border-b border-border px-4 py-4">
+        <div className="text-[13px] font-medium text-destructive">{label} · 批改失败</div>
+        <div className="mt-1 break-all text-xs text-muted-foreground">
           {empty ? "该任务未作答,无法批改。" : ai.error ?? "原因未知"}
         </div>
       </div>
@@ -161,18 +161,18 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
   /* DONE */
   const dims = ai.dimensions ?? [];
   return (
-    <div className="border-b border-[#dfe4ec] px-4 py-4 last:border-0">
+    <div className="border-b border-border px-4 py-4 last:border-0">
       {/* 标题行:band + 元数据 */}
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="text-[13px] font-medium">
           {label}
           {ai.overall != null && (
-            <span className="ml-2 rounded-md bg-[#eef4ff] px-2 py-0.5 text-[15px] font-bold text-[#1a6feb]">
+            <span className="ml-2 rounded-md bg-primary/10 px-2 py-0.5 text-[15px] font-bold text-primary">
               {ai.overall.toFixed(1)}
             </span>
           )}
         </div>
-        <div className="text-[11px] text-[#8a93a2]">
+        <div className="text-[11px] text-muted-foreground">
           {ai.wordCount ? `${ai.wordCount} 词 · ` : ""}
           {ai.model ?? ""}
           {ai.tokens ? ` · ${ai.tokens} tokens` : ""}
@@ -185,25 +185,25 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
       {dims.length > 0 && (
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {dims.map((d) => (
-            <div key={d.name} className="rounded-lg border border-[#e3e8f0] p-3">
+            <div key={d.name} className="rounded-lg border border-border/70 p-3">
               <div className="flex items-baseline justify-between gap-2">
                 <div className="text-[13px] font-medium" title={DIM_LABEL[d.name]}>
                   {d.name}
-                  <span className="ml-1.5 text-[11px] font-normal text-[#8a93a2]">
+                  <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
                     {DIM_LABEL[d.name]?.split(" ")[1] ?? ""}
                   </span>
                 </div>
-                <div className="text-lg font-bold text-[#1a6feb]">{d.band.toFixed(1)}</div>
+                <div className="text-lg font-bold text-primary">{d.band.toFixed(1)}</div>
               </div>
               {d.comment && (
-                <p className="mt-1.5 text-[13px] leading-relaxed text-[#3c4654]">{d.comment}</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{d.comment}</p>
               )}
               {d.evidence.length > 0 && (
                 <ul className="mt-2 space-y-1">
                   {d.evidence.map((ev, i) => (
                     <li
                       key={i}
-                      className="border-l-2 border-[#c9d7f5] pl-2 text-xs italic leading-relaxed text-[#5b6574]"
+                      className="border-l-2 border-primary/30 pl-2 text-xs italic leading-relaxed text-muted-foreground"
                     >
                       “{ev}”
                     </li>
@@ -211,7 +211,7 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
                 </ul>
               )}
               {d.improvement && (
-                <p className="mt-2 rounded-md bg-[#fffbf2] px-2 py-1.5 text-xs leading-relaxed text-[#8a5a00]">
+                <p className="mt-2 rounded-md bg-warning/10 px-2 py-1.5 text-xs font-medium leading-relaxed text-warning">
                   <span className="font-medium">建议：</span>
                   {d.improvement}
                 </p>
@@ -225,12 +225,12 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
       {(ai.strengths?.length ?? 0) + (ai.weaknesses?.length ?? 0) > 0 && (
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {(ai.strengths?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-[#e3e8f0] p-3">
-              <div className="text-xs font-medium text-[#18925c]">亮点</div>
-              <ul className="mt-1.5 space-y-1 text-[13px] leading-relaxed text-[#3c4654]">
+            <div className="rounded-lg border border-border/70 p-3">
+              <div className="text-xs font-medium text-success">亮点</div>
+              <ul className="mt-1.5 space-y-1 text-[13px] leading-relaxed text-muted-foreground">
                 {ai.strengths!.map((s, i) => (
                   <li key={i} className="flex gap-1.5">
-                    <span className="shrink-0 text-[#18925c]">+</span>
+                    <span className="shrink-0 text-success">+</span>
                     <span>{s}</span>
                   </li>
                 ))}
@@ -238,12 +238,12 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
             </div>
           )}
           {(ai.weaknesses?.length ?? 0) > 0 && (
-            <div className="rounded-lg border border-[#e3e8f0] p-3">
-              <div className="text-xs font-medium text-[#c07d10]">不足</div>
-              <ul className="mt-1.5 space-y-1 text-[13px] leading-relaxed text-[#3c4654]">
+            <div className="rounded-lg border border-border/70 p-3">
+              <div className="text-xs font-medium text-warning">不足</div>
+              <ul className="mt-1.5 space-y-1 text-[13px] leading-relaxed text-muted-foreground">
                 {ai.weaknesses!.map((s, i) => (
                   <li key={i} className="flex gap-1.5">
-                    <span className="shrink-0 text-[#c07d10]">−</span>
+                    <span className="shrink-0 text-warning">−</span>
                     <span>{s}</span>
                   </li>
                 ))}
@@ -255,25 +255,25 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
 
       {/* 问题标注:原句 → 建议 */}
       {(ai.flaggedIssues?.length ?? 0) > 0 && (
-        <div className="mt-3 rounded-lg border border-[#e3e8f0] p-3">
-          <div className="text-xs font-medium text-[#5b6574]">
+        <div className="mt-3 rounded-lg border border-border/70 p-3">
+          <div className="text-xs font-medium text-muted-foreground">
             问题标注({ai.flaggedIssues!.length})
           </div>
           <div className="mt-2 space-y-2">
             {ai.flaggedIssues!.map((f, i) => (
-              <div key={i} className="rounded-md bg-[#fafbfc] px-3 py-2 text-[13px] leading-relaxed">
-                <span className="mr-2 inline-block rounded bg-[#fdf1f1] px-1.5 py-0.5 align-[1px] text-[11px] text-[#c0392b]">
+              <div key={i} className="rounded-md bg-muted/50 px-3 py-2 text-[13px] leading-relaxed">
+                <span className="mr-2 inline-block rounded bg-destructive/10 px-1.5 py-0.5 align-[1px] text-[11px] text-destructive">
                   {ISSUE_TYPE_LABEL[f.type] ?? f.type}
                 </span>
                 {f.quote && (
-                  <span className="text-[#b3541e] line-through decoration-[#f0cdbb]">
+                  <span className="text-destructive line-through decoration-destructive/30">
                     {f.quote}
                   </span>
                 )}
                 {f.quote && f.suggestion && (
-                  <span className="mx-1.5 text-[#8a93a2]">→</span>
+                  <span className="mx-1.5 text-muted-foreground">→</span>
                 )}
-                {f.suggestion && <span className="text-[#18925c]">{f.suggestion}</span>}
+                {f.suggestion && <span className="text-success">{f.suggestion}</span>}
               </div>
             ))}
           </div>
@@ -282,11 +282,11 @@ function TaskBlock({ task, ai }: { task: "T1" | "T2"; ai: AiGrading | null }) {
 
       {/* 改写范文(默认折叠) */}
       {ai.rewrittenSample && (
-        <details className="mt-3 rounded-lg border border-[#dcefe4] bg-[#f6fbf8]">
-          <summary className="cursor-pointer px-3 py-2 text-[13px] font-medium text-[#18925c]">
+        <details className="mt-3 rounded-lg border border-border bg-success/5">
+          <summary className="cursor-pointer px-3 py-2 text-[13px] font-medium text-success">
             查看同题高分改写范文
           </summary>
-          <pre className="max-h-[420px] overflow-auto border-t border-[#dcefe4] px-3 py-3 text-[13px] leading-relaxed whitespace-pre-wrap text-[#2c3440]">
+          <pre className="max-h-[420px] overflow-auto border-t border-border px-3 py-3 text-[13px] leading-relaxed whitespace-pre-wrap text-foreground">
             {ai.rewrittenSample}
           </pre>
         </details>
@@ -371,21 +371,21 @@ export default function WritingGradingCard({
   const canRetry = !running && !allDone && (essays.T1 || essays.T2);
 
   return (
-    <div className="rounded-xl border border-[#dfe4ec] bg-white">
-      <div className="border-b border-[#dfe4ec] px-4 py-3 text-[15px] font-medium">
+    <div className="rounded-xl border border-border bg-card">
+      <div className="border-b border-border px-4 py-3 text-[15px] font-medium">
         AI 写作批改 · 四维诊断(TR / CC / LR / GRA)
       </div>
 
       {/* 状态条 */}
-      <div className="border-b border-[#dfe4ec] px-4 py-3">
+      <div className="border-b border-border px-4 py-3">
         {running ? (
-          <div className="flex items-center gap-2 text-[13px] text-[#c07d10]">
+          <div className="flex items-center gap-2 text-[13px] text-warning">
             <Spinner />
             AI 批改进行中,完成后自动刷新(通常 10–60 秒)…
           </div>
         ) : allDone ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-[13px] text-[#18925c]">
+            <div className="text-[13px] text-success">
               批改完成
               {status.bandScore != null && status.bandScore > 0 && (
                 <span className="ml-2 font-bold">写作 Band {status.bandScore.toFixed(1)}</span>
@@ -395,23 +395,23 @@ export default function WritingGradingCard({
               type="button"
               disabled={triggering}
               onClick={() => void trigger(true)}
-              className="text-xs text-[#8a93a2] underline-offset-2 hover:text-[#1a6feb] hover:underline disabled:opacity-50"
+              className="text-xs text-muted-foreground underline-offset-2 hover:text-primary hover:underline disabled:opacity-50"
             >
               {triggering ? "提交中…" : "重新批改"}
             </button>
           </div>
         ) : everGraded && firstError ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="min-w-0 flex-1 text-[13px] text-[#c0392b]">
+            <div className="min-w-0 flex-1 text-[13px] text-destructive">
               批改未完成:
-              <span className="ml-1 break-all text-xs text-[#8a93a2]">{firstError}</span>
+              <span className="ml-1 break-all text-xs text-muted-foreground">{firstError}</span>
             </div>
             {canRetry && (
               <button
                 type="button"
                 disabled={triggering}
                 onClick={() => void trigger(true)}
-                className="shrink-0 rounded-md bg-[#1a6feb] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#155fd0] disabled:opacity-50"
+                className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 {triggering ? "提交中…" : "重试批改"}
               </button>
@@ -419,14 +419,14 @@ export default function WritingGradingCard({
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-[13px] text-[#5b6574]">
+            <div className="text-[13px] text-muted-foreground">
               写作尚未批改。AI 将按雅思官方四维标准给出分数、逐维诊断与高分范文。
             </div>
             <button
               type="button"
               disabled={triggering}
               onClick={() => void trigger(false)}
-              className="shrink-0 rounded-md bg-[#1a6feb] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#155fd0] disabled:opacity-50"
+              className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-50"
             >
               {triggering ? "提交中…" : "开始 AI 批改"}
             </button>

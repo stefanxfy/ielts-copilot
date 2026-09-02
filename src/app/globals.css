@@ -7,7 +7,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: "Noto Sans SC Variable", ui-sans-serif, system-ui, -apple-system,
+    "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -39,6 +40,12 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* 可爱点缀色：淡粉（装饰用，如徽章/高亮/空态插画） */
+  --color-cute-pink: var(--cute-pink);
+  --color-cute-pink-foreground: var(--cute-pink-foreground);
+  /* 语义反馈色 */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,73 +55,89 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * 白天主题 · 清爽可爱
+ * 底色淡蓝白、品牌柔和新蓝、粉色点缀、圆角偏大
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.984 0.009 247.9);
+  --foreground: oklch(0.29 0.033 261.4);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.29 0.033 261.4);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.29 0.033 261.4);
+  --primary: oklch(0.6 0.183 255.5);
+  --primary-foreground: oklch(0.99 0.004 247.9);
+  --secondary: oklch(0.953 0.022 248.4);
+  --secondary-foreground: oklch(0.42 0.078 257.4);
+  --muted: oklch(0.958 0.013 248.8);
+  --muted-foreground: oklch(0.53 0.033 255.3);
+  --accent: oklch(0.945 0.028 248.9);
+  --accent-foreground: oklch(0.42 0.078 257.4);
+  --destructive: oklch(0.6 0.19 25.9);
+  --border: oklch(0.912 0.017 250.5);
+  --input: oklch(0.912 0.017 250.5);
+  --ring: oklch(0.7 0.128 255.3);
+  --cute-pink: oklch(0.862 0.066 350.9);
+  --cute-pink-foreground: oklch(0.42 0.1 355.6);
+  --success: oklch(0.58 0.125 155.8);
+  --warning: oklch(0.72 0.14 70.2);
+  --chart-1: oklch(0.6 0.183 255.5);
+  --chart-2: oklch(0.72 0.128 350.3);
+  --chart-3: oklch(0.7 0.12 180.9);
+  --chart-4: oklch(0.78 0.13 80.3);
+  --chart-5: oklch(0.65 0.15 295.4);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.975 0.013 248.3);
+  --sidebar-foreground: oklch(0.29 0.033 261.4);
+  --sidebar-primary: oklch(0.6 0.183 255.5);
+  --sidebar-primary-foreground: oklch(0.99 0.004 247.9);
+  --sidebar-accent: oklch(0.945 0.028 248.9);
+  --sidebar-accent-foreground: oklch(0.42 0.078 257.4);
+  --sidebar-border: oklch(0.912 0.017 250.5);
+  --sidebar-ring: oklch(0.7 0.128 255.3);
 }
 
+/*
+ * 夜晚主题 · 护眼
+ * 深蓝灰（非纯黑）、前景 90% 白（非纯白降眩光）、primary 提亮为长春花蓝
+ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.208 0.02 264.7);
+  --foreground: oklch(0.9 0.016 250.8);
+  --card: oklch(0.255 0.024 263.4);
+  --card-foreground: oklch(0.9 0.016 250.8);
+  --popover: oklch(0.255 0.024 263.4);
+  --popover-foreground: oklch(0.9 0.016 250.8);
+  --primary: oklch(0.72 0.135 254.9);
+  --primary-foreground: oklch(0.22 0.042 262.2);
+  --secondary: oklch(0.305 0.028 262.4);
+  --secondary-foreground: oklch(0.88 0.024 252.4);
+  --muted: oklch(0.3 0.026 262.6);
+  --muted-foreground: oklch(0.71 0.024 254.2);
+  --accent: oklch(0.32 0.034 261.9);
+  --accent-foreground: oklch(0.9 0.016 250.8);
+  --destructive: oklch(0.7 0.152 24.5);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.72 0.135 254.9);
+  --cute-pink: oklch(0.72 0.1 350.3);
+  --cute-pink-foreground: oklch(0.24 0.05 355.9);
+  --success: oklch(0.74 0.12 155.8);
+  --warning: oklch(0.79 0.125 74.6);
+  --chart-1: oklch(0.72 0.135 254.9);
+  --chart-2: oklch(0.76 0.12 350.3);
+  --chart-3: oklch(0.75 0.11 180.9);
+  --chart-4: oklch(0.8 0.12 80.3);
+  --chart-5: oklch(0.74 0.12 295.4);
+  --sidebar: oklch(0.255 0.024 263.4);
+  --sidebar-foreground: oklch(0.9 0.016 250.8);
+  --sidebar-primary: oklch(0.72 0.135 254.9);
+  --sidebar-primary-foreground: oklch(0.22 0.042 262.2);
+  --sidebar-accent: oklch(0.32 0.034 261.9);
+  --sidebar-accent-foreground: oklch(0.9 0.016 250.8);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.72 0.135 254.9);
 }
 
 @layer base {
@@ -126,5 +149,60 @@
   }
   html {
     @apply font-sans;
+  }
+  /* 文字选中：淡粉，可爱小彩蛋 */
+  ::selection {
+    background: color-mix(in oklab, var(--cute-pink) 45%, transparent);
+  }
+  /* 可爱风滚动条：圆润胶囊、低存在感、随主题变色 */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    border: 2.5px solid transparent;
+    background-clip: padding-box;
+    background-color: color-mix(in oklab, var(--foreground) 22%, transparent);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--foreground) 34%, transparent);
+  }
+  /* 主题切换 / 交互反馈的颜色平滑过渡（关闭动画偏好时不生效） */
+  @media (prefers-reduced-motion: no-preference) {
+    * {
+      transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        fill 0.2s ease,
+        stroke 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+  }
+}
+
+@layer utilities {
+  /* 可爱按压反馈：配 active:scale(0.97) 使用 */
+  .press-bubble {
+    transition: transform 0.12s ease;
+  }
+  .press-bubble:active {
+    transform: scale(0.97);
+  }
+  /* 卡片悬浮：轻微上浮 + 主色柔光投影（prefers-reduced-motion 时不动） */
+  @media (prefers-reduced-motion: no-preference) {
+    .card-float {
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+    .card-float:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--primary) 18%, transparent);
+    }
   }
 }

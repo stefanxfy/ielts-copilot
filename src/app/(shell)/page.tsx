@@ -44,7 +44,7 @@ export default function DashboardPage() {
   return (
     <>
       <h2 className="text-xl">仪表盘 · 成绩分析</h2>
-      <p className="mb-5 text-[13px] text-[#5b6574]">
+      <p className="mb-5 text-[13px] text-muted-foreground">
         基于历史成绩分析 · 总分曲线看完整模考,单科曲线/雷达含单科练习
       </p>
 
@@ -113,19 +113,19 @@ export default function DashboardPage() {
               }}
             />
           </div>
-          <div className="rounded-xl border border-[#dfe4ec] bg-white lg:col-span-2">
-            <div className="border-b border-[#dfe4ec] px-4 py-3 text-[15px] font-medium">
+          <div className="rounded-xl border border-border bg-card lg:col-span-2">
+            <div className="border-b border-border px-4 py-3 text-[15px] font-medium">
               四科能力雷达
             </div>
             {radar.items.length ? (
               <>
                 <AbilityRadar items={radar.items} />
-                <div className="px-4 pb-3 text-[11px] text-[#8a93a2]">
+                <div className="px-4 pb-3 text-[11px] text-muted-foreground">
                   最近成绩 vs 历史均值(共 {radar.sampleCount} 条记录,含单科练习) · 口语暂无真题数据
                 </div>
               </>
             ) : (
-              <div className="px-4 py-16 text-center text-xs text-[#8a93a2]">
+              <div className="px-4 py-16 text-center text-xs text-muted-foreground">
                 暂无分科数据
               </div>
             )}
@@ -136,23 +136,23 @@ export default function DashboardPage() {
       )}
 
       {/* ③ 薄弱真题清单 */}
-      <div className="mb-5 rounded-xl border border-[#dfe4ec] bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#dfe4ec] px-4 py-3">
+      <div className="mb-5 rounded-xl border border-border bg-card">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
           <div className="text-[15px] font-medium">薄弱真题 · 巩固清单</div>
-          <div className="text-[11px] text-[#8a93a2]">
+          <div className="text-[11px] text-muted-foreground">
             判定:最近 band &lt; 目标 − 0.5(当前目标 {effectiveTarget.toFixed(1)}
             {overview.targetOverall == null ? " · 默认兜底" : ""}),重做达标自动移出
           </div>
         </div>
         {weakItems.length === 0 ? (
-          <div className="px-4 py-8 text-center text-xs text-[#8a93a2]">
+          <div className="px-4 py-8 text-center text-xs text-muted-foreground">
             {hasSessions
               ? "暂无薄弱项 · 各卷最近成绩均达标,继续保持 ✓"
               : "完成模考后,未达标的真题会出现在这里,支持反复练"}
           </div>
         ) : (
           <table className="w-full text-[13px]">
-            <thead className="bg-[#fafbfc] text-left text-xs text-[#8a93a2]">
+            <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
               <tr>
                 <th className="px-4 py-2.5 font-medium">真题卷</th>
                 <th className="px-4 py-2.5 font-medium">科目</th>
@@ -164,20 +164,20 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {weakItems.map((w) => (
-                <tr key={`${w.examId}-${w.subject}`} className="border-t border-[#eef0f3]">
+                <tr key={`${w.examId}-${w.subject}`} className="border-t border-border">
                   <td className="px-4 py-2.5">{w.paperTitle}</td>
                   <td className="px-4 py-2.5">{SUBJECT_LABEL[w.subject] ?? w.subject}</td>
                   <td className="px-4 py-2.5">
-                    <span className="font-semibold text-[#c0392b]">
+                    <span className="font-semibold text-destructive">
                       {w.latestBand.toFixed(1)}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-[#5b6574]">{w.attempts} 次</td>
-                  <td className="px-4 py-2.5 text-[#c0392b]">-{w.gap.toFixed(1)}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground">{w.attempts} 次</td>
+                  <td className="px-4 py-2.5 text-destructive">-{w.gap.toFixed(1)}</td>
                   <td className="px-4 py-2.5 text-right">
                     <Link
                       href={`/exam/${w.examId}`}
-                      className="rounded-md border border-[#1a6feb] px-2.5 py-1 text-xs text-[#1a6feb] transition-colors hover:bg-[#e8f0fe]"
+                      className="rounded-md border border-primary px-2.5 py-1 text-xs text-primary transition-colors hover:bg-primary/10"
                     >
                       再练一次 →
                     </Link>
@@ -192,7 +192,7 @@ export default function DashboardPage() {
       {/* 最近模考(场次成绩单入口) */}
       <RecentSessions />
 
-      <p className="mt-4 text-center text-[11px] text-[#b6bdc9]">
+      <p className="mt-4 text-center text-[11px] text-muted-foreground/60">
         本地题库 {paperCount} 份单科卷 · {setCount} 套真题 · 前往「机考模拟」开始练习
       </p>
     </>
@@ -218,16 +218,16 @@ function OverviewCard({
 }) {
   const body = (
     <>
-      <div className="text-xs text-[#8a93a2]">{title}</div>
+      <div className="text-xs text-muted-foreground">{title}</div>
       <div
         className={`mt-1 text-[28px] font-bold leading-tight ${
           trend == null
-            ? "text-[#1a6feb]"
+            ? "text-primary"
             : trend > 0
-              ? "text-[#18925c]"
+              ? "text-success"
               : trend < 0
-                ? "text-[#c0392b]"
-                : "text-[#1a6feb]"
+                ? "text-destructive"
+                : "text-primary"
         }`}
       >
         {main}
@@ -237,17 +237,17 @@ function OverviewCard({
           </span>
         )}
       </div>
-      {sub && <div className="mt-1.5 text-[11px] leading-relaxed text-[#8a93a2]">{sub}</div>}
+      {sub && <div className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{sub}</div>}
       {arrow && (
-        <div className="mt-1 text-[11px] text-[#1a6feb] transition-opacity group-hover:opacity-70">
+        <div className="mt-1 text-[11px] text-primary transition-opacity group-hover:opacity-70">
           {arrow}
         </div>
       )}
     </>
   );
   const cls =
-    "rounded-xl border border-[#dfe4ec] bg-white p-4 transition-shadow" +
-    (href ? " group cursor-pointer hover:border-[#1a6feb] hover:shadow-[0_3px_10px_rgba(16,35,63,0.08)]" : "");
+    "rounded-xl border border-border bg-card p-4 transition-shadow" +
+    (href ? " group cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/10" : "");
   return href ? (
     <Link href={href} className={`block ${cls}`}>
       {body}
@@ -259,15 +259,15 @@ function OverviewCard({
 
 function EmptyGuide() {
   return (
-    <div className="mb-5 rounded-xl border border-dashed border-[#c9d4e4] bg-[#fafbfc] px-6 py-12 text-center">
+    <div className="mb-5 rounded-xl border border-dashed border-border bg-muted/50 px-6 py-12 text-center">
       <div className="text-[36px]">📈</div>
       <div className="mt-3 text-[15px] font-medium">先完成一场模考,曲线从这里开始</div>
-      <p className="mt-1.5 text-[13px] text-[#5b6574]">
+      <p className="mt-1.5 text-[13px] text-muted-foreground">
         从「机考模拟」选一套真题,完整考完听力 + 阅读 + 写作,分数曲线与能力雷达即刻生成。
       </p>
       <Link
         href="/mock"
-        className="mt-4 inline-block rounded-md bg-[#1a6feb] px-4 py-2 text-[13px] text-white transition-colors hover:bg-[#0d4fa8]"
+        className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-[13px] text-white transition-colors hover:bg-primary/90"
       >
         去机考模拟 →
       </Link>
@@ -300,15 +300,15 @@ function RecentSessions() {
   return (
     <>
       <h3 className="mb-3 text-[15px]">最近模考</h3>
-      <div className="rounded-xl border border-[#dfe4ec] bg-white px-4 py-2">
+      <div className="rounded-xl border border-border bg-card px-4 py-2">
         {sessions.length === 0 ? (
-          <div className="py-4 text-center text-xs text-[#8a93a2]">
+          <div className="py-4 text-center text-xs text-muted-foreground">
             暂无模考场次 · 从「机考模拟」选一套真题开始
           </div>
         ) : (
           <table className="w-full border-collapse text-[13px]">
             <thead>
-              <tr className="border-b border-[#dfe4ec] text-left text-xs text-[#5b6574]">
+              <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-2.5 py-2 font-medium">套卷</th>
                 <th className="px-2.5 py-2 font-medium">状态</th>
                 <th className="px-2.5 py-2 font-medium">总分</th>
@@ -319,16 +319,16 @@ function RecentSessions() {
             </thead>
             <tbody>
               {sessions.map((s) => (
-                <tr key={s.sessionId} className="border-b border-[#dfe4ec] last:border-0">
+                <tr key={s.sessionId} className="border-b border-border last:border-0">
                   <td className="px-2.5 py-2.5">{s.setTitle ?? s.sessionId}</td>
                   <td className="px-2.5 py-2.5">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[11px] ${
                         s.status === "COMPLETED"
-                          ? "bg-[#eefaf3] text-[#18925c]"
+                          ? "bg-success/10 text-success"
                           : s.status === "ABANDONED"
-                            ? "bg-[#fdf1f1] text-[#c0392b]"
-                            : "bg-[#fff7e6] text-[#c07d10]"
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-warning/15 text-warning"
                       }`}
                     >
                       {s.status === "COMPLETED"
@@ -338,15 +338,15 @@ function RecentSessions() {
                           : "进行中"}
                     </span>
                   </td>
-                  <td className="px-2.5 py-2.5 font-semibold text-[#1a6feb]">
+                  <td className="px-2.5 py-2.5 font-semibold text-primary">
                     {s.overallBand != null ? s.overallBand.toFixed(1) : "—"}
                   </td>
                   <td className="px-2.5 py-2.5">
                     {s.totalUsedSec != null ? fmtDuration(s.totalUsedSec) : "—"}
                   </td>
-                  <td className="px-2.5 py-2.5 text-[#8a93a2]">{fmtTime(s.startedAt)}</td>
+                  <td className="px-2.5 py-2.5 text-muted-foreground">{fmtTime(s.startedAt)}</td>
                   <td className="px-2.5 py-2.5">
-                    <Link href={`/session/${s.sessionId}`} className="text-[#1a6feb] hover:underline">
+                    <Link href={`/session/${s.sessionId}`} className="text-primary hover:underline">
                       场次成绩单 →
                     </Link>
                   </td>
