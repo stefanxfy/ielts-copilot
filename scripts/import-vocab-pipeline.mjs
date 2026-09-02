@@ -35,7 +35,7 @@ const args = Object.fromEntries(
   }),
 );
 const LIMIT = args.limit ? parseInt(args.limit, 10) : Infinity;
-const SEED = args.seed ?? "./data/seed/ielts-100.txt";
+const SEED = args.seed ?? "./seeds/ielts-100.txt";
 const BOOK_ID = "ielts-core-pilot";
 const BCZ_BASE = "https://cdn.jsdelivr.net/gh/lyc8503/baicizhan-word-meaning-API/data/words/";
 const VOICE = "en-GB-RyanNeural";
