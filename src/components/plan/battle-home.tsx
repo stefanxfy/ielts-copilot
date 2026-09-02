@@ -1,11 +1,12 @@
 /**
  * battle-home.tsx — 备考作战主页(P7 §3.3 三栏)
  *
- * 左:考试倒计时 + ⓘ考前须知;中:今日任务清单(勾选判定,服务端算好传入);
- * 右:打卡日历 + 今日心得 + AI 昨日总结卡(挂载时自动触发·幂等,失败/重跑走 force)。
+ * 左:考试倒计时 + ⓘ考前须知;中:今日任务清单(勾选判定,服务端算好传入;
+ * 打卡日历点选历史日期后动态切换为该日完成情况,回看只读);右:打卡日历 +
+ * 今日心得 + AI 昨日总结卡(挂载时自动触发·幂等,失败/重跑走 force)。
  *
  * 注意:本组件 import type 自 checklist.ts(类型擦除,不会把 better-sqlite3
- * 拉进客户端 bundle);判定逻辑全部在服务端 page 完成后经 props 下发。
+ * 拉进客户端 bundle);判定逻辑全部在服务端 page / API 完成后下发。
  */
 "use client";
 
@@ -48,6 +49,21 @@ const SLOT_LABEL: Record<string, string> = {
   evening: "晚上",
 };
 
+/** /api/study-plan-day 响应(历史日任务完成情况) */
+interface HistoryDay {
+  ok: boolean;
+  date: string;
+  weekNo: number;
+  phase: { name: string; focus: string } | null;
+  tasks: TaskCheck[];
+  punch: {
+    date: string;
+    submissions: number;
+    words: number;
+    level: 0 | 1 | 2;
+  };
+}
+
 export interface BattleHomeProps {
   /** ACTIVE 计划 id(归档 DELETE 用) */
   planId: number;
@@ -83,6 +99,53 @@ export function BattleHome({
   const autoTriggered = useRef(false);
 
   const today = todayStr();
+
+  /* ---------- 历史日回看:日历点选 → 拉取该日完成情况,动态切换中栏 ---------- */
+  const [viewDate, setViewDate] = useState(today);
+  const [history, setHistory] = useState<HistoryDay | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+  // 请求序号防竞态:快速连点只采纳最后一次
+  const reqSeq = useRef(0);
+
+  const viewingHistory = viewDate !== today;
+
+  async function loadHistoryDay(date: string) {
+    const seq = ++reqSeq.current;
+    setHistoryLoading(true);
+    setHistoryError("");
+    try {
+      const resp = await fetch(`/api/study-plan-day?date=${date}`);
+      const data = (await resp.json()) as Partial<HistoryDay> & { error?: string };
+      if (seq !== reqSeq.current) return; // 已有更新的请求,丢弃
+      if (!resp.ok) {
+        setHistoryError(data.error ?? "加载失败");
+        setHistory(null);
+        return;
+      }
+      setHistory(data as HistoryDay);
+    } catch {
+      if (seq !== reqSeq.current) return;
+      setHistoryError("加载失败(服务未响应)");
+      setHistory(null);
+    } finally {
+      if (seq === reqSeq.current) setHistoryLoading(false);
+    }
+  }
+
+  function selectDate(date: string) {
+    setViewDate(date);
+    if (date === today) {
+      setHistory(null); // 回到今天:直接用服务端算好的今日 props
+      return;
+    }
+    void loadHistoryDay(date);
+  }
+
+  function backToToday() {
+    selectDate(today);
+  }
+
   const daysLeft = daysBetween(examDate, today);
 
   /** 自动触发昨日总结(幂等:已生成过则服务端 skipped;失败静默不打扰) */
@@ -228,69 +291,49 @@ export function BattleHome({
         </div>
       </div>
 
-      {/* ===== 中栏:今日任务 ===== */}
+      {/* ===== 中栏:今日任务 / 历史日回看(日历点选动态切换) ===== */}
       <div className={CARD}>
-        <div className="flex items-center justify-between">
-          <h3 className="text-[15px]">今日任务</h3>
-          <button
-            type="button"
-            className={HINT + " hover:text-primary"}
-            onClick={() => router.refresh()}
-          >
-            刷新
-          </button>
-        </div>
-        <p className={`${HINT} mt-1 mb-3`}>科目任务按本周累计判定;背单词按当日判定</p>
-        {tasks.length === 0 ? (
-          <p className="py-8 text-center text-[13px] text-muted-foreground">当前周没有排期任务</p>
+        {viewingHistory ? (
+          <>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px]">
+                回看 · {viewDate.slice(5).replace("-", "/")} 任务
+              </h3>
+              <button type="button" className={HINT + " hover:text-primary"} onClick={backToToday}>
+                回到今天
+              </button>
+            </div>
+            {historyLoading ? (
+              <p className="py-8 text-center text-[13px] text-muted-foreground">加载中…</p>
+            ) : historyError ? (
+              <p className="py-8 text-center text-[13px] text-warning">{historyError}</p>
+            ) : history ? (
+              <>
+                <p className={`${HINT} mt-1 mb-3`}>
+                  第 {history.weekNo} 周 · 阶段:{history.phase?.name ?? "超出计划范围"}
+                  {history.punch.level > 0
+                    ? ` · 打卡${history.punch.level === 2 ? "双达标" : "单达标"}(交卷 ${history.punch.submissions} · 背词 ${history.punch.words})`
+                    : " · 当日未打卡"}
+                </p>
+                <TaskList tasks={history.tasks} emptyHint="该日所在周没有排期任务" />
+              </>
+            ) : null}
+          </>
         ) : (
-          <div className="grid gap-2.5">
-            {tasks.map((t, i) => (
-              <div
-                key={i}
-                className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 ${
-                  t.exempt
-                    ? "border-border bg-muted/40 opacity-70"
-                    : t.done
-                      ? "border-success/30 bg-success/10"
-                      : "border-border bg-card"
-                }`}
+          <>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px]">今日任务</h3>
+              <button
+                type="button"
+                className={HINT + " hover:text-primary"}
+                onClick={() => router.refresh()}
               >
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
-                    t.exempt
-                      ? "border border-border text-muted-foreground/50"
-                      : t.done
-                        ? "bg-success text-white"
-                        : "border border-border text-transparent"
-                  }`}
-                >
-                  ✓
-                </span>
-                <div className="flex-1">
-                  <div className="text-[13px] text-foreground">
-                    {TASK_LABEL[t.type] ?? t.type} {t.count}
-                    {t.unit}
-                    {t.slot ? <span className="ml-1.5 text-muted-foreground">· {SLOT_LABEL[t.slot] ?? t.slot}</span> : null}
-                  </div>
-                  <div className="mt-0.5 text-[11px] text-muted-foreground">
-                    {t.exempt
-                      ? "暂无追踪(P8 口语上线后开启)"
-                      : `进度 ${t.progress}/${t.count}`}
-                  </div>
-                </div>
-                {!t.exempt && (
-                  <span
-                    className={`text-[12px] font-medium ${
-                      t.done ? "text-success" : "text-warning"
-                    }`}
-                  >
-                    {t.done ? "已完成" : "进行中"}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+                刷新
+              </button>
+            </div>
+            <p className={`${HINT} mt-1 mb-3`}>科目任务按本周累计判定;背单词按当日判定</p>
+            <TaskList tasks={tasks} emptyHint="当前周没有排期任务" />
+          </>
         )}
       </div>
 
@@ -298,7 +341,12 @@ export function BattleHome({
       <div className="grid gap-4">
         <div className={CARD}>
           <h3 className="mb-3 text-[15px]">打卡日历</h3>
-          <PunchCalendar rules={punchRules} examDate={examDate} />
+          <PunchCalendar
+            rules={punchRules}
+            examDate={examDate}
+            selectedDate={viewDate}
+            onSelectDate={selectDate}
+          />
         </div>
 
         <div className={CARD}>
@@ -372,6 +420,56 @@ export function BattleHome({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/** 任务清单渲染(今日 / 历史日回看共用) */
+function TaskList({ tasks, emptyHint }: { tasks: TaskCheck[]; emptyHint: string }) {
+  if (tasks.length === 0) {
+    return <p className="py-8 text-center text-[13px] text-muted-foreground">{emptyHint}</p>;
+  }
+  return (
+    <div className="grid gap-2.5">
+      {tasks.map((t, i) => (
+        <div
+          key={i}
+          className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 ${
+            t.exempt
+              ? "border-border bg-muted/40 opacity-70"
+              : t.done
+                ? "border-success/30 bg-success/10"
+                : "border-border bg-card"
+          }`}
+        >
+          <span
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
+              t.exempt
+                ? "border border-border text-muted-foreground/50"
+                : t.done
+                  ? "bg-success text-white"
+                  : "border border-border text-transparent"
+            }`}
+          >
+            ✓
+          </span>
+          <div className="flex-1">
+            <div className="text-[13px] text-foreground">
+              {TASK_LABEL[t.type] ?? t.type} {t.count}
+              {t.unit}
+              {t.slot ? <span className="ml-1.5 text-muted-foreground">· {SLOT_LABEL[t.slot] ?? t.slot}</span> : null}
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              {t.exempt ? "暂无追踪(P8 口语上线后开启)" : `进度 ${t.progress}/${t.count}`}
+            </div>
+          </div>
+          {!t.exempt && (
+            <span className={`text-[12px] font-medium ${t.done ? "text-success" : "text-warning"}`}>
+              {t.done ? "已完成" : "进行中"}
+            </span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
