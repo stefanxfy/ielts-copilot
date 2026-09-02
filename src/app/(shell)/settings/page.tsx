@@ -35,9 +35,10 @@ import { TemplateRulesCard } from "@/components/settings/template-rules-card";
 import { useSettings } from "@/stores/settings";
 import {
   DEFAULT_UI_THEME,
+  UI_THEME_CHANGE_EVENT,
   UI_THEMES,
-  applyUiTheme,
   currentUiTheme,
+  selectUiTheme,
   type UiThemeId,
 } from "@/lib/ui-theme";
 
@@ -121,9 +122,14 @@ export default function SettingsPage() {
     void load();
   }, [load]);
 
-  // 皮肤选择:以 SSR 直出的 <html data-theme> 为初始值;切换即时生效并持久化到 app_settings
+  // 皮肤选择:以 SSR 直出的 <html data-theme> 为初始值;顶栏切换器换肤后经事件同步勾选
   const [uiTheme, setUiTheme] = useState<UiThemeId>(DEFAULT_UI_THEME);
   useEffect(() => setUiTheme(currentUiTheme()), []);
+  useEffect(() => {
+    const sync = () => setUiTheme(currentUiTheme());
+    window.addEventListener(UI_THEME_CHANGE_EVENT, sync);
+    return () => window.removeEventListener(UI_THEME_CHANGE_EVENT, sync);
+  }, []);
 
   // 服务端视图到达 → 灌表单(apiKey 永远留空,占位符显示掩码)。
   const [syncedFrom, setSyncedFrom] = useState<unknown>(null);
@@ -424,13 +430,7 @@ export default function SettingsPage() {
                     key={t.id}
                     type="button"
                     onClick={() => {
-                      applyUiTheme(t.id);
-                      setUiTheme(t.id);
-                      void fetch("/api/ui-theme", {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ theme: t.id }),
-                      }).catch(() => undefined);
+                      void selectUiTheme(t.id);
                     }}
                     className={`press-bubble rounded-lg border p-2 text-left transition-colors ${
                       active

@@ -63,3 +63,26 @@ export function currentUiTheme(): UiThemeId {
   const v = document.documentElement.getAttribute("data-theme");
   return isUiThemeId(v) ? v : DEFAULT_UI_THEME;
 }
+
+/** 换肤广播事件名:任一入口切换后派发,其他入口(顶栏切换器/设置页)监听同步选中态 */
+export const UI_THEME_CHANGE_EVENT = "ui-theme-change";
+
+/**
+ * 换肤统一入口:应用到 <html> + PUT 持久化到 app_settings.ui_theme + 广播事件。
+ * 持久化失败不打断交互(本地已生效,下次启动回落 DB 旧值)。
+ */
+export async function selectUiTheme(id: UiThemeId): Promise<void> {
+  applyUiTheme(id);
+  try {
+    await fetch("/api/ui-theme", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme: id }),
+    });
+  } catch {
+    // 静默:本地已生效
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent<UiThemeId>(UI_THEME_CHANGE_EVENT, { detail: id }));
+  }
+}
