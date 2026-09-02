@@ -294,6 +294,8 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   // 确认页可编辑副本:preview 到手时深拷贝初始化,编辑只动它,确认时直传
   const [draftPhases, setDraftPhases] = useState<PlanPhase[]>([]);
+  // count 输入中间态(键 "阶段-行"):保留 "2." 等未完成输入,失焦后回落为数值渲染
+  const [countDrafts, setCountDrafts] = useState<Record<string, string>>({});
   const [failReason, setFailReason] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -377,6 +379,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         const result = data as PreviewResult;
         setPreview(result);
         setDraftPhases(structuredClone(result.phases));
+        setCountDrafts({});
       }
     } catch {
       toast.error("生成请求失败(服务未响应)");
@@ -509,7 +512,8 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
       }),
     );
 
-  /* ---------- 确认页(preview 到手后覆盖向导) ---------- */
+  // 确认页(preview 到手后覆盖向导)。渲染 draftPhases(可编辑副本),编辑才真正可见;
+  // preview 仅保留 weeks/days/generatedBy 等元信息
   if (preview) {
     const isAdjust = variant === "adjust";
     return (
@@ -533,7 +537,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         </p>
 
         <div className="grid gap-3">
-          {preview.phases.map((p, i) => {
+          {draftPhases.map((p, i) => {
             // adjust:含已过周的阶段锁定(已过周与打卡历史绑定,人工改动会撕裂历史一致性)
             const locked =
               isAdjust && preview.currentWeek != null && p.weeks.some((w) => w < preview.currentWeek!);
@@ -583,11 +587,26 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                             aria-label="任务量"
                             className="h-7 w-16 rounded-md border border-[#dfe4ec] bg-white px-1.5 text-center text-[12px] text-[#1c2330] outline-none focus:border-[#1a6feb]"
                             inputMode="decimal"
-                            value={t.count}
+                            value={countDrafts[`${i}-${j}`] ?? String(t.count)}
                             onChange={(e) => {
-                              const v = e.target.value.replace(/[^\d.]/g, "");
-                              const n = Number(v);
-                              setTask(i, j, { count: v && Number.isFinite(n) && n > 0 ? n : 0 });
+                              const raw = e.target.value.replace(/[^\d.]/g, "");
+                              setCountDrafts((m) => ({ ...m, [`${i}-${j}`]: raw }));
+                              const n = Number(raw);
+                              // 合法数值才写 draft(含小数);未完成态("2."/"")不污染数据
+                              if (raw && Number.isFinite(n) && n > 0) setTask(i, j, { count: n });
+                            }}
+                            onBlur={() => {
+                              const raw = countDrafts[`${i}-${j}`];
+                              if (raw === undefined) return;
+                              const n = Number(raw);
+                              if (!raw || !Number.isFinite(n) || n <= 0) {
+                                // 无效输入回落为当前值,并同步显示
+                                setTask(i, j, { count: t.count > 0 ? t.count : 1 });
+                              }
+                              setCountDrafts((m) => {
+                                const { [`${i}-${j}`]: _, ...rest } = m;
+                                return rest;
+                              });
                             }}
                           />
                           <span className="text-[12px] text-[#8a93a2]">{t.unit}</span>
