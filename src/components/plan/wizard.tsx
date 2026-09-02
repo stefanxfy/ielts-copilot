@@ -17,12 +17,13 @@ import type {
   PlanAvailability,
   PlanPhase,
   PlanSource,
+  PlanTask,
   StudyPreferences,
   TargetScores,
   TimeSlot,
   TaskType,
 } from "@/db/schema";
-import { TASK_TYPES } from "@/db/schema";
+import { TASK_TYPES, TASK_UNIT } from "@/db/schema";
 import { todayStr } from "@/lib/study/date";
 import {
   Dialog,
@@ -114,6 +115,8 @@ interface PreviewResult {
   generatedBy: PlanSource;
   weeks: number;
   days: number;
+  /** adjust 模式:服务端当前周号;周全部 ≥ 此值的阶段可编辑,含已过周的阶段锁定 */
+  currentWeek?: number;
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -289,6 +292,8 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
   // STEP5 每日量 → preview(dailyWords 在 STEP3 上方已初始化:调整模式回填)
   const [previewing, setPreviewing] = useState(false);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
+  // 确认页可编辑副本:preview 到手时深拷贝初始化,编辑只动它,确认时直传
+  const [draftPhases, setDraftPhases] = useState<PlanPhase[]>([]);
   const [failReason, setFailReason] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -369,7 +374,9 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         return;
       }
       if (data.phases && data.generatedBy) {
-        setPreview(data as PreviewResult);
+        const result = data as PreviewResult;
+        setPreview(result);
+        setDraftPhases(structuredClone(result.phases));
       }
     } catch {
       toast.error("生成请求失败(服务未响应)");
@@ -423,6 +430,19 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
 
   async function confirmCreate() {
     if (!preview) return;
+    // 客户端先拦一道明显不合法的编辑;unit 由 type 查表无需校验,服务端会再覆写
+    for (const p of draftPhases) {
+      if (p.weeklyTasks.length === 0) {
+        toast.error(`阶段「${p.name}」没有任务`);
+        return;
+      }
+      for (const t of p.weeklyTasks) {
+        if (!Number.isFinite(t.count) || t.count <= 0) {
+          toast.error(`阶段「${p.name}」的「${TASK_LABEL[t.type]}」任务量需大于 0`);
+          return;
+        }
+      }
+    }
     setSubmitting(true);
     try {
       const isAdjust = variant === "adjust" && planId != null;
@@ -431,8 +451,8 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...buildPayload(),
-          // 两种模式都直传 preview phases:创建走整体落库,调整保证「所见即所得」
-          phases: preview.phases,
+          // 两种模式都直传确认页 phases(含人工编辑):创建走整体落库,调整保证「所见即所得」
+          phases: draftPhases,
           generatedBy: preview.generatedBy,
         }),
       });
@@ -449,6 +469,45 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
       setSubmitting(false);
     }
   }
+
+  /* ---------- 确认页任务行编辑(只动 draftPhases;unit 由 type 查表,不单独存) ---------- */
+
+  const setTask = (pi: number, ti: number, patch: Partial<PlanTask>) =>
+    setDraftPhases((phases) =>
+      phases.map((p, i) =>
+        i !== pi
+          ? p
+          : { ...p, weeklyTasks: p.weeklyTasks.map((t, j) => (j !== ti ? t : { ...t, ...patch })) },
+      ),
+    );
+
+  /** 换 type:同阶段内不允许重复 type(打卡判定按 type 汇总,重复行语义含糊) */
+  const onTaskTypeChange = (pi: number, ti: number, type: TaskType) => {
+    const phase = draftPhases[pi];
+    if (phase?.weeklyTasks.some((t, j) => j !== ti && t.type === type)) {
+      toast.error("该阶段已有此任务类型");
+      return;
+    }
+    setTask(pi, ti, { type });
+  };
+
+  const removeTask = (pi: number, ti: number) =>
+    setDraftPhases((phases) =>
+      phases.map((p, i) =>
+        i !== pi ? p : { ...p, weeklyTasks: p.weeklyTasks.filter((_, j) => j !== ti) },
+      ),
+    );
+
+  /** 加一行:自动选一个本阶段未用过的 type;六种用满后按钮已禁用 */
+  const addTask = (pi: number) =>
+    setDraftPhases((phases) =>
+      phases.map((p, i) => {
+        if (i !== pi) return p;
+        const used = new Set(p.weeklyTasks.map((t) => t.type));
+        const type = TASK_TYPES.find((t) => !used.has(t)) ?? "listening";
+        return { ...p, weeklyTasks: [...p.weeklyTasks, { type, count: 1, unit: TASK_UNIT[type] }] };
+      }),
+    );
 
   /* ---------- 确认页(preview 到手后覆盖向导) ---------- */
   if (preview) {
@@ -470,35 +529,109 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         <p className={`${HINT} mb-4`}>
           {isAdjust
             ? `共 ${preview.weeks} 周 · 距考试 ${preview.days} 天 · 已过周与打卡历史保持不变,仅重排未来周;确认后立即生效`
-            : `共 ${preview.weeks} 周 · 距考试 ${preview.days} 天 · 确认后立即生效(原计划自动归档)`}
+            : `共 ${preview.weeks} 周 · 距考试 ${preview.days} 天 · 任务行可直接调整;确认后立即生效(原计划自动归档)`}
         </p>
 
         <div className="grid gap-3">
-          {preview.phases.map((p, i) => (
-            <div key={i} className="rounded-lg border border-[#e7ecf3] bg-[#fafbfd] p-3.5">
-              <div className="flex items-center justify-between">
-                <div className="text-[13px] font-medium text-[#1c2330]">
-                  {p.name}
-                  <span className="ml-2 text-[12px] font-normal text-[#8a93a2]">
-                    {formatWeeks(p.weeks)}
-                  </span>
+          {preview.phases.map((p, i) => {
+            // adjust:含已过周的阶段锁定(已过周与打卡历史绑定,人工改动会撕裂历史一致性)
+            const locked =
+              isAdjust && preview.currentWeek != null && p.weeks.some((w) => w < preview.currentWeek!);
+            return (
+              <div key={i} className="rounded-lg border border-[#e7ecf3] bg-[#fafbfd] p-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 text-[13px] font-medium text-[#1c2330]">
+                    {p.name}
+                    <span className="ml-2 text-[12px] font-normal text-[#8a93a2]">
+                      {formatWeeks(p.weeks)}
+                    </span>
+                    {locked && (
+                      <span className="ml-2 rounded-full bg-[#f1f4f9] px-2 py-0.5 text-[11px] font-normal text-[#8a93a2]">
+                        已过周 · 不可改
+                      </span>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-[12px] text-[#5b6574]">{p.focus}</span>
                 </div>
-                <span className="text-[12px] text-[#5b6574]">{p.focus}</span>
+                <div className="mt-2 grid gap-1.5">
+                  {p.weeklyTasks.length === 0 && (
+                    <p className={`${HINT} py-1`}>本阶段暂无任务,点下方「加任务」添加</p>
+                  )}
+                  {p.weeklyTasks.map((t, j) => (
+                    <div key={j} className="flex flex-wrap items-center gap-1.5">
+                      {locked ? (
+                        <span className="rounded-md border border-[#e7ecf3] bg-white px-2 py-1 text-[12px] text-[#3c4656]">
+                          {TASK_LABEL[t.type]} {t.count}
+                          {t.unit}
+                          {t.slot ? ` · ${SLOT_LABEL[t.slot]}` : ""}
+                        </span>
+                      ) : (
+                        <>
+                          <select
+                            aria-label="任务类型"
+                            className="h-7 rounded-md border border-[#dfe4ec] bg-white px-1.5 text-[12px] text-[#1c2330] outline-none focus:border-[#1a6feb]"
+                            value={t.type}
+                            onChange={(e) => onTaskTypeChange(i, j, e.target.value as TaskType)}
+                          >
+                            {TASK_TYPES.map((tp) => (
+                              <option key={tp} value={tp}>
+                                {TASK_LABEL[tp]}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            aria-label="任务量"
+                            className="h-7 w-16 rounded-md border border-[#dfe4ec] bg-white px-1.5 text-center text-[12px] text-[#1c2330] outline-none focus:border-[#1a6feb]"
+                            inputMode="decimal"
+                            value={t.count}
+                            onChange={(e) => {
+                              const v = e.target.value.replace(/[^\d.]/g, "");
+                              const n = Number(v);
+                              setTask(i, j, { count: v && Number.isFinite(n) && n > 0 ? n : 0 });
+                            }}
+                          />
+                          <span className="text-[12px] text-[#8a93a2]">{t.unit}</span>
+                          <select
+                            aria-label="建议时段"
+                            className="h-7 rounded-md border border-[#dfe4ec] bg-white px-1.5 text-[12px] text-[#1c2330] outline-none focus:border-[#1a6feb]"
+                            value={t.slot ?? ""}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setTask(i, j, v ? { slot: v as TimeSlot } : { slot: undefined });
+                            }}
+                          >
+                            {SUBJECT_SLOT_OPTIONS.map((o) => (
+                              <option key={o.value} value={o.value}>
+                                {o.label === "不指定" ? "不指定时段" : o.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            aria-label={`删除${TASK_LABEL[t.type]}任务`}
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-[14px] text-[#8a93a2] transition-colors hover:bg-[#fdeeec] hover:text-[#d5453c]"
+                            onClick={() => removeTask(i, j)}
+                          >
+                            ×
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                  {!locked && (
+                    <button
+                      type="button"
+                      className="mt-0.5 w-fit rounded-md border border-dashed border-[#c9d2e0] px-2 py-1 text-[12px] text-[#5b6574] transition-colors hover:border-[#1a6feb] hover:text-[#1a6feb] disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={p.weeklyTasks.length >= TASK_TYPES.length}
+                      onClick={() => addTask(i)}
+                    >
+                      + 加任务
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {p.weeklyTasks.map((t, j) => (
-                  <span
-                    key={j}
-                    className="rounded-md border border-[#e7ecf3] bg-white px-2 py-1 text-[12px] text-[#3c4656]"
-                  >
-                    {TASK_LABEL[t.type]} {t.count}
-                    {t.unit}
-                    {t.slot ? ` · ${SLOT_LABEL[t.slot]}` : ""}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-4 flex gap-2.5">

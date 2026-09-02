@@ -10,7 +10,7 @@
  * v2.8:availability.slots 为 {start,end} 精确范围;范围→四段按中点归属,
  *      段边界由 wake/bed 推导;「整块」= 范围时长 ≥ blockMinMinutes。
  */
-import { TASK_TYPES, TIME_SLOTS } from "@/db/schema";
+import { TASK_TYPES, TASK_UNIT, TIME_SLOTS } from "@/db/schema";
 import type {
   AvailableRange,
   PlanAvailability,
@@ -31,15 +31,6 @@ import { daysBetween, hhmmToMin } from "@/lib/study/date";
 
 const ROUND_05 = (n: number) => Math.round(n * 2) / 2;
 const clamp = (n: number, lo: number, hi: number) => Math.min(Math.max(n, lo), hi);
-
-export const TASK_UNIT: Record<TaskType, PlanPhase["weeklyTasks"][number]["unit"]> = {
-  words: "个/天",
-  listening: "套/周",
-  reading: "套/周",
-  writing: "套/周",
-  speaking: "次/周",
-  set: "套/周",
-};
 
 /* ======================================================================
  * ① 时段工具(范围合并 / 段归属 / 整块判定)
@@ -335,6 +326,7 @@ export function validatePhasesOutput(raw: unknown, weeks: number): ValidateResul
     if (!Array.isArray(p.weeklyTasks) || p.weeklyTasks.length === 0) {
       return { ok: false, reason: `阶段「${p.name}」weeklyTasks 为空` };
     }
+    const types = new Set<string>();
     const tasks: PlanPhase["weeklyTasks"] = [];
     for (const t of p.weeklyTasks) {
       if (!t || typeof t !== "object") return { ok: false, reason: "任务元素不是对象" };
@@ -342,6 +334,11 @@ export function validatePhasesOutput(raw: unknown, weeks: number): ValidateResul
       if (!TASK_TYPES.includes(task.type as TaskType)) {
         return { ok: false, reason: `未知任务 type:${String(task.type)}` };
       }
+      // 同阶段 type 重复:打卡清单按 type 汇总进度,重复行=同一进度渲染两次,语义不自洽
+      if (types.has(String(task.type))) {
+        return { ok: false, reason: `阶段「${p.name}」任务 ${String(task.type)} 重复` };
+      }
+      types.add(String(task.type));
       if (typeof task.count !== "number" || !Number.isFinite(task.count) || task.count <= 0) {
         return { ok: false, reason: `任务 ${String(task.type)} count 非法` };
       }

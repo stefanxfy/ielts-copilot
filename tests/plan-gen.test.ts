@@ -213,6 +213,14 @@ test("validatePhasesOutput:unit 由 type 查表覆写(LLM 量词写错不拒整�
   assert.equal(r.phases![0].weeklyTasks[1].unit, "套/周");
 });
 
+test("validatePhasesOutput:同阶段 type 重复拒绝(打卡清单按 type 汇总,重复行语义不自洽)", () => {
+  const dup = structuredClone(GOOD);
+  dup[0].weeklyTasks.push({ type: "words", count: 10, unit: "个/天" });
+  const r = validatePhasesOutput(dup, 3);
+  assert.equal(r.ok, false);
+  assert.match(r.reason ?? "", /重复/);
+});
+
 test("validatePhasesOutput:周缺漏 / 重复 / 未知 type / 错 slot 均拒绝", () => {
   const miss = structuredClone(GOOD);
   miss[1].weeks = [4]; // 缺第 3 周

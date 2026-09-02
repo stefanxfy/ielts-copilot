@@ -205,13 +205,14 @@ export async function PATCH(
     );
   }
 
-  /* ?preview=1:干跑不落库,回预览(weeks/days 供确认页展示) */
+  /* ?preview=1:干跑不落库,回预览(weeks/days 供确认页展示;currentWeek 供前端锁定已过周不可编辑) */
   if (previewApply === "1") {
     return NextResponse.json({
       phases: finalCheck.phases as PlanPhase[],
       generatedBy: source === "template" ? ("template" as const) : ("llm" as const),
       weeks: newTotalWeeks,
       days: daysBetween(input.examDate, today),
+      currentWeek: currentWeekNo,
     });
   }
 

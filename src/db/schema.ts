@@ -377,15 +377,29 @@ export interface PlanPhase {
   /** 阶段重点,≤20 字 */
   focus: string;
   /** 周任务模板 */
-  weeklyTasks: {
-    type: TaskType;
-    /** 量:words=个/天,其余=套(次)/周 */
-    count: number;
-    unit: "个/天" | "套/周" | "次/周";
-    /** 建议时段;无偏好且无可时段时缺省 */
-    slot?: TimeSlot;
-  }[];
+  weeklyTasks: PlanTask[];
 }
+
+/** 周任务模板单行(type 决定 unit 的纯展示量词,查表 TASK_UNIT) */
+export interface PlanTask {
+  type: TaskType;
+  /** 量:words=个/天,其余=套(次)/周 */
+  count: number;
+  unit: "个/天" | "套/周" | "次/周";
+  /** 建议时段;无偏好且无可时段时缺省 */
+  slot?: TimeSlot;
+}
+
+/** 任务 type → 展示量词(unit 是纯展示字段、由 type 唯一决定,任何写入路径都以本表覆写为准)。
+ *  放 schema 而非 plan-gen:客户端组件(向导确认页)也要查表,避免把 Node 侧依赖拉进浏览器 bundle */
+export const TASK_UNIT: Record<TaskType, PlanTask["unit"]> = {
+  words: "个/天",
+  listening: "套/周",
+  reading: "套/周",
+  writing: "套/周",
+  speaking: "次/周",
+  set: "套/周",
+};
 
 /** app_settings.study_preferences —— 个人习惯(人的属性,跨计划持久) */
 export interface StudyPreferences {
