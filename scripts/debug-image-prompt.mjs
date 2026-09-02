@@ -72,6 +72,14 @@ const STYLE_CANDIDATES = {
   s4: "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters",
   // S5: 极简扁平符号风(符号化最强,信息最纯粹)
   s5: "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters",
+  // S6: 彩铅手绘风(细腻颗粒、绘本内页感)
+  s6: "Detailed colored pencil drawing, soft hand-drawn strokes, delicate pencil grain texture, warm harmonious colors, storybook illustration page, gentle lighting, no text, no letters",
+  // S7: 钢笔淡彩风(线描骨架 + 水彩罩染,叙事更清晰)
+  s7: "Pen and wash illustration, fine ink line drawing with loose watercolor washes, elegant sketch style, warm muted palette, white paper background, classic literary book illustration, no text, no letters",
+  // S8: 暖调胶片摄影风(Kodak Portra 质感、颗粒感、怀旧)
+  s8: "Warm analog film photography, Kodak Portra color tones, soft natural window light, subtle film grain, 35mm candid composition, nostalgic warm atmosphere, one clear subject, no text, no letters, no watermark",
+  // S9: 复古自然图鉴风(老博物志手绘图版、学术感)
+  s9: "Vintage naturalist illustration, antique field guide plate style, finely detailed scientific drawing, muted earthy watercolor tones, aged cream paper background, classic encyclopedia engraving feel, no text, no letters",
 };
 const STYLE_LABEL = {
   s1: "S1 暖色扁平插画",
@@ -79,6 +87,10 @@ const STYLE_LABEL = {
   s3: "S3 3D黏土渲染",
   s4: "S4 水彩手绘",
   s5: "S5 极简扁平符号",
+  s6: "S6 彩铅手绘",
+  s7: "S7 钢笔淡彩",
+  s8: "S8 暖调胶片摄影",
+  s9: "S9 复古自然图鉴",
 };
 
 /* ---------- 提示词结构策略 ---------- */
@@ -169,7 +181,7 @@ function buildPage(manifest) {
   for (const it of manifest.items) {
     if (it.file && existsSync(it.file)) (groups[it.id] ??= []).push(it);
   }
-  const KNOWN = ["s1-v1", "s1-v2", "s2-v1", "s2-v2", "s3-v2", "s4-v2", "s5-v2"];
+  const KNOWN = ["s1-v1", "s1-v2", "s2-v1", "s2-v2", "s3-v2", "s4-v2", "s5-v2", "s6-v2", "s7-v2", "s8-v2", "s9-v2"];
   const order = KNOWN.filter((g) => groups[g]).concat(
     Object.keys(groups).filter((g) => !KNOWN.includes(g)),
   );
