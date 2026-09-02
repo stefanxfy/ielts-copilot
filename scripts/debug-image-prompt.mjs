@@ -80,6 +80,10 @@ const STYLE_CANDIDATES = {
   s8: "Warm analog film photography, Kodak Portra color tones, soft natural window light, subtle film grain, 35mm candid composition, nostalgic warm atmosphere, one clear subject, no text, no letters, no watermark",
   // S9: 复古自然图鉴风(老博物志手绘图版、学术感)
   s9: "Vintage naturalist illustration, antique field guide plate style, finely detailed scientific drawing, muted earthy watercolor tones, aged cream paper background, classic encyclopedia engraving feel, no text, no letters",
+  // S10: 古风动漫(国风动画关键帧、水墨渐变)
+  s10: "Ancient Chinese style anime illustration, guofeng donghua key visual, flowing ink-wash color gradients, misty atmosphere, traditional oriental aesthetics, delicate line art, elegant muted palette, cinematic composition, no text, no letters",
+  // S11: 巨构史诗(超大尺度建筑、渺小主体对比、科幻概念画)
+  s11: "Epic colossal megastructure concept art, monumental sci-fi architecture towering into the clouds in the background, tiny subjects for dramatic scale contrast, atmospheric haze, volumetric light, cinematic wide-angle matte painting, no text, no letters",
 };
 const STYLE_LABEL = {
   s1: "S1 暖色扁平插画",
@@ -91,6 +95,8 @@ const STYLE_LABEL = {
   s7: "S7 钢笔淡彩",
   s8: "S8 暖调胶片摄影",
   s9: "S9 复古自然图鉴",
+  s10: "S10 古风动漫",
+  s11: "S11 巨构史诗",
 };
 
 /* ---------- 提示词结构策略 ---------- */
@@ -181,7 +187,7 @@ function buildPage(manifest) {
   for (const it of manifest.items) {
     if (it.file && existsSync(it.file)) (groups[it.id] ??= []).push(it);
   }
-  const KNOWN = ["s1-v1", "s1-v2", "s2-v1", "s2-v2", "s3-v2", "s4-v2", "s5-v2", "s6-v2", "s7-v2", "s8-v2", "s9-v2"];
+  const KNOWN = ["s1-v1", "s1-v2", "s2-v1", "s2-v2", "s3-v2", "s4-v2", "s5-v2", "s6-v2", "s7-v2", "s8-v2", "s9-v2", "s10-v2", "s11-v2"];
   const order = KNOWN.filter((g) => groups[g]).concat(
     Object.keys(groups).filter((g) => !KNOWN.includes(g)),
   );
