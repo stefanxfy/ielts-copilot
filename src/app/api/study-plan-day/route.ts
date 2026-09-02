@@ -73,6 +73,10 @@ export async function GET(request: Request) {
     parseLocalDate(date),
   );
 
+  // 计划边界(供 UI 区分「早于计划开始」/「晚于计划结束」两种范围外情形)
+  const phases = plan.phasesJson as PlanPhase[];
+  const planTotalWeeks = phases.reduce((n, p) => Math.max(n, ...p.weeks), 0);
+
   const dayRow = activities.find((a) => a.activityDate === date);
   const punch = dayRow
     ? punchOfDay(dayRow, readPunchRules())
@@ -85,5 +89,7 @@ export async function GET(request: Request) {
     phase: phase ? { name: phase.name, focus: phase.focus } : null,
     tasks,
     punch,
+    planStartWeekMonday: plan.planStartWeekMonday,
+    planTotalWeeks,
   });
 }

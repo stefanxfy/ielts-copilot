@@ -62,6 +62,16 @@ interface HistoryDay {
     words: number;
     level: 0 | 1 | 2;
   };
+  /** 计划边界:起点周一 + 总周数(供 UI 区分计划前/计划后) */
+  planStartWeekMonday: string;
+  planTotalWeeks: number;
+}
+
+/** 计划范围外的原因文案:weekNo ≤ 0 早于计划开始;> 总周数 晚于计划结束 */
+function outOfRangeHint(h: HistoryDay): string {
+  return h.weekNo < 1
+    ? "早于计划开始周,当时还没有排期任务"
+    : "已超出计划结束周,如需继续可调整计划续期";
 }
 
 export interface BattleHomeProps {
@@ -315,7 +325,13 @@ export function BattleHome({
                     ? ` · 打卡${history.punch.level === 2 ? "双达标" : "单达标"}(交卷 ${history.punch.submissions} · 背词 ${history.punch.words})`
                     : " · 当日未打卡"}
                 </p>
-                <TaskList tasks={history.tasks} emptyHint="该日所在周没有排期任务" />
+                {history.phase ? (
+                  <TaskList tasks={history.tasks} emptyHint="该日所在周没有排期任务" />
+                ) : (
+                  <p className="py-8 text-center text-[13px] text-muted-foreground">
+                    {outOfRangeHint(history)}
+                  </p>
+                )}
               </>
             ) : null}
           </>
