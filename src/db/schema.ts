@@ -1,10 +1,11 @@
 /**
  * src/db/schema.ts — 全量表定义(v3.1 · 5 表,推倒旧 12 表重写;P8 增 · 背单词 3 表)
  *
- * 对齐:docs/数据模型设计.md v3.1 + docs/背单词数据模型设计.md v0.5
+ * 对齐:docs/数据模型设计.md v3.1 + docs/背单词数据模型设计.md v0.7.1
  * 原则:内容不入库(真题 HTML 留文件系统)/ 锚点即题目(题号三方对齐)/
  *       静态与动态一刀切开(exam_sets+papers=卷的定义,exam_sessions+exam_records=考的历史;
- *       word_books+words+book_word_relation=词书与词条的定义,学习进度后续独立成表)
+ *       word_books+words+book_word_relation=词书与词条的定义,
+ *       word_progress+word_review_log=学习进度与答题流水)
  *
  * 删除语义:删 exam_sets 级联删 papers 与其下 sessions/records(删卷重录是合法操作);
  *       exam_records.exam_id 显式 RESTRICT(有作答记录的单科卷不许删,防误删)。
@@ -14,6 +15,9 @@
  * 背单词:删 word_books 级联清 book_word_relation(删词书重导合法);words.id 显式 RESTRICT
  *       (有词书引用的词条不许删,防误删共享内容;book_word_relation 走 cascade 清干净后 words
  *       行残留无害,下次任何书用到自动复用)。
+ *       学习层:删 words 级联清 word_progress,删 word_progress 级联清 word_review_log
+ *       (进度与流水是纯派生数据,词没了记忆没意义);删除主路径被 words RESTRICT 挡住,
+ *       cascade 仅作兜底。
  */
 import { sql } from "drizzle-orm";
 import {
@@ -680,5 +684,109 @@ export const bookWordRelation = sqliteTable(
     uniqueIndex("uq_bwr_book_word").on(t.bookId, t.wordId),
     uniqueIndex("uq_bwr_book_order").on(t.bookId, t.order),
     index("idx_bwr_word").on(t.wordId),
+  ],
+);
+
+/* ================================================================
+ * P8 学习层(docs/背单词数据模型设计.md v0.7 §8/§9)
+ * ================================================================ */
+
+/* ---------- 学习层:枚举 + JSON 契约 ---------- */
+
+/** word_progress.stage 出题阶段(recognize 认词卡 | spell 默写卡三型) */
+export const PROGRESS_STAGES = ["recognize", "spell"] as const;
+export type ProgressStage = (typeof PROGRESS_STAGES)[number];
+
+/** word_progress.status 在学 | 用户跳过不调度(可恢复) */
+export const PROGRESS_STATUSES = ["ACTIVE", "IGNORED"] as const;
+export type ProgressStatus = (typeof PROGRESS_STATUSES)[number];
+
+/** FSRS 评分枚举值(ts-fsrs Rating:Again=1 Hard=2 Good=3 Easy=4;UI 只暴露 1~3) */
+export type FsrsRating = 1 | 2 | 3 | 4;
+
+/**
+ * word_progress.fsrs_state_json — FSRS 记忆状态(ts-fsrs Card 序列化)
+ *
+ * 只持久化记忆模型四要素 + 计数快照;due/lastReviewAt/reps/lapses 提为表列
+ * (due 是到期队列热点查询条件,reps/lapses 是统计面),此处冗余仅作与 Card
+ * 对齐的完整快照,回写时以表列为准。state ∈ ts-fsrs State 枚举:
+ * 0=New 1=Learning 2=Review 3=Relearning
+ */
+export interface FsrsState {
+  stability: number;
+  difficulty: number;
+  state: 0 | 1 | 2 | 3;
+  /** learning_steps 步数(ts-fsrs Card.learning_steps) */
+  step: number;
+  /** 初始化参数版本(默认参数代次,便于未来参数升级迁移;ts-fsrs v5.4 = FSRS-6.0) */
+  paramVersion?: string;
+}
+
+/* ---------- word_progress:学习进度(1 行 = 一个词,单轨一词一行) ---------- */
+
+export const wordProgress = sqliteTable(
+  "word_progress",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /**
+     * FK → words.id ON DELETE CASCADE:进度跟词走,词删记忆跟着走
+     * (主删除路径被 book_word_relation RESTRICT 挡住,cascade 仅兜底);
+     * UNIQUE(wordId) 单轨:一词一行,不设 dimension 双轨——会默写的词必然认识。
+     */
+    wordId: int("word_id")
+      .notNull()
+      .references(() => words.id, { onDelete: "cascade" }),
+    /** 出题阶段:recognize(新词默认)| spell(连续 2 次认识后升级,见设计文档 §8.4) */
+    stage: text("stage", { enum: PROGRESS_STAGES }).notNull().default("recognize"),
+    /** ACTIVE 在学 | IGNORED 用户跳过(可恢复) */
+    status: text("status", { enum: PROGRESS_STATUSES }).notNull().default("ACTIVE"),
+    /** 下次到期时间 epoch ms——到期队列唯一热点查询条件,故提升为列+索引 */
+    due: int("due").notNull(),
+    /** FSRS 记忆状态(契约见 FsrsState) */
+    fsrsStateJson: text("fsrs_state_json", { mode: "json" })
+      .$type<FsrsState>()
+      .notNull(),
+    /** 累计答题次数 */
+    reps: int("reps").notNull().default(0),
+    /** 累计答错(跌落)次数 */
+    lapses: int("lapses").notNull().default(0),
+    /** 最后评分时间 epoch ms */
+    lastReviewAt: int("last_review_at"),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [
+    uniqueIndex("uq_word_progress_word").on(t.wordId),
+    index("idx_word_progress_status_due").on(t.status, t.due),
+  ],
+);
+
+/* ---------- word_review_log:答题流水(只增不改不删,1 行 = 一次答题) ---------- */
+
+export const wordReviewLog = sqliteTable(
+  "word_review_log",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** FK → word_progress.id ON DELETE CASCADE:流水随进度走 */
+    progressId: int("progress_id")
+      .notNull()
+      .references(() => wordProgress.id, { onDelete: "cascade" }),
+    /** FSRS 原生评分 1~4(Again/Hard/Good/Easy),实际只出现 1~3 */
+    rating: int("rating").notNull(),
+    /**
+     * 答题时 stage 快照——历史事实,事后 join 不出来(stage 会变),故落列。
+     * 用过提示且答对最多记 Hard 的判定依据也在评分时点落进 rating 本身。
+     */
+    stage: text("stage", { enum: PROGRESS_STAGES }).notNull(),
+    /** 答题时间 epoch ms */
+    reviewedAt: int("reviewed_at").notNull(),
+  },
+  (t) => [
+    index("idx_word_review_log_progress").on(t.progressId),
+    index("idx_word_review_log_reviewed").on(t.reviewedAt),
   ],
 );
