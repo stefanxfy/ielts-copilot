@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>背单词素材收集方案 · 调研报告</title>
+<style>
+  :root {
+    --bg: #fafaf9; --fg: #1c1917; --card: #ffffff; --muted: #78716c;
+    --primary: #d97706; --primary-soft: #fef3c7; --border: #e7e5e4;
+    --ok: #15803d; --ok-bg: #f0fdf4; --warn: #b45309; --warn-bg: #fffbeb;
+    --danger: #b91c1c; --danger-bg: #fef2f2; --info: #1d4ed8; --info-bg: #eff6ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.7; padding: 40px 20px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 26px; margin-bottom: 6px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  h2 { font-size: 19px; margin: 36px 0 14px; padding-left: 12px; border-left: 4px solid var(--primary); }
+  h3 { font-size: 15px; margin: 18px 0 8px; }
+  p { margin: 8px 0; font-size: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+  th { text-align: left; background: var(--primary-soft); color: #78350f; padding: 8px 10px; font-weight: 600; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  code { background: #f5f5f4; border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 12px; font-family: "SF Mono", Menlo, Consolas, monospace; }
+  .tag { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .t-ok { background: var(--ok-bg); color: var(--ok); }
+  .t-warn { background: var(--warn-bg); color: var(--warn); }
+  .t-danger { background: var(--danger-bg); color: var(--danger); }
+  .t-info { background: var(--info-bg); color: var(--info); }
+  .tldr { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a; border-radius: 12px; padding: 18px 22px; margin: 16px 0; }
+  .tldr b { color: #92400e; }
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 14px 0; }
+  .step { flex: 1; min-width: 150px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; position: relative; }
+  .step .n { position: absolute; top: -10px; left: 12px; width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .step h4 { font-size: 13px; margin: 6px 0 4px; }
+  .step p { font-size: 12px; color: var(--muted); margin: 0; }
+  .arrow { align-self: center; color: var(--primary); font-weight: 700; font-size: 16px; }
+  ul { padding-left: 20px; font-size: 14px; }
+  li { margin: 4px 0; }
+  .footnote { color: var(--muted); font-size: 12px; border-top: 1px dashed var(--border); margin-top: 30px; padding-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>背单词功能 · 素材收集方案</h1>
+  <div class="sub">调研日期 2026-09-02 · 所有渠道均经本机实测验证（✅=实测通过）· ielts-copilot docs</div>
+
+  <div class="tldr">
+    <b>结论（TL;DR）</b>：三件套各有免费且可落地的主渠道——<b>词库</b>用 <b>ECDICT</b>（开源、77 万词条、自带 ielts 考试标签）筛出雅思词表；<b>语境例句</b>优先用现成例句库（百字斩例句 JSON），缺漏用 <b>LLM 批量生成</b>（项目已接 LLM，版权最干净、还能定制雅思风格）；<b>发音</b>用 <b>edge-tts</b>（微软神经音色、免费无限量、可调速）批量合成 mp3 本地化。自定义词库走 CSV/JSON 导入 + 导入后自动补全管线。全部素材本地落盘，背单词功能零外部依赖。
+  </div>
+
+  <h2>一、词库来源</h2>
+  <table>
+    <tr><th style="width:150px">来源</th><th>规模与内容</th><th style="width:80px">格式</th><th>实测可达性</th><th style="width:90px">版权</th></tr>
+    <tr>
+      <td><b>ECDICT</b><br><span style="color:var(--muted);font-size:12px">skywind3000/ECDICT</span></td>
+      <td>77 万词条：音标 / 中英释义 / BNC+当代词频 / 柯林斯星级 / 牛津3000 / 词形变化 / <b>考试标签（含 ielts）</b>；附带 wordroot.txt 词根库。按 <code>tag LIKE '%ielts%'</code> 筛选即得雅思核心词表（约 5-8k 词）</td>
+      <td>SQLite / CSV</td>
+      <td>✅ <code>codeload.github.com</code> 源码包 200（含 stardict.7z 51MB）<br>✅ jsdelivr 单文件可拉<br>❌ release 附件直连不通<br>❌ ghproxy 镜像不通</td>
+      <td><span class="tag t-ok">开源可分发</span></td>
+    </tr>
+    <tr>
+      <td><b>新东方雅思词根+联想</b><br><span style="color:var(--muted);font-size:12px">fanhongtao/IELTS</span></td>
+      <td>3722 词，自带音标 + 中文释义（乱序便携版手抄词表），质量高、纯雅思向，适合作种子词表或与 ECDICT 交叉校验</td>
+      <td>txt</td>
+      <td>✅ 已实际下载（jsdelivr 直链，253KB）</td>
+      <td><span class="tag t-warn">个人学习用</span></td>
+    </tr>
+    <tr>
+      <td><b>扇贝词书全套</b><br><span style="color:var(--muted);font-size:12px">kajweb/dict</span></td>
+      <td>IELTS 真题词汇、四级、六级、考研、托福等全套词书 JSON（含释义+例句），词书结构现成</td>
+      <td>JSON</td>
+      <td>⚠️ jsdelivr 整包超限 403，走 codeload 源码包</td>
+      <td><span class="tag t-warn">个人学习用</span></td>
+    </tr>
+    <tr>
+      <td><b>TOEFL/IELTS 学术词 1000</b><br><span style="color:var(--muted);font-size:12px">wordlevel.net</span></td>
+      <td>1000 高频学术词：英文释义 + <b>语境例句</b> + 学科主题 + 难度分级 + 同义词，AI 增强结构化数据</td>
+      <td>JSON / CSV</td>
+      <td>✅ zenodo / Kaggle / HuggingFace 多渠道</td>
+      <td><span class="tag t-ok">MIT 可分发</span></td>
+    </tr>
+  </table>
+  <p style="font-size:13px;color:var(--muted)">选型建议：<b>ECDICT 为主库</b>（释义/音标/词频/词形的事实源），新东方 3722 词表作种子对齐「雅思高频」，wordlevel 1000 直接作「学术词汇」小词书。</p>
+
+  <h2>二、语境例句来源</h2>
+  <table>
+    <tr><th style="width:170px">来源</th><th>说明</th><th>版权</th></tr>
+    <tr>
+      <td><b>百词斩例句表</b><br><span style="color:var(--muted);font-size:12px">zhenghaoyang24/english-vocabulary</span></td>
+      <td><code>tb_voc_examples.json</code>：例句 en + 中译，按 wordid 与词条表关联（词条表含雅思书）；覆盖率高、真人编写的教学例句</td>
+      <td><span class="tag t-warn">个人学习用</span></td>
+    </tr>
+    <tr>
+      <td><b>dictionaryapi.dev</b>（Wiktionary）</td>
+      <td>免 key 免费 REST API：释义 / 例句 / <b>真人音频 URL</b> / 同义反义。实测可用但偶尔空响应（需重试 + 缓存）。适合「补漏」与「按需查询」，不适合全量依赖</td>
+      <td><span class="tag t-warn">CC BY-SA 3.0 署名</span></td>
+    </tr>
+    <tr>
+      <td><b>LLM 批量生成</b>（推荐主力）</td>
+      <td>项目已接 LLM（config.json）。按「雅思真题风格（学术场景/图表描述/观点论证）」批量生成例句 + 中文翻译 + 词形搭配，一次生成全量本地化。质量可控、风格统一、<b>版权完全干净</b>、可按用户弱项定制（如写作高频词给议论文句式）</td>
+      <td><span class="tag t-ok">自有内容</span></td>
+    </tr>
+  </table>
+
+  <h2>三、发音音频来源</h2>
+  <table>
+    <tr><th style="width:170px">来源</th><th>说明</th><th>版权</th></tr>
+    <tr>
+      <td><b>edge-tts</b>（推荐主力）</td>
+      <td>微软 Edge 神经网络语音的 Python 封装（v7.2.8，LGPL）：<b>免费、无 key、无配额</b>。<code>en-GB-RyanNeural / SoniaNeural</code> 英音，支持调速（单词可放慢 10%）。单词、例句都能合成，批量脚本一次跑完落 <code>public/audio/</code></td>
+      <td><span class="tag t-ok">音频自用无虞</span></td>
+    </tr>
+    <tr>
+      <td>gstatic 真人录音</td>
+      <td>dictionaryapi.dev 返回的真人音频（实测 200，7.5KB/词）。覆盖不全、URL 带日期版本会失效——只适合「批量下载缓存进本地」，不要在线直连播放</td>
+      <td><span class="tag t-warn">缓存自用</span></td>
+    </tr>
+    <tr>
+      <td>Web Speech API</td>
+      <td>浏览器原生 <code>speechSynthesis</code>，零素材成本兜底方案；音色依赖系统（macOS 尚可、Windows 参差），可作 edge-tts 缺漏时的在线兜底</td>
+      <td><span class="tag t-ok">无限制</span></td>
+    </tr>
+  </table>
+
+  <h2>四、推荐素材管线（一条流水线跑通）</h2>
+  <div class="flow">
+    <div class="step"><span class="n">1</span><h4>拉 ECDICT</h4><p>codeload 源码包 → 解 stardict.7z → <code>tag LIKE '%ielts%'</code> 筛词（~5-8k），新东方 3722 词表交叉对齐</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="n">2</span><h4>补例句</h4><p>百词斩例句表按 wordid join；缺漏部分 LLM 批量生成（雅思风格 en+cn）</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="n">3</span><h4>合成音频</h4><p>edge-tts en-GB 批量合成 mp3（单词 + 例句各一份），落 public/audio/words/</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="n">4</span><h4>入库</h4><p>生成 wordbooks/words 数据导入 app 主库，音频路径入列，功能零外网依赖</p></div>
+  </div>
+  <p style="font-size:13px;color:var(--muted)">预估产出：雅思核心词书 5-8k 词 ×（释义+音标+2 例句+2 音频）≈ 音频 1-2GB 磁盘、跑批一次约 1-2 小时（edge-tts 并发限速下）。可先跑 500 词的垂直切片验证全链路，再放量。</p>
+
+  <h2>五、自定义导入设计（词书 + 加词）</h2>
+  <div class="card">
+    <ul>
+      <li><b>导入格式</b>：第一版支持 CSV（<code>word,meaning[,phonetic]</code>）与 JSON 数组；只填单词也行——导入后自动走补全管线</li>
+      <li><b>自动补全管线</b>（导入体验的关键）：本地 ECDICT 查释义/音标/词频 → 缺例句的用 LLM 生成 → edge-tts 合成音频 → 入库。用户拖一份词单进来即得完整可用词书</li>
+      <li><b>手动加词</b>：学习中心/阅读中生词「一键加入生词本」走同一管线</li>
+      <li><b>数据模型</b>：沿用 v2 极简风格建议两张新表——<code>word_books</code>（词书元信息）+ <code>words</code>（词条，例句等富信息合并 JSON 列，不生硬拆表），后续出正式设计文档再定稿</li>
+    </ul>
+  </div>
+
+  <h2>六、版权红线一览</h2>
+  <table>
+    <tr><th>素材</th><th>个人学习（本项目定位）</th><th>若将来开源/分发</th></tr>
+    <tr><td>ECDICT 词库 / wordlevel 1000</td><td><span class="tag t-ok">✅ 随意用</span></td><td><span class="tag t-ok">可分发</span>（MIT 需署名回链）</td></tr>
+    <tr><td>新东方词表 / 扇贝词书 / 百词斩例句</td><td><span class="tag t-ok">✅ 本机使用没问题</span></td><td><span class="tag t-danger">❌ 不可再分发</span>（教材/平台版权）</td></tr>
+    <tr><td>LLM 生成例句 / edge-tts 合成音频</td><td><span class="tag t-ok">✅ 随意用</span></td><td><span class="tag t-ok">自有内容，最干净</span></td></tr>
+    <tr><td>Wiktionary 数据（dictionaryapi.dev）</td><td><span class="tag t-ok">✅ 可用</span></td><td><span class="tag t-warn">需 CC BY-SA 3.0 同协议署名</span></td></tr>
+  </table>
+
+  <div class="footnote">实测环境备注：GitHub release 直连与常见 ghproxy 镜像本机不通，<b>codeload.github.com 源码包与 jsdelivr 是稳定通道</b>；dictionaryapi.dev 偶发空响应，批量抓取必须带重试与本地缓存；edge-tts 无需任何账号。方案执行前建议先跑 500 词垂直切片验证全链路。</div>
+</div>
+</body>
+</html>
