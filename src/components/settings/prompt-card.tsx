@@ -14,7 +14,7 @@ const CARD = "mb-4 max-w-[680px] rounded-xl border border-border bg-card p-5";
 const BTN =
   "rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
-  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
 const HINT = "text-xs text-muted-foreground";
 
 interface PromptItem {

@@ -267,7 +267,7 @@ function EmptyGuide() {
       </p>
       <Link
         href="/mock"
-        className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-[13px] text-white transition-colors hover:bg-primary/90"
+        className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-[13px] text-primary-foreground transition-colors hover:bg-primary/90"
       >
         去机考模拟 →
       </Link>

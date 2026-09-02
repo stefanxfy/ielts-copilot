@@ -46,7 +46,7 @@ function levelOf(a: ActivityRow | undefined, rules: PunchRules): 0 | 1 | 2 {
 const LEVEL_CLS: Record<0 | 1 | 2, string> = {
   0: "text-muted-foreground",
   1: "bg-success/25 text-success",
-  2: "bg-success text-white",
+  2: "bg-success text-primary-foreground",
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");

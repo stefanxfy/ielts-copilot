@@ -33,6 +33,13 @@ import { PunchRulesCard } from "@/components/settings/punch-rules-card";
 import { StudyPrefsCard } from "@/components/settings/study-prefs-card";
 import { TemplateRulesCard } from "@/components/settings/template-rules-card";
 import { useSettings } from "@/stores/settings";
+import {
+  DEFAULT_UI_THEME,
+  UI_THEMES,
+  applyUiTheme,
+  currentUiTheme,
+  type UiThemeId,
+} from "@/lib/ui-theme";
 
 /* ---------- 原型同款基础样式 ---------- */
 const CARD = "rounded-xl border border-border bg-card p-5";
@@ -44,7 +51,7 @@ const INPUT =
 const BTN =
   "rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
-  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
 const HINT = "text-xs text-muted-foreground";
 const H2 = "mb-3 text-[15px] font-medium text-foreground";
 const CARD_W = "mb-4 max-w-[680px]";
@@ -113,6 +120,10 @@ export default function SettingsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // 皮肤选择:以 SSR 直出的 <html data-theme> 为初始值;切换即时生效并持久化到 app_settings
+  const [uiTheme, setUiTheme] = useState<UiThemeId>(DEFAULT_UI_THEME);
+  useEffect(() => setUiTheme(currentUiTheme()), []);
 
   // 服务端视图到达 → 灌表单(apiKey 永远留空,占位符显示掩码)。
   const [syncedFrom, setSyncedFrom] = useState<unknown>(null);
@@ -400,6 +411,57 @@ export default function SettingsPage() {
       {/* ===== ④ 通用 ===== */}
       <section id="general" className={SECTION}>
         <h2 className={H2}>通用</h2>
+
+        {/* 界面皮肤(glearn 同源 8 套;即时生效,存 app_settings) */}
+        <div className={CARD_W}>
+          <div className={CARD}>
+            <h3 className="mb-3.5 text-[15px]">界面皮肤</h3>
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              {UI_THEMES.map((t) => {
+                const active = uiTheme === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => {
+                      applyUiTheme(t.id);
+                      setUiTheme(t.id);
+                      void fetch("/api/ui-theme", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ theme: t.id }),
+                      }).catch(() => undefined);
+                    }}
+                    className={`press-bubble rounded-lg border p-2 text-left transition-colors ${
+                      active
+                        ? "border-primary ring-2 ring-primary/30"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    {/* 色条:底色 / 品牌色 / 点缀色,还原 glearn 主题卡观感 */}
+                    <span
+                      className="mb-1.5 flex h-7 overflow-hidden rounded-md border border-border"
+                      style={{ background: t.swatch[0] }}
+                    >
+                      <span className="h-full flex-[3]" style={{ background: t.swatch[1] }} />
+                      <span className="h-full flex-1" style={{ background: t.swatch[2] }} />
+                    </span>
+                    <span className="flex items-center justify-between text-[12px] leading-none">
+                      <span className={active ? "font-semibold text-primary" : "text-foreground"}>
+                        {t.label}
+                      </span>
+                      {active && <span className="text-[11px] text-primary">✓</span>}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className={`${HINT} mt-3`}>
+              皮肤即时生效并保存;「夜读·灯下」为暗色护眼皮肤,顶栏按钮可在夜读与上次浅色皮肤间快切。
+            </div>
+          </div>
+        </div>
 
         {/* 本地数据 */}
         <div className={CARD_W}>

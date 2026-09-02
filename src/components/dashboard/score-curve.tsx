@@ -123,7 +123,7 @@ export default function ScoreCurveChart({
               onClick={() => setDim(d)}
               className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                 dim === d
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:bg-accent"
               }`}
             >

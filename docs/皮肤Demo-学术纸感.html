@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-skin="paper" data-page-node-id="UANQObCZJjEaqP9EswVpkL">
+<head data-page-node-id="w0CrqsiwwM0aG0nYVDpnjF">
+<meta charset="UTF-8" data-page-node-id="evfdPwmAkpXbUYH6Jqh0l7">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="PwxFpb67VnbtAPXI3FG8TD">
+<title>ielts-copilot · 学术纸感皮肤 Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" data-page-node-id="S51OEeTvOFoFTrrDZpgIg6">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin data-page-node-id="3vS5hpmUrjkhrjsyG2luVX">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" data-page-node-id="30sdHd5csHpbXUpQZ6bfel">
+<style>
+/* ============================================================
+   ielts-copilot 「学术纸感」备选皮肤 Demo
+   核心思路（借鉴 glearn 的 data-theme 气质包架构）：
+   同一套布局与组件，只靠 <html data-skin="..."> 切换两组 token；
+   少量「组件形态」差异（导航下划线、输入框底边线、按钮直角化）
+   用皮肤作用域的覆盖规则表达。
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ---------- 皮肤 A：可爱风（现状 light 主题，照搬 globals.css） ---------- */
+html[data-skin="cute"] {
+  --background: oklch(0.984 0.009 247.9);
+  --foreground: oklch(0.29 0.033 261.4);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.29 0.033 261.4);
+  --primary: oklch(0.6 0.183 255.5);
+  --primary-foreground: oklch(0.99 0.004 247.9);
+  --secondary: oklch(0.953 0.022 248.4);
+  --secondary-foreground: oklch(0.42 0.078 257.4);
+  --muted: oklch(0.958 0.013 248.8);
+  --muted-foreground: oklch(0.53 0.033 255.3);
+  --accent: oklch(0.945 0.028 248.9);
+  --accent-foreground: oklch(0.42 0.078 257.4);
+  --destructive: oklch(0.6 0.19 25.9);
+  --border: oklch(0.912 0.017 250.5);
+  --input: oklch(0.912 0.017 250.5);
+  --ring: oklch(0.7 0.128 255.3);
+  --success: oklch(0.58 0.125 155.8);
+  --warning: oklch(0.72 0.14 70.2);
+  --chart-1: oklch(0.6 0.183 255.5);
+  --chart-2: oklch(0.72 0.128 350.3);
+  --chart-3: oklch(0.7 0.12 180.9);
+  --radius: 0.875rem;
+  --shadow-card: 0 1px 2px oklch(0.6 0.183 255.5 / 6%);
+  --shadow-hover: 0 6px 18px oklch(0.6 0.183 255.5 / 12%);
+  --font-display: "Noto Sans SC", "PingFang SC", sans-serif;
+  --font-mono-ui: ui-monospace, "SF Mono", Menlo, monospace;
+  --nav-active-bg: oklch(0.6 0.183 255.5 / 15%);
+  --nav-active-text: var(--primary);
+  --seal-display: none;
+  --texture: none;
+}
+
+/* ---------- 皮肤 B：学术纸感（本 demo 主角） ---------- */
+html[data-skin="paper"] {
+  --background: #fafaf9;            /* stone-50 暖纸白 */
+  --foreground: #292524;            /* stone-800 墨色 */
+  --card: #ffffff;
+  --card-foreground: #292524;
+  --primary: #b45309;               /* 赭石 / 琥珀深（amber-700） */
+  --primary-foreground: #fffbf5;    /* 暖白 */
+  --secondary: #f5f5f4;             /* stone-100 */
+  --secondary-foreground: #57534e;
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;      /* stone-500 */
+  --accent: #f5f5f4;
+  --accent-foreground: #44403c;
+  --destructive: #a8412f;           /* 朱砂（降饱和） */
+  --border: #e7e5e4;                /* stone-200 hairline */
+  --input: #d6d3d1;
+  --ring: #d97706;
+  --success: #4d7358;               /* 苔绿 */
+  --warning: #a16207;
+  --chart-1: #b45309;               /* 赭石 */
+  --chart-2: #41618c;               /* 墨青 */
+  --chart-3: #5c7355;               /* 苔绿 */
+  --chart-4: #a3622e;
+  --chart-5: #6d5a7e;
+  --radius: 0.625rem;               /* 10px，克制 */
+  --shadow-card: 0 1px 2px rgba(28,25,23,.04), 0 1px 3px rgba(28,25,23,.03);
+  --shadow-hover: 0 2px 4px rgba(28,25,23,.05), 0 6px 16px rgba(28,25,23,.07);
+  --font-display: "Noto Serif SC", "Songti SC", "STSong", serif;  /* 书卷气标题 */
+  --font-mono-ui: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --nav-active-bg: transparent;
+  --nav-active-text: var(--primary);
+  --seal-display: inline-flex;      /* 朱砂小印章 */
+  /* 极淡纸张颗粒 */
+  --texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.28 0 0 0 0 0.25 0 0 0 0.025 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background-color: var(--background);
+  background-image: var(--texture);
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.6;
+  transition: background-color .25s ease, color .25s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 顶部说明条 ---------- */
+.demo-note {
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  text-align: center;
+  font-family: var(--font-mono-ui);
+  font-size: 11.5px;
+  letter-spacing: .04em;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 16px;
+  height: 52px; padding: 0 20px;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 700; letter-spacing: .02em;
+  text-decoration: none; color: var(--foreground);
+}
+.logo .brand-font { font-family: var(--font-display); transition: font-family .2s; }
+.logo em { font-style: normal; color: var(--primary); }
+.seal {
+  display: var(--seal-display);
+  align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 3px;
+  background: #a83d29; color: #fffbf5;
+  font-family: var(--font-display); font-size: 12px; font-weight: 900; line-height: 1;
+  box-shadow: 0 1px 2px rgba(28,25,23,.2);
+}
+nav { display: flex; gap: 4px; flex: 1; }
+.nav-link {
+  position: relative;
+  padding: 6px 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 500; text-decoration: none;
+  color: var(--muted-foreground);
+  transition: color .15s, background-color .15s;
+}
+.nav-link:hover { background: var(--accent); color: var(--accent-foreground); }
+.nav-link.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+.badge {
+  display: none;
+  padding: 2px 10px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--secondary); color: var(--muted-foreground);
+  font-size: 11.5px;
+}
+@media (min-width: 720px) { .badge { display: block; } }
+.skin-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--foreground); font-size: 12.5px; font-family: inherit;
+  cursor: pointer; transition: transform .12s ease, box-shadow .2s, border-color .2s;
+  box-shadow: var(--shadow-card);
+}
+.skin-toggle:hover { border-color: var(--primary); }
+.skin-toggle:active { transform: scale(0.96); }
+.skin-toggle svg { width: 14px; height: 14px; stroke: var(--primary); }
+
+/* 皮肤作用域形态覆盖：纸感导航改为「下划线」学术形态 */
+html[data-skin="paper"] .nav-link { border-radius: 2px; }
+html[data-skin="paper"] .nav-link.active::after {
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: 1px;
+  height: 2px; background: var(--primary); border-radius: 1px;
+}
+html[data-skin="paper"] .skin-toggle { border-radius: 6px; }
+
+/* ---------- 布局容器 ---------- */
+.container { max-width: 1080px; margin: 0 auto; padding: 28px 20px 64px; }
+.page-title { font-size: 20px; font-weight: 700; }
+html[data-skin="paper"] .page-title { font-family: var(--font-display); font-weight: 600; letter-spacing: .02em; }
+.page-sub { margin: 4px 0 24px; font-size: 13px; color: var(--muted-foreground); }
+
+.kicker {
+  font-family: var(--font-mono-ui); font-size: 11px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 10px;
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--card); color: var(--card-foreground);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  transition: box-shadow .25s ease, transform .25s ease, background-color .25s;
+}
+.card.floatable:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.card-title { font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
+.card-desc { font-size: 12px; color: var(--muted-foreground); margin-bottom: 14px; }
+
+/* ---------- 能力总览 4 卡 ---------- */
+.stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 20px; }
+.stat-label { font-family: var(--font-mono-ui); font-size: 11px; letter-spacing: .1em; color: var(--muted-foreground); }
+.stat-main { font-size: 30px; font-weight: 700; line-height: 1.25; margin-top: 2px; }
+html[data-skin="paper"] .stat-main { font-family: var(--font-display); font-weight: 600; }
+.stat-main .up { color: var(--success); font-size: 15px; font-weight: 600; margin-left: 6px; }
+.stat-sub { font-size: 12px; color: var(--muted-foreground); }
+.stat-arrow { display: inline-block; margin-top: 10px; font-size: 12px; color: var(--primary); text-decoration: none; }
+.stat-arrow:hover { text-decoration: underline; }
+
+/* ---------- 图表区 ---------- */
+.charts { display: grid; gap: 14px; grid-template-columns: 1fr; margin-bottom: 20px; }
+@media (min-width: 860px) { .charts { grid-template-columns: 1.6fr 1fr; } }
+.legend { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--muted-foreground); }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+
+/* ---------- 列表行 ---------- */
+.row-list { display: flex; flex-direction: column; }
+.row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 4px; border-bottom: 1px solid var(--border);
+}
+.row:last-child { border-bottom: 0; }
+.tag {
+  flex: none; padding: 2px 8px; border-radius: 4px;
+  font-family: var(--font-mono-ui); font-size: 11px;
+  background: var(--secondary); color: var(--secondary-foreground);
+  border: 1px solid var(--border);
+}
+.row-title { flex: 1; font-size: 13px; }
+.row-band { font-family: var(--font-mono-ui); font-size: 12px; color: var(--destructive); }
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 16px; border-radius: calc(var(--radius) * 0.8);
+  font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform .12s ease, background-color .15s, border-color .15s, box-shadow .2s;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary { background: var(--primary); color: var(--primary-foreground); }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-ghost { background: var(--card); color: var(--foreground); border-color: var(--border); }
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+html[data-skin="paper"] .btn-primary { border-radius: 6px; }  /* 近直角大色块 */
+html[data-skin="paper"] .btn-ghost { border-radius: 6px; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+
+/* ---------- 表单（纸感签名：底边线输入框） ---------- */
+.input {
+  width: 100%; padding: 8px 2px;
+  border: 1px solid var(--input); border-radius: calc(var(--radius) * 0.7);
+  background: var(--card); color: var(--foreground);
+  font-size: 13px; font-family: inherit;
+  outline: none; transition: border-color .15s;
+}
+.input:focus { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 18%, transparent); }
+html[data-skin="paper"] .input {
+  border: 0; border-bottom: 1px solid var(--input); border-radius: 0;
+  background: transparent; padding: 8px 2px;
+}
+html[data-skin="paper"] .input:focus { box-shadow: none; border-bottom-color: var(--primary); }
+.field-label {
+  font-family: var(--font-mono-ui); font-size: 11px; letter-spacing: .12em;
+  color: var(--muted-foreground); margin-bottom: 2px;
+}
+
+/* ---------- 底部：token 对照 + 落地说明 ---------- */
+.bottom { display: grid; gap: 14px; grid-template-columns: 1fr; margin-top: 28px; }
+@media (min-width: 860px) { .bottom { grid-template-columns: 1.15fr 1fr; } }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-family: var(--font-mono-ui); font-size: 11px; letter-spacing: .08em; color: var(--muted-foreground); font-weight: 500; }
+td.mono { font-family: var(--font-mono-ui); font-size: 11.5px; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; border: 1px solid var(--border); vertical-align: -1px; margin-right: 6px; }
+ol.steps { padding-left: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+ol.steps li::marker { font-family: var(--font-mono-ui); color: var(--primary); }
+code { font-family: var(--font-mono-ui); font-size: 11.5px; background: var(--secondary); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }
+.foot-note { margin-top: 26px; text-align: center; font-family: var(--font-mono-ui); font-size: 11px; color: var(--muted-foreground); letter-spacing: .06em; }
+</style>
+</head>
+<body data-page-node-id="7oRDDg2558wzalUt3s6CZd">
+
+<div class="demo-note" data-page-node-id="NLNnA4WbUnTUvUCmr79bFs">SKIN DEMO · 同一套布局，两种气质 —— 点右上角「切换皮肤」实时对比（数据为演示静态值）</div>
+
+<!-- ======= 顶栏（对应 src/components/shell/topbar.tsx） ======= -->
+<header class="topbar" data-page-node-id="E1cYWPwOfh2RSGcCE7dAwb">
+  <a class="logo" href="#" data-page-node-id="oQaNxPCZnZ8sedWV4AZngD">
+    <span class="seal" data-page-node-id="1XKpLRHE0wcG11eNhQYDvW">学</span>
+    <span class="brand-font" data-page-node-id="2kcaLSaP8KmjrmB3p3amAU">IELTS<em data-page-node-id="vJqEt8f3gPeTfqDEqyHHLL">Copilot</em></span>
+  </a>
+  <nav data-page-node-id="0ONMgsnnfCNfcIRvDvpDa7">
+    <a class="nav-link" href="#" data-page-node-id="9U6U5VndFE8Js7LWvA8xbk">仪表盘</a>
+    <a class="nav-link" href="#" data-page-node-id="1WbcCx0oYPGPGU0iyCl9Lc">备考计划</a>
+    <a class="nav-link" href="#" data-page-node-id="AeyeCOZHN7KliU1HyNCgCX">机考模拟</a>
+    <a class="nav-link" href="#" data-page-node-id="ikui9BIzJdq0DYFRuBOqas">学习中心</a>
+    <a class="nav-link active" href="#" data-page-node-id="tGx8p5NjxH2Dzjcuje5SkT">设置</a>
+  </nav>
+  <span class="badge" data-page-node-id="L4jeUAm0rTdT7D0YP0L5Ol">本地单机版 · 数据存于本机</span>
+  <button class="skin-toggle" id="skinToggle" onclick="toggleSkin()" data-page-node-id="w2WBAR37YQbsu6Y4fKG17q">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="jqOyXEDfMEfCcfDF2XHzdW"><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 0-4h-1a5 5 0 1 1 5-5v1a2 2 0 0 0 4 0v-1A9 9 0 0 0 12 3z" data-page-node-id="GrFdrFdOhXgfFbC15UezhG"/><circle cx="8" cy="10" r="1" data-page-node-id="kuk1HrzvBouGH7qhMfQfN5"/><circle cx="12" cy="7.5" r="1" data-page-node-id="QLL3t7PsYpVg4WefrjHgPe"/><circle cx="16" cy="10" r="1" data-page-node-id="5n3I14ZDwkd1a3S0qBPHxR"/></svg>
+    <span id="toggleLabel" data-page-node-id="XmwWxu1abF050qiuEckzv4">切换到 可爱风</span>
+  </button>
+</header>
+
+<main class="container" data-page-node-id="vFqcMrCxgoNCZ0k0BvviXa">
+  <h2 class="page-title" data-page-node-id="gb5dHKnMlcU0KP9E4RJfz5">设置 · 备考目标</h2>
+  <p class="page-sub" data-page-node-id="FL8f8OSB3iYSqeiNQINSnU">学术纸感皮肤下的仪表盘/设置混合样张 · 组件结构与线上一致，仅换 token</p>
+
+  <!-- ① 能力总览 4 卡（对应仪表盘 OverviewCard） -->
+  <div class="kicker" data-page-node-id="S6zIjPJ5mesEAdhoNHQ6Tb">OVERVIEW · 能力总览</div>
+  <div class="stats" data-page-node-id="yTlvWACXW0L4ONKNNQ3wwN">
+    <div class="card floatable" data-page-node-id="wmZ5Q6jaAbjD67AlFi6QtH">
+      <div class="stat-label" data-page-node-id="Hqi0f48JgXpcS0RiSSFUJG">当前水平</div>
+      <div class="stat-main" data-page-node-id="KwCKiGgWa53FtuQI0mgijf">6.5</div>
+      <div class="stat-sub" data-page-node-id="gERClUVpCJLkuqRihMZzoP">总分 · 听力 7.0 / 阅读 7.0 / 写作 6.0 / 口语 6.0</div>
+      <a class="stat-arrow" href="#" data-page-node-id="krsp5ucvPJwQEcWVa3yBKy">查看最近成绩单 →</a>
+    </div>
+    <div class="card floatable" data-page-node-id="NOZja9d3deiJEK5YXpdD32">
+      <div class="stat-label" data-page-node-id="HMxGCegvU6wjWJZY2NhV3F">趋势 VS 上次</div>
+      <div class="stat-main" data-page-node-id="3DHhgQ1FA40tLnLHLmBLIC">+0.5<span class="up" data-page-node-id="nNokkxUZYNr5gZQau7rrjb">↑</span></div>
+      <div class="stat-sub" data-page-node-id="5WxMqheoLWNMcUi3YfYOKK">近两次模考总分对比</div>
+    </div>
+    <div class="card floatable" data-page-node-id="dqXb4xIFVzZWXW7ZaXn9GH">
+      <div class="stat-label" data-page-node-id="OQWIaAs5JRx3xaZaZHAJ2c">目标差距</div>
+      <div class="stat-main" data-page-node-id="ay1BlWh69WtDpb0pxMsqWt">0.5</div>
+      <div class="stat-sub" data-page-node-id="HwFBdXgQKVFYkXMGSkouNc">目标 7.0 · 距离一个台阶</div>
+    </div>
+    <div class="card floatable" data-page-node-id="N8P95SQqT5bJ9uSJ1LSxJg">
+      <div class="stat-label" data-page-node-id="Dj6HvcJPTzPMGnldGjTcgC">累计模考</div>
+      <div class="stat-main" data-page-node-id="VNQtxC4Lq9xDWFz9Wqoge6">12</div>
+      <div class="stat-sub" data-page-node-id="tkVSPxu0iwocmyHClBDs7T">覆盖剑桥 15–19 · 共 48 份单科</div>
+    </div>
+  </div>
+
+  <!-- ② 曲线 + 雷达 -->
+  <div class="charts" data-page-node-id="jfBTumxScMMUlD32r2gJw5">
+    <div class="card floatable" data-page-node-id="86DWNYDXnmo4Z78jxLNlRv">
+      <div class="card-title" data-page-node-id="JdjkRVzNG5xToM4Lsbb4fd">分数曲线</div>
+      <div class="card-desc" data-page-node-id="Z62E1iqwkKl3B4zFmQU3Dp">最近 6 场完整模考 · 虚线为备考计划目标</div>
+      <svg viewBox="0 0 560 240" width="100%" role="img" aria-label="分数曲线" data-page-node-id="4yGX4X8zat3XWHzXhBVbx8">
+        <!-- 横向网格 -->
+        <g stroke="var(--border)" stroke-width="1" data-page-node-id="4rdDoVLgSpxOdR988UDea9">
+          <line x1="52" y1="40"  x2="530" y2="40" data-page-node-id="z2ZzMfI0jiqZx6higNHbta"/>
+          <line x1="52" y1="80"  x2="530" y2="80" data-page-node-id="FCbPd7zCHzxrldvBXPzxha"/>
+          <line x1="52" y1="120" x2="530" y2="120" data-page-node-id="EJD1XOBBiIe6ggmeWn6jLf"/>
+          <line x1="52" y1="160" x2="530" y2="160" data-page-node-id="iOc4PBfxSgRoPEyrT8wOVx"/>
+          <line x1="52" y1="200" x2="530" y2="200" data-page-node-id="Z7SzixZGUaH4u4ml09sMAO"/>
+        </g>
+        <!-- band 刻度 -->
+        <g fill="var(--muted-foreground)" font-size="10" font-family="var(--font-mono-ui)" data-page-node-id="PwcWrHoJYVwAvHl6Xqy0r4">
+          <text x="30" y="44" data-page-node-id="VXQCCP52ywldMBXP18GCDT">7.5</text><text x="30" y="84" data-page-node-id="ShqFJR5USMtEl6EMCxFeJd">7.0</text>
+          <text x="30" y="124" data-page-node-id="Lebz6h47bk0u3PndI8tszx">6.5</text><text x="30" y="164" data-page-node-id="lIrls4t4Xxklc2uC7BPoBr">6.0</text><text x="30" y="204" data-page-node-id="YESheLN4nYO1gThKsi1CrL">5.5</text>
+        </g>
+        <!-- 目标线 7.0 -->
+        <line x1="52" y1="80" x2="530" y2="80" stroke="var(--warning)" stroke-width="1.5" stroke-dasharray="5 4" data-page-node-id="sT7PmM4Luja9R8Mr68zS9M"/>
+        <text x="534" y="84" fill="var(--warning)" font-size="10" font-family="var(--font-mono-ui)" data-page-node-id="rXNGMemLW1FFSxcCFSeRQH">7.0</text>
+        <!-- 听力 -->
+        <polyline points="60,120 148,120 236,80 324,120 412,40 500,80"
+                  fill="none" stroke="var(--chart-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".85" data-page-node-id="Y9wQ8wLh8K1VHGoTAdid2C"/>
+        <!-- 总分 -->
+        <polyline points="60,160 148,120 236,160 324,120 412,80 500,120"
+                  fill="none" stroke="var(--chart-1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="8nrrIx1XtTbCBe67LCASbA"/>
+        <g fill="var(--card)" stroke="var(--chart-1)" stroke-width="2" data-page-node-id="F4ty8gs31oRQbLbq5OHodA">
+          <circle cx="60" cy="160" r="3.5" data-page-node-id="fEFvaK0CiZl7bKBjP9PY70"/><circle cx="148" cy="120" r="3.5" data-page-node-id="WEY8NeyTyIYkyLozhI8Glk"/><circle cx="236" cy="160" r="3.5" data-page-node-id="B7FC2gDh0YSccSQFO7jZhz"/>
+          <circle cx="324" cy="120" r="3.5" data-page-node-id="zLkwIDRQC7Dyk41oT85zjJ"/><circle cx="412" cy="80" r="3.5" data-page-node-id="LPFNR56Wf33UR2cd6jHVgF"/><circle cx="500" cy="120" r="3.5" data-page-node-id="wCAOPUCq7SKNinK50XZl4k"/>
+        </g>
+        <g fill="var(--muted-foreground)" font-size="10" font-family="var(--font-mono-ui)" data-page-node-id="uoEbCHuFIZHpi1PAG2H7HH">
+          <text x="52" y="222" data-page-node-id="dhSRbyLbgWYsKYwDscNWZ4">C15</text><text x="140" y="222" data-page-node-id="eRnAUTES7hf30jgXTfTFwf">C16</text><text x="228" y="222" data-page-node-id="7LaCN6fPGlCo9u0X6Y4sPi">C17</text>
+          <text x="316" y="222" data-page-node-id="1mlkFEALYxtWcBvhdf37Hy">C18</text><text x="404" y="222" data-page-node-id="rQor8U2hkZab9nvOAkqZPv">C19</text><text x="490" y="222" data-page-node-id="cnRRWuS55HicXCiBYIPnGl">本周</text>
+        </g>
+      </svg>
+      <div class="legend" data-page-node-id="FHmyrpIhWgJ3ic7e4jbuFZ">
+        <span data-page-node-id="agVWH096v1qCE6D40gPAQU"><i style="background:var(--chart-1)" data-page-node-id="puUrUm6oYvQzPVFcv9WbhB"></i>总分</span>
+        <span data-page-node-id="xdYzOunvQZP3MMjWXgVQgP"><i style="background:var(--chart-2)" data-page-node-id="iswOSs9i9ZNJJmch7cbBq7"></i>听力</span>
+        <span data-page-node-id="zmNEBKIN0MJztICZu3tuIS"><i style="background:var(--warning)" data-page-node-id="2xAkBArTMhIP7NEzmYewix"></i>目标线</span>
+      </div>
+    </div>
+
+    <div class="card floatable" data-page-node-id="e4yVa0RbweTRzxPJaXhdUC">
+      <div class="card-title" data-page-node-id="b5vNdLnQGKl4GHx6bhFv2r">能力雷达</div>
+      <div class="card-desc" data-page-node-id="53EhFKz5JvL64rM5JITupe">最近一场 vs 历史均值</div>
+      <svg viewBox="0 0 280 240" width="100%" role="img" aria-label="能力雷达" data-page-node-id="0JDOwyTCSe7L3RYBFSUeb3">
+        <g stroke="var(--border)" fill="none" data-page-node-id="fRAwkFUfNFxzWJdGZwBtGt">
+          <polygon points="140,35 225,120 140,205 55,120" data-page-node-id="n8Ap5moHFEgqKKUFZICmFd"/>
+          <polygon points="140,60 200,120 140,180 80,120" data-page-node-id="ngsxZWBmDCjFbCxeqp0wun"/>
+          <polygon points="140,85 175,120 140,155 105,120" data-page-node-id="YvpT0T4O6LGavmr6KFBgkm"/>
+          <line x1="140" y1="120" x2="140" y2="35" data-page-node-id="4BIvBz647qdtK6POjkii4k"/><line x1="140" y1="120" x2="225" y2="120" data-page-node-id="Bq3Loekau84E8Mb4jsFOt0"/>
+          <line x1="140" y1="120" x2="140" y2="205" data-page-node-id="hI4weYXWU09sukFGExaMLI"/><line x1="140" y1="120" x2="55" y2="120" data-page-node-id="kWbj9dKUvC1oTHjRioy5Xv"/>
+        </g>
+        <!-- 均值 -->
+        <polygon points="140,58.8 201.2,120 140,171.9 88.1,120"
+                 fill="var(--chart-3)" fill-opacity=".12" stroke="var(--chart-3)" stroke-width="1.5" stroke-dasharray="4 3" data-page-node-id="h40xtFjNgdB0XZojLrnZpo"/>
+        <!-- 最近 -->
+        <polygon points="140,50.3 201.2,120 140,162.5 88.1,120"
+                 fill="var(--chart-1)" fill-opacity=".16" stroke="var(--chart-1)" stroke-width="2" data-page-node-id="n7CeEGiIH9dbBvGpn6Yzgw"/>
+        <g fill="var(--card)" stroke="var(--chart-1)" stroke-width="1.5" data-page-node-id="U45ZpcfDwwGD9ygXjtcOrB">
+          <circle cx="140" cy="50.3" r="3" data-page-node-id="0KZTQJb0hwQAqUWLMmHraq"/><circle cx="201.2" cy="120" r="3" data-page-node-id="h90lEBOHys2KeoFZHjCCEw"/>
+          <circle cx="140" cy="162.5" r="3" data-page-node-id="qQjxX8a8IaHAoiMCthTlTu"/><circle cx="88.1" cy="120" r="3" data-page-node-id="fAW5NJtvMEkRqwh0g2KZrf"/>
+        </g>
+        <g fill="var(--muted-foreground)" font-size="11" data-page-node-id="IqoBC2DoDLY1AxKDSobqBc">
+          <text x="132" y="24" data-page-node-id="2t5kRbwLWlvKoSKcBUSVot">听力</text><text x="233" y="124" data-page-node-id="CCgffPBwh2QSOM9aAQWSQn">阅读</text>
+          <text x="130" y="226" data-page-node-id="X7CrgHSs3XNtBzxhJ5kVtr">写作</text><text x="28" y="124" data-page-node-id="BMFVECTyVU23fkh9EGdiuB">口语</text>
+        </g>
+      </svg>
+      <div class="legend" data-page-node-id="TpQXTyUv8gx53HQUnj4Lbz">
+        <span data-page-node-id="pDbtd151eoLDjwZQFZdom6"><i style="background:var(--chart-1)" data-page-node-id="PV9N0AzRLQTlhrKvZhSLNN"></i>最近 7.0 / 6.5 / 5.5 / 6.0</span>
+        <span data-page-node-id="8lZB0xbkB7e2OS71vOjvEs"><i style="background:var(--chart-3)" data-page-node-id="WZqVXNhxFKmyIPsUAvkXgQ"></i>均值</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 薄弱清单 + 表单样张 -->
+  <div class="charts" data-page-node-id="lAWDGPNSng8LzEwrV0mXwJ">
+    <div class="card floatable" data-page-node-id="4b26RZ3ya3ocPuzmCrzQBl">
+      <div class="card-title" data-page-node-id="LT1xaQFZYyjCR58tDoulAW">薄弱真题清单</div>
+      <div class="card-desc" data-page-node-id="EOCjQKHxf1aw8d0fpbtJBK">最近 band &lt; 目标 − 0.5 的卷 × 科目</div>
+      <div class="row-list" data-page-node-id="llP3Kd88vRPiMMY9PlmNx5">
+        <div class="row" data-page-node-id="xgEWgI8TZwAOSKNEzvxb7V">
+          <span class="tag" data-page-node-id="DT0l64dC4Nh05zoUb81eiG">C18-T2 · 写作</span>
+          <span class="row-title" data-page-node-id="si6sVtECaZYiET40e0SKJw">Task 2 议论文论证展开不足</span>
+          <span class="row-band" data-page-node-id="QWjSRPxli3JYCAQj0GLLGA">5.5</span>
+          <button class="btn btn-ghost btn-sm" data-page-node-id="9d0PgiOvribycwPJm6UEmr">再练一次</button>
+        </div>
+        <div class="row" data-page-node-id="AwPNBCKDFGTFibnfONjVPl">
+          <span class="tag" data-page-node-id="BAZBAXo1EwZKNxGxF6Ymiv">C17-T3 · 口语</span>
+          <span class="row-title" data-page-node-id="4Ij6r8y4UuWe34apcJVxET">Part 3 抽象话题词汇受限</span>
+          <span class="row-band" data-page-node-id="fzIQ89sXAhHGDAGYpaPaNK">5.5</span>
+          <button class="btn btn-ghost btn-sm" data-page-node-id="K7Bc0HZIOFHvnb89tlCWDE">再练一次</button>
+        </div>
+        <div class="row" data-page-node-id="ZCkWgrEFJFd7oD967KHt20">
+          <span class="tag" data-page-node-id="cR00tdsDBDEYVEihaeMydt">C19-T1 · 阅读</span>
+          <span class="row-title" data-page-node-id="YMGpb6fQnUzwxYC5WAdfig">判断题 NG 误判率偏高</span>
+          <span class="row-band" data-page-node-id="wGSwbBTAxN8mOA5WhJMzA0">6.0</span>
+          <button class="btn btn-ghost btn-sm" data-page-node-id="gxpHJgOgdpzCMDhWMcliFj">再练一次</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card floatable" data-page-node-id="ylRFTEV6YQZiT1Px57Nr6P">
+      <div class="card-title" data-page-node-id="HrZDcQjz8AhRXjAqNKlQOg">备考目标</div>
+      <div class="card-desc" data-page-node-id="ACMLfo5CmGyVQFSRival05">注意输入框形态：纸感皮肤为「底边线」学术样式</div>
+      <div style="margin-bottom:14px" data-page-node-id="RU25NhwHwMvE9oEsPHXSbW">
+        <div class="field-label" data-page-node-id="0zWDAljoIIbK59eEDsejld">TARGET · 目标总分</div>
+        <input class="input" value="7.0" readonly data-page-node-id="EWc1Fm55MZIXXFPYgbZI0H">
+      </div>
+      <div style="margin-bottom:16px" data-page-node-id="jOcPpnCGzyufBaFKv921Bb">
+        <div class="field-label" data-page-node-id="NvoVrQGVVMC1M2v1HjL4uz">EXAM · 考期</div>
+        <input class="input" value="2026-10-24" readonly data-page-node-id="2yxZSHm29gT1nEy9K3o7Pz">
+      </div>
+      <div style="display:flex;gap:8px" data-page-node-id="GO8PjNp1Vmc0MBRKuhLX00">
+        <button class="btn btn-primary" data-page-node-id="F62wWRp1eBnK2raDrZ2lOI">保存目标</button>
+        <button class="btn btn-ghost" data-page-node-id="bVL5EUSFgbs0pxjZNJAx9R">生成计划</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ Token 对照 + 落地路径 -->
+  <div class="bottom" data-page-node-id="GdH2VpODaXdOEe73NNhsnD">
+    <div class="card" data-page-node-id="pDSZex3Iupp0Dnx1bdV3Di">
+      <div class="card-title" data-page-node-id="QFKEPAitJ0mBxCjssgXJFg">核心 token 对照</div>
+      <div class="card-desc" data-page-node-id="J7tn72lwtWN9q5ZTOaA0wj">同一批语义变量，两组取值 —— 组件代码零改动</div>
+      <table data-page-node-id="n26oxGrHQPr06frgS8WC4U">
+        <tr data-page-node-id="nQE283OxpHiDxAtRlz8Bqo"><th data-page-node-id="AOEOVQEDVun3xiBLbi0s7M">TOKEN</th><th data-page-node-id="5ZKI6Z9vqWnJmfclyi5lDf">可爱风（现状）</th><th data-page-node-id="XHGZQVNzd7FTrCUl3qxMwn">学术纸感（提案）</th></tr>
+        <tr data-page-node-id="cAb4MZo5z2rvgIFYHcC65D"><td class="mono" data-page-node-id="AmV3GVVuoMBPUm9rSgKr2F">--background</td>
+            <td class="mono" data-page-node-id="5yOiur9ju7kjJNbyp523hB"><span class="swatch" style="background:oklch(0.984 0.009 247.9)" data-page-node-id="yppYLHgCRrLu13DVZ6HXiG"></span>淡蓝白</td>
+            <td class="mono" data-page-node-id="BQNHEgd5ADMMjEzrKPocHZ"><span class="swatch" style="background:#fafaf9" data-page-node-id="TpIFbH6Hf7oUbUwgDcZ947"></span>#fafaf9 暖纸白</td></tr>
+        <tr data-page-node-id="LVhlNQCTKpxBNwFxycOPxh"><td class="mono" data-page-node-id="h0T0JCbhti0Rr4SHIRbe55">--primary</td>
+            <td class="mono" data-page-node-id="bKYCoMJT15IH2YWVslVkIF"><span class="swatch" style="background:oklch(0.6 0.183 255.5)" data-page-node-id="crhi1xrSIL2EM2mtn1rzIc"></span>柔和新蓝</td>
+            <td class="mono" data-page-node-id="1CPaCQLfF1MZRkrvPBaV52"><span class="swatch" style="background:#b45309" data-page-node-id="k9nzjnenSgtGoNK35YSWjO"></span>#b45309 赭石琥珀</td></tr>
+        <tr data-page-node-id="hVQDto0kHOJp5Y5nFyAdhw"><td class="mono" data-page-node-id="9kU8kzFT2Dkowtn2PbGB2l">--radius</td>
+            <td class="mono" data-page-node-id="GTvKiQgRP2AHjaNENqcq4Y">0.875rem（圆润）</td>
+            <td class="mono" data-page-node-id="Hgg2j9Y5pTzXqEBetCDnAZ">0.625rem（克制）</td></tr>
+        <tr data-page-node-id="zpHPRpf5OEklA2my7XTfXu"><td class="mono" data-page-node-id="mCV999CCMZasPdf6MFXziz">标题字体</td>
+            <td class="mono" data-page-node-id="wwfAaTCQIhGLfUDI07aI1K">Noto Sans SC</td>
+            <td class="mono" data-page-node-id="CsRDquPLhTnlgMUnrXCQYJ">Noto Serif SC（书卷气）</td></tr>
+        <tr data-page-node-id="vsonEmF47jQLHA9cnf0BpJ"><td class="mono" data-page-node-id="4r3rxrkorkzR6IZbYNtF2r">标签字体</td>
+            <td class="mono" data-page-node-id="r4joTuxE4hBaFkluOaEP0F">同正文</td>
+            <td class="mono" data-page-node-id="sBWZSyth0AholPHbNuYO1u">IBM Plex Mono（打字机）</td></tr>
+        <tr data-page-node-id="8PoHXF0VdrJmvGmrYnVKjQ"><td class="mono" data-page-node-id="mJBGn3YUvIMCITrzWtg4VR">输入框</td>
+            <td class="mono" data-page-node-id="yOC5OP0m4XQ3nxEZrGvuSA">全框线</td>
+            <td class="mono" data-page-node-id="v9NFZklISzWy3srZrTu03b">底边线（聚焦变赭石）</td></tr>
+        <tr data-page-node-id="jeFAkUj8C5TocDm0hvPWgW"><td class="mono" data-page-node-id="mzF4v6kAbD8KSFk5oWqckz">导航激活</td>
+            <td class="mono" data-page-node-id="s2LvdCrXQp91n3c1sQ48Xx">圆 pill 淡蓝底</td>
+            <td class="mono" data-page-node-id="MWeGBQh4uPJbBAMckFSKvN">文字 + 2px 底线</td></tr>
+        <tr data-page-node-id="WwOyuBa8zynYxhYKqoJaBy"><td class="mono" data-page-node-id="XBG3P2Le0TXITrFzPApaBF">阴影</td>
+            <td class="mono" data-page-node-id="ss2T3wGLf2U73Drv1Azlje">主色柔光</td>
+            <td class="mono" data-page-node-id="MZ2v2yEKd82rG3D7pkDIDm">近无 · 墨色 4% 双层</td></tr>
+        <tr data-page-node-id="Ty5acU8psdbEQl1Rc6uhyB"><td class="mono" data-page-node-id="B5eZHlzF5RiR6IFUUl6P2E">专属彩蛋</td>
+            <td class="mono" data-page-node-id="OiIrRGyaruk1FY9fX36rZn">淡粉选中 / 按压回弹</td>
+            <td class="mono" data-page-node-id="UL4AtLax9HIujiWciffRjk">朱砂印章 / 纸张颗粒纹理</td></tr>
+      </table>
+    </div>
+
+    <div class="card" data-page-node-id="SMIbeKx6WcBnp4csCufQVg">
+      <div class="card-title" data-page-node-id="juTPzp3UcwhvExlugMFPWt">落地路径（若采纳）</div>
+      <div class="card-desc" data-page-node-id="XmFqqewisJ0Btn9AV1bQ22">得益于现有全量语义 token，成本约半天</div>
+      <ol class="steps" data-page-node-id="AgKpETV9Zl0jWeHcEv4RgD">
+        <li data-page-node-id="5QJo5caJTa4AkIBZgHkD9A"><code data-page-node-id="KT3IDx0dFrnSg0ORFRqLBi">globals.css</code> 追加 <code data-page-node-id="XvvzACtS7n9wdEUKsl7SwK">html[data-skin="paper"]{…}</code> 变量块（约 40 行，即本 demo 头部那组）+ 约 15 行组件形态覆盖</li>
+        <li data-page-node-id="TeAwUosT8BOIe3SZfzlHQD"><code data-page-node-id="vnFHAWmVWLqYo9NpsHsy9u">layout.tsx</code> 的 <code data-page-node-id="0HZMGLOKZFX0wWk3NAiZMi">&lt;html&gt;</code> 挂 <code data-page-node-id="RusGCPDCbDUUQBM7V85Aa4">data-skin</code>，与 next-themes 的 class 并存互不干扰</li>
+        <li data-page-node-id="o790TkEVhxqX67UIp0NJ0T">可选字体包：<code data-page-node-id="SZGH4qKiOIfMhTAnF83E2P">@fontsource/ibm-plex-mono</code> + <code data-page-node-id="UNIiQWmRrOrhiUSeFsPDsd">@fontsource/noto-serif-sc</code>（本地化，沿用现有 fontsource 铁律，不碰 next/font/google）</li>
+        <li data-page-node-id="MLERYQrbVXhmQN4FOyMCkw">设置页加「皮肤」选择器，持久化进 <code data-page-node-id="KsE9lx3RLH89P60SUVMj2C">app_settings</code>（非敏感偏好，符合数据模型约定）</li>
+        <li data-page-node-id="qai4HjBHtIKeOAtfwUKPFr">夜晚版：复用现有 <code data-page-node-id="vxLCMBiH36fhJS0o8ytQIq">.dark</code> 骨架，仅把色相从蓝灰换成暖墨石色系</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="foot-note" data-page-node-id="uilfC4wH0hny3RB20to85L">IELTS-COPILOT · SKIN DEMO · PAPER / ACADEMIC · 2026-09</div>
+</main>
+
+<script>
+function toggleSkin() {
+  const el = document.documentElement;
+  const next = el.dataset.skin === "paper" ? "cute" : "paper";
+  el.dataset.skin = next;
+  document.getElementById("toggleLabel").textContent =
+    next === "paper" ? "切换到 可爱风" : "切换到 学术纸感";
+}
+</script>
+</body>
+</html>

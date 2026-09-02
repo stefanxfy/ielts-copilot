@@ -32,7 +32,7 @@ const CARD = "card-float rounded-xl border border-border bg-card p-5";
 const BTN =
   "press-bubble rounded-md border border-border bg-card px-3 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 const BTN_PRIMARY =
-  "press-bubble rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+  "press-bubble rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
 const HINT = "text-xs text-muted-foreground";
 
 const TASK_LABEL: Record<string, string> = {
@@ -501,7 +501,7 @@ function TaskList({ tasks, emptyHint }: { tasks: TaskCheck[]; emptyHint: string 
               t.exempt
                 ? "border border-border text-muted-foreground/50"
                 : t.done
-                  ? "bg-success text-white"
+                  ? "bg-success text-primary-foreground"
                   : "border border-border text-transparent"
             }`}
           >

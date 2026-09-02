@@ -19,7 +19,7 @@ const INPUT =
 const SELECT =
   "h-9 w-[180px] rounded-md border border-border bg-card px-2.5 text-[13px] outline-none focus:border-primary";
 const BTN_PRIMARY =
-  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
 const HINT = "text-xs text-muted-foreground";
 
 const TASK_LABEL: Record<TaskType, string> = {

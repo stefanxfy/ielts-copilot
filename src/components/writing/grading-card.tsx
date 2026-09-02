@@ -411,7 +411,7 @@ export default function WritingGradingCard({
                 type="button"
                 disabled={triggering}
                 onClick={() => void trigger(true)}
-                className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+                className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {triggering ? "提交中…" : "重试批改"}
               </button>
@@ -426,7 +426,7 @@ export default function WritingGradingCard({
               type="button"
               disabled={triggering}
               onClick={() => void trigger(false)}
-              className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+              className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {triggering ? "提交中…" : "开始 AI 批改"}
             </button>

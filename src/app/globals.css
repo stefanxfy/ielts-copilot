@@ -2,8 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -40,9 +38,6 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* 可爱点缀色：淡粉（装饰用，如徽章/高亮/空态插画） */
-  --color-cute-pink: var(--cute-pink);
-  --color-cute-pink-foreground: var(--cute-pink-foreground);
   /* 语义反馈色 */
   --color-success: var(--success);
   --color-warning: var(--warning);
@@ -56,88 +51,215 @@
 }
 
 /*
- * 白天主题 · 清爽可爱
- * 底色淡蓝白、品牌柔和新蓝、粉色点缀、圆角偏大
+ * 默认皮肤 · 麦田琥珀(glearn 同源默认)
+ * 不设 data-theme 属性时生效;其余 7 套皮肤经 html[data-theme=…] 覆盖,见下方「八套主题皮肤」。
  */
 :root {
-  --background: oklch(0.984 0.009 247.9);
-  --foreground: oklch(0.29 0.033 261.4);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.29 0.033 261.4);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.29 0.033 261.4);
-  --primary: oklch(0.6 0.183 255.5);
-  --primary-foreground: oklch(0.99 0.004 247.9);
-  --secondary: oklch(0.953 0.022 248.4);
-  --secondary-foreground: oklch(0.42 0.078 257.4);
-  --muted: oklch(0.958 0.013 248.8);
-  --muted-foreground: oklch(0.53 0.033 255.3);
-  --accent: oklch(0.945 0.028 248.9);
-  --accent-foreground: oklch(0.42 0.078 257.4);
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #d97706;
+  --primary-foreground: #ffffff;
+  --secondary: #fffbeb;
+  --secondary-foreground: #b45309;
+  --muted: #f1efec;
+  --muted-foreground: #57534e;
+  --accent: #fffbeb;
+  --accent-foreground: #b45309;
   --destructive: oklch(0.6 0.19 25.9);
-  --border: oklch(0.912 0.017 250.5);
-  --input: oklch(0.912 0.017 250.5);
-  --ring: oklch(0.7 0.128 255.3);
-  --cute-pink: oklch(0.862 0.066 350.9);
-  --cute-pink-foreground: oklch(0.42 0.1 355.6);
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #ecab53;
   --success: oklch(0.58 0.125 155.8);
   --warning: oklch(0.72 0.14 70.2);
-  --chart-1: oklch(0.6 0.183 255.5);
-  --chart-2: oklch(0.72 0.128 350.3);
-  --chart-3: oklch(0.7 0.12 180.9);
-  --chart-4: oklch(0.78 0.13 80.3);
-  --chart-5: oklch(0.65 0.15 295.4);
+  --chart-1: #d97706;
+  --chart-2: #f59e0b;
+  --chart-3: #b45309;
+  --chart-4: #6b7280;
+  --chart-5: #2f6b4f;
   --radius: 0.875rem;
-  --sidebar: oklch(0.975 0.013 248.3);
-  --sidebar-foreground: oklch(0.29 0.033 261.4);
-  --sidebar-primary: oklch(0.6 0.183 255.5);
-  --sidebar-primary-foreground: oklch(0.99 0.004 247.9);
-  --sidebar-accent: oklch(0.945 0.028 248.9);
-  --sidebar-accent-foreground: oklch(0.42 0.078 257.4);
-  --sidebar-border: oklch(0.912 0.017 250.5);
-  --sidebar-ring: oklch(0.7 0.128 255.3);
+  --selection: #d977062e;
+  --sidebar: #fafaf9;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #d97706;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fffbeb;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #e7e5e4;
+  --sidebar-ring: #ecab53;
 }
 
 /*
- * 夜晚主题 · 护眼
- * 深蓝灰（非纯黑）、前景 90% 白（非纯白降眩光）、primary 提亮为长春花蓝
+ * 八套主题皮肤(glearn 同源,docs/皮肤Demo-八大主题.html)
+ * html[data-theme=…] 变量块覆盖 :root 语义 token,组件零改动。
+ * 默认皮肤麦田琥珀已在 :root,故无 wheat 块;「夜读·灯下」为暗色皮肤。
+ * 附带气质包:--page-tex 整页背景画 / --card-tex 卡片纹理(经 .bg-card 钩子叠加) / --selection 选中色。
  */
-.dark {
-  --background: oklch(0.208 0.02 264.7);
-  --foreground: oklch(0.9 0.016 250.8);
-  --card: oklch(0.255 0.024 263.4);
-  --card-foreground: oklch(0.9 0.016 250.8);
-  --popover: oklch(0.255 0.024 263.4);
-  --popover-foreground: oklch(0.9 0.016 250.8);
-  --primary: oklch(0.72 0.135 254.9);
-  --primary-foreground: oklch(0.22 0.042 262.2);
-  --secondary: oklch(0.305 0.028 262.4);
-  --secondary-foreground: oklch(0.88 0.024 252.4);
-  --muted: oklch(0.3 0.026 262.6);
-  --muted-foreground: oklch(0.71 0.024 254.2);
-  --accent: oklch(0.32 0.034 261.9);
-  --accent-foreground: oklch(0.9 0.016 250.8);
-  --destructive: oklch(0.7 0.152 24.5);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.72 0.135 254.9);
-  --cute-pink: oklch(0.72 0.1 350.3);
-  --cute-pink-foreground: oklch(0.24 0.05 355.9);
-  --success: oklch(0.74 0.12 155.8);
-  --warning: oklch(0.79 0.125 74.6);
-  --chart-1: oklch(0.72 0.135 254.9);
-  --chart-2: oklch(0.76 0.12 350.3);
-  --chart-3: oklch(0.75 0.11 180.9);
-  --chart-4: oklch(0.8 0.12 80.3);
-  --chart-5: oklch(0.74 0.12 295.4);
-  --sidebar: oklch(0.255 0.024 263.4);
-  --sidebar-foreground: oklch(0.9 0.016 250.8);
-  --sidebar-primary: oklch(0.72 0.135 254.9);
-  --sidebar-primary-foreground: oklch(0.22 0.042 262.2);
-  --sidebar-accent: oklch(0.32 0.034 261.9);
-  --sidebar-accent-foreground: oklch(0.9 0.016 250.8);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.72 0.135 254.9);
+
+/* 水墨 · 砚池 */
+html[data-theme="ink"] {
+  --background: #f7f5f0; --foreground: #191917;
+  --card: #fcf9f2; --card-foreground: #191917;
+  --popover: #fcf9f2; --popover-foreground: #191917;
+  --primary: #a83d29; --primary-foreground: #ffffff;
+  --secondary: #faf0ec; --secondary-foreground: #9a3524;
+  --muted: #edeae2; --muted-foreground: #615e56;
+  --accent: #faf0ec; --accent-foreground: #9a3524;
+  --border: #e4e1d8; --input: #e4e1d8;
+  --ring: #c4715d;
+  --chart-1: #a83d29; --chart-2: #44433d; --chart-3: #d08a76; --chart-4: #8a867a; --chart-5: #5d6b5c;
+  --sidebar: #f7f5f0; --sidebar-foreground: #191917;
+  --sidebar-primary: #a83d29; --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #faf0ec; --sidebar-accent-foreground: #191917;
+  --sidebar-border: #e4e1d8; --sidebar-ring: #c4715d;
+  --selection: #19191729;
+  --card-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.32 0 0 0 0 0.31 0 0 0 0 0.27 0 0 0 0.1 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
+  --page-tex: url("data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%201000'%20preserveAspectRatio='xMidYMax%20slice'%20fill='none'%3e%3cdefs%3e%3cfilter%20id='soft'%20x='-30%25'%20y='-30%25'%20width='160%25'%20height='160%25'%3e%3cfeGaussianBlur%20stdDeviation='14'/%3e%3c/filter%3e%3cfilter%20id='mist'%20x='-40%25'%20y='-40%25'%20width='180%25'%20height='180%25'%3e%3cfeGaussianBlur%20stdDeviation='46'/%3e%3c/filter%3e%3c/defs%3e%3cg%20filter='url(%23mist)'%20fill='%23191917'%3e%3cellipse%20cx='1360'%20cy='110'%20rx='300'%20ry='100'%20opacity='0.12'/%3e%3cellipse%20cx='1140'%20cy='210'%20rx='200'%20ry='66'%20opacity='0.07'/%3e%3c/g%3e%3cg%20filter='url(%23soft)'%20fill='%23191917'%3e%3cpath%20d='M-40%20900%20Q160%20760%20340%20850%20Q470%20700%20640%20830%20Q760%20770%20900%20850%20L900%201010%20L-40%201010%20Z'%20opacity='0.08'/%3e%3cpath%20d='M520%20920%20Q740%20780%20950%20880%20Q1090%20760%201280%20880%20Q1420%20820%201640%20900%20L1640%201010%20L520%201010%20Z'%20opacity='0.12'/%3e%3cpath%20d='M900%20950%20Q1080%20850%201250%20930%20Q1400%20860%201640%20950%20L1640%201010%20L900%201010%20Z'%20opacity='0.17'/%3e%3c/g%3e%3cg%20stroke='%23191917'%20stroke-linecap='round'%20fill='none'%3e%3cpath%20d='M170%20930%20Q400%20918%20640%20928'%20stroke-width='2.6'%20opacity='0.2'/%3e%3cpath%20d='M260%20958%20Q420%20950%20570%20956'%20stroke-width='2'%20opacity='0.13'/%3e%3c/g%3e%3cg%20opacity='0.65'%3e%3cpath%20d='M360%20916%20Q396%20928%20438%20916%20L426%20904%20L376%20904%20Z'%20fill='%232e2d29'/%3e%3cpath%20d='M398%20904%20V872%20Q414%20884%20398%20894'%20stroke='%232e2d29'%20stroke-width='2.6'%20fill='none'%20stroke-linecap='round'/%3e%3c/g%3e%3c/svg%3e");
+}
+
+/* 牛津 · 学院 */
+html[data-theme="academia"] {
+  --background: #f8f4ea; --foreground: #221d14;
+  --card: #fdfaf2; --card-foreground: #221d14;
+  --popover: #fdfaf2; --popover-foreground: #221d14;
+  --primary: #3a5f4b; --primary-foreground: #ffffff;
+  --secondary: #edf2ee; --secondary-foreground: #2f4f3e;
+  --muted: #efe9db; --muted-foreground: #665c4b;
+  --accent: #edf2ee; --accent-foreground: #2f4f3e;
+  --border: #e7dfcf; --input: #e7dfcf;
+  --ring: #7d9c85;
+  --chart-1: #3a5f4b; --chart-2: #b28f4a; --chart-3: #2f4f3e; --chart-4: #7d9c8a; --chart-5: #a3542e;
+  --sidebar: #f8f4ea; --sidebar-foreground: #221d14;
+  --sidebar-primary: #3a5f4b; --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #edf2ee; --sidebar-accent-foreground: #221d14;
+  --sidebar-border: #e7dfcf; --sidebar-ring: #7d9c85;
+  --selection: #2f4f3e2e;
+  --card-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.36 0 0 0 0 0.24 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
+  --page-tex: url("data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%201000'%20preserveAspectRatio='xMidYMax%20slice'%20fill='none'%3e%3cdefs%3e%3cfilter%20id='glow'%20x='-40%25'%20y='-40%25'%20width='180%25'%20height='180%25'%3e%3cfeGaussianBlur%20stdDeviation='60'/%3e%3c/filter%3e%3c/defs%3e%3cg%20filter='url(%23glow)'%20fill='%23b28f4a'%3e%3cellipse%20cx='1200'%20cy='60'%20rx='380'%20ry='140'%20opacity='0.16'/%3e%3cellipse%20cx='480'%20cy='-40'%20rx='260'%20ry='110'%20opacity='0.09'/%3e%3c/g%3e%3cg%20stroke='%23b28f4a'%20opacity='0.5'%3e%3cpath%20d='M64%20250%20V88%20H260'%20stroke-width='2.4'/%3e%3cpath%20d='M76%20238%20V100%20H236'%20stroke-width='1.2'/%3e%3c/g%3e%3cg%20stroke='%23b28f4a'%20fill='none'%20opacity='0.5'%3e%3cpath%20d='M1240%20986%20C1360%20950%201470%20860%201530%20720'%20stroke-width='2.8'/%3e%3cg%20stroke-width='1.8'%20fill='%23b28f4a'%20fill-opacity='0.22'%3e%3cpath%20d='M1300%20962%20q-8%20-26%2016%20-36%20q16%2020%20-16%2036'/%3e%3cpath%20d='M1372%20924%20q-4%20-28%2020%20-32%20q12%2022%20-20%2032'/%3e%3cpath%20d='M1434%20872%20q0%20-28%2024%20-28%20q8%2024%20-24%2028'/%3e%3cpath%20d='M1482%20808%20q4%20-28%2028%20-24%20q4%2026%20-28%2024'/%3e%3cpath%20d='M1516%20736%20q8%20-26%2030%20-18%20q0%2026%20-30%2018'/%3e%3c/g%3e%3c/g%3e%3cpath%20d='M120%20998%20H720'%20stroke='%23b28f4a'%20stroke-width='1.4'%20opacity='0.4'/%3e%3c/svg%3e");
+}
+
+/* 海盐 · 地中海 */
+html[data-theme="seasalt"] {
+  --background: #f5f8f7; --foreground: #1a2426;
+  --card: #ffffff; --card-foreground: #1a2426;
+  --popover: #ffffff; --popover-foreground: #1a2426;
+  --primary: #38708f; --primary-foreground: #ffffff;
+  --secondary: #edf3f7; --secondary-foreground: #2d5f7c;
+  --muted: #e8efee; --muted-foreground: #5b7071;
+  --accent: #edf3f7; --accent-foreground: #2d5f7c;
+  --border: #dce5e4; --input: #dce5e4;
+  --ring: #6f9cbd;
+  --chart-1: #38708f; --chart-2: #c26a44; --chart-3: #2d5f7c; --chart-4: #5f8dab; --chart-5: #47796b;
+  --sidebar: #f5f8f7; --sidebar-foreground: #1a2426;
+  --sidebar-primary: #38708f; --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #edf3f7; --sidebar-accent-foreground: #1a2426;
+  --sidebar-border: #dce5e4; --sidebar-ring: #6f9cbd;
+  --selection: #2d5f7c2e;
+}
+
+/* 青花 · 瓷影 */
+html[data-theme="porcelain"] {
+  --background: #f6f8f9; --foreground: #161b1e;
+  --card: #ffffff; --card-foreground: #161b1e;
+  --popover: #ffffff; --popover-foreground: #161b1e;
+  --primary: #315d84; --primary-foreground: #ffffff;
+  --secondary: #eef3f7; --secondary-foreground: #275179;
+  --muted: #ebf0f2; --muted-foreground: #5e707c;
+  --accent: #eef3f7; --accent-foreground: #275179;
+  --border: #dee6e9; --input: #dee6e9;
+  --ring: #729ebc;
+  --chart-1: #315d84; --chart-2: #6f9db4; --chart-3: #275179; --chart-4: #8fb3c9; --chart-5: #4e8377;
+  --sidebar: #f6f8f9; --sidebar-foreground: #161b1e;
+  --sidebar-primary: #315d84; --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef3f7; --sidebar-accent-foreground: #161b1e;
+  --sidebar-border: #dee6e9; --sidebar-ring: #729ebc;
+  --selection: #27517929;
+  --card-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' fill='none'%3E%3Cg stroke='%23275179' stroke-width='1' opacity='0.045'%3E%3Cpath d='M-10 60 L60 84 L118 42 L196 78 L270 50'/%3E%3Cpath d='M60 84 L48 160 L110 214 L96 270'/%3E%3Cpath d='M196 78 L214 150 L172 208 L232 262'/%3E%3Cpath d='M48 160 L-8 190 M214 150 L268 172 M118 42 L128 -6'/%3E%3C/g%3E%3C/svg%3E");
+  --page-tex: url("data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%201000'%20preserveAspectRatio='xMidYMax%20slice'%20fill='none'%3e%3cdefs%3e%3cfilter%20id='soft'%20x='-30%25'%20y='-30%25'%20width='160%25'%20height='160%25'%3e%3cfeGaussianBlur%20stdDeviation='1.2'/%3e%3c/filter%3e%3c/defs%3e%3cg%20stroke='%23275179'%20stroke-width='1.4'%20opacity='0.07'%3e%3cpath%20d='M1600%2040%20L1450%2096%20L1368%2040%20M1450%2096%20L1416%20190%20L1300%20236%20M1416%20190%20L1520%20258%20L1600%20232'/%3e%3cpath%20d='M1300%20236%20L1330%20330%20M1520%20258%20L1498%20360'/%3e%3c/g%3e%3cg%20filter='url(%23soft)'%20stroke='%23275179'%20stroke-linecap='round'%20fill='none'%3e%3cpath%20d='M-20%20950%20C120%20900%20220%20990%20360%20942%20C500%20894%20600%20992%20740%20944%20C880%20896%20980%20990%201120%20942%20C1260%20894%201360%20990%201500%20942%20C1560%20922%201600%20936%201640%20946'%20stroke-width='5'%20opacity='0.13'/%3e%3cpath%20d='M-20%20978%20C140%20940%20260%201000%20420%20962%20C580%20924%20700%201002%20860%20964%20C1020%20926%201140%201000%201300%20962%20C1440%20928%201540%20992%201640%20968'%20stroke-width='3.4'%20opacity='0.09'/%3e%3c/g%3e%3cg%20fill='%23275179'%3e%3cellipse%20cx='360'%20cy='936'%20rx='14'%20ry='6'%20transform='rotate(-24%20360%20936)'%20opacity='0.12'/%3e%3cellipse%20cx='740'%20cy='938'%20rx='14'%20ry='6'%20transform='rotate(-24%20740%20938)'%20opacity='0.12'/%3e%3cellipse%20cx='1120'%20cy='936'%20rx='14'%20ry='6'%20transform='rotate(-24%201120%20936)'%20opacity='0.12'/%3e%3ccircle%20cx='540'%20cy='960'%20r='4.5'%20opacity='0.11'/%3e%3ccircle%20cx='940'%20cy='962'%20r='4.5'%20opacity='0.11'/%3e%3ccircle%20cx='1330'%20cy='958'%20r='4.5'%20opacity='0.11'/%3e%3c/g%3e%3c/svg%3e");
+}
+
+/* 竹里 · 空山 */
+html[data-theme="bamboo"] {
+  --background: #f6f8f2; --foreground: #181b16;
+  --card: #fcfdf9; --card-foreground: #181b16;
+  --popover: #fcfdf9; --popover-foreground: #181b16;
+  --primary: #467552; --primary-foreground: #ffffff;
+  --secondary: #eef4ef; --secondary-foreground: #3f6b49;
+  --muted: #ebeee2; --muted-foreground: #616a58;
+  --accent: #eef4ef; --accent-foreground: #3f6b49;
+  --border: #e0e5d7; --input: #e0e5d7;
+  --ring: #83a68d;
+  --chart-1: #467552; --chart-2: #a89858; --chart-3: #3f6b49; --chart-4: #6a9877; --chart-5: #8a6f3e;
+  --sidebar: #f6f8f2; --sidebar-foreground: #181b16;
+  --sidebar-primary: #467552; --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef4ef; --sidebar-accent-foreground: #181b16;
+  --sidebar-border: #e0e5d7; --sidebar-ring: #83a68d;
+  --selection: #3f6b492e;
+  --card-tex: repeating-linear-gradient(90deg, #181b1607 0 1px, transparent 1px 6px);
+  --page-tex: url("data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%201000'%20preserveAspectRatio='xMidYMax%20slice'%20fill='none'%3e%3cdefs%3e%3cfilter%20id='mist'%20x='-40%25'%20y='-40%25'%20width='180%25'%20height='180%25'%3e%3cfeGaussianBlur%20stdDeviation='40'/%3e%3c/filter%3e%3cfilter%20id='soft'%20x='-30%25'%20y='-30%25'%20width='160%25'%20height='160%25'%3e%3cfeGaussianBlur%20stdDeviation='2'/%3e%3c/filter%3e%3c/defs%3e%3cg%20filter='url(%23mist)'%20fill='%233f6b49'%3e%3cellipse%20cx='380'%20cy='960'%20rx='420'%20ry='110'%20opacity='0.1'/%3e%3cellipse%20cx='1000'%20cy='990'%20rx='520'%20ry='120'%20opacity='0.07'/%3e%3c/g%3e%3cg%20filter='url(%23soft)'%20stroke='%233f6b49'%20stroke-linecap='round'%3e%3cpath%20d='M1470%201000%20C1466%20800%201470%20560%201482%20340'%20stroke-width='14'%20opacity='0.14'/%3e%3cpath%20d='M1548%201000%20C1546%20820%201550%20640%201558%20470'%20stroke-width='10'%20opacity='0.1'/%3e%3cpath%20d='M1462%20812%20H1486%20M1468%20604%20H1492%20M1476%20402%20H1498'%20stroke-width='4'%20opacity='0.16'/%3e%3cpath%20d='M1542%20852%20H1560%20M1546%20668%20H1564'%20stroke-width='3'%20opacity='0.12'/%3e%3c/g%3e%3cg%20fill='%233f6b49'%3e%3cellipse%20cx='1432'%20cy='356'%20rx='42'%20ry='8'%20transform='rotate(-34%201432%20356)'%20opacity='0.15'/%3e%3cellipse%20cx='1500'%20cy='300'%20rx='46'%20ry='8'%20transform='rotate(-12%201500%20300)'%20opacity='0.13'/%3e%3cellipse%20cx='1452'%20cy='300'%20rx='38'%20ry='7'%20transform='rotate(-58%201452%20300)'%20opacity='0.11'/%3e%3cellipse%20cx='1560'%20cy='428'%20rx='40'%20ry='7'%20transform='rotate(-24%201560%20428)'%20opacity='0.12'/%3e%3cellipse%20cx='1596'%20cy='380'%20rx='36'%20ry='7'%20transform='rotate(-50%201596%20380)'%20opacity='0.1'/%3e%3c/g%3e%3c/svg%3e");
+}
+
+/* 莫奈 · 雾紫 */
+html[data-theme="monet"] {
+  --background: #f6f5f9; --foreground: #1b1922;
+  --card: #fdfcff; --card-foreground: #1b1922;
+  --popover: #fdfcff; --popover-foreground: #1b1922;
+  --primary: #656195; --primary-foreground: #ffffff;
+  --secondary: #f0eff7; --secondary-foreground: #5d5a8c;
+  --muted: #eceaf2; --muted-foreground: #696378;
+  --accent: #f0eff7; --accent-foreground: #5d5a8c;
+  --border: #e1deea; --input: #e1deea;
+  --ring: #9c98c4;
+  --chart-1: #656195; --chart-2: #6f8f7a; --chart-3: #5d5a8c; --chart-4: #a8a4cd; --chart-5: #c98ba6;
+  --sidebar: #f6f5f9; --sidebar-foreground: #1b1922;
+  --sidebar-primary: #656195; --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0eff7; --sidebar-accent-foreground: #1b1922;
+  --sidebar-border: #e1deea; --sidebar-ring: #9c98c4;
+  --selection: #5d5a8c2e;
+  --card-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.33 0 0 0 0 0.45 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
+  --page-tex: url("data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%201000'%20preserveAspectRatio='xMidYMax%20slice'%20fill='none'%3e%3cdefs%3e%3cfilter%20id='mist'%20x='-40%25'%20y='-40%25'%20width='180%25'%20height='180%25'%3e%3cfeGaussianBlur%20stdDeviation='46'/%3e%3c/filter%3e%3cfilter%20id='dab'%20x='-40%25'%20y='-40%25'%20width='180%25'%20height='180%25'%3e%3cfeGaussianBlur%20stdDeviation='7'/%3e%3c/filter%3e%3c/defs%3e%3cg%20filter='url(%23mist)'%3e%3cellipse%20cx='240'%20cy='120'%20rx='340'%20ry='130'%20fill='%23c9b8d8'%20opacity='0.14'/%3e%3cellipse%20cx='420'%20cy='60'%20rx='220'%20ry='90'%20fill='%23e8c9b0'%20opacity='0.1'/%3e%3c/g%3e%3cg%20filter='url(%23mist)'%3e%3cellipse%20cx='700'%20cy='950'%20rx='700'%20ry='130'%20fill='%235d5a8c'%20opacity='0.08'/%3e%3cellipse%20cx='1300'%20cy='980'%20rx='480'%20ry='110'%20fill='%236f8f7a'%20opacity='0.07'/%3e%3c/g%3e%3cg%20filter='url(%23dab)'%3e%3cellipse%20cx='420'%20cy='920'%20rx='58'%20ry='14'%20fill='%236f8f7a'%20opacity='0.16'/%3e%3cellipse%20cx='560'%20cy='958'%20rx='44'%20ry='11'%20fill='%236f8f7a'%20opacity='0.12'/%3e%3cellipse%20cx='980'%20cy='936'%20rx='52'%20ry='13'%20fill='%236f8f7a'%20opacity='0.13'/%3e%3cellipse%20cx='1180'%20cy='964'%20rx='40'%20ry='10'%20fill='%236f8f7a'%20opacity='0.1'/%3e%3cellipse%20cx='700'%20cy='912'%20rx='34'%20ry='9'%20fill='%238783b3'%20opacity='0.12'/%3e%3cellipse%20cx='860'%20cy='962'%20rx='30'%20ry='8'%20fill='%23c98ba6'%20opacity='0.12'/%3e%3cellipse%20cx='470'%20cy='906'%20rx='14'%20ry='8'%20fill='%23c98ba6'%20opacity='0.18'/%3e%3c/g%3e%3cg%20stroke='%238783b3'%20stroke-linecap='round'%20opacity='0.14'%3e%3cpath%20d='M300%20880%20H420%20M640%20872%20H730%20M1040%20884%20H1150'%20stroke-width='3'/%3e%3c/g%3e%3c/svg%3e");
+}
+
+/* 夜读 · 灯下(暗色皮肤) */
+html[data-theme="night"] {
+  --background: #171412; --foreground: #efeae4;
+  --card: #211d1a; --card-foreground: #efeae4;
+  --popover: #211d1a; --popover-foreground: #efeae4;
+  --primary: #b07312; --primary-foreground: #171412;
+  --secondary: #32240f; --secondary-foreground: #dda038;
+  --muted: #2a2520; --muted-foreground: #b8ab9c;
+  --accent: #32240f; --accent-foreground: #dda038;
+  --border: #3a332b; --input: #3a332b;
+  --ring: #b07312;
+  --chart-1: #dda038; --chart-2: #b07312; --chart-3: #e6c37a; --chart-4: #a8927a; --chart-5: #8fae9f;
+  --sidebar: #211d1a; --sidebar-foreground: #efeae4;
+  --sidebar-primary: #b07312; --sidebar-primary-foreground: #171412;
+  --sidebar-accent: #32240f; --sidebar-accent-foreground: #efeae4;
+  --sidebar-border: #3a332b; --sidebar-ring: #b07312;
+  --selection: #cd8c1e4d;
+  --card-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.94 0 0 0 0 0.88 0 0 0 0 0.78 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
+  --page-tex: url("data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%201000'%20preserveAspectRatio='xMidYMax%20slice'%20fill='none'%3e%3cdefs%3e%3cfilter%20id='glow'%20x='-60%25'%20y='-60%25'%20width='220%25'%20height='220%25'%3e%3cfeGaussianBlur%20stdDeviation='60'/%3e%3c/filter%3e%3cfilter%20id='soft'%20x='-30%25'%20y='-30%25'%20width='160%25'%20height='160%25'%3e%3cfeGaussianBlur%20stdDeviation='3'/%3e%3c/filter%3e%3c/defs%3e%3cg%20filter='url(%23glow)'%3e%3cellipse%20cx='1340'%20cy='150'%20rx='360'%20ry='220'%20fill='%23dda038'%20opacity='0.1'/%3e%3cellipse%20cx='1260'%20cy='330'%20rx='260'%20ry='200'%20fill='%23dda038'%20opacity='0.055'/%3e%3c/g%3e%3cg%20fill='%23efeae4'%3e%3ccircle%20cx='260'%20cy='130'%20r='2.4'%20opacity='0.4'/%3e%3ccircle%20cx='470'%20cy='80'%20r='1.8'%20opacity='0.3'/%3e%3ccircle%20cx='680'%20cy='180'%20r='1.6'%20opacity='0.24'/%3e%3ccircle%20cx='150'%20cy='300'%20r='1.6'%20opacity='0.2'/%3e%3c/g%3e%3cg%20filter='url(%23soft)'%3e%3cpath%20d='M-20%20984%20H1640%20V1010%20H-20%20Z'%20fill='%23efeae4'%20opacity='0.05'/%3e%3cpath%20d='M1120%20948%20L1330%20948%20L1338%20984%20L1112%20984%20Z'%20fill='%23efeae4'%20opacity='0.07'/%3e%3cpath%20d='M1140%20926%20L1310%20926%20L1318%20948%20L1132%20948%20Z'%20fill='%23dda038'%20opacity='0.08'/%3e%3cpath%20d='M260%20960%20L420%20960%20L426%20984%20L254%20984%20Z'%20fill='%23efeae4'%20opacity='0.05'/%3e%3c/g%3e%3cg%20stroke='%23efeae4'%20stroke-width='2.4'%20stroke-linecap='round'%20fill='none'%20opacity='0.16'%3e%3cpath%20d='M640%20972%20C680%20954%20730%20954%20760%20966%20C790%20954%20840%20954%20880%20972'/%3e%3cpath%20d='M760%20966%20V984'/%3e%3c/g%3e%3c/svg%3e");
+}
+
+/* 皮肤附加层:整页背景画(body::before 固定铺底,z:-1 落在内容之下) */
+@layer base {
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--page-tex, none);
+    background-size: cover;
+    background-position: center bottom;
+  }
+  /* 卡片纹理钩子:给用 bg-card 的表面叠加皮肤纹理(默认皮肤无 --card-tex,回退 none) */
+  .bg-card {
+    background-image: var(--card-tex, none);
+  }
 }
 
 @layer base {
@@ -150,9 +272,9 @@
   html {
     @apply font-sans;
   }
-  /* 文字选中：淡粉，可爱小彩蛋 */
+  /* 文字选中:跟随皮肤 --selection(glearn 同款;各皮肤变量块与 :root 均已定义) */
   ::selection {
-    background: color-mix(in oklab, var(--cute-pink) 45%, transparent);
+    background: var(--selection, color-mix(in oklab, var(--primary) 18%, transparent));
   }
   /* 可爱风滚动条：圆润胶囊、低存在感、随主题变色 */
   ::-webkit-scrollbar {
