@@ -465,7 +465,13 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         return;
       }
       toast.success(isAdjust ? "计划已调整,今日任务按新方案执行" : "备考计划已开启");
-      router.refresh(); // 父页面(服务端)重读 ACTIVE 计划 → 切作战主页
+      if (isAdjust) {
+        // 当前 URL 是 /plan?adjust=1,仅 refresh 会再次命中「有计划+adjust=1」的调整分支留在向导;
+        // 去掉参数导航(页面 force-dynamic,导航即取最新服务端渲染)→ 落到作战主页
+        router.replace("/plan");
+      } else {
+        router.refresh(); // 父页面(服务端)重读 ACTIVE 计划 → 切作战主页
+      }
     } catch {
       toast.error(variant === "adjust" ? "计划调整失败(服务未响应)" : "计划保存失败(服务未响应)");
     } finally {
@@ -673,7 +679,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
               type="button"
               className={BTN}
               disabled={submitting}
-              onClick={() => router.push("/plan")}
+              onClick={() => router.replace("/plan")}
             >
               放弃修改
             </button>
