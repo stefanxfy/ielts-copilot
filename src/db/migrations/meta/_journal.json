@@ -15,6 +15,13 @@
       "when": 1788262284774,
       "tag": "0001_complete_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788334108726,
+      "tag": "0002_vocabulary_books_words_relation",
+      "breakpoints": true
     }
   ]
 }

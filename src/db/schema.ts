@@ -1,14 +1,19 @@
 /**
- * src/db/schema.ts — 全量表定义(v3.1 · 5 表,推倒旧 12 表重写)
+ * src/db/schema.ts — 全量表定义(v3.1 · 5 表,推倒旧 12 表重写;P8 增 · 背单词 3 表)
  *
- * 对齐:docs/数据模型设计.md v3.1(唯一事实源,字段语义/JSON 契约都在那)
+ * 对齐:docs/数据模型设计.md v3.1 + docs/背单词数据模型设计.md v0.5
  * 原则:内容不入库(真题 HTML 留文件系统)/ 锚点即题目(题号三方对齐)/
- *       静态与动态一刀切开(exam_sets+papers=卷的定义,exam_sessions+exam_records=考的历史)
+ *       静态与动态一刀切开(exam_sets+papers=卷的定义,exam_sessions+exam_records=考的历史;
+ *       word_books+words+book_word_relation=词书与词条的定义,学习进度后续独立成表)
  *
  * 删除语义:删 exam_sets 级联删 papers 与其下 sessions/records(删卷重录是合法操作);
  *       exam_records.exam_id 显式 RESTRICT(有作答记录的单科卷不许删,防误删)。
  *       旧 12 表(papers 旧列/sections/passages/question_groups/questions/choices/
  *       answers/writing_tasks/attempts/responses/grading_results)不保留兼容层。
+ *
+ * 背单词:删 word_books 级联清 book_word_relation(删词书重导合法);words.id 显式 RESTRICT
+ *       (有词书引用的词条不许删,防误删共享内容;book_word_relation 走 cascade 清干净后 words
+ *       行残留无害,下次任何书用到自动复用)。
  */
 import { sql } from "drizzle-orm";
 import {
@@ -549,4 +554,131 @@ export const studyJournals = sqliteTable(
       .default(sql`(unixepoch())`),
   },
   (t) => [uniqueIndex("uq_journals_date_period").on(t.journalDate, t.period)],
+);
+
+/* ---------- 背单词:枚举 + JSON 契约 ---------- */
+
+/** words.origin 内容血缘 */
+export const WORD_ORIGINS = ["ecdict", "baicizhan", "import", "manual"] as const;
+export type WordOrigin = (typeof WORD_ORIGINS)[number];
+
+/** word_books.source 词书来源 */
+export const BOOK_SOURCES = ["builtin", "custom"] as const;
+export type BookSource = (typeof BOOK_SOURCES)[number];
+
+/**
+ * words.contentJson 契约(docs/背单词数据模型设计.md §5)
+ *
+ * 字段分类:
+ *   - 展示型:translation / definition / examples / root / exchange / audio.word
+ *   - 元数据型:collins / tags / bncRank / frqRank
+ *   - 承载型:examples[].audio
+ */
+export interface WordExample {
+  /** 例句英文原句 */
+  en: string;
+  /** 例句中文翻译(可空) */
+  cn?: string;
+  /** 例句音频路径,空表示未生成或生成失败 */
+  audio?: string;
+}
+export interface WordContent {
+  /** 中文释义(多行,百词斩 mean_cn 按 "；" 拆) */
+  translation: string[];
+  /** 英文释义(可空,百词斩 mean_en) */
+  definition?: string[];
+  /** 例句:默认 1 条(百词斩 join),schema 支持多条无上限 */
+  examples: WordExample[];
+  /** 词根拆解(可空,ECDICT wordroot.txt) */
+  root?: string;
+  /** 词形变化/重点短语(可空,百词斩 sentence_phrase / ECDICT exchange) */
+  exchange?: string;
+  /** 单词发音路径,如 /audio/words/abandon.mp3(可空,edge-tts 异步合成落盘后回写) */
+  audio?: { word?: string };
+  /** 柯林斯星级 1-5(可空,ECDICT 补) */
+  collins?: number;
+  /** 考试标签 ["ielts","toefl"](可空,ECDICT tag 拆分) */
+  tags?: string[];
+  /** BNC 词频排名:数字越小越常用(可空,ECDICT bnc 补) */
+  bncRank?: number;
+  /** 当代语料词频排名:数字越小越常用(可空,ECDICT frq 补) */
+  frqRank?: number;
+}
+
+/* ---------- word_books:词书定义(1 行 = 一本词书) ---------- */
+
+export const wordBooks = sqliteTable(
+  "word_books",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** 词书英文短标识,幂等导入键("ielts-core" / "custom-20260902");同 examSetId 模式 */
+    bookId: text("book_id").notNull(),
+    /** 展示名「雅思核心词汇」 */
+    name: text("name").notNull(),
+    /** 词书说明(来源/适用人群,可空) */
+    description: text("description"),
+    /** builtin(管线导入)/ custom(用户导入) */
+    source: text("source", { enum: BOOK_SOURCES }).notNull(),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex("uq_word_books_book_id").on(t.bookId)],
+);
+
+/* ---------- words:词条内容(1 行 = 一个词,全局唯一) ---------- */
+
+export const words = sqliteTable(
+  "words",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** 单词本体(小写归一,模糊匹配在应用层做) */
+    word: text("word").notNull(),
+    /** 英式音标(百词斩 accent 落 Uk,可空) */
+    phoneticUk: text("phonetic_uk"),
+    /** 美式音标(后续从 ECDICT phonetic_us 补,可空) */
+    phoneticUs: text("phonetic_us"),
+    /** 富信息合并列(契约见 WordContent) */
+    contentJson: text("content_json", { mode: "json" })
+      .$type<WordContent>()
+      .notNull(),
+    /** 内容血缘:ecdict(管线)/ baicizhan(百词斩 join)/ import(用户导入带)/ manual(手动加词) */
+    origin: text("origin", { enum: WORD_ORIGINS }).notNull(),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [
+    uniqueIndex("uq_words_word").on(t.word),
+    index("idx_words_origin").on(t.origin),
+  ],
+);
+
+/* ---------- book_word_relation:关系表(1 行 = 某词书的第 N 个词) ---------- */
+
+export const bookWordRelation = sqliteTable(
+  "book_word_relation",
+  {
+    /** FK → word_books.id ON DELETE CASCADE:删词书级联清关联 */
+    bookId: int("book_id")
+      .notNull()
+      .references(() => wordBooks.id, { onDelete: "cascade" }),
+    /** FK → words.id ON DELETE RESTRICT:有词书引用的词条不许删(防误删共享内容) */
+    wordId: int("word_id")
+      .notNull()
+      .references(() => words.id, { onDelete: "restrict" }),
+    /** 词在本书中的序号(0 起,词序即默认学习序) */
+    order: int("order").notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_bwr_book_word").on(t.bookId, t.wordId),
+    uniqueIndex("uq_bwr_book_order").on(t.bookId, t.order),
+    index("idx_bwr_word").on(t.wordId),
+  ],
 );
