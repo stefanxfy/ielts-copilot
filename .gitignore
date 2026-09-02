@@ -18,6 +18,16 @@ desktop.ini
 # ---------- Node (保留的概率较低,但先列好) ----------
 node_modules/
 npm-debug.log*
+
+# ---------- 背单词音频(P8 切片) ----------
+# 音频由 scripts/import-vocab-pipeline.mjs 调 edge-tts 重新合成,
+# 二进制大不入库;clone 后跑脚本一键重生。
+public/audio/
+
+# 例外:data/seed/ielts-100.txt 是配置型词表(几 KB),不是运行时数据,
+# 入库方便 clone 后直接跑 pipeline。data/app.db 等运行时库仍被 data/ 整体排除。
+!data/seed/
+!data/seed/ielts-100.txt
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
@@ -75,6 +85,10 @@ next-env.d.ts
 next-server/
 /config.json
 /data
+# 例外:data/seed/ 是配置型词表(几 KB),非运行时数据,入库便于 clone 后直接跑 pipeline。
+# data/app.db 等运行时库仍被 /data 整体排除。
+!/data/seed/
+!/data/seed/ielts-100.txt
 
 # ---------- WorkBuddy 本地工作记忆 ----------
 .workbuddy/
