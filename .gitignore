@@ -83,3 +83,6 @@ next-server/
 
 # ---------- WorkBuddy 本地工作记忆 ----------
 .workbuddy/
+
+# 生图调试产物(图片不入库,确认后的正式管线走 public/images/words/)
+tmp/
