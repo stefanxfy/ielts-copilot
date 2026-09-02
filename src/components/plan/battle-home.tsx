@@ -3,7 +3,8 @@
  *
  * 左:考试倒计时 + ⓘ考前须知;中:今日任务清单(勾选判定,服务端算好传入;
  * 打卡日历点选历史日期后动态切换为该日完成情况,回看只读);右:打卡日历 +
- * 今日心得 + AI 昨日总结卡(挂载时自动触发·幂等,失败/重跑走 force)。
+ * 心得卡(今日可编辑/历史日只读)+ AI 总结卡(挂载时自动触发·幂等,
+ * 失败/重跑走 force;历史日只展示当时已生成的总结)。
  *
  * 注意:本组件 import type 自 checklist.ts(类型擦除,不会把 better-sqlite3
  * 拉进客户端 bundle);判定逻辑全部在服务端 page / API 完成后下发。
@@ -61,6 +62,11 @@ interface HistoryDay {
     submissions: number;
     words: number;
     level: 0 | 1 | 2;
+  };
+  /** 该日 (period=daily) 心得与 AI 总结(右栏历史日只读回看用) */
+  journal: {
+    content: string;
+    aiSummary: AiSummary | null;
   };
   /** 计划边界:起点周一 + 总周数(供 UI 区分计划前/计划后) */
   planStartWeekMonday: string;
@@ -366,52 +372,84 @@ export function BattleHome({
         </div>
 
         <div className={CARD}>
-          <h3 className="mb-2.5 text-[15px]">今日心得</h3>
-          <textarea
-            className="min-h-[72px] w-full resize-y rounded-md border border-border bg-card px-2.5 py-2 text-[13px] outline-none focus:border-primary"
-            maxLength={5000}
-            placeholder="今天练了什么、卡在哪、有什么收获…(选填)"
-            value={journal}
-            onChange={(e) => setJournal(e.target.value)}
-          />
-          <div className="mt-2 flex items-center justify-between">
-            <span className={HINT}>{journal.length}/5000</span>
-            <button type="button" className={BTN} onClick={saveJournal} disabled={journalSaving}>
-              {journalSaving ? "保存中…" : "保存心得"}
-            </button>
-          </div>
+          <h3 className="mb-2.5 text-[15px]">
+            {viewingHistory
+              ? `${viewDate.slice(5).replace("-", "/")} 心得`
+              : "今日心得"}
+          </h3>
+          {viewingHistory ? (
+            history?.journal.content ? (
+              <p className="min-h-[72px] whitespace-pre-wrap rounded-md border border-dashed border-border bg-muted/40 px-2.5 py-2 text-[13px] leading-relaxed text-foreground">
+                {history.journal.content}
+              </p>
+            ) : (
+              <p className="min-h-[72px] rounded-md border border-dashed border-border bg-muted/40 px-2.5 py-2 text-[13px] text-muted-foreground">
+                当天没有写心得
+              </p>
+            )
+          ) : (
+            <>
+              <textarea
+                className="min-h-[72px] w-full resize-y rounded-md border border-border bg-card px-2.5 py-2 text-[13px] outline-none focus:border-primary"
+                maxLength={5000}
+                placeholder="今天练了什么、卡在哪、有什么收获…(选填)"
+                value={journal}
+                onChange={(e) => setJournal(e.target.value)}
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <span className={HINT}>{journal.length}/5000</span>
+                <button type="button" className={BTN} onClick={saveJournal} disabled={journalSaving}>
+                  {journalSaving ? "保存中…" : "保存心得"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         <div className={CARD}>
           <div className="flex items-center justify-between">
-            <h3 className="text-[15px]">AI 昨日总结</h3>
-            <button type="button" className={BTN} onClick={rerunSummary} disabled={rerunning}>
-              {rerunning ? "生成中…" : "重跑"}
-            </button>
+            <h3 className="text-[15px]">
+              {viewingHistory
+                ? `${viewDate.slice(5).replace("-", "/")} AI 总结`
+                : "AI 昨日总结"}
+            </h3>
+            {!viewingHistory && (
+              <button type="button" className={BTN} onClick={rerunSummary} disabled={rerunning}>
+                {rerunning ? "生成中…" : "重跑"}
+              </button>
+            )}
           </div>
-          {aiSummary ? (
-            <div className="mt-2.5">
-              <p className="text-[13px] leading-relaxed text-muted-foreground">{aiSummary.summary}</p>
-              {aiSummary.suggestions.length > 0 && (
-                <ul className="mt-2.5 grid gap-1.5">
-                  {aiSummary.suggestions.map((s, i) => (
-                    <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-muted-foreground">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                      <span>{s}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          {(() => {
+            const viewAiSummary = viewingHistory ? history?.journal.aiSummary ?? null : aiSummary;
+            if (viewAiSummary) {
+              return (
+                <div className="mt-2.5">
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">{viewAiSummary.summary}</p>
+                  {viewAiSummary.suggestions.length > 0 && (
+                    <ul className="mt-2.5 grid gap-1.5">
+                      {viewAiSummary.suggestions.map((s, i) => (
+                        <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-muted-foreground">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                          <span>{s}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className={`${HINT} mt-2.5`}>
+                    基于 {viewAiSummary.basedOn.submissions} 次交卷 · {viewAiSummary.basedOn.words} 个词
+                    {viewAiSummary.basedOn.journalExcerpt ? " · 含你的心得" : ""} · {viewAiSummary.model}
+                  </p>
+                </div>
+              );
+            }
+            return (
               <p className={`${HINT} mt-2.5`}>
-                基于 {aiSummary.basedOn.submissions} 次交卷 · {aiSummary.basedOn.words} 个词
-                {aiSummary.basedOn.journalExcerpt ? " · 含你的心得" : ""} · {aiSummary.model}
+                {viewingHistory
+                  ? "该日尚无 AI 总结(昨日有学习记录时才会自动生成)"
+                  : "昨日有学习记录时自动生成;现在也可以点「重跑」试试。"}
               </p>
-            </div>
-          ) : (
-            <p className={`${HINT} mt-2.5`}>
-              昨日有学习记录时自动生成;现在也可以点「重跑」试试。
-            </p>
-          )}
+            );
+          })()}
         </div>
       </div>
 

@@ -10,8 +10,8 @@
 import { NextResponse } from "next/server";
 import { and, eq, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db";
-import { studyActivities, studyPlans } from "@/db/schema";
-import type { PlanPhase } from "@/db/schema";
+import { studyActivities, studyJournals, studyPlans } from "@/db/schema";
+import type { AiSummary, PlanPhase } from "@/db/schema";
 import {
   buildTodayChecklist,
   punchOfDay,
@@ -82,6 +82,17 @@ export async function GET(request: Request) {
     ? punchOfDay(dayRow, readPunchRules())
     : { date, submissions: 0, words: 0, level: 0 as const };
 
+  // 该日 (daily) 心得 + AI 总结(用于右栏历史日只读回看)
+  const journalRow = getDb()
+    .select()
+    .from(studyJournals)
+    .where(and(eq(studyJournals.journalDate, date), eq(studyJournals.period, "daily")))
+    .get();
+  const journal: { content: string; aiSummary: AiSummary | null } = {
+    content: journalRow?.content ?? "",
+    aiSummary: journalRow?.aiSummaryJson ?? null,
+  };
+
   return NextResponse.json({
     ok: true,
     date,
@@ -89,6 +100,7 @@ export async function GET(request: Request) {
     phase: phase ? { name: phase.name, focus: phase.focus } : null,
     tasks,
     punch,
+    journal,
     planStartWeekMonday: plan.planStartWeekMonday,
     planTotalWeeks,
   });
