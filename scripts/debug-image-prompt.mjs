@@ -11,10 +11,11 @@
  *   node scripts/debug-image-prompt.mjs --styles s3,s4                   # 只跑某些风格
  *   node scripts/debug-image-prompt.mjs --words abundant,isolate         # 只跑某些词
  *   node scripts/debug-image-prompt.mjs --dry                            # 只打印提示词不调 API
+ *   node scripts/debug-image-prompt.mjs --rebuild                        # 只扫磁盘已有图重建 manifest+对比页(不调 API)
  *
- * 产物:tmp/image-debug/<style>-<strategy>/<word>.png + manifest.json(增量合并留档)
+ * 产物:prototype/vocab/image-lab/<style>-<strategy>/<word>.png + manifest.json(增量合并留档)
  *      + 对比.html(每次非 dry 运行后自动重建)
- * 图片不入 git(tmp/ 已 gitignore);确认效果后把策略固化进正式管线。
+ * 图片入库留痕(用户要求中间产物不落 tmp、一律进 prototype/ 归档);确认效果后把策略固化进正式管线。
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -181,7 +182,7 @@ async function genImage(key, prompt, outFile) {
 
 /* ---------- 对比页重建(每次非 dry 运行后调用) ---------- */
 function buildPage(manifest) {
-  const outDir = join(ROOT, "tmp", "image-debug");
+  const outDir = join(ROOT, "prototype", "vocab", "image-lab");
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
   const groups = {};
   for (const it of manifest.items) {
@@ -224,7 +225,7 @@ h3.wordh{font-size:15px;margin:18px 0 8px;}
     const items = groups[gid];
     html += `<div class="group"><div class="gh"><h2>${esc(STYLE_LABEL[s] ?? s)} × ${esc(STRATEGIES[v]?.label ?? v)}</h2><span class="tag">${esc(STRAT_DESC[v] ?? "")}</span></div><div class="gd">风格前缀: ${stylePrefix(items[0].prompt)}</div><div class="grid">`;
     for (const it of items) {
-      const rel = it.file.replace(/^.*tmp\/image-debug\//, "");
+      const rel = it.file.replace(/^.*vocab\/image-lab\//, "");
       html += `<div class="card"><img src="${rel}" alt="${it.word}"><div class="w">${it.word}</div></div>`;
     }
     html += `</div><details class="prompt"><summary>查看本组 ${items.length} 条提示词</summary>`;
@@ -238,7 +239,7 @@ h3.wordh{font-size:15px;margin:18px 0 8px;}
     if (!rows.length) continue;
     html += `<h3 class="wordh">${w}</h3><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">`;
     for (const { gid, it } of rows) {
-      const rel = it.file.replace(/^.*tmp\/image-debug\//, "");
+      const rel = it.file.replace(/^.*vocab\/image-lab\//, "");
       html += `<div class="card"><img src="${rel}" alt="${gid}"><div class="w">${shortLabel(gid)}</div></div>`;
     }
     html += `</div>`;
@@ -250,6 +251,7 @@ h3.wordh{font-size:15px;margin:18px 0 8px;}
 /* ---------- 主流程 ---------- */
 const argv = process.argv.slice(2);
 const dry = argv.includes("--dry");
+const rebuild = argv.includes("--rebuild"); // 只扫磁盘已有图重建 manifest/对比页,绝不调 API
 const argVal = (name) => {
   const i = argv.indexOf(name);
   return i >= 0 ? argv[i + 1] : null;
@@ -264,11 +266,7 @@ const chosenStyles = stylesArg ? stylesArg.split(",") : Object.keys(STYLE_CANDID
 for (const s of chosenStyles) if (!STYLE_CANDIDATES[s]) throw new Error(`未知风格 ${s}`);
 if (strategyArg && !STRATEGIES[strategyArg]) throw new Error(`未知策略 ${strategyArg}`);
 
-const key = readMiniMaxKey();
-const allWords = await loadWords(chosenWords);
-if (allWords.length === 0) throw new Error("没从库里取到词");
-
-const outDir = join(ROOT, "tmp", "image-debug");
+const outDir = join(ROOT, "prototype", "vocab", "image-lab");
 mkdirSync(outDir, { recursive: true });
 
 // manifest 增量合并:同 (组,词) 记录覆盖,历史记录保留
@@ -286,6 +284,29 @@ const upsert = (rec) => {
     idx.set(k, manifest.items.length - 1);
   }
 };
+
+if (rebuild) {
+  // --rebuild:不调 API。逐 (风格,策略,词) 确定性重构造提示词,命中磁盘已有图则登记,只重建 manifest + 对比页。
+  let hit = 0;
+  for (const sid of Object.keys(STYLE_CANDIDATES)) {
+    for (const [vid, strat] of Object.entries(STRATEGIES)) {
+      for (const word of chosenWords) {
+        const row = await loadWords([word]);
+        if (!row.length) continue;
+        const prompt = strat.build(row[0], STYLE_CANDIDATES[sid]);
+        const file = join(outDir, `${sid}-${vid}`, `${word}.png`);
+        if (existsSync(file)) {
+          upsert({ id: `${sid}-${vid}`, word, prompt, file });
+          hit++;
+        }
+      }
+    }
+  }
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  buildPage(manifest);
+  console.log(`rebuild 完成:${hit} 张磁盘图登记入 manifest,产物目录 ${outDir}`);
+  process.exit(0);
+}
 
 for (const sid of chosenStyles) {
   const style = STYLE_CANDIDATES[sid];

@@ -1,0 +1,383 @@
+{
+  "generatedAt": "2026-09-02T17:59:13.693Z",
+  "items": [
+    {
+      "id": "s1-v1",
+      "word": "abandon",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style Illustrate the meaning of the English word \"abandon\". Meaning: v.抛弃; 放弃. English definition: to stop doing something, especially before it is finished; to stop having something. Example sentence: \"He abandoned his car in the desert.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v1/abandon.png"
+    },
+    {
+      "id": "s1-v1",
+      "word": "abundant",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style Illustrate the meaning of the English word \"abundant\". Meaning: adj.大量的. English definition: existing in large quantities; more than enough. Example sentence: \"The fish in this pond are abundant.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v1/abundant.png"
+    },
+    {
+      "id": "s1-v1",
+      "word": "discard",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style Illustrate the meaning of the English word \"discard\". Meaning: v.丢掉; 抛弃; 打出（无用的牌）. English definition: to get rid of something that you no longer want or need. Example sentence: \"I will discard this bottle into the garbage bin.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v1/discard.png"
+    },
+    {
+      "id": "s1-v1",
+      "word": "isolate",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style Illustrate the meaning of the English word \"isolate\". Meaning: v. 使隔离. English definition: to separate somebody/something physically or socially from other people or things. Example sentence: \"The old man built a huge fence, to isolate himself from his neighbors.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v1/isolate.png"
+    },
+    {
+      "id": "s1-v1",
+      "word": "accomplish",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style Illustrate the meaning of the English word \"accomplish\". Meaning: v. 完成，做到; 实现. English definition: to succeed in doing or completing something. Example sentence: \"She is so happy to have accomplished her weight-loss goal.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v1/accomplish.png"
+    },
+    {
+      "id": "s1-v2",
+      "word": "abandon",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v2/abandon.png"
+    },
+    {
+      "id": "s1-v2",
+      "word": "abundant",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style One single scene that expresses the English word \"abundant\" (adj.大量的). Scene: A wooden market stall overflowing with piles of fresh oranges and fish, baskets stacked high, morning light — the feeling of more than enough. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v2/abundant.png"
+    },
+    {
+      "id": "s1-v2",
+      "word": "discard",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style One single scene that expresses the English word \"discard\" (v.丢掉; 抛弃; 打出（无用的牌）). Scene: A hand dropping an empty plastic bottle toward a recycling bin, crumpled papers scattered nearby — the decisive moment of throwing something away. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v2/discard.png"
+    },
+    {
+      "id": "s1-v2",
+      "word": "isolate",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style One single scene that expresses the English word \"isolate\" (v. 使隔离). Scene: A small wooden cabin on a remote snowy field, one tiny window glowing, distant village far away beyond a fence — the feeling of being cut off from others. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v2/isolate.png"
+    },
+    {
+      "id": "s1-v2",
+      "word": "accomplish",
+      "prompt": "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style One single scene that expresses the English word \"accomplish\" (v. 完成，做到; 实现). Scene: A tired runner crossing a finish line at sunrise, arms raised, medal around neck, crowd blurred behind — the moment of finally achieving a hard goal. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s1-v2/accomplish.png"
+    },
+    {
+      "id": "s2-v1",
+      "word": "abandon",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark Illustrate the meaning of the English word \"abandon\". Meaning: v.抛弃; 放弃. English definition: to stop doing something, especially before it is finished; to stop having something. Example sentence: \"He abandoned his car in the desert.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v1/abandon.png"
+    },
+    {
+      "id": "s2-v1",
+      "word": "abundant",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark Illustrate the meaning of the English word \"abundant\". Meaning: adj.大量的. English definition: existing in large quantities; more than enough. Example sentence: \"The fish in this pond are abundant.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v1/abundant.png"
+    },
+    {
+      "id": "s2-v1",
+      "word": "discard",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark Illustrate the meaning of the English word \"discard\". Meaning: v.丢掉; 抛弃; 打出（无用的牌）. English definition: to get rid of something that you no longer want or need. Example sentence: \"I will discard this bottle into the garbage bin.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v1/discard.png"
+    },
+    {
+      "id": "s2-v1",
+      "word": "isolate",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark Illustrate the meaning of the English word \"isolate\". Meaning: v. 使隔离. English definition: to separate somebody/something physically or socially from other people or things. Example sentence: \"The old man built a huge fence, to isolate himself from his neighbors.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v1/isolate.png"
+    },
+    {
+      "id": "s2-v1",
+      "word": "accomplish",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark Illustrate the meaning of the English word \"accomplish\". Meaning: v. 完成，做到; 实现. English definition: to succeed in doing or completing something. Example sentence: \"She is so happy to have accomplished her weight-loss goal.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v1/accomplish.png"
+    },
+    {
+      "id": "s2-v2",
+      "word": "abandon",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v2/abandon.png"
+    },
+    {
+      "id": "s2-v2",
+      "word": "abundant",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark One single scene that expresses the English word \"abundant\" (adj.大量的). Scene: A wooden market stall overflowing with piles of fresh oranges and fish, baskets stacked high, morning light — the feeling of more than enough. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v2/abundant.png"
+    },
+    {
+      "id": "s2-v2",
+      "word": "discard",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark One single scene that expresses the English word \"discard\" (v.丢掉; 抛弃; 打出（无用的牌）). Scene: A hand dropping an empty plastic bottle toward a recycling bin, crumpled papers scattered nearby — the decisive moment of throwing something away. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v2/discard.png"
+    },
+    {
+      "id": "s2-v2",
+      "word": "isolate",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark One single scene that expresses the English word \"isolate\" (v. 使隔离). Scene: A small wooden cabin on a remote snowy field, one tiny window glowing, distant village far away beyond a fence — the feeling of being cut off from others. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v2/isolate.png"
+    },
+    {
+      "id": "s2-v2",
+      "word": "accomplish",
+      "prompt": "Photorealistic photography, natural lighting, shallow depth of field, one clear focal subject, editorial magazine quality, no text, no letters, no watermark One single scene that expresses the English word \"accomplish\" (v. 完成，做到; 实现). Scene: A tired runner crossing a finish line at sunrise, arms raised, medal around neck, crowd blurred behind — the moment of finally achieving a hard goal. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s2-v2/accomplish.png"
+    },
+    {
+      "id": "s3-v1",
+      "word": "abandon",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters Illustrate the meaning of the English word \"abandon\". Meaning: v.抛弃; 放弃. English definition: to stop doing something, especially before it is finished; to stop having something. Example sentence: \"He abandoned his car in the desert.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v1/abandon.png"
+    },
+    {
+      "id": "s3-v1",
+      "word": "abundant",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters Illustrate the meaning of the English word \"abundant\". Meaning: adj.大量的. English definition: existing in large quantities; more than enough. Example sentence: \"The fish in this pond are abundant.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v1/abundant.png"
+    },
+    {
+      "id": "s3-v1",
+      "word": "discard",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters Illustrate the meaning of the English word \"discard\". Meaning: v.丢掉; 抛弃; 打出（无用的牌）. English definition: to get rid of something that you no longer want or need. Example sentence: \"I will discard this bottle into the garbage bin.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v1/discard.png"
+    },
+    {
+      "id": "s3-v1",
+      "word": "isolate",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters Illustrate the meaning of the English word \"isolate\". Meaning: v. 使隔离. English definition: to separate somebody/something physically or socially from other people or things. Example sentence: \"The old man built a huge fence, to isolate himself from his neighbors.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v1/isolate.png"
+    },
+    {
+      "id": "s3-v1",
+      "word": "accomplish",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters Illustrate the meaning of the English word \"accomplish\". Meaning: v. 完成，做到; 实现. English definition: to succeed in doing or completing something. Example sentence: \"She is so happy to have accomplished her weight-loss goal.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v1/accomplish.png"
+    },
+    {
+      "id": "s3-v2",
+      "word": "abandon",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v2/abandon.png"
+    },
+    {
+      "id": "s3-v2",
+      "word": "abundant",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters One single scene that expresses the English word \"abundant\" (adj.大量的). Scene: A wooden market stall overflowing with piles of fresh oranges and fish, baskets stacked high, morning light — the feeling of more than enough. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v2/abundant.png"
+    },
+    {
+      "id": "s3-v2",
+      "word": "discard",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters One single scene that expresses the English word \"discard\" (v.丢掉; 抛弃; 打出（无用的牌）). Scene: A hand dropping an empty plastic bottle toward a recycling bin, crumpled papers scattered nearby — the decisive moment of throwing something away. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v2/discard.png"
+    },
+    {
+      "id": "s3-v2",
+      "word": "isolate",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters One single scene that expresses the English word \"isolate\" (v. 使隔离). Scene: A small wooden cabin on a remote snowy field, one tiny window glowing, distant village far away beyond a fence — the feeling of being cut off from others. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v2/isolate.png"
+    },
+    {
+      "id": "s3-v2",
+      "word": "accomplish",
+      "prompt": "Cute 3D clay render style, soft rounded shapes, matte pastel materials, soft studio lighting, playful miniature diorama scene, high detail, no text, no letters One single scene that expresses the English word \"accomplish\" (v. 完成，做到; 实现). Scene: A tired runner crossing a finish line at sunrise, arms raised, medal around neck, crowd blurred behind — the moment of finally achieving a hard goal. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s3-v2/accomplish.png"
+    },
+    {
+      "id": "s4-v1",
+      "word": "abandon",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters Illustrate the meaning of the English word \"abandon\". Meaning: v.抛弃; 放弃. English definition: to stop doing something, especially before it is finished; to stop having something. Example sentence: \"He abandoned his car in the desert.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v1/abandon.png"
+    },
+    {
+      "id": "s4-v1",
+      "word": "abundant",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters Illustrate the meaning of the English word \"abundant\". Meaning: adj.大量的. English definition: existing in large quantities; more than enough. Example sentence: \"The fish in this pond are abundant.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v1/abundant.png"
+    },
+    {
+      "id": "s4-v1",
+      "word": "discard",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters Illustrate the meaning of the English word \"discard\". Meaning: v.丢掉; 抛弃; 打出（无用的牌）. English definition: to get rid of something that you no longer want or need. Example sentence: \"I will discard this bottle into the garbage bin.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v1/discard.png"
+    },
+    {
+      "id": "s4-v1",
+      "word": "isolate",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters Illustrate the meaning of the English word \"isolate\". Meaning: v. 使隔离. English definition: to separate somebody/something physically or socially from other people or things. Example sentence: \"The old man built a huge fence, to isolate himself from his neighbors.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v1/isolate.png"
+    },
+    {
+      "id": "s4-v1",
+      "word": "accomplish",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters Illustrate the meaning of the English word \"accomplish\". Meaning: v. 完成，做到; 实现. English definition: to succeed in doing or completing something. Example sentence: \"She is so happy to have accomplished her weight-loss goal.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v1/accomplish.png"
+    },
+    {
+      "id": "s4-v2",
+      "word": "abandon",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v2/abandon.png"
+    },
+    {
+      "id": "s4-v2",
+      "word": "abundant",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters One single scene that expresses the English word \"abundant\" (adj.大量的). Scene: A wooden market stall overflowing with piles of fresh oranges and fish, baskets stacked high, morning light — the feeling of more than enough. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v2/abundant.png"
+    },
+    {
+      "id": "s4-v2",
+      "word": "discard",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters One single scene that expresses the English word \"discard\" (v.丢掉; 抛弃; 打出（无用的牌）). Scene: A hand dropping an empty plastic bottle toward a recycling bin, crumpled papers scattered nearby — the decisive moment of throwing something away. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v2/discard.png"
+    },
+    {
+      "id": "s4-v2",
+      "word": "isolate",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters One single scene that expresses the English word \"isolate\" (v. 使隔离). Scene: A small wooden cabin on a remote snowy field, one tiny window glowing, distant village far away beyond a fence — the feeling of being cut off from others. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v2/isolate.png"
+    },
+    {
+      "id": "s4-v2",
+      "word": "accomplish",
+      "prompt": "Delicate watercolor painting, hand-drawn ink sketch lines, soft washes of color, warm paper texture background, gentle literary mood, no text, no letters One single scene that expresses the English word \"accomplish\" (v. 完成，做到; 实现). Scene: A tired runner crossing a finish line at sunrise, arms raised, medal around neck, crowd blurred behind — the moment of finally achieving a hard goal. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s4-v2/accomplish.png"
+    },
+    {
+      "id": "s5-v1",
+      "word": "abandon",
+      "prompt": "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters Illustrate the meaning of the English word \"abandon\". Meaning: v.抛弃; 放弃. English definition: to stop doing something, especially before it is finished; to stop having something. Example sentence: \"He abandoned his car in the desert.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s5-v1/abandon.png"
+    },
+    {
+      "id": "s5-v1",
+      "word": "abundant",
+      "prompt": "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters Illustrate the meaning of the English word \"abundant\". Meaning: adj.大量的. English definition: existing in large quantities; more than enough. Example sentence: \"The fish in this pond are abundant.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s5-v1/abundant.png"
+    },
+    {
+      "id": "s5-v1",
+      "word": "discard",
+      "prompt": "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters Illustrate the meaning of the English word \"discard\". Meaning: v.丢掉; 抛弃; 打出（无用的牌）. English definition: to get rid of something that you no longer want or need. Example sentence: \"I will discard this bottle into the garbage bin.\" The image must make the word's meaning instantly recognizable without any text.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s5-v1/discard.png"
+    },
+    {
+      "id": "s5-v2",
+      "word": "abandon",
+      "prompt": "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s5-v2/abandon.png"
+    },
+    {
+      "id": "s5-v2",
+      "word": "abundant",
+      "prompt": "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters One single scene that expresses the English word \"abundant\" (adj.大量的). Scene: A wooden market stall overflowing with piles of fresh oranges and fish, baskets stacked high, morning light — the feeling of more than enough. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s5-v2/abundant.png"
+    },
+    {
+      "id": "s5-v2",
+      "word": "discard",
+      "prompt": "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters One single scene that expresses the English word \"discard\" (v.丢掉; 抛弃; 打出（无用的牌）). Scene: A hand dropping an empty plastic bottle toward a recycling bin, crumpled papers scattered nearby — the decisive moment of throwing something away. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s5-v2/discard.png"
+    },
+    {
+      "id": "s5-v2",
+      "word": "isolate",
+      "prompt": "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters One single scene that expresses the English word \"isolate\" (v. 使隔离). Scene: A small wooden cabin on a remote snowy field, one tiny window glowing, distant village far away beyond a fence — the feeling of being cut off from others. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s5-v2/isolate.png"
+    },
+    {
+      "id": "s5-v2",
+      "word": "accomplish",
+      "prompt": "Minimal flat vector illustration, bold simple geometric shapes, limited warm color palette, strong silhouette, symbolic composition, generous negative space, no text, no letters One single scene that expresses the English word \"accomplish\" (v. 完成，做到; 实现). Scene: A tired runner crossing a finish line at sunrise, arms raised, medal around neck, crowd blurred behind — the moment of finally achieving a hard goal. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s5-v2/accomplish.png"
+    },
+    {
+      "id": "s6-v2",
+      "word": "abandon",
+      "prompt": "Detailed colored pencil drawing, soft hand-drawn strokes, delicate pencil grain texture, warm harmonious colors, storybook illustration page, gentle lighting, no text, no letters One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s6-v2/abandon.png"
+    },
+    {
+      "id": "s6-v2",
+      "word": "abundant",
+      "prompt": "Detailed colored pencil drawing, soft hand-drawn strokes, delicate pencil grain texture, warm harmonious colors, storybook illustration page, gentle lighting, no text, no letters One single scene that expresses the English word \"abundant\" (adj.大量的). Scene: A wooden market stall overflowing with piles of fresh oranges and fish, baskets stacked high, morning light — the feeling of more than enough. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s6-v2/abundant.png"
+    },
+    {
+      "id": "s6-v2",
+      "word": "discard",
+      "prompt": "Detailed colored pencil drawing, soft hand-drawn strokes, delicate pencil grain texture, warm harmonious colors, storybook illustration page, gentle lighting, no text, no letters One single scene that expresses the English word \"discard\" (v.丢掉; 抛弃; 打出（无用的牌）). Scene: A hand dropping an empty plastic bottle toward a recycling bin, crumpled papers scattered nearby — the decisive moment of throwing something away. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s6-v2/discard.png"
+    },
+    {
+      "id": "s6-v2",
+      "word": "isolate",
+      "prompt": "Detailed colored pencil drawing, soft hand-drawn strokes, delicate pencil grain texture, warm harmonious colors, storybook illustration page, gentle lighting, no text, no letters One single scene that expresses the English word \"isolate\" (v. 使隔离). Scene: A small wooden cabin on a remote snowy field, one tiny window glowing, distant village far away beyond a fence — the feeling of being cut off from others. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s6-v2/isolate.png"
+    },
+    {
+      "id": "s6-v2",
+      "word": "accomplish",
+      "prompt": "Detailed colored pencil drawing, soft hand-drawn strokes, delicate pencil grain texture, warm harmonious colors, storybook illustration page, gentle lighting, no text, no letters One single scene that expresses the English word \"accomplish\" (v. 完成，做到; 实现). Scene: A tired runner crossing a finish line at sunrise, arms raised, medal around neck, crowd blurred behind — the moment of finally achieving a hard goal. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s6-v2/accomplish.png"
+    },
+    {
+      "id": "s7-v2",
+      "word": "abandon",
+      "prompt": "Pen and wash illustration, fine ink line drawing with loose watercolor washes, elegant sketch style, warm muted palette, white paper background, classic literary book illustration, no text, no letters One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s7-v2/abandon.png"
+    },
+    {
+      "id": "s7-v2",
+      "word": "abundant",
+      "prompt": "Pen and wash illustration, fine ink line drawing with loose watercolor washes, elegant sketch style, warm muted palette, white paper background, classic literary book illustration, no text, no letters One single scene that expresses the English word \"abundant\" (adj.大量的). Scene: A wooden market stall overflowing with piles of fresh oranges and fish, baskets stacked high, morning light — the feeling of more than enough. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s7-v2/abundant.png"
+    },
+    {
+      "id": "s7-v2",
+      "word": "discard",
+      "prompt": "Pen and wash illustration, fine ink line drawing with loose watercolor washes, elegant sketch style, warm muted palette, white paper background, classic literary book illustration, no text, no letters One single scene that expresses the English word \"discard\" (v.丢掉; 抛弃; 打出（无用的牌）). Scene: A hand dropping an empty plastic bottle toward a recycling bin, crumpled papers scattered nearby — the decisive moment of throwing something away. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s7-v2/discard.png"
+    },
+    {
+      "id": "s7-v2",
+      "word": "isolate",
+      "prompt": "Pen and wash illustration, fine ink line drawing with loose watercolor washes, elegant sketch style, warm muted palette, white paper background, classic literary book illustration, no text, no letters One single scene that expresses the English word \"isolate\" (v. 使隔离). Scene: A small wooden cabin on a remote snowy field, one tiny window glowing, distant village far away beyond a fence — the feeling of being cut off from others. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s7-v2/isolate.png"
+    },
+    {
+      "id": "s7-v2",
+      "word": "accomplish",
+      "prompt": "Pen and wash illustration, fine ink line drawing with loose watercolor washes, elegant sketch style, warm muted palette, white paper background, classic literary book illustration, no text, no letters One single scene that expresses the English word \"accomplish\" (v. 完成，做到; 实现). Scene: A tired runner crossing a finish line at sunrise, arms raised, medal around neck, crowd blurred behind — the moment of finally achieving a hard goal. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s7-v2/accomplish.png"
+    },
+    {
+      "id": "s8-v2",
+      "word": "abandon",
+      "prompt": "Warm analog film photography, Kodak Portra color tones, soft natural window light, subtle film grain, 35mm candid composition, nostalgic warm atmosphere, one clear subject, no text, no letters, no watermark One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s8-v2/abandon.png"
+    },
+    {
+      "id": "s8-v2",
+      "word": "abundant",
+      "prompt": "Warm analog film photography, Kodak Portra color tones, soft natural window light, subtle film grain, 35mm candid composition, nostalgic warm atmosphere, one clear subject, no text, no letters, no watermark One single scene that expresses the English word \"abundant\" (adj.大量的). Scene: A wooden market stall overflowing with piles of fresh oranges and fish, baskets stacked high, morning light — the feeling of more than enough. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s8-v2/abundant.png"
+    },
+    {
+      "id": "s9-v2",
+      "word": "abandon",
+      "prompt": "Vintage naturalist illustration, antique field guide plate style, finely detailed scientific drawing, muted earthy watercolor tones, aged cream paper background, classic encyclopedia engraving feel, no text, no letters One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s9-v2/abandon.png"
+    },
+    {
+      "id": "s10-v2",
+      "word": "abandon",
+      "prompt": "Ancient Chinese style anime illustration, guofeng donghua key visual, flowing ink-wash color gradients, misty atmosphere, traditional oriental aesthetics, delicate line art, elegant muted palette, cinematic composition, no text, no letters One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s10-v2/abandon.png"
+    },
+    {
+      "id": "s11-v2",
+      "word": "abandon",
+      "prompt": "Epic colossal megastructure concept art, monumental sci-fi architecture towering into the clouds in the background, tiny subjects for dramatic scale contrast, atmospheric haze, volumetric light, cinematic wide-angle matte painting, no text, no letters One single scene that expresses the English word \"abandon\" (v.抛弃; 放弃). Scene: A lone car parked in a vast empty desert, one door left open, no people around, long shadows of dusk — the feeling of leaving something behind forever. Focus on making the abstract meaning visible through the subject, action and environment. No text, no letters, no captions.",
+      "file": "/Users/fanyunxu/Desktop/myproject/ielts-copilot/prototype/vocab/image-lab/s11-v2/abandon.png"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>背单词卡片原型 · 认词卡 + 默写三型</title>
+<link rel="stylesheet" href="cards.css">
+</head>
+<body>
+
+<header class="demo-head">
+  <h1>背单词卡片 · 交互原型</h1>
+  <p class="sub">认词卡（翻转）+ 默写卡三型（视觉 40 / 听觉 30 / 语境 30）· 数据取自 words 表真实词库 · 配图为 S1 暖色扁平插画实验图</p>
+</header>
+
+<!-- 词选择 + 卡型选择 -->
+<nav class="pickers">
+  <div class="picker-row">
+    <span class="picker-label">单词</span>
+    <div class="chips" id="wordChips"></div>
+  </div>
+  <div class="picker-row">
+    <span class="picker-label">卡型</span>
+    <div class="chips" id="typeChips"></div>
+    <button class="btn btn-ghost btn-sm" id="randomBtn" title="按 40/30/30 比例随机抽默写卡型">🎲 随机默写卡</button>
+  </div>
+</nav>
+
+<!-- 卡片舞台 + 侧栏 -->
+<div class="layout">
+  <main class="stage">
+    <div class="card-slot" id="cardSlot"><!-- JS 注入卡片 --></div>
+  </main>
+
+  <!-- 侧栏：状态机 + 复习流水 -->
+  <aside class="side">
+    <section class="panel">
+      <h3>词进度模拟（word_progress）</h3>
+      <div class="stage-line" id="progressLine">abandon · stage <b>recognize</b> · 连续认识 <b>0/2</b></div>
+      <p class="hint">认词卡「认识」连续 2 次 → 升级 spell 走默写；默写 Hard 降模糊、Again 降不认识。</p>
+    </section>
+    <section class="panel">
+      <h3>复习流水模拟（word_review_log）</h3>
+      <ul class="log" id="reviewLog"><li class="log-empty">尚无答题记录</li></ul>
+    </section>
+  </aside>
+</div>
+
+<script src="demo.js"></script>
+</body>
+</html>
