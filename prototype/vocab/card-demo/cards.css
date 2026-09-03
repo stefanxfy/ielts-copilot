@@ -223,12 +223,13 @@ body {
   display: flex;
   gap: 14px;
 }
-.rate-below { margin-top: 16px; }
-/* 实心色块评分钮（参考稿样式，收窄版）：红=不认识 / 琥珀=模糊 / 绿=认识 */
+/* 与卡片(400px)对齐：行宽锁卡片槽宽,三键行内均分,左右边缘与卡片齐平 */
+.rate-below {
+  max-width: 400px;
+  margin: 16px auto 0;
+}
+.rate-below .rate-btn { flex: 1; min-width: 0; max-width: none; }
 .rate-btn {
-  flex: 0 0 auto;
-  min-width: 120px;
-  max-width: 150px;
   border-radius: 12px;
   padding: 11px 18px;
   font-size: 14px;
