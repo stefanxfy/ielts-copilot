@@ -1,54 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" width="100%" role="img">
-  <title>背单词学习动线</title>
-  <desc>从词库中心到复习完成的用户主路径与循环,学习台展示今日进度与词书进度条</desc>
-  <rect x="0" y="0" width="680" height="400" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 580" width="100%" role="img">
+  <title>背单词直达复习动线</title>
+  <desc>点击背单词直达认词卡session,零选词时中央引导去单词库,右上角今日进度与累计已背总数</desc>
+  <rect x="0" y="0" width="680" height="580" fill="#FFFFFF"/>
   <defs>
     <marker id="arrowFlow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
-  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">背单词主动线:导词 → 选词 → 复习循环</text>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">背单词主动线:打开即背,零选词先引导</text>
 
-  <rect x="40" y="64" width="170" height="96" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-  <text x="56" y="90" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#0C447C">1 · 词库中心</text>
-  <text x="56" y="110" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">/learn/books</text>
-  <text x="56" y="127" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">新建/导入词书</text>
-  <text x="56" y="144" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">点词书卡 → 词表浏览</text>
+  <rect x="240" y="52" width="200" height="34" rx="17" fill="#FAC775"/>
+  <text x="340" y="73" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#633806">导航 · 点击「背单词」</text>
 
-  <rect x="255" y="64" width="170" height="96" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-  <text x="271" y="90" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#0C447C">2 · 词表浏览(词库中心内)</text>
-  <text x="271" y="110" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">/learn/books/[bookId]</text>
-  <text x="271" y="127" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">浏览词表 · 试听</text>
-  <text x="271" y="144" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">勾选加入背诵计划</text>
+  <path d="M340 86 L340 106" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrowFlow)"/>
 
-  <rect x="470" y="64" width="170" height="96" rx="10" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.5"/>
-  <text x="486" y="90" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#633806">3 · 学习台</text>
-  <text x="486" y="110" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B">/learn</text>
-  <text x="486" y="127" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B">今日进度 10/30</text>
-  <text x="486" y="144" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B">在背词书进度条</text>
+  <path d="M340 108 L436 152 L340 196 L244 152 Z" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="340" y="148" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#0C447C">背词计划里</text>
+  <text x="340" y="164" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#0C447C">已有词?</text>
 
-  <path d="M210 112 L251 112" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrowFlow)"/>
-  <path d="M425 112 L466 112" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrowFlow)"/>
+  <path d="M244 152 L185 152 L185 222" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrowFlow)"/>
+  <text x="196" y="144" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">否 · 零选词</text>
 
-  <path d="M555 164 L555 200" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrowFlow)"/>
-  <text x="547" y="186" text-anchor="end" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">点「开始复习」</text>
+  <path d="M436 152 L495 152 L495 222" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrowFlow)"/>
+  <text x="452" y="144" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">是 · 有词</text>
 
-  <rect x="130" y="204" width="420" height="110" rx="10" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-  <text x="150" y="230" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#27500A">4 · 复习 session(/learn/review)</text>
-  <text x="150" y="250" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">认词卡(新词起步) → 连续 2 次认识升级默写</text>
-  <text x="150" y="267" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">默写三型按 vocab-card-policy 抽取:视觉 40 / 听觉 30 / 语境 30</text>
-  <text x="150" y="284" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">无图词自动剔除视觉型;评分 Good/Hard/Again 折算 FSRS 回写</text>
-  <text x="150" y="301" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">交互细节照抄 prototype/vocab/card-demo 已验证原型</text>
+  <rect x="40" y="228" width="290" height="96" rx="10" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+  <text x="56" y="252" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#444441">中央提示页(不渲染认词卡)</text>
+  <text x="56" y="271" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">文案「请先到单词库制定背词计划」</text>
+  <text x="56" y="288" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">此时不显示进度条与已背总数</text>
+  <rect x="56" y="296" width="112" height="22" rx="11" fill="#FAC775"/>
+  <text x="112" y="311" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#633806">去单词库 →</text>
 
-  <path d="M130 259 L96 259 L96 150" fill="none" stroke="#888780" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrowFlow)"/>
-  <text x="52" y="210" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">答完回学习台</text>
-  <text x="46" y="226" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">进度 +1</text>
+  <rect x="350" y="228" width="290" height="180" rx="10" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+  <text x="366" y="252" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#27500A">复习 session · 认词卡直达</text>
+  <text x="624" y="252" text-anchor="end" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#3B6D11">/learn</text>
+  <text x="366" y="272" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">学习台取消,session 即首页</text>
+  <text x="366" y="289" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">背词 + 复习一体:新词认卡起步,</text>
+  <text x="366" y="306" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">连续认识升级默写;FSRS 到期合并全部在背词书</text>
+  <text x="366" y="330" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#27500A">右上角常驻两件套:</text>
+  <text x="366" y="347" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">· 今日进度 10/30(制定了今日计划才显示)</text>
+  <text x="366" y="364" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">· 累计已背总词数(总是显示)</text>
+  <text x="366" y="388" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">答完一词进度 +1,FSRS 算到期,明日再来</text>
 
-  <path d="M550 259 L612 259 L612 172" fill="none" stroke="#888780" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrowFlow)"/>
-  <text x="618" y="196" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">FSRS 算到期</text>
-  <text x="618" y="212" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">明日再来</text>
+  <path d="M185 324 L185 366" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrowFlow)"/>
 
-  <rect x="40" y="336" width="600" height="40" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
-  <text x="56" y="352" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">学习台无打卡日历/到期队列:今日进度 10/30(累计完成/今日计划)在「开始复习」按钮上方以进度条</text>
-  <text x="56" y="368" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">+数字呈现;按词书分行展示各书进度条,beginner 友好,一眼看到"还剩多少"。</text>
+  <rect x="40" y="372" width="290" height="104" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="56" y="396" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#0C447C">单词库 · /learn/books</text>
+  <text x="314" y="396" text-anchor="end" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#185FA5">资料库 ▾ 亦可直达</text>
+  <text x="56" y="416" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">原「词库中心」改名,挂导航资料库下拉</text>
+  <text x="56" y="433" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">词书卡片 + 新建/导入</text>
+  <text x="56" y="450" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">点词书卡 → 词表浏览 → 勾选加入背诵计划</text>
+
+  <path d="M185 476 L185 504 L640 504 L640 414" fill="none" stroke="#888780" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrowFlow)"/>
+  <text x="400" y="496" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">选词入计划 → 再点「背单词」直达认词卡开背</text>
+
+  <rect x="40" y="524" width="600" height="40" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+  <text x="56" y="540" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">资料库 ▾ 下拉四项:单词库(实)/语法库/阅读库/视听库(后三项占位,点击无反应)。</text>
+  <text x="56" y="556" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">无学习台中转、无「开始复习」按钮——打开即背,答完即走;词书分行进度条随学习台一并取消。</text>
 </svg>
