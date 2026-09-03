@@ -265,6 +265,23 @@ function renderRecogCard(w) {
   const next = document.getElementById("nextBtn");
   if (prev) prev.onclick = () => recogNext(-1);
   if (next) next.onclick = () => recogNext(1);
+
+  // 方向键垂直位置：实测单词行中心精确对齐（替代百分比估算）。
+  // 必须在图片加载后重校——加载前 img 高度为 0，单词行位置会失真。
+  const alignSlideNav = () => {
+    const wordRow = $slot.querySelector(".recog-word-row");
+    const stage = $slot.querySelector(".recog-stage");
+    if (!wordRow || !stage) return;
+    const wr = wordRow.getBoundingClientRect();
+    const sr = stage.getBoundingClientRect();
+    const top = wr.top - sr.top + wr.height / 2 - 22; // 22 = 方向键半高(44/2)
+    document.getElementById("prevBtn").style.top = top + "px";
+    document.getElementById("nextBtn").style.top = top + "px";
+  };
+  alignSlideNav();
+  const recogImg = $slot.querySelector(".recog-img");
+  if (recogImg && !recogImg.complete) recogImg.addEventListener("load", alignSlideNav, { once: true });
+  window.addEventListener("resize", alignSlideNav);
 }
 
 // ---------- 默写卡（三型共用骨架） ----------
