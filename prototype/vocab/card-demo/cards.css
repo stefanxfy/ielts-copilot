@@ -351,65 +351,38 @@ body {
 .word-input.ok   { border-color: var(--success); color: var(--success); }
 .word-input.bad  { border-color: var(--destructive); color: var(--destructive); }
 
-/* ---------- 默写卡：无边框字母格（参考截图：底边线格 + 居中，无框框） ---------- */
+/* ---------- 默写卡：单行下划线输入（无边框、不换行，参考截图的下划线风） ---------- */
 .dictation-face {
   justify-content: flex-start;
 }
 .dict-input-area { margin-top: auto; padding-top: 18px; }
 
-.letter-grid {
-  position: relative;
-  display: flex;
-  gap: 7px;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-end;
-}
-.letter-cell {
-  width: 30px;
-  height: 44px;
+.word-line-input {
+  display: block;
+  width: 100%;
   border: none;
-  border-bottom: 2.5px solid var(--border);
+  border-bottom: 2px solid var(--border);
   background: transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 700;
+  padding: 6px 4px 10px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 2px;
   text-transform: lowercase;
+  white-space: nowrap;   /* 不换行 */
+  overflow-x: auto;      /* 超长横向滚动 */
+  outline: none;
   color: var(--foreground);
+  caret-color: var(--primary);
   transition: border-color .15s, color .15s;
 }
-.letter-cell.ok-c   { border-bottom-color: var(--success); color: var(--success); }
-.letter-cell.wrong  { border-bottom-color: var(--destructive); color: var(--destructive); }
-.cell-count {
-  position: absolute;
-  right: 0;
-  bottom: -20px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-  opacity: .7;
-  font-variant-numeric: tabular-nums;
-}
-
-/* 隐形输入框：盖住整个输入区承接击键（iOS 弹键盘需要真实 input），视觉不可见 */
-.dict-input-area { position: relative; }
-.ghost-input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font-size: 16px; /* 防 iOS 聚焦自动放大 */
-  background: transparent;
-  color: transparent;
-  caret-color: transparent;
-  cursor: default;
-}
+.word-line-input:focus { border-bottom-color: var(--primary); }
+.word-line-input::placeholder { color: var(--muted-foreground); opacity: .45; letter-spacing: 0; font-weight: 400; }
+.word-line-input.ok       { border-bottom-color: var(--success);   color: var(--success); }
+.word-line-input.bad      { border-bottom-color: var(--destructive); color: var(--destructive); }
+.word-line-input.revealed { border-bottom-color: var(--border); color: var(--destructive); }
+.word-line-input:disabled { opacity: 1; cursor: not-allowed; }
 
 /* ---------- 默写卡：提示区（分级揭示） ---------- */
 .dict-hint {

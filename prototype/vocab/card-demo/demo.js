@@ -77,8 +77,8 @@ const state = {
   // word_progress 单轨模拟：stage recognize|spell + 连续认识计数
   progress: Object.fromEntries(Object.keys(WORDS).map(w => [w, { stage: "recognize", streak: 0 }])),
   reviewLog: [], // { word, type, rating, ts }
-  spell: {},     // 默写卡按词状态：{ hints, done, result, guess }
-  _spoken: null, // 听觉默写「自动播 1 次」计时标记（wordId）
+  spell: {},     // 默写卡按 卡型:单词 状态：{ hints, done, result, guess }
+  _spoken: null, // 听觉默写「自动播 1 次」标记（卡型:单词）
 };
 
 const $slot = document.getElementById("cardSlot");
@@ -165,7 +165,7 @@ function recogNext(delta) {
 // ---------- 默写卡通用：导航放行规则（与认词卡一致） ----------
 // 当前词提交过（无论对错）→ 视为背过；背过后 左/右 箭头均可用
 function spellNextAllowed() {
-  const s = state.spell[state.wordId];
+  const s = state.spell[spellKey(state.wordId)];
   return !!(s && s.done);
 }
 function spellNav(delta) {
@@ -371,11 +371,14 @@ function renderRecogCard(w, opts = {}) {
 // · 判对：音效（0 提示 perfect / 1 提示 great / 2 提示 good）→ 自动下一个词
 // · 判错：音效 + 卡面全揭示（词+音标+释义），锁定输入；提交钮变「下一个」
 // · 左右方向键与认词卡一致；提交过本词（对错均可）后放行
+function spellKey(wordId) { return `${state.typeId}:${wordId}`; } // 三卡型提示/判分状态互相独立
+
 function spellState(wordId) {
-  if (!state.spell[wordId]) {
-    state.spell[wordId] = { hints: 0, done: false, result: null };
+  const key = spellKey(wordId);
+  if (!state.spell[key]) {
+    state.spell[key] = { hints: 0, done: false, result: null, guess: null };
   }
-  return state.spell[wordId];
+  return state.spell[key];
 }
 
 function renderDictation(w, type) {
@@ -422,7 +425,7 @@ function renderDictation(w, type) {
         <span class="dict-hint-text">${esc(w.translation)}</span>
       </div>`;
   }
-  if (s.done && s.result === "wrong") {
+  if (s.done && s.result === "wrong" && !s.gaveUp) { // 查看答案态答案已在输入行，不重复展示
     hintHtml += `
       <div class="dict-answer">
         <span class="dict-answer-label">正确拼写</span>
@@ -440,7 +443,9 @@ function renderDictation(w, type) {
           ${stimulus}
           ${hintHtml}
           <div class="dict-input-area">
-            <div class="letter-grid" id="letterGrid"></div>
+            <input class="word-line-input" id="answerInput" type="text"
+                   autocomplete="off" autocapitalize="off" spellcheck="false"
+                   ${s.done ? "disabled" : ""} />
             <div id="verdictSlot"></div>
           </div>
         </div>
@@ -450,45 +455,16 @@ function renderDictation(w, type) {
       </button>
     </div>
     <div class="dict-actions">
-      <button class="btn btn-ghost" id="hintBtn" ${s.done ? "disabled" : ""}>提示</button>
-      <button class="btn btn-primary" id="submitBtn">${s.done ? "下一个" : "提交"}</button>
+      <button class="btn btn-ghost" id="hintBtn" ${s.done ? "disabled" : ""}>${s.hints >= 2 ? "查看答案" : "提示"}</button>
+      <button class="btn btn-primary" id="submitBtn" ${s.gaveUp ? "disabled" : ""}>${s.done && !s.gaveUp ? "下一个" : "提交"}</button>
     </div>`;
 
-  // ---- 字母格：隐形输入框盖住整个输入区承接击键（iOS 弹键盘需真实 input），格子只做展示 ----
-  // 注意：输入框必须是格子的兄弟节点——renderCells 会重写 grid.innerHTML，子节点会被清掉
-  const inputArea = $slot.querySelector(".dict-input-area");
-  const grid = $slot.querySelector("#letterGrid");
-  const input = document.createElement("input");
-  input.className = "ghost-input";
-  input.setAttribute("autocomplete", "off");
-  input.setAttribute("autocapitalize", "off");
-  input.setAttribute("spellcheck", "false");
-  inputArea.appendChild(input);
-  // 判分后回放用户刚提交的拼写（逐格标对错）；未提交时空格展示
-  renderCells(grid, s.done ? (s.guess || "") : "", w.word, s);
-  if (!s.done) input.focus();
-
-  function renderCells(gridEl, value, word, st) {
-    const n = Math.max(word.length, value.length, 1);
-    let html = "";
-    for (let i = 0; i < n; i++) {
-      const ch = value[i] || "";
-      let cls = "letter-cell";
-      if (st.done && st.result !== "good") {
-        // 揭示后逐格标对错
-        if (ch) cls += ch.toLowerCase() === word[i]?.toLowerCase() ? " ok-c" : " wrong";
-      }
-      if (st.done && st.result === "good") cls += " ok-c";
-      html += `<span class="${cls}">${esc(ch)}</span>`;
-    }
-    gridEl.innerHTML = html + `<span class="cell-count">${value.length}/${word.length}</span>`;
-  }
-
+  // ---- 单行下划线输入（无格子、无字母数提示、不换行：超长横向滚动） ----
+  const input = document.getElementById("answerInput");
   input.addEventListener("input", () => {
-    // 仅小写字母；长度上限放宽 2 格，便于“多打几格再看对错”
-    const cleaned = input.value.toLowerCase().replace(/[^a-z]/g, "").slice(0, w.word.length + 2);
-    input.value = cleaned;
-    renderCells(grid, cleaned, w.word, s);
+    // 仅小写字母；不限制长度也不换行，超宽由输入框自身横向滚动
+    input.value = input.value.toLowerCase().replace(/[^a-z]/g, "");
+    s.draft = input.value; // 未提交草稿：重渲染（点提示）后恢复
   });
   input.addEventListener("keydown", e => {
     if (e.key === "Enter") {
@@ -496,8 +472,14 @@ function renderDictation(w, type) {
       submit(); // done 后回车 = 进下一个词
     }
   });
-  // 判分后锁输入：done 态输入框禁用，格子只读展示
-  if (s.done) input.disabled = true;
+  if (s.done) {
+    // 判分后回放：判错显示用户拼写并标红；查看答案显示正确单词（灰色锁定，不可修改）
+    input.value = s.gaveUp ? w.word : (s.guess || "");
+    input.classList.add(s.gaveUp ? "revealed" : (s.result === "good" ? "ok" : "bad"));
+  } else {
+    if (s.draft) input.value = s.draft; // 点提示等重渲染后恢复未提交草稿
+    input.focus();
+  }
 
   // ---- 提交 / 下一个 ----
   const submitBtn = document.getElementById("submitBtn");
@@ -509,14 +491,30 @@ function renderDictation(w, type) {
   }
   submitBtn.onclick = submit;
 
-  // ---- 提示（两级；done 后禁用） ----
+  // ---- 提示按钮：两级提示用尽后变「查看答案」----
+  // 点「提示」循环 +1（一级/二级）；点「查看答案」= 放弃：答案填入输入行锁定、
+  // 提交钮禁用，只能方向键 上一个/下一个，记不认识（again）
   const hintBtn = document.getElementById("hintBtn");
   if (hintBtn && !s.done) hintBtn.onclick = () => {
-    if (s.hints >= 2) return;
-    s.hints += 1;
-    if (type !== "audio" && s.hints === 1) speak(w.word); // 一级提示附读音（听觉型本身就在听）
-    pushLog(typeName(type), `hint${s.hints}`);
-    render();
+    if (s.hints < 2) {
+      s.hints += 1;
+      if (type !== "audio" && s.hints === 1) speak(w.word); // 一级提示附读音（听觉型本身就在听）
+      pushLog(typeName(type), `hint${s.hints}`);
+      render();
+    } else {
+      // 查看答案 = 不认识
+      s.done = true;
+      s.gaveUp = true;
+      s.result = "wrong";
+      s.guess = null;
+      s.draft = null;
+      sfxWrong();
+      pushLog(typeName(type), "reveal");
+      const p = state.progress[state.wordId];
+      p.stage = "recognize";
+      p.streak = 0;
+      renderDictation(w, type);
+    }
   };
   // ---- 提示区发音 ----
   const hp = document.getElementById("hintPronBtn");
@@ -544,9 +542,9 @@ function renderDictation(w, type) {
     });
   }
 
-  // ---- 判分结果徽标 ----
+  // ---- 判分结果徽标（查看答案态不显示徽标，答案已在输入行） ----
   const verdictSlot = document.getElementById("verdictSlot");
-  if (s.done && verdictSlot) {
+  if (s.done && !s.gaveUp && verdictSlot) {
     let badge = "";
     if (s.result === "good") {
       const label = s.hints === 0 ? "Perfect" : s.hints === 1 ? "Great" : "Good";
@@ -557,9 +555,9 @@ function renderDictation(w, type) {
     verdictSlot.innerHTML = badge;
   }
 
-  // ---- 听觉型：自动播 1 次 ----
-  if (type === "audio" && !s.done && state._spoken !== state.wordId) {
-    state._spoken = state.wordId;
+  // ---- 听觉型：自动播 1 次（按卡型独立标记） ----
+  if (type === "audio" && !s.done && state._spoken !== spellKey(state.wordId)) {
+    state._spoken = spellKey(state.wordId);
     setTimeout(() => speak(w.word), 350);
   }
 }
@@ -577,6 +575,7 @@ function grade(w, type, guessRaw) {
   s.done = true;
   s.result = ok ? "good" : "wrong";
   s.guess = guess;
+  s.draft = null;
 
   const p = state.progress[state.wordId];
   if (ok) {
