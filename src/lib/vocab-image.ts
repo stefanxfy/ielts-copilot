@@ -22,58 +22,22 @@ import type { WordContent } from "@/db/schema";
 import { readConfig } from "@/lib/config";
 import { getSetting, setSetting } from "@/lib/study/settings";
 import { publicDir } from "@/lib/paths";
+import {
+  DEFAULT_VOCAB_IMAGE_STYLE,
+  VOCAB_IMAGE_STYLES,
+  isVocabImageStyleId,
+  type VocabImageStyleId,
+} from "@/lib/vocab-image-styles";
 
-/* ---------- 风格池(§6.1 定稿 5 选;前缀与调试脚本逐字一致,便于对比复现) ---------- */
+/* ---------- 风格池与风格 id:单一来源在 vocab-image-styles.ts(client 安全),此处转发 ---------- */
 
-export const VOCAB_IMAGE_STYLES = {
-  s1: {
-    label: "暖色扁平插画",
-    desc: "pastel 绘本、扁平暖色,词义可读性最好",
-    prefix:
-      "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style",
-  },
-  s6: {
-    label: "彩铅手绘",
-    desc: "铅笔颗粒质感、绘本内页感",
-    prefix:
-      "Detailed colored pencil drawing, soft hand-drawn strokes, delicate pencil grain texture, warm harmonious colors, storybook illustration page, gentle lighting, no text, no letters",
-  },
-  s8: {
-    label: "暖调胶片摄影",
-    desc: "Kodak Portra 色调、胶片颗粒、怀旧氛围",
-    prefix:
-      "Warm analog film photography, Kodak Portra color tones, soft natural window light, subtle film grain, 35mm candid composition, nostalgic warm atmosphere, one clear subject, no text, no letters, no watermark",
-  },
-  s10: {
-    label: "古风动漫",
-    desc: "国风动画关键帧、水墨渐变、雾气氛围",
-    prefix:
-      "Ancient Chinese style anime illustration, guofeng donghua key visual, flowing ink-wash color gradients, misty atmosphere, traditional oriental aesthetics, delicate line art, elegant muted palette, cinematic composition, no text, no letters",
-  },
-  s11: {
-    label: "巨构史诗",
-    desc: "巨构背景、渺小主体对比、史诗构图",
-    prefix:
-      "Epic colossal megastructure concept art, monumental sci-fi architecture towering into the clouds in the background, tiny subjects for dramatic scale contrast, atmospheric haze, volumetric light, cinematic wide-angle matte painting, no text, no letters",
-  },
-} as const;
-
-export type VocabImageStyleId = keyof typeof VOCAB_IMAGE_STYLES;
-
-export const DEFAULT_VOCAB_IMAGE_STYLE: VocabImageStyleId = "s1";
-
-/** 供设置页下拉/选择器渲染的风格列表 */
-export function vocabImageStyleOptions() {
-  return Object.entries(VOCAB_IMAGE_STYLES).map(([id, s]) => ({
-    id: id as VocabImageStyleId,
-    label: s.label,
-    desc: s.desc,
-  }));
-}
-
-export function isVocabImageStyleId(v: unknown): v is VocabImageStyleId {
-  return typeof v === "string" && v in VOCAB_IMAGE_STYLES;
-}
+export {
+  DEFAULT_VOCAB_IMAGE_STYLE,
+  VOCAB_IMAGE_STYLES,
+  isVocabImageStyleId,
+  vocabImageStyleOptions,
+  type VocabImageStyleId,
+} from "@/lib/vocab-image-styles";
 
 /* ---------- 风格偏好(app_settings.vocab_image_style) ---------- */
 

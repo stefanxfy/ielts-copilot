@@ -32,6 +32,7 @@ import { PromptCard } from "@/components/settings/prompt-card";
 import { PunchRulesCard } from "@/components/settings/punch-rules-card";
 import { StudyPrefsCard } from "@/components/settings/study-prefs-card";
 import { TemplateRulesCard } from "@/components/settings/template-rules-card";
+import { VocabImageStyleCard } from "@/components/settings/vocab-image-style-card";
 import { useSettings } from "@/stores/settings";
 import {
   DEFAULT_UI_THEME,
@@ -411,6 +412,7 @@ export default function SettingsPage() {
         <h2 className={H2}>备考</h2>
         <PunchRulesCard />
         <StudyPrefsCard />
+        <VocabImageStyleCard />
         <TemplateRulesCard />
       </section>
 
