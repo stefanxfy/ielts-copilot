@@ -71,7 +71,8 @@ const CARD_TYPES = [
 const state = {
   wordId: "abandon",
   typeId: "recog",
-  recogRevealed: false, // 认词卡：点了模糊/不认识后展开中文释义 + 上/下一个导航
+  recogRevealed: false, // 认词卡：点了模糊/不认识后展开中文释义
+  rated: new Set(), // 背过的词(点过 认识/模糊/不认识 任一键)——右箭头只对背过的词放行
   // word_progress 单轨模拟：stage recognize|spell + 连续认识计数
   progress: Object.fromEntries(Object.keys(WORDS).map(w => [w, { stage: "recognize", streak: 0 }])),
   reviewLog: [], // { word, type, rating, ts }
@@ -149,8 +150,13 @@ function goWord(id) {
 function recogNext(delta) {
   const ids = Object.keys(WORDS);
   const i = ids.indexOf(state.wordId) + delta;
-  if (i < 0 || i >= ids.length) return; // 首个没有上一个，末尾没有下一个
+  if (i < 0 || i >= ids.length) return; // 首个没有上一个,末尾没有下一个
   goWord(ids[i]);
+}
+
+/** 下一个箭头放行规则:当前词已背过(点过任一评分键)。背过的词回来时随时可点下一个 */
+function nextAllowed() {
+  return state.rated.has(state.wordId);
 }
 
 function renderChips() {
@@ -220,7 +226,7 @@ function renderRecogCard(w) {
           </div>` : ""}
         </div>
       </div>
-      <button class="slide-nav slide-nav-next" id="nextBtn" ${hasNext ? "" : "disabled"} title="下一个单词" aria-label="下一个单词">
+      <button class="slide-nav slide-nav-next" id="nextBtn" ${hasNext && nextAllowed() ? "" : "disabled"} title="下一个单词(背过当前词后解锁)" aria-label="下一个单词">
         ${chevronSvg("right")}
       </button>
       <div class="rate-row rate-below">
@@ -237,15 +243,16 @@ function renderRecogCard(w) {
 
   function rate(r) {
     const p = state.progress[state.wordId];
+    state.rated.add(state.wordId); // 点过任一评分键 → 该词背过,右箭头解锁
     if (r === "good") {
       p.streak += 1;
       if (p.streak >= 2) { p.stage = "spell"; }  // 连续 2 次认识 → 升级默写
       pushLog("认词", r);
       if (hasNext) { goWord(ids[idx + 1]); return; }  // 认识 → 自动跳下一个
-      render(); // 已是最后一个：留在原地（正式实现接 session 结算）
+      render(); // 已是最后一个：留在原地(正式实现接 session 结算)
       return;
     }
-    // 模糊 / 不认识 → 展开中文释义 + 上/下一个导航
+    // 模糊 / 不认识 → 展开中文释义
     p.streak = 0;
     if (p.stage === "spell") p.stage = "recognize";  // 降级回认词
     pushLog("认词", r);
