@@ -17,6 +17,12 @@ const FEATURES = [
   { name: "分数曲线", ver: "V3", desc: "历次模考 band 追踪，看趋势" },
   { name: "生词本", ver: "V3", desc: "阅读点词收藏，导出 Anki 背单词" },
   {
+    name: "词库中心",
+    ver: "M2",
+    desc: "词书卡片列表 · 一行一词导入 · 风格/音色可视化选择",
+    href: "/learn/books",
+  },
+  {
     name: "背单词演示",
     ver: "P8",
     desc: "100 词垂直切片 · 单词+例句音频播放 · 8 套皮肤融合",
