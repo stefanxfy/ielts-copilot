@@ -19,16 +19,17 @@
   <text x="78" y="184" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">进度条 + 导入中 spinner</text>
 
   <rect x="254" y="106" width="170" height="88" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
-  <text x="268" y="130" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#444441">新建词库弹窗</text>
-  <text x="268" y="150" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">粘贴 / 上传 txt 双 tab</text>
-  <text x="268" y="167" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">格式提示:一行一词</text>
-  <text x="268" y="184" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">生图策略三选</text>
+  <text x="268" y="124" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#444441">新建词库弹窗(导入并入)</text>
+  <text x="268" y="140" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">粘贴/上传 txt · 生图策略三选</text>
+  <text x="268" y="156" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">配图风格五选·缩略图预览</text>
+  <text x="268" y="172" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">音色选择(词/句分开)·试听</text>
+  <text x="268" y="188" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">默认 Andrew/Emma · s1</text>
 
   <rect x="444" y="106" width="170" height="88" rx="8" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
   <text x="458" y="130" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#444441">导入四步进度</text>
   <text x="458" y="150" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">解析去重 → 抓释义</text>
-  <text x="458" y="167" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">→ TTS → 核心词生图</text>
-  <text x="458" y="184" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">完成后出未命中清单</text>
+  <text x="458" y="167" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">→ TTS(词Andrew/句Emma)</text>
+  <text x="458" y="183" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">→ 核心词生图 · 未命中清单</text>
 
   <path d="M234 150 L250 150" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrow4)"/>
   <path d="M424 150 L440 150" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrow4)"/>
@@ -37,8 +38,8 @@
 
   <rect x="40" y="248" width="290" height="76" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
   <text x="64" y="274" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#0C447C">POST /api/vocab-book(#61)</text>
-  <text x="64" y="294" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">{name, words[], genStrategy}</text>
-  <text x="64" y="311" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">异步任务 · 轮询 GET 任务状态</text>
+  <text x="64" y="294" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">{name, words[], genStrategy,</text>
+  <text x="64" y="311" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">imageStyle, voiceWord, voiceSent}</text>
 
   <rect x="350" y="248" width="290" height="76" rx="10" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
   <text x="374" y="274" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#27500A">学习动线</text>

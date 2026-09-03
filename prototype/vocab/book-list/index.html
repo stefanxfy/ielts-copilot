@@ -14,21 +14,20 @@
     <p class="sub">词库卡片列表 · 内置/自定义词库统一管理 · 点击卡片进入学习 · 卡片 hover 出操作</p>
   </div>
   <div class="toolbar">
-    <button class="btn btn-ghost" id="importBtn">导入词库</button>
-    <button class="btn btn-primary" id="newBtn">＋ 新建词库</button>
+    <button class="btn btn-primary" id="newBtn">＋ 新建 / 导入词库</button>
   </div>
 </header>
 
 <!-- 词库卡片网格 -->
 <main class="book-grid" id="bookGrid"><!-- JS 注入卡片 --></main>
 
-<!-- 新建/导入词库弹窗 -->
+<!-- 新建词库弹窗（导入并入新建：txt 词表即新建入口） -->
 <div class="modal-mask" id="modalMask">
   <div class="modal">
     <!-- 第一步：基本信息 + 导入内容 -->
     <section id="stepForm">
       <h2>新建词库</h2>
-      <p class="modal-sub">txt 一行一词，导入后自动补全释义 / 例句 / 音频（百词斩数据源）</p>
+      <p class="modal-sub">粘贴 / 上传 txt 词表（一行一词）即完成导入，释义 / 例句 / 音频 / 配图自动补全</p>
 
       <div class="upload-tabs">
         <button class="upload-tab active" data-tab="paste">粘贴文本</button>
@@ -83,6 +82,30 @@
         </div>
       </div>
 
+      <div class="field">
+        <label>配图风格 <span class="label-tip">点缩略图选择 · 同一句词的实拍样图对比</span></label>
+        <div class="style-grid" id="styleGrid"><!-- JS 注入风格卡片 --></div>
+      </div>
+
+      <div class="field">
+        <label>发音音色 <span class="label-tip">edge-tts 生成 · 点 🔶 试听样音</span></label>
+        <div class="voice-row">
+          <div class="voice-cell">
+            <div class="v-label">单词读音</div>
+            <select id="voiceWord"></select>
+            <button class="voice-play" id="playVoiceWord" title="试听单词读音">▶</button>
+          </div>
+          <div class="voice-cell">
+            <div class="v-label">例句读音</div>
+            <select id="voiceSent"></select>
+            <button class="voice-play" id="playVoiceSent" title="试听例句读音">▶</button>
+          </div>
+        </div>
+        <div class="format-hint" style="margin-top:8px">
+          默认：单词 <b>Andrew</b>（男·美音，节奏自然） / 例句 <b>Emma</b>（女·美音，停顿韵律最佳），例句统一放慢 8%。试音结论：Multilingual 系（Andrew/Emma/Ava/Brian）韵律优于经典英音 Neural 系。
+        </div>
+      </div>
+
       <div class="modal-actions">
         <button class="btn btn-ghost" id="cancelBtn">取消</button>
         <button class="btn btn-primary" id="startImportBtn">开始导入</button>
@@ -98,8 +121,8 @@
         <div class="steps">
           <div class="step-item" id="step1"><span class="dot">1</span>解析词表 · 去重合并</div>
           <div class="step-item" id="step2"><span class="dot">2</span>抓取释义 / 例句（百词斩数据源）</div>
-          <div class="step-item" id="step3"><span class="dot">3</span>合成发音音频（edge-tts 英音）</div>
-          <div class="step-item" id="step4"><span class="dot">4</span>核心词批量生图（<span id="progGenCount">—</span>）</div>
+          <div class="step-item" id="step3"><span class="dot">3</span><span id="step3Text">合成发音音频</span></div>
+          <div class="step-item" id="step4"><span class="dot">4</span><span id="step4Text">核心词批量生图</span>（<span id="progGenCount">—</span>）</div>
         </div>
       </div>
       <div class="modal-actions">

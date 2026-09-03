@@ -38,7 +38,12 @@ const LIMIT = args.limit ? parseInt(args.limit, 10) : Infinity;
 const SEED = args.seed ?? "./seeds/ielts-100.txt";
 const BOOK_ID = "ielts-core-pilot";
 const BCZ_BASE = "https://cdn.jsdelivr.net/gh/lyc8503/baicizhan-word-meaning-API/data/words/";
-const VOICE = "en-GB-RyanNeural";
+// 音色策略(2026-09-03 用户试音定稿):单词=Andrew(节奏最佳男声),例句=Emma(女声韵律最佳)。
+// Multilingual 系韵律显著优于经典 Neural 系(停顿/连读/语调接近真人)。
+// CLI 可覆盖: --voice-word= --voice-sent= ;例句统一 --rate=-8% 稍慢,停顿感更明显。
+const VOICE_WORD = args["voice-word"] ?? "en-US-AndrewMultilingualNeural";
+const VOICE_SENT = args["voice-sent"] ?? "en-US-EmmaMultilingualNeural";
+const SENT_RATE = "--rate=-8%";
 
 // ===== DB =====
 const sqlite = new Database("./data/app.db");
@@ -70,8 +75,9 @@ async function fetchWithRetry(url, attempts = 3) {
  * 调 edge-tts (Python CLI) 合成音频,落 mp3。
  * 用 managed venv 下的 edge-tts(pip 装在 default env,免污染系统)。
  * 失败重试 3 次 + 退避(speech.platform.bing.com 偶发 SSL reset)。
+ * extraArgs: 例句传 [SENT_RATE] 实现稍慢语速。
  */
-async function synth(text, outPath, voice = VOICE, retries = 3) {
+async function synth(text, outPath, voice, extraArgs = [], retries = 3) {
   await mkdir(dirname(outPath), { recursive: true });
   if (existsSync(outPath) && (await import("node:fs/promises")).stat) {
     const stat = await (await import("node:fs/promises")).stat(outPath).catch(() => null);
@@ -82,7 +88,7 @@ async function synth(text, outPath, voice = VOICE, retries = 3) {
     const result = await new Promise((resolve) => {
       const child = spawn(
         py,
-        ["-m", "edge_tts", "--voice", voice, "--text", text, "--write-media", outPath],
+        ["-m", "edge_tts", "--voice", voice, ...extraArgs, "--text", text, "--write-media", outPath],
         { stdio: ["ignore", "pipe", "pipe"] },
       );
       let stderr = "";
@@ -281,7 +287,12 @@ const touchedIds = new Set(); // 记录哪些 word 需要回写 contentJson
 async function worker() {
   while (cursor < jobs.length) {
     const job = jobs[cursor++];
-    const r = await synth(job.text, job.outPath);
+    const r = await synth(
+      job.text,
+      job.outPath,
+      job.kind === "word" ? VOICE_WORD : VOICE_SENT,
+      job.kind === "sent" ? [SENT_RATE] : [],
+    );
     if (r.ok) {
       if (job.kind === "word") wordAudioOk++;
       else sentAudioOk++;

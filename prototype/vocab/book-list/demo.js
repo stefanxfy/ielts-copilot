@@ -113,10 +113,70 @@ function btnFlash(card, text) {
   setTimeout(() => { card.querySelector(".book-name").textContent = old; }, 900);
 }
 
+/* ---------- 配图风格池（对齐 src/lib/vocab-image-styles.ts）---------- */
+const IMAGE_STYLES = [
+  { id: "s1",  label: "暖色扁平插画", desc: "pastel 绘本 · 词义可读性最好",  img: "img/styles/s1-v1.png",  def: true },
+  { id: "s6",  label: "彩铅手绘",     desc: "铅笔颗粒 · 绘本内页感",          img: "img/styles/s6-v2.png" },
+  { id: "s8",  label: "暖调胶片摄影", desc: "Kodak 色调 · 胶片颗粒",          img: "img/styles/s8-v2.png" },
+  { id: "s10", label: "古风动漫",     desc: "国风动画 · 水墨渐变",            img: "img/styles/s10-v2.png" },
+  { id: "s11", label: "巨构史诗",     desc: "巨构对比 · 史诗构图",            img: "img/styles/s11-v2.png" },
+];
+let selectedStyle = "s1";
+
+function renderStyleGrid() {
+  const grid = document.getElementById("styleGrid");
+  grid.innerHTML = IMAGE_STYLES.map(
+    (s) => `
+    <div class="style-card ${s.id === selectedStyle ? "selected" : ""}" data-style="${s.id}">
+      <img src="${s.img}" alt="${s.label} 预览（abandon 样图）">
+      <div class="style-meta">
+        <div class="style-name">${s.label}${s.def ? ' <span class="def-tag">默认</span>' : ""}</div>
+        <div class="style-desc">${s.desc}</div>
+      </div>
+    </div>`,
+  ).join("");
+}
+document.getElementById("styleGrid").addEventListener("click", (e) => {
+  const card = e.target.closest(".style-card");
+  if (!card) return;
+  selectedStyle = card.dataset.style;
+  renderStyleGrid();
+});
+
+/* ---------- 发音音色池（2026-09-03 试音定稿，对齐 pipeline 默认）---------- */
+const VOICES = [
+  { id: "en-US-AndrewMultilingualNeural", name: "Andrew", tag: "男·美音·节奏最佳", wordDef: true },
+  { id: "en-US-BrianMultilingualNeural",  name: "Brian",  tag: "男·美音" },
+  { id: "en-US-AvaMultilingualNeural",    name: "Ava",    tag: "女·美音" },
+  { id: "en-US-EmmaMultilingualNeural",   name: "Emma",   tag: "女·美音·韵律最佳", sentDef: true },
+  { id: "en-GB-SoniaNeural",              name: "Sonia",  tag: "女·英音" },
+  { id: "en-GB-LibbyNeural",              name: "Libby",  tag: "女·英音" },
+];
+const VOICE_BY_ID = Object.fromEntries(VOICES.map((v) => [v.id, v]));
+
+function fillVoiceSelect(id, defVoiceId) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = VOICES.map(
+    (v) =>
+      `<option value="${v.id}" ${v.id === defVoiceId ? "selected" : ""}>${v.name}（${v.tag}${v.id === defVoiceId ? " · 默认" : ""}）</option>`,
+  ).join("");
+}
+fillVoiceSelect("voiceWord", "en-US-AndrewMultilingualNeural");
+fillVoiceSelect("voiceSent", "en-US-EmmaMultilingualNeural");
+
+/* 试听：一个 Audio 实例复用，切换时打断上一个 */
+let auditionAudio = null;
+function playVoice(voiceId) {
+  if (auditionAudio) { auditionAudio.pause(); auditionAudio = null; }
+  auditionAudio = new Audio(`audio/${VOICE_BY_ID[voiceId].name}.mp3`);
+  auditionAudio.play();
+}
+document.getElementById("playVoiceWord").onclick = () => playVoice(document.getElementById("voiceWord").value);
+document.getElementById("playVoiceSent").onclick = () => playVoice(document.getElementById("voiceSent").value);
+
 /* ---------- 新建 / 导入弹窗 ---------- */
 const $mask = document.getElementById("modalMask");
 document.getElementById("newBtn").onclick = openModal;
-document.getElementById("importBtn").onclick = openModal;
 document.getElementById("cancelBtn").onclick = closeModal;
 $mask.addEventListener("click", (e) => { if (e.target === $mask) closeModal(); });
 document.getElementById("doneBtn").onclick = closeModal;
@@ -125,6 +185,7 @@ function openModal() {
   $mask.classList.add("open");
   document.getElementById("stepForm").style.display = "";
   document.getElementById("stepProgress").style.display = "none";
+  renderStyleGrid();
 }
 
 function closeModal() { $mask.classList.remove("open"); }
@@ -170,8 +231,14 @@ document.getElementById("startImportBtn").onclick = () => {
   const name = document.getElementById("bookName").value.trim() || "未命名词库";
   const core = document.getElementById("genCore").checked;
   const coreCount = core ? Math.round(words.length * 0.72) : (document.getElementById("genAll").checked ? words.length : 0);
+  const wv = VOICE_BY_ID[document.getElementById("voiceWord").value];
+  const sv = VOICE_BY_ID[document.getElementById("voiceSent").value];
+  const style = IMAGE_STYLES.find((s) => s.id === selectedStyle);
   document.getElementById("progBookName").textContent = name;
   document.getElementById("progGenCount").textContent = coreCount ? `核心词 ${coreCount} 张` : "跳过";
+  document.getElementById("step3Text").textContent = `合成发音音频（单词 ${wv.name} / 例句 ${sv.name}，-8%）`;
+  document.getElementById("step4Text").textContent = `核心词批量生图（${style.label}）`;
+  console.log("[demo] 导入参数:", { name, style: selectedStyle, voiceWord: wv.id, voiceSent: sv.id });
 
   document.getElementById("stepForm").style.display = "none";
   document.getElementById("stepProgress").style.display = "";
@@ -206,6 +273,7 @@ function simulateSteps(n, coreCount, name) {
         hasAudio: true,
         imgCount: coreCount,
         status: "ready",
+        style: selectedStyle,
       });
       render();
       setTimeout(closeModal, 700);
@@ -214,3 +282,6 @@ function simulateSteps(n, coreCount, name) {
 }
 
 render();
+
+/* URL 带 ?open=1 自动打开弹窗（截图/演示用） */
+if (new URLSearchParams(location.search).get("open") === "1") openModal();
