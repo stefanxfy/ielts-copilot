@@ -154,15 +154,26 @@ const VOICES = [
 ];
 const VOICE_BY_ID = Object.fromEntries(VOICES.map((v) => [v.id, v]));
 
+/* 选项文本保持极短：只显示名字 +（默认）标记；详细标签放在选中态旁的 small 里 */
 function fillVoiceSelect(id, defVoiceId) {
   const sel = document.getElementById(id);
   sel.innerHTML = VOICES.map(
     (v) =>
-      `<option value="${v.id}" ${v.id === defVoiceId ? "selected" : ""}>${v.name}（${v.tag}${v.id === defVoiceId ? " · 默认" : ""}）</option>`,
+      `<option value="${v.id}" ${v.id === defVoiceId ? "selected" : ""}>${v.name}${v.id === defVoiceId ? "（默认）" : ""}</option>`,
   ).join("");
 }
 fillVoiceSelect("voiceWord", "en-US-AndrewMultilingualNeural");
 fillVoiceSelect("voiceSent", "en-US-EmmaMultilingualNeural");
+
+/* 选中音色的描述标签渲染在下拉旁（不进 option，避免挤爆一行） */
+function updateVoiceTag(selectId, tagId) {
+  const v = VOICE_BY_ID[document.getElementById(selectId).value];
+  document.getElementById(tagId).textContent = v.tag;
+}
+document.getElementById("voiceWord").addEventListener("change", () => updateVoiceTag("voiceWord", "tagWord"));
+document.getElementById("voiceSent").addEventListener("change", () => updateVoiceTag("voiceSent", "tagSent"));
+updateVoiceTag("voiceWord", "tagWord");
+updateVoiceTag("voiceSent", "tagSent");
 
 /* 试听：一个 Audio 实例复用，切换时打断上一个 */
 let auditionAudio = null;

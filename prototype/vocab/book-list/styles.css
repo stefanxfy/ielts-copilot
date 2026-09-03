@@ -333,16 +333,35 @@ body {
 .voice-cell .v-label { font-size: 12px; color: var(--muted-foreground); flex-shrink: 0; width: 52px; }
 .voice-cell select {
   flex: 1;
-  padding: 7px 9px;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 7px 26px 7px 11px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 9px;
   font-size: 12.5px;
-  background: var(--card);
+  background: var(--card)
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a8a29e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
   color: var(--foreground);
   outline: none;
   min-width: 0;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.voice-cell select:focus { border-color: var(--ring); }
+.voice-cell select:hover { border-color: var(--ring); }
+.voice-cell select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px oklch(0.83 0.13 82 / 0.3);
+}
+.voice-tags { display: flex; gap: 8px; margin-top: 7px; }
+.voice-tag {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  background: var(--muted);
+  border-radius: 99px;
+  padding: 2px 9px;
+}
+.voice-tag:empty { display: none; }
 .voice-play {
   width: 28px; height: 28px; flex-shrink: 0;
   border-radius: 50%;
