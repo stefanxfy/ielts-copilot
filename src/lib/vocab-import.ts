@@ -62,6 +62,8 @@ export interface VocabImportTaskState {
   /** parse → bcz → ecdict → db → tts → image → done */
   phase: string;
   phaseLabel: string;
+  /** 词库名称(列表页「导入中」卡片标题用) */
+  name: string;
   bookId?: string;
   total: number;
   /** 已处理词数(各阶段累计推进,前端粗粒度进度用) */
@@ -92,6 +94,11 @@ function taskMap(): Map<string, VocabImportTaskState> {
 
 export function getImportTask(id: string): VocabImportTaskState | undefined {
   return taskMap().get(id);
+}
+
+/** 全部进行中任务(词库列表页「导入中」卡片渲染用) */
+export function listRunningImportTasks(): VocabImportTaskState[] {
+  return [...taskMap().values()].filter((t) => t.status === "running");
 }
 
 /** 最多保留 20 个历史任务态,防内存缓慢膨胀(单用户本地无所谓,防御性) */
@@ -154,6 +161,7 @@ export function startImportTask(raw: unknown): { ok: true; value: StartImportRes
     status: "running",
     phase: "parse",
     phaseLabel: PHASE_LABELS.parse,
+    name,
     bookId,
     total: body.words.length,
     done: 0,

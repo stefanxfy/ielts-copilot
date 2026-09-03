@@ -20,6 +20,7 @@ import { eq, asc, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { wordBooks, words, bookWordRelation, wordProgress } from "@/db/schema";
 import { hasVocabImage } from "@/lib/vocab-card-policy";
+import { listRunningImportTasks } from "@/lib/vocab-import";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +45,11 @@ export async function GET(req: Request) {
         .leftJoin(wordProgress, eq(wordProgress.wordId, words.id))
         .where(eq(bookWordRelation.bookId, b.id))
         .all();
+      // 封面池:书内有配图的词图 web 路径(词书表无封面字段,取词配图充任);
+      // 列表页「重新生成封面」在此池内轮换
+      const coverPool = rows
+        .filter((r) => hasVocabImage(r.contentJson))
+        .map((r) => r.contentJson.image!);
       return {
         bookId: b.bookId,
         name: b.name,
@@ -54,12 +60,23 @@ export async function GET(req: Request) {
         imageCount: rows.filter((r) => hasVocabImage(r.contentJson)).length,
         audioCount: rows.filter((r) => r.contentJson?.audio?.word).length,
         missingImageCount: rows.filter((r) => !hasVocabImage(r.contentJson)).length,
+        coverImage: coverPool[0] ?? null,
+        coverPool,
       };
     });
-    return NextResponse.json({ books: summary });
+    // 进行中导入任务(原型「导入中」卡片:_GRE 3000(导入中…)),进程重启即丢
+    const importing = listRunningImportTasks().map((t) => ({
+      taskId: t.id,
+      name: t.name,
+      phaseLabel: t.phaseLabel,
+      total: t.total,
+      done: t.done,
+    }));
+    return NextResponse.json({ books: summary, importing });
   }
 
-  // ===== 有 bookId:单书词条(P8 演示页) =====
+  // ===== 有 bookId:单书词条(词表浏览页 S2 用) =====
+  // 每词带 id + inPlan(是否已在背诵计划,即 word_progress 有行),供「选词入计划」标注。
   const book = db
     .select()
     .from(wordBooks)
@@ -70,15 +87,18 @@ export async function GET(req: Request) {
   }
   const rows = db
     .select({
+      id: words.id,
       word: words.word,
       phoneticUk: words.phoneticUk,
       phoneticUs: words.phoneticUs,
       contentJson: words.contentJson,
       origin: words.origin,
       order: bookWordRelation.order,
+      inPlan: sql<number>`CASE WHEN ${wordProgress.id} IS NULL THEN 0 ELSE 1 END`,
     })
     .from(bookWordRelation)
     .innerJoin(words, eq(words.id, bookWordRelation.wordId))
+    .leftJoin(wordProgress, eq(wordProgress.wordId, words.id))
     .where(eq(bookWordRelation.bookId, book.id))
     .orderBy(asc(bookWordRelation.order))
     .all();
@@ -91,7 +111,7 @@ export async function GET(req: Request) {
       source: book.source,
       wordCount: rows.length,
     },
-    words: rows,
+    words: rows.map((r) => ({ ...r, inPlan: Number(r.inPlan) > 0 })),
   });
 }
 
