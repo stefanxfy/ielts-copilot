@@ -512,9 +512,18 @@ interface TtsJob {
 /* ---------- 子模块:edge-tts 合成 ---------- */
 
 /** managed venv python(可用环境变量覆盖);CLI 管线同款 */
-const EDGE_TTS_PY = process.env.EDGE_TTS_PY ?? "/Users/fanyunxu/.workbuddy/binaries/python/envs/default/bin/python3";
+export const EDGE_TTS_PY = process.env.EDGE_TTS_PY ?? "/Users/fanyunxu/.workbuddy/binaries/python/envs/default/bin/python3";
 
-async function synthOne(text: string, out: string, voice: string, rate: string | null, retries = 5): Promise<boolean> {
+/**
+ * 合成单条音频(单词级重生成复用,见 vocab-regen.ts;勿改签名语义)
+ */
+export async function synthOne(
+  text: string,
+  out: string,
+  voice: string,
+  rate: string | null,
+  retries = 5,
+): Promise<boolean> {
   if (existsSync(out) && statSync(out).size > 1000) return true; // 已有跳过(幂等;0 字节失败残留不短路)
   await mkdir(join(out, ".."), { recursive: true });
   const args = ["-m", "edge_tts", "--voice", voice, "--text", text, "--write-media", out];

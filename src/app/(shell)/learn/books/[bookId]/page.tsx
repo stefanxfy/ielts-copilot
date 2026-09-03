@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { RegenDialog } from "@/components/vocab/regen-dialog";
 
 interface WordContent {
   translation: string[];
@@ -85,6 +86,8 @@ export default function WordBrowsePage() {
   const [submitting, setSubmitting] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [nowPlaying, setNowPlaying] = useState<string | null>(null);
+  /** 物料重生成弹窗开关(挂在当前选中词上) */
+  const [regenOpen, setRegenOpen] = useState(false);
   const audioRef = useSingleAudio();
 
   useEffect(() => {
@@ -296,10 +299,31 @@ export default function WordBrowsePage() {
                 onPreview={setLightbox}
                 onAddPlan={() => void addToPlan([selected.id])}
                 submitting={submitting}
+                onRegen={() => setRegenOpen(true)}
               />
             )}
           </section>
         </div>
+      )}
+
+      {/* 物料重生成弹窗(配图风格 / 单词音色 / 例句音色) */}
+      {selected && (
+        <RegenDialog
+          open={regenOpen}
+          onOpenChange={setRegenOpen}
+          word={selected.word}
+          exampleCount={selected.contentJson.examples?.length ?? 0}
+          hasImage={Boolean(selected.contentJson.image)}
+          onRegenerated={() => {
+            // 重拉整页数据(单词级覆盖,重取最省心且保序)
+            fetch(`/api/vocab-book?bookId=${encodeURIComponent(bookId)}`)
+              .then((r) => (r.ok ? r.json() : null))
+              .then((d: BookResp | null) => {
+                if (d) setData(d);
+              })
+              .catch(() => undefined);
+          }}
+        />
       )}
 
       {/* 底部浮动操作条:已勾选待加入计划 */}
@@ -351,6 +375,7 @@ function WordDetail({
   onPreview,
   onAddPlan,
   submitting,
+  onRegen,
 }: {
   row: WordRow;
   nowPlaying: string | null;
@@ -358,6 +383,7 @@ function WordDetail({
   onPreview: (src: string) => void;
   onAddPlan: () => void;
   submitting: boolean;
+  onRegen: () => void;
 }) {
   const cj = row.contentJson;
   return (
@@ -372,8 +398,15 @@ function WordDetail({
           className="max-h-64 w-full cursor-zoom-in rounded-lg border border-border bg-muted/30 object-contain"
         />
       ) : (
-        <div className="flex h-28 w-full items-center justify-center rounded-lg border border-dashed border-border text-[12px] text-muted-foreground">
+        <div className="flex h-28 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border text-[12px] text-muted-foreground">
           暂无配图 · 学习时该词走听觉 / 语境卡
+          <button
+            type="button"
+            onClick={onRegen}
+            className="cursor-pointer rounded-full border border-primary/60 px-3 py-1 text-[12px] text-primary transition-colors hover:bg-primary/10"
+          >
+            手动生成配图
+          </button>
         </div>
       )}
 
@@ -391,6 +424,16 @@ function WordDetail({
           </span>
         )}
         <span className="ml-auto flex items-center gap-2">
+          {/* 物料重生成入口(配图/单词读音/例句读音) */}
+          <button
+            type="button"
+            onClick={onRegen}
+            title="配图与读音重生成"
+            className="inline-flex items-center gap-1 rounded-md border border-dashed border-border px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-ring hover:text-foreground"
+          >
+            <RefreshIcon />
+            重新生成
+          </button>
           {row.inPlan ? (
             <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[12px] text-primary">
               已入选计划
@@ -544,6 +587,25 @@ function SpeakerIcon() {
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+    </svg>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="23 4 23 10 17 10" />
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
     </svg>
   );
 }
