@@ -91,6 +91,12 @@ function speakerSvg(size = 14) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
 }
 
+// 左右箭头（幻灯片播放钮风格）
+function chevronSvg(dir, size = 20) {
+  const d = dir === "left" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6";
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+}
+
 function speak(text) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
@@ -181,45 +187,47 @@ function renderRecogCard(w) {
   const hasNext = idx < ids.length - 1;
 
   $slot.innerHTML = `
-    <div class="flashcard">
-      <div class="face recog-face">
-        <img class="recog-img" src="${w.img}" alt="${w.word} 配图">
+    <div class="recog-stage">
+      <button class="slide-nav slide-nav-prev" id="prevBtn" ${hasPrev ? "" : "disabled"} title="上一个单词" aria-label="上一个单词">
+        ${chevronSvg("left")}
+      </button>
+      <div class="flashcard">
+        <div class="face recog-face">
+          <img class="recog-img" src="${w.img}" alt="${w.word} 配图">
 
-        <div class="recog-word-row">
-          <span class="recog-word">${w.word}</span>
-          <span class="recog-phon">${w.ipa}</span>
-          <button class="play-chip" id="pronBtn" title="播放单词发音" aria-label="播放单词发音 ${w.word}">
-            ${speakerSvg(16)}
-          </button>
-        </div>
-
-        <div class="recog-example">
-          <div class="recog-example-text">
-            <p class="recog-example-en"><i>${esc(w.example.en)}</i></p>
-            ${revealed ? `<p class="recog-example-cn">${esc(w.example.cn)}</p>` : ""}
+          <div class="recog-word-row">
+            <span class="recog-word">${w.word}</span>
+            <span class="recog-phon">${w.ipa}</span>
+            <button class="play-chip" id="pronBtn" title="播放单词发音" aria-label="播放单词发音 ${w.word}">
+              ${speakerSvg(16)}
+            </button>
           </div>
-          <button class="play-chip play-chip-sm" data-speak="${esc(w.example.en)}" title="朗读例句" aria-label="朗读例句">
-            ${speakerSvg(14)}
-          </button>
+
+          <div class="recog-example">
+            <div class="recog-example-text">
+              <p class="recog-example-en"><i>${esc(w.example.en)}</i></p>
+              ${revealed ? `<p class="recog-example-cn">${esc(w.example.cn)}</p>` : ""}
+            </div>
+            <button class="play-chip play-chip-sm" data-speak="${esc(w.example.en)}" title="朗读例句" aria-label="朗读例句">
+              ${speakerSvg(14)}
+            </button>
+          </div>
+
+          ${revealed ? `
+          <div class="recog-translation">
+            <div class="recog-translation-label">中文释义</div>
+            <div class="recog-translation-text">${esc(w.translation)}</div>
+          </div>` : ""}
         </div>
-
-        ${revealed ? `
-        <div class="recog-translation">
-          <div class="recog-translation-label">中文释义</div>
-          <div class="recog-translation-text">${esc(w.translation)}</div>
-        </div>` : ""}
-
-        ${revealed ? `
-        <div class="nav-row">
-          <button class="nav-btn" id="prevBtn" ${hasPrev ? "" : "disabled"} title="上一个单词">← 上一个</button>
-          <button class="nav-btn" id="nextBtn" ${hasNext ? "" : "disabled"} title="下一个单词">下一个 →</button>
-        </div>` : ""}
       </div>
-    </div>
-    <div class="rate-row rate-below">
-      <button class="rate-btn rate-again" data-r="again">不认识</button>
-      <button class="rate-btn rate-hard" data-r="hard">模糊</button>
-      <button class="rate-btn rate-good" data-r="good">认识</button>
+      <button class="slide-nav slide-nav-next" id="nextBtn" ${hasNext ? "" : "disabled"} title="下一个单词" aria-label="下一个单词">
+        ${chevronSvg("right")}
+      </button>
+      <div class="rate-row rate-below">
+        <button class="rate-btn rate-again" data-r="again">不认识</button>
+        <button class="rate-btn rate-hard" data-r="hard">模糊</button>
+        <button class="rate-btn rate-good" data-r="good">认识</button>
+      </div>
     </div>`;
 
   document.getElementById("pronBtn").onclick = () => speak(w.word);
