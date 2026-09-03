@@ -61,7 +61,8 @@ const WORDS = {
 
 // ---------- 卡型 ----------
 const CARD_TYPES = [
-  { id: "recog",  label: "认词卡",   ratio: null },
+  { id: "recog",      label: "认词卡",      ratio: null },
+  { id: "recogPlain", label: "认词卡·无图", ratio: null },
   { id: "visual", label: "视觉默写", ratio: 40 },
   { id: "audio",  label: "听觉默写", ratio: 30 },
   { id: "ctx",    label: "语境默写", ratio: 30 },
@@ -136,6 +137,7 @@ function render() {
   const w = WORDS[state.wordId];
   const t = state.typeId;
   if (t === "recog") renderRecogCard(w);
+  else if (t === "recogPlain") renderRecogCard(w, { plain: true });
   else if (t === "visual") renderDictation(w, "visual");
   else if (t === "audio") renderDictation(w, "audio");
   else renderDictation(w, "ctx");
@@ -185,7 +187,8 @@ function pushLog(type, rating) {
 // ---------- 认词卡（新布局：图在上 → 单词+音标+发音 → 例句+朗读 → 三键评分） ----------
 // 点击「模糊/不认识」→ 例句下方展开中文释义，出现 上一个/下一个 导航
 // 点击「认识」→ 直接跳下一个词
-function renderRecogCard(w) {
+function renderRecogCard(w, opts = {}) {
+  const plain = !!opts.plain; // 无图版：不渲染配图，单词升级为主视觉
   const revealed = state.recogRevealed;
   const ids = Object.keys(WORDS);
   const idx = ids.indexOf(state.wordId);
@@ -198,12 +201,12 @@ function renderRecogCard(w) {
         ${chevronSvg("left")}
       </button>
       <div class="flashcard">
-        <div class="face recog-face">
-          <img class="recog-img" src="${w.img}" alt="${w.word} 配图">
+        <div class="face recog-face ${plain ? "recog-face-plain" : ""}">
+          ${plain ? "" : `<img class="recog-img" src="${w.img}" alt="${w.word} 配图">`}
 
-          <div class="recog-word-row">
+          <div class="recog-word-row ${plain ? "recog-word-row-main" : ""}">
             <span class="recog-word-wrap">
-              <span class="recog-word">${w.word}</span>
+              <span class="recog-word ${plain ? "recog-word-xl" : ""}">${w.word}</span>
               <span class="recog-word-side">
                 <span class="recog-phon">${w.ipa}</span>
                 <button class="play-bare" id="pronBtn" title="播放单词发音" aria-label="播放单词发音 ${w.word}">
@@ -213,6 +216,7 @@ function renderRecogCard(w) {
             </span>
           </div>
 
+          ${plain ? `<div class="recog-bottom">` : ""}
           <div class="recog-example">
             <div class="recog-example-text">
               <p class="recog-example-en"><i>${esc(w.example.en)}</i></p>
@@ -228,6 +232,7 @@ function renderRecogCard(w) {
             <div class="recog-translation-label">中文释义</div>
             <div class="recog-translation-text">${esc(w.translation)}</div>
           </div>` : ""}
+          ${plain ? `</div>` : ""}
         </div>
       </div>
       <button class="slide-nav slide-nav-next" id="nextBtn" ${hasNext && nextAllowed() ? "" : "disabled"} title="下一个单词(背过当前词后解锁)" aria-label="下一个单词">
@@ -273,10 +278,13 @@ function renderRecogCard(w) {
   // 方向键垂直位置：实测单词行中心精确对齐（替代百分比估算）。
   // 必须在图片加载后重校——加载前 img 高度为 0，单词行位置会失真。
   const alignSlideNav = () => {
-    const wordRow = $slot.querySelector(".recog-word-row");
+    // 无图版单词组会被揭示态上移，箭头要跟单词组的实际位置走
+    const ref = plain
+      ? $slot.querySelector(".recog-word-wrap")
+      : $slot.querySelector(".recog-word-row");
     const stage = $slot.querySelector(".recog-stage");
-    if (!wordRow || !stage) return;
-    const wr = wordRow.getBoundingClientRect();
+    if (!ref || !stage) return;
+    const wr = ref.getBoundingClientRect();
     const sr = stage.getBoundingClientRect();
     const top = wr.top - sr.top + wr.height / 2 - 22; // 22 = 方向键半高(44/2)
     document.getElementById("prevBtn").style.top = top + "px";
@@ -286,6 +294,34 @@ function renderRecogCard(w) {
   const recogImg = $slot.querySelector(".recog-img");
   if (recogImg && !recogImg.complete) recogImg.addEventListener("load", alignSlideNav, { once: true });
   window.addEventListener("resize", alignSlideNav);
+
+  // 无图版单词自适应：基准 52px，音标+喇叭在词正下方（不悬挂），
+  // 约束简化为「词宽 ≤ 卡内宽 - 余量」，超了逐级收缩字号（最小 40px）
+  if (plain) {
+    const face = $slot.querySelector(".recog-face");
+    const wordEl = $slot.querySelector(".recog-word");
+    const wrapEl = $slot.querySelector(".recog-word-wrap");
+    const bottomEl = $slot.querySelector(".recog-bottom");
+    const fitPlainWord = () => {
+      const avail = face.clientWidth - 36;
+      let size = 52;
+      wordEl.style.fontSize = size + "px";
+      while (size > 40 && wordEl.offsetWidth > avail) {
+        size -= 1;
+        wordEl.style.fontSize = size + "px";
+      }
+      // 揭示态下底部例句+释义会变高：实测与单词组的重叠量，把单词组整体上移让位；
+      // 初始态（不重叠）回零，单词保持卡片几何中心
+      wrapEl.style.transform = "translateY(0)";
+      const wr = wrapEl.getBoundingClientRect();
+      const br = bottomEl.getBoundingClientRect();
+      const overlap = wr.bottom - br.top + 10; // 10px 呼吸间距，全量上移
+      if (overlap > 0) wrapEl.style.transform = `translateY(${-overlap}px)`;
+      alignSlideNav();
+    };
+    fitPlainWord();
+    window.addEventListener("resize", fitPlainWord);
+  }
 }
 
 // ---------- 默写卡（三型共用骨架） ----------

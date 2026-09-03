@@ -144,6 +144,38 @@ body {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+/* ---------- 认词卡·无图版：单词升级为主视觉，占满整卡绝对居中 ---------- */
+/* 例句+释义包进 .recog-bottom 钉在卡底（揭示释义增高向上生长），单词始终钉在卡片几何中心 */
+/* 音标+裸喇叭不悬挂，改排在单词正下方居中；单词基准 52px（demo.js 按卡宽自适应收缩） */
+.recog-face-plain { justify-content: flex-end; }
+.recog-word-row-main {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none; /* 铺满整卡的透明层不挡例句/评分点击 */
+  z-index: 2; /* 揭示态单词组上移后叠于例句之上，避免音标被例句卡背景盖住 */
+}
+.recog-word-row-main .recog-word-wrap {
+  pointer-events: auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.recog-word-row-main .recog-word-side {
+  position: static;
+  margin-left: 0;
+  gap: 5px;
+}
+.recog-word-xl { font-size: 52px; letter-spacing: -1px; }
+.recog-bottom {
+  position: relative;
+  z-index: 1; /* 叠在单词铺满层之上 */
+}
+
 /* 例句朗读钮：复用单词行裸喇叭 .play-bare，仅补「推到行右侧」的定位 */
 .recog-example .play-bare { margin-left: auto; }
 
