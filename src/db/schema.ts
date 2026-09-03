@@ -599,6 +599,8 @@ export interface WordContent {
   exchange?: string;
   /** 单词发音路径,如 /audio/words/abandon.mp3(可空,edge-tts 异步合成落盘后回写) */
   audio?: { word?: string };
+  /** LLM 生成联想配图路径 /images/words/<word>.png(可空,MiniMax 生图管线落盘后回写,§6.1) */
+  image?: string;
   /** 柯林斯星级 1-5(可空,ECDICT 补) */
   collins?: number;
   /** 考试标签 ["ielts","toefl"](可空,ECDICT tag 拆分) */

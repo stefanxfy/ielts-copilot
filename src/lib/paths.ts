@@ -20,6 +20,11 @@ export function dataDir(): string {
   return join(appRoot(), "data");
 }
 
+/** public 静态资源目录(音频 mp3 / 联想配图 png 落盘处) */
+export function publicDir(): string {
+  return join(appRoot(), "public");
+}
+
 export function dbFile(): string {
   return join(dataDir(), "app.db");
 }
