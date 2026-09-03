@@ -202,11 +202,15 @@ function renderRecogCard(w) {
           <img class="recog-img" src="${w.img}" alt="${w.word} 配图">
 
           <div class="recog-word-row">
-            <span class="recog-word">${w.word}</span>
-            <span class="recog-phon">${w.ipa}</span>
-            <button class="play-chip" id="pronBtn" title="播放单词发音" aria-label="播放单词发音 ${w.word}">
-              ${speakerSvg(16)}
-            </button>
+            <span class="recog-word-wrap">
+              <span class="recog-word">${w.word}</span>
+              <span class="recog-word-side">
+                <span class="recog-phon">${w.ipa}</span>
+                <button class="play-bare" id="pronBtn" title="播放单词发音" aria-label="播放单词发音 ${w.word}">
+                  ${speakerSvg(15)}
+                </button>
+              </span>
+            </span>
           </div>
 
           <div class="recog-example">

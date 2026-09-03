@@ -132,19 +132,19 @@ body {
   position: absolute;
   left: 100%;
   bottom: 2px;
-  margin-left: 8px;
+  margin-left: 6px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   white-space: nowrap;
 }
 .recog-phon {
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: 11px;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-/* 发音按钮：纯图标圆形钮（喇叭），对齐 vocab-demo 的轻量按钮质感 */
+/* 发音按钮（例句卡内）：小圆形 chip */
 .play-chip {
   margin-left: auto;
   display: inline-flex;
@@ -164,6 +164,21 @@ body {
 .play-chip:hover { background: var(--muted); border-color: var(--ring); color: var(--primary); }
 .play-chip:active { transform: scale(.94); }
 .play-chip-sm { width: 30px; height: 30px; }
+
+/* 发音按钮（单词行专用）：裸喇叭，无圈无底色，纯图标 */
+.play-bare {
+  border: none;
+  background: none;
+  padding: 0;
+  line-height: 0;
+  color: var(--primary);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: transform .15s, color .15s;
+}
+.play-bare:hover { color: var(--secondary-foreground); transform: scale(1.15); }
+.play-bare:active { transform: scale(.9); }
 
 /* 例句块（左文右朗读钮，vocab-demo 例句卡样式） */
 .recog-example {
