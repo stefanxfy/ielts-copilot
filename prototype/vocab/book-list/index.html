@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>词库列表原型 · 词库卡片 + 自定义导入</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="demo-head">
+  <div>
+    <h1>我的词库</h1>
+    <p class="sub">词库卡片列表 · 内置/自定义词库统一管理 · 点击卡片进入学习 · 卡片 hover 出操作</p>
+  </div>
+  <div class="toolbar">
+    <button class="btn btn-ghost" id="importBtn">导入词库</button>
+    <button class="btn btn-primary" id="newBtn">＋ 新建词库</button>
+  </div>
+</header>
+
+<!-- 词库卡片网格 -->
+<main class="book-grid" id="bookGrid"><!-- JS 注入卡片 --></main>
+
+<!-- 新建/导入词库弹窗 -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <!-- 第一步：基本信息 + 导入内容 -->
+    <section id="stepForm">
+      <h2>新建词库</h2>
+      <p class="modal-sub">txt 一行一词，导入后自动补全释义 / 例句 / 音频（百词斩数据源）</p>
+
+      <div class="upload-tabs">
+        <button class="upload-tab active" data-tab="paste">粘贴文本</button>
+        <button class="upload-tab" data-tab="file">上传 txt 文件</button>
+      </div>
+
+      <div class="field" id="pasteField">
+        <label for="wordText">词表内容</label>
+        <div class="format-hint">
+          <b>导入格式</b>：每行一个单词，支持 <code># 注释行</code> 和空行（自动忽略）<br>
+          <code>abandon</code> &nbsp;→ 自动抓取释义 / 例句 / 音标 / 发音音频<br>
+          带屈折的行会按词根合并，如 <code>abandoned</code> 记到 <code>abandon</code>
+        </div>
+        <textarea id="wordText" placeholder="abandon&#10;abundant&#10;accomplish&#10;isolate&#10;discard&#10;# 一行一个词，# 开头为注释"></textarea>
+      </div>
+
+      <div class="field" id="fileField" style="display:none">
+        <div class="drop-zone" id="dropZone">
+          拖拽 .txt 文件到此处，或点击选择文件<br>
+          <span style="font-size:12px">格式同粘贴文本：每行一个单词</span>
+        </div>
+        <input type="file" id="fileInput" accept=".txt" style="display:none">
+      </div>
+
+      <div class="field">
+        <label for="bookName">词库名称</label>
+        <input type="text" id="bookName" placeholder="例如：剑桥雅思词汇精选">
+      </div>
+
+      <div class="field">
+        <label>核心词生图策略</label>
+        <div class="gen-option">
+          <input type="radio" name="genStrategy" id="genCore" checked>
+          <div>
+            <div class="g-title">仅核心词生图（推荐）</div>
+            <div class="g-desc">collins ≥3 或 BNC 词频 ≤2000 的词自动生成配图，其余词学习时走听觉/语境卡。阈值可在设置中调整。</div>
+          </div>
+        </div>
+        <div class="gen-option" style="margin-top:8px">
+          <input type="radio" name="genStrategy" id="genAll">
+          <div>
+            <div class="g-title">全部生图</div>
+            <div class="g-desc">所有词生成配图（耗时较长，按 100 词约 15 分钟估算）</div>
+          </div>
+        </div>
+        <div class="gen-option" style="margin-top:8px">
+          <input type="radio" name="genStrategy" id="genNone">
+          <div>
+            <div class="g-title">暂不生图</div>
+            <div class="g-desc">先导入文本数据，配图之后在词库内按词手动生成</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelBtn">取消</button>
+        <button class="btn btn-primary" id="startImportBtn">开始导入</button>
+      </div>
+    </section>
+
+    <!-- 第二步：导入进度 -->
+    <section id="stepProgress" style="display:none">
+      <h2>正在导入「<span id="progBookName"></span>」</h2>
+      <p class="modal-sub">导入在后台进行，关闭窗口不影响进度</p>
+      <div class="import-progress">
+        <div class="big-num" id="progNum">0 / 0</div>
+        <div class="steps">
+          <div class="step-item" id="step1"><span class="dot">1</span>解析词表 · 去重合并</div>
+          <div class="step-item" id="step2"><span class="dot">2</span>抓取释义 / 例句（百词斩数据源）</div>
+          <div class="step-item" id="step3"><span class="dot">3</span>合成发音音频（edge-tts 英音）</div>
+          <div class="step-item" id="step4"><span class="dot">4</span>核心词批量生图（<span id="progGenCount">—</span>）</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="doneBtn">后台运行，完成</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<p class="demo-note">
+  原型说明：卡片数据取自 word_books / book_word_relation 真实结构（雅思核心 100 词 = 内置；测试词书 = 自定义示例），
+  另外两张为演示态卡片（生成中 / 高进度）。进度条对应 word_progress 聚合；「重新生成封面」走 /api/vocab-image 同链路换 book 封面词。
+</p>
+
+<script src="demo.js"></script>
+</body>
+</html>
