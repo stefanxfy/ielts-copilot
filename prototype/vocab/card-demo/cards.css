@@ -394,13 +394,6 @@ body {
 }
 .dict-hint-1 { justify-content: center; }
 .dict-hint-1 .recog-phon { font-size: 14px; }
-.dict-hint-img {
-  height: 84px;
-  width: auto;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  margin-left: 6px;
-}
 .dict-hint-2 {
   border-radius: 12px;
   border: 1px dashed var(--ring);

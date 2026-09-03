@@ -390,11 +390,17 @@ function renderDictation(w, type) {
   const navAllowed = spellNextAllowed();
 
   // ---- 刺激区 ----
+  // 听觉型：一级提示后整个卡片重渲染为「大图居中 + 图下音标/播放钮」，与视觉卡一级提示同款布局
   let stimulus = "";
   if (type === "visual") {
     stimulus = `<img class="vis-img" src="${w.img}" alt="视觉提示">`;
   } else if (type === "audio") {
-    stimulus = `
+    stimulus = (s.hints >= 1 || s.done) ? `
+      <img class="vis-img" src="${w.img}" alt="听觉提示配图">
+      <div class="dict-hint dict-hint-1">
+        <span class="recog-phon">${w.ipa}</span>
+        <button class="play-bare" id="hintPronBtn" title="播放单词发音" aria-label="播放单词发音">${speakerSvg(15)}</button>
+      </div>` : `
       <button class="audio-play" id="playBtn" title="播放读音" aria-label="播放单词读音">${speakerSvg(34)}</button>`;
   } else {
     const b = exampleBlanked(w.word);
@@ -404,15 +410,12 @@ function renderDictation(w, type) {
   }
 
   // ---- 提示区（分级揭示；done 后全展示） ----
-  // 视觉/语境型一级：音标 + 读音（自动 1 次 + 裸喇叭）；听觉型一级：音标 + 图片
+  // 视觉/语境型一级：音标 + 读音（自动 1 次 + 裸喇叭），居中在图/例句下方
+  // 听觉型一级已并入刺激区（大图居中 + 图下音标/播放钮），提示区只出二级中文释义
   const level = s.done ? 2 : s.hints;
   let hintHtml = "";
-  if (level >= 1 || s.done) {
-    hintHtml += type === "audio" ? `
-      <div class="dict-hint dict-hint-1">
-        <span class="recog-phon">${w.ipa}</span>
-        <img class="dict-hint-img" src="${w.img}" alt="提示配图">
-      </div>` : `
+  if ((level >= 1 || s.done) && type !== "audio") {
+    hintHtml += `
       <div class="dict-hint dict-hint-1">
         <span class="recog-phon">${w.ipa}</span>
         <button class="play-bare" id="hintPronBtn" title="播放单词发音" aria-label="播放单词发音">${speakerSvg(15)}</button>
