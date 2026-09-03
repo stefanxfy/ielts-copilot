@@ -101,16 +101,6 @@ body {
 }
 
 /* ---------- 认词卡（图上 → 词中 → 例句 → 评分） ---------- */
-.recog-badge {
-  align-self: flex-start;
-  font-size: 11px;
-  color: var(--secondary-foreground);
-  background: var(--secondary);
-  border-radius: 999px;
-  padding: 3px 10px;
-  margin-bottom: 16px;
-}
-
 .recog-img {
   /* 方图限高居中，保证整幅插画可见且卡片不至于过高 */
   display: block;
@@ -231,25 +221,28 @@ body {
 /* 三键评分：位于卡片下方（不在卡片内） */
 .rate-row {
   display: flex;
-  gap: 10px;
+  gap: 14px;
 }
 .rate-below { margin-top: 16px; }
+/* 实心色块评分钮（参考稿样式，收窄版）：红=不认识 / 琥珀=模糊 / 绿=认识 */
 .rate-btn {
-  flex: 1;
-  border-radius: 10px;
-  padding: 11px 0;
+  flex: 0 0 auto;
+  min-width: 120px;
+  max-width: 150px;
+  border-radius: 12px;
+  padding: 11px 18px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--card);
+  border: none;
+  color: #fff;
   transition: all .15s;
   font-family: inherit;
 }
-.rate-btn:hover { transform: translateY(-1px); }
-.rate-again  { color: var(--destructive); }
-.rate-hard   { color: var(--warning); }
-.rate-good   { color: var(--success); }
+.rate-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.rate-again  { background: #d93636; }
+.rate-hard   { background: #d97706; }
+.rate-good   { background: #21a353; }
 .rate-btn:active { transform: scale(.97); }
 
 /* ---------- 默写卡公共头 ---------- */

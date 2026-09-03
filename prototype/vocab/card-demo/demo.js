@@ -183,8 +183,6 @@ function renderRecogCard(w) {
   $slot.innerHTML = `
     <div class="flashcard">
       <div class="face recog-face">
-        <span class="recog-badge">认词卡 · 认识连续 2 次升级默写</span>
-
         <img class="recog-img" src="${w.img}" alt="${w.word} 配图">
 
         <div class="recog-word-row">
