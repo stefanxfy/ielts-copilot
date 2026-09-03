@@ -144,26 +144,8 @@ body {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-/* 发音按钮（例句卡内）：小圆形 chip */
-.play-chip {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--border);
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all .15s;
-  font-family: inherit;
-  flex-shrink: 0;
-}
-.play-chip:hover { background: var(--muted); border-color: var(--ring); color: var(--primary); }
-.play-chip:active { transform: scale(.94); }
-.play-chip-sm { width: 30px; height: 30px; }
+/* 例句朗读钮：复用单词行裸喇叭 .play-bare，仅补「推到行右侧」的定位 */
+.recog-example .play-bare { margin-left: auto; }
 
 /* 发音按钮（单词行专用）：裸喇叭，无圈无底色，纯图标 */
 .play-bare {

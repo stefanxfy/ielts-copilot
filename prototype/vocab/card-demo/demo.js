@@ -218,7 +218,7 @@ function renderRecogCard(w) {
               <p class="recog-example-en"><i>${esc(w.example.en)}</i></p>
               ${revealed ? `<p class="recog-example-cn">${esc(w.example.cn)}</p>` : ""}
             </div>
-            <button class="play-chip play-chip-sm" data-speak="${esc(w.example.en)}" title="朗读例句" aria-label="朗读例句">
+            <button class="play-bare" data-speak="${esc(w.example.en)}" title="朗读例句" aria-label="朗读例句">
               ${speakerSvg(14)}
             </button>
           </div>
@@ -241,7 +241,7 @@ function renderRecogCard(w) {
     </div>`;
 
   document.getElementById("pronBtn").onclick = () => speak(w.word);
-  $slot.querySelectorAll(".play-chip[data-speak]").forEach(b => {
+  $slot.querySelectorAll(".play-bare[data-speak]").forEach(b => {
     b.onclick = () => speak(b.dataset.speak);
   });
 
