@@ -1,8 +1,9 @@
 /**
  * /learn/books — 词库中心(#62)
  *
- * 词书卡片网格(封面 + 来源徽章 + 词数/已学/配图 + 进度条) + 新建/导入弹窗
+ * 词书卡片网格(封面 + 来源徽章 + 词数/已学/配图/缺图 + 进度条) + 新建/导入弹窗
  * (CreateBookDialog)+ 删除确认。对齐 prototype/vocab/book-list 原型。
+ * 「缺图 N」提示(#64):无图词出题时自动跳过视觉默写型(见 vocab-card-policy),不阻塞使用。
  *
  * 数据源:
  *   GET    /api/vocab-book          全部词书汇总
@@ -24,6 +25,7 @@ interface BookSummary {
   learnedCount: number;
   imageCount: number;
   audioCount: number;
+  missingImageCount: number;
 }
 
 const CARD = "card-float flex flex-col overflow-hidden rounded-xl border border-border bg-card";
@@ -128,6 +130,11 @@ export default function BookListPage() {
                     <span>
                       配图 <b className="text-sm text-foreground">{b.imageCount}</b>
                     </span>
+                    {b.missingImageCount > 0 && (
+                      <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        缺图 {b.missingImageCount}
+                      </span>
+                    )}
                     <span className="ml-auto">🔊 {b.audioCount}</span>
                   </div>
 

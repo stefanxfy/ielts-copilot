@@ -11,12 +11,15 @@
  * 汇总计数口径:
  *   wordCount  = book_word_relation 行数
  *   learnedCount = join word_progress 有进度行的词数(全局一词一行)
- *   imageCount / audioCount = contentJson.image / audio.word 非空的词数
+ *   imageCount / audioCount = hasVocabImage / contentJson.audio.word 的词数
+ *     (image 用文件系统级判定:0 字节/已删残留路径不算,同卡型调度口径,#64)
+ *   missingImageCount = wordCount - imageCount(词库中心「缺图」提示用,#64)
  */
 import { NextResponse } from "next/server";
 import { eq, asc, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { wordBooks, words, bookWordRelation, wordProgress } from "@/db/schema";
+import { hasVocabImage } from "@/lib/vocab-card-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,8 +51,9 @@ export async function GET(req: Request) {
         source: b.source,
         wordCount: rows.length,
         learnedCount: rows.reduce((n, r) => n + Number(r.hasProgress), 0),
-        imageCount: rows.filter((r) => r.contentJson?.image).length,
+        imageCount: rows.filter((r) => hasVocabImage(r.contentJson)).length,
         audioCount: rows.filter((r) => r.contentJson?.audio?.word).length,
+        missingImageCount: rows.filter((r) => !hasVocabImage(r.contentJson)).length,
       };
     });
     return NextResponse.json({ books: summary });
