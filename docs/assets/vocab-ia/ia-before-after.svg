@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 560" width="100%" role="img">
+  <title>学习中心到背单词的信息架构重构</title>
+  <desc>现状学习中心8卡与目标背单词单入口四页结构对比</desc>
+  <rect x="0" y="0" width="680" height="560" fill="#FFFFFF"/>
+  <defs>
+    <marker id="arrowIA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">学习中心 → 背单词:信息架构重构</text>
+
+  <rect x="40" y="60" width="600" height="212" rx="12" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+  <text x="64" y="88" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#444441">现状 · 学习中心 = 6 张占位卡 + 2 个实功能</text>
+
+  <rect x="64" y="102" width="552" height="30" rx="6" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+  <text x="84" y="121" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">仪表盘</text>
+  <text x="148" y="121" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">备考计划</text>
+  <text x="236" y="121" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">机考模拟</text>
+  <rect x="318" y="106" width="64" height="22" rx="11" fill="#FAC775"/>
+  <text x="350" y="121" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#633806">学习中心</text>
+  <text x="448" y="121" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">设置</text>
+
+  <rect x="64" y="146" width="129" height="54" rx="8" fill="#FFFFFF" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="76" y="166" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#888780">错题本 V2</text>
+  <text x="76" y="184" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#B4B2A9">占位 · 点击仅 toast</text>
+
+  <rect x="205" y="146" width="129" height="54" rx="8" fill="#FFFFFF" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="217" y="166" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#888780">专项训练 V2</text>
+  <text x="217" y="184" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#B4B2A9">占位 · 点击仅 toast</text>
+
+  <rect x="346" y="146" width="129" height="54" rx="8" fill="#FFFFFF" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="358" y="166" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#888780">精听训练 V2</text>
+  <text x="358" y="184" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#B4B2A9">占位 · 点击仅 toast</text>
+
+  <rect x="487" y="146" width="129" height="54" rx="8" fill="#FFFFFF" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="499" y="166" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#888780">弱项雷达 V3</text>
+  <text x="499" y="184" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#B4B2A9">占位 · 点击仅 toast</text>
+
+  <rect x="64" y="208" width="129" height="54" rx="8" fill="#FFFFFF" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="76" y="228" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#888780">分数曲线 V3</text>
+  <text x="76" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#B4B2A9">占位 · 点击仅 toast</text>
+
+  <rect x="205" y="208" width="129" height="54" rx="8" fill="#FFFFFF" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="217" y="228" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#888780">生词本 V3</text>
+  <text x="217" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#B4B2A9">占位 · 点击仅 toast</text>
+
+  <rect x="346" y="208" width="129" height="54" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="358" y="228" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#0C447C">词库中心 M2</text>
+  <text x="358" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">/learn/books</text>
+
+  <rect x="487" y="208" width="129" height="54" rx="8" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+  <text x="499" y="228" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#27500A">背单词演示 P8</text>
+  <text x="499" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">/learn/vocab-demo</text>
+
+  <path d="M340 282 L340 312" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrowIA)"/>
+  <text x="352" y="301" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">删除 6 张占位卡 · 「学习中心」更名「背单词」</text>
+
+  <rect x="40" y="322" width="600" height="200" rx="12" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+  <text x="64" y="350" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#444441">目标 · 方案 A:背单词单入口</text>
+
+  <rect x="64" y="364" width="552" height="30" rx="6" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+  <text x="84" y="383" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">仪表盘</text>
+  <text x="148" y="383" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">备考计划</text>
+  <text x="236" y="383" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">机考模拟</text>
+  <rect x="324" y="368" width="52" height="22" rx="11" fill="#FAC775"/>
+  <text x="350" y="383" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#633806">背单词</text>
+  <text x="448" y="383" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">设置</text>
+
+  <rect x="64" y="408" width="129" height="92" rx="8" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.5"/>
+  <text x="76" y="428" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#633806">学习台</text>
+  <text x="181" y="428" text-anchor="end" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#854F0B">待新建</text>
+  <text x="76" y="446" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B">/learn · 今日队列</text>
+  <text x="76" y="462" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B">打卡日历 · 词书进度</text>
+  <text x="76" y="478" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B">「开始复习」入口</text>
+
+  <rect x="205" y="408" width="129" height="92" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="217" y="428" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#0C447C">词库管理</text>
+  <text x="322" y="428" text-anchor="end" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#185FA5">已有</text>
+  <text x="217" y="446" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">/learn/books</text>
+  <text x="217" y="462" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">词书卡片 + 导入弹窗</text>
+  <text x="217" y="478" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">四步异步导入进度</text>
+
+  <rect x="346" y="408" width="129" height="92" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="358" y="428" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#0C447C">词表浏览</text>
+  <text x="463" y="428" text-anchor="end" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#185FA5">正式化</text>
+  <text x="358" y="446" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">/learn/books/[bookId]</text>
+  <text x="358" y="462" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">词列表 · 音标 · 音频</text>
+  <text x="358" y="478" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5">选词加入背诵计划</text>
+
+  <rect x="487" y="408" width="129" height="92" rx="8" fill="#FFFFFF" stroke="#97C459" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="499" y="428" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#27500A">复习 session</text>
+  <text x="604" y="428" text-anchor="end" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#3B6D11">待开发</text>
+  <text x="499" y="446" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">/learn/review</text>
+  <text x="499" y="462" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">认词卡 + 默写三型</text>
+  <text x="499" y="478" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11">按 policy 选卡型</text>
+
+  <text x="64" y="516" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">背单词演示(/learn/vocab-demo)在词表浏览页上线后退役;错题本等 6 张占位卡直接删除,不留死链。</text>
+</svg>
