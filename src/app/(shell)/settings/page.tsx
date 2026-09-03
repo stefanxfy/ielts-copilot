@@ -34,6 +34,7 @@ import { StudyPrefsCard } from "@/components/settings/study-prefs-card";
 import { TemplateRulesCard } from "@/components/settings/template-rules-card";
 import { VocabImageStyleCard } from "@/components/settings/vocab-image-style-card";
 import { VocabCoreThresholdsCard } from "@/components/settings/vocab-core-thresholds-card";
+import { VocabStudyPrefsCard } from "@/components/settings/vocab-study-prefs-card";
 import { useSettings } from "@/stores/settings";
 import {
   DEFAULT_UI_THEME,
@@ -413,6 +414,7 @@ export default function SettingsPage() {
         <h2 className={H2}>备考</h2>
         <PunchRulesCard />
         <StudyPrefsCard />
+        <VocabStudyPrefsCard />
         <VocabImageStyleCard />
         <VocabCoreThresholdsCard />
         <TemplateRulesCard />
