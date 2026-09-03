@@ -33,6 +33,7 @@ import { PunchRulesCard } from "@/components/settings/punch-rules-card";
 import { StudyPrefsCard } from "@/components/settings/study-prefs-card";
 import { TemplateRulesCard } from "@/components/settings/template-rules-card";
 import { VocabImageStyleCard } from "@/components/settings/vocab-image-style-card";
+import { VocabCoreThresholdsCard } from "@/components/settings/vocab-core-thresholds-card";
 import { useSettings } from "@/stores/settings";
 import {
   DEFAULT_UI_THEME,
@@ -413,6 +414,7 @@ export default function SettingsPage() {
         <PunchRulesCard />
         <StudyPrefsCard />
         <VocabImageStyleCard />
+        <VocabCoreThresholdsCard />
         <TemplateRulesCard />
       </section>
 
