@@ -84,22 +84,11 @@ body {
 .btn-ghost:hover { border-color: var(--ring); color: var(--foreground); }
 .btn-primary { background: var(--primary); color: var(--primary-foreground); }
 
-/* ---------- 卡片容器与翻转 ---------- */
-.flashcard { perspective: 1400px; }
-.flashcard-inner {
-  position: relative;
-  width: 100%;
-  min-height: 420px;
-  transition: transform .5s cubic-bezier(.4, .1, .2, 1.2);
-  transform-style: preserve-3d;
-}
-.flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+/* ---------- 卡片容器 ---------- */
+.flashcard { position: relative; }
 
 .face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  position: relative;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -107,11 +96,11 @@ body {
   padding: 26px;
   display: flex;
   flex-direction: column;
+  min-height: 420px;
   overflow: hidden;
 }
-.face-back { transform: rotateY(180deg); }
 
-/* ---------- 认词卡 ---------- */
+/* ---------- 认词卡（图上 → 词中 → 例句 → 评分） ---------- */
 .recog-badge {
   align-self: flex-start;
   font-size: 11px;
@@ -119,67 +108,132 @@ body {
   background: var(--secondary);
   border-radius: 999px;
   padding: 3px 10px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
-.recog-word {
-  font-size: 40px;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.5px;
-}
-.recog-phon {
-  color: var(--muted-foreground);
-  font-size: 14px;
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.icon-btn {
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 50%;
-  width: 26px; height: 26px;
-  cursor: pointer;
-  font-size: 12px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted-foreground);
-  transition: all .15s;
-}
-.icon-btn:hover { border-color: var(--primary); color: var(--primary); }
 
 .recog-img {
-  width: 100%;
-  border-radius: 12px;
-  margin-top: 16px;
+  /* 方图限高居中，保证整幅插画可见且卡片不至于过高 */
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 320px;
   aspect-ratio: 1 / 1;
+  margin: 0 auto 18px;
+  border-radius: 12px;
   object-fit: cover;
   border: 1px solid var(--border);
 }
-.recog-def {
-  margin-top: 14px;
+
+/* 单词 + 音标 + 发音（vocab-demo 同款布局：词大字，音标淡色，喇叭按钮在右侧） */
+.recog-word-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.recog-word {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+.recog-phon {
+  color: var(--muted-foreground);
+  font-size: 13px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 发音按钮：纯图标圆形钮（喇叭），对齐 vocab-demo 的轻量按钮质感 */
+.play-chip {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.play-chip:hover { background: var(--muted); border-color: var(--ring); color: var(--primary); }
+.play-chip:active { transform: scale(.94); }
+.play-chip-sm { width: 30px; height: 30px; }
+
+/* 例句块（左文右朗读钮，vocab-demo 例句卡样式） */
+.recog-example {
+  margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.recog-example-text { flex: 1; min-width: 0; }
+.recog-example-en { margin: 0; font-size: 14.5px; line-height: 1.65; }
+.recog-example-cn {
+  margin: 6px 0 0;
   font-size: 13px;
   color: var(--muted-foreground);
-  line-height: 1.55;
+  animation: pop .25s ease;
 }
-.recog-trans { margin-top: 8px; font-size: 17px; font-weight: 600; }
 
-.flip-hint {
-  margin-top: auto;
-  text-align: center;
+/* 模糊/不认识后揭示的中文释义 */
+.recog-translation {
+  margin-top: 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--ring);
+  background: var(--secondary);
+  padding: 12px 14px;
+  animation: pop .25s ease;
+}
+.recog-translation-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
   color: var(--muted-foreground);
-  font-size: 12px;
-  padding-top: 14px;
 }
+.recog-translation-text { margin-top: 4px; font-size: 17px; font-weight: 600; }
 
+/* 揭示后出现的 上一个/下一个 导航（卡片内底部） */
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+  animation: pop .25s ease;
+}
+.nav-btn {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.nav-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* 三键评分：位于卡片下方（不在卡片内） */
 .rate-row {
   display: flex;
   gap: 10px;
-  margin-top: 18px;
 }
+.rate-below { margin-top: 16px; }
 .rate-btn {
   flex: 1;
   border-radius: 10px;
@@ -196,7 +250,7 @@ body {
 .rate-again  { color: var(--destructive); }
 .rate-hard   { color: var(--warning); }
 .rate-good   { color: var(--success); }
-.rate-good.active, .rate-btn:active { transform: scale(.97); }
+.rate-btn:active { transform: scale(.97); }
 
 /* ---------- 默写卡公共头 ---------- */
 .type-badge {

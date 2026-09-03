@@ -71,6 +71,7 @@ const CARD_TYPES = [
 const state = {
   wordId: "abandon",
   typeId: "recog",
+  recogRevealed: false, // 认词卡：点了模糊/不认识后展开中文释义 + 上/下一个导航
   // word_progress 单轨模拟：stage recognize|spell + 连续认识计数
   progress: Object.fromEntries(Object.keys(WORDS).map(w => [w, { stage: "recognize", streak: 0 }])),
   reviewLog: [], // { word, type, rating, ts }
@@ -83,7 +84,12 @@ const $progressLine = document.getElementById("progressLine");
 const $reviewLog = document.getElementById("reviewLog");
 
 // ---------- 工具 ----------
-function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+
+// 喇叭图标（对齐 /learn/vocab-demo 页的 SpeakerIcon）
+function speakerSvg(size = 14) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+}
 
 function speak(text) {
   if (!window.speechSynthesis) return;
@@ -128,13 +134,26 @@ function render() {
   else renderDictation(w, "ctx");
 }
 
+function goWord(id) {
+  state.wordId = id;
+  state.recogRevealed = false; // 换词后回到未揭示状态
+  render();
+}
+
+function recogNext(delta) {
+  const ids = Object.keys(WORDS);
+  const i = ids.indexOf(state.wordId) + delta;
+  if (i < 0 || i >= ids.length) return; // 首个没有上一个，末尾没有下一个
+  goWord(ids[i]);
+}
+
 function renderChips() {
   $wordChips.innerHTML = Object.keys(WORDS).map(id =>
     `<button class="chip ${id === state.wordId ? "active" : ""}" data-w="${id}">${id}</button>`).join("");
   $typeChips.innerHTML = CARD_TYPES.map(t =>
     `<button class="chip ${t.id === state.typeId ? "active" : ""}" data-t="${t.id}">${t.label}${t.ratio ? ` <span style="opacity:.55">${t.ratio}%</span>` : ""}</button>`).join("");
   $wordChips.querySelectorAll("[data-w]").forEach(b =>
-    b.onclick = () => { state.wordId = b.dataset.w; render(); });
+    b.onclick = () => goWord(b.dataset.w));
   $typeChips.querySelectorAll("[data-t]").forEach(b =>
     b.onclick = () => { state.typeId = b.dataset.t; render(); });
 }
@@ -151,59 +170,88 @@ function pushLog(type, rating) {
     `<li><span>${l.word} <span class="dim">· ${l.type}</span></span><span class="lv-${l.rating}">${l.rating}</span></li>`).join("");
 }
 
-// ---------- 认词卡 ----------
+// ---------- 认词卡（新布局：图在上 → 单词+音标+发音 → 例句+朗读 → 三键评分） ----------
+// 点击「模糊/不认识」→ 例句下方展开中文释义，出现 上一个/下一个 导航
+// 点击「认识」→ 直接跳下一个词
 function renderRecogCard(w) {
+  const revealed = state.recogRevealed;
+  const ids = Object.keys(WORDS);
+  const idx = ids.indexOf(state.wordId);
+  const hasPrev = idx > 0;
+  const hasNext = idx < ids.length - 1;
+
   $slot.innerHTML = `
-    <div class="flashcard" id="flashcard">
-      <div class="flashcard-inner">
-        <div class="face face-front">
-          <span class="recog-badge">认词卡 · 认识连续 2 次升级默写</span>
-          <div class="recog-word">${w.word}</div>
-          <div class="recog-phon">
-            ${w.ipa}
-            <button class="icon-btn" id="pronBtn" title="发音">🔊</button>
-          </div>
-          <img class="recog-img" src="${w.img}" alt="${w.word} 配图">
-          <div class="flip-hint">点击卡片翻面查看释义</div>
+    <div class="flashcard">
+      <div class="face recog-face">
+        <span class="recog-badge">认词卡 · 认识连续 2 次升级默写</span>
+
+        <img class="recog-img" src="${w.img}" alt="${w.word} 配图">
+
+        <div class="recog-word-row">
+          <span class="recog-word">${w.word}</span>
+          <span class="recog-phon">${w.ipa}</span>
+          <button class="play-chip" id="pronBtn" title="播放单词发音" aria-label="播放单词发音 ${w.word}">
+            ${speakerSvg(16)}
+          </button>
         </div>
-        <div class="face face-back">
-          <span class="recog-badge">认词卡 · 释义面</span>
-          <div class="recog-trans">${esc(w.translation)}</div>
-          <div class="recog-def">${esc(w.definition)}</div>
-          <div class="recog-def" style="margin-top:10px">
-            <i>${esc(w.example.en)}</i><br>${esc(w.example.cn)}
+
+        <div class="recog-example">
+          <div class="recog-example-text">
+            <p class="recog-example-en"><i>${esc(w.example.en)}</i></p>
+            ${revealed ? `<p class="recog-example-cn">${esc(w.example.cn)}</p>` : ""}
           </div>
-          <div class="rate-row" style="margin-top:auto">
-            <button class="rate-btn rate-again" data-r="again">不认识</button>
-            <button class="rate-btn rate-hard" data-r="hard">模糊</button>
-            <button class="rate-btn rate-good" data-r="good">认识</button>
-          </div>
+          <button class="play-chip play-chip-sm" data-speak="${esc(w.example.en)}" title="朗读例句" aria-label="朗读例句">
+            ${speakerSvg(14)}
+          </button>
         </div>
+
+        ${revealed ? `
+        <div class="recog-translation">
+          <div class="recog-translation-label">中文释义</div>
+          <div class="recog-translation-text">${esc(w.translation)}</div>
+        </div>` : ""}
+
+        ${revealed ? `
+        <div class="nav-row">
+          <button class="nav-btn" id="prevBtn" ${hasPrev ? "" : "disabled"} title="上一个单词">← 上一个</button>
+          <button class="nav-btn" id="nextBtn" ${hasNext ? "" : "disabled"} title="下一个单词">下一个 →</button>
+        </div>` : ""}
       </div>
+    </div>
+    <div class="rate-row rate-below">
+      <button class="rate-btn rate-again" data-r="again">不认识</button>
+      <button class="rate-btn rate-hard" data-r="hard">模糊</button>
+      <button class="rate-btn rate-good" data-r="good">认识</button>
     </div>`;
 
-  const card = document.getElementById("flashcard");
-  card.addEventListener("click", (e) => {
-    if (e.target.closest(".rate-btn") || e.target.closest("#pronBtn")) return;
-    card.classList.toggle("flipped");
-  });
   document.getElementById("pronBtn").onclick = () => speak(w.word);
-
-  card.querySelectorAll(".rate-btn").forEach(b => {
-    b.onclick = () => {
-      const r = b.dataset.r;
-      const p = state.progress[state.wordId];
-      if (r === "good") {
-        p.streak += 1;
-        if (p.streak >= 2) { p.stage = "spell"; }  // 连续 2 次认识 → 升级默写
-      } else {
-        p.streak = 0;
-        if (p.stage === "spell") p.stage = "recognize";  // 降级回认词
-      }
-      pushLog("认词", r);
-      render();
-    };
+  $slot.querySelectorAll(".play-chip[data-speak]").forEach(b => {
+    b.onclick = () => speak(b.dataset.speak);
   });
+
+  function rate(r) {
+    const p = state.progress[state.wordId];
+    if (r === "good") {
+      p.streak += 1;
+      if (p.streak >= 2) { p.stage = "spell"; }  // 连续 2 次认识 → 升级默写
+      pushLog("认词", r);
+      if (hasNext) { goWord(ids[idx + 1]); return; }  // 认识 → 自动跳下一个
+      render(); // 已是最后一个：留在原地（正式实现接 session 结算）
+      return;
+    }
+    // 模糊 / 不认识 → 展开中文释义 + 上/下一个导航
+    p.streak = 0;
+    if (p.stage === "spell") p.stage = "recognize";  // 降级回认词
+    pushLog("认词", r);
+    state.recogRevealed = true;
+    render();
+  }
+
+  $slot.querySelectorAll(".rate-btn").forEach(b => { b.onclick = () => rate(b.dataset.r); });
+  const prev = document.getElementById("prevBtn");
+  const next = document.getElementById("nextBtn");
+  if (prev) prev.onclick = () => recogNext(-1);
+  if (next) next.onclick = () => recogNext(1);
 }
 
 // ---------- 默写卡（三型共用骨架） ----------
