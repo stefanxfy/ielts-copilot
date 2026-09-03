@@ -133,8 +133,8 @@ export default function VocabDemoPage() {
       <header className="flex items-baseline justify-between">
         <div>
           <div className="text-[12px] text-muted-foreground">
-            <Link href="/learn" className="hover:underline">
-              学习中心
+            <Link href="/learn/books" className="hover:underline">
+              单词库
             </Link>
             <span className="px-1.5">/</span>
             <span>背单词演示</span>

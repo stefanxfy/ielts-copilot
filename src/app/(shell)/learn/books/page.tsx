@@ -1,5 +1,5 @@
 /**
- * /learn/books — 词库中心(#62)
+ * /learn/books — 单词库(#62;原「词库中心」,v1.3 更名迁入资料库下拉)
  *
  * 词书卡片网格(封面 + 来源徽章 + 词数/已学/配图/缺图 + 进度条) + 新建/导入弹窗
  * (CreateBookDialog)+ 删除确认。对齐 prototype/vocab/book-list 原型。
@@ -78,7 +78,7 @@ export default function BookListPage() {
     <>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="text-xl">词库中心</h2>
+          <h2 className="text-xl">单词库</h2>
           <p className="mt-0.5 text-[13px] text-muted-foreground">单词书管理 · 一行一词导入,其余自动补全</p>
         </div>
         <button

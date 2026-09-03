@@ -1,74 +1,89 @@
 "use client";
 
 /**
- * /learn 学习中心(复刻原型 view-learn)
- * 提分闭环功能占位:V2/V3 逐版开放,点击 toast 说明
- * 背单词演示页:已开放(P8 垂直切片),点击跳转 /learn/vocab-demo
+ * /learn — 背单词(复习 session 即首页,学习中心 8 卡页已退役)
+ * docs/学习中心重构-背单词页面编排规划.md v1.3 §2.2 三形态状态机:
+ *   A. 背词计划零选词 → 中央引导「请先到单词库制定背词计划」+「去单词库 →」
+ *   B/C. 有选词 → S1 暂放「复习功能即将上线」极简占位(S3 按 card-demo 原型高保真移植:
+ *        认词卡 + 默写三型 + vocab-card-policy 选卡型 + FSRS 回写 + 右上角进度两件套)
+ * 数据源:GET /api/vocab-study-plan(total=0 即零选词,纯查询无副作用)
  */
 
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const FEATURES = [
-  { name: "错题本", ver: "V2", desc: "按题型归类错题，快速定位薄弱题型" },
-  { name: "专项训练", ver: "V2", desc: "只刷某一种题型，随机抽题反复练" },
-  { name: "精听训练", ver: "V2", desc: "听力逐句循环、跟读、听写" },
-  { name: "弱项雷达", ver: "V3", desc: "题型维度能力分布，一眼看清短板" },
-  { name: "分数曲线", ver: "V3", desc: "历次模考 band 追踪，看趋势" },
-  { name: "生词本", ver: "V3", desc: "阅读点词收藏，导出 Anki 背单词" },
-  {
-    name: "词库中心",
-    ver: "M2",
-    desc: "词书卡片列表 · 一行一词导入 · 风格/音色可视化选择",
-    href: "/learn/books",
-  },
-  {
-    name: "背单词演示",
-    ver: "P8",
-    desc: "100 词垂直切片 · 单词+例句音频播放 · 8 套皮肤融合",
-    href: "/learn/vocab-demo",
-  },
-];
+type PlanSummary = { total: number; active: number; dueNow: number };
 
 export default function LearnPage() {
-  return (
-    <>
-      <h2 className="text-xl">学习中心</h2>
-      <p className="mb-5 text-[13px] text-muted-foreground">提分闭环功能 · 按版本逐步开放</p>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURES.map((f) =>
-          f.href ? (
-            <Link
-              key={f.name}
-              href={f.href}
-              className="card-float block rounded-xl border border-border bg-card p-4 text-left"
-            >
-              <div className="flex items-center justify-between text-sm font-semibold">
-                {f.name}
-                <span className="rounded-full border border-border px-[7px] py-px text-[10px] font-normal text-muted-foreground">
-                  {f.ver}
-                </span>
-              </div>
-              <div className="mt-2 text-xs text-muted-foreground">{f.desc}</div>
-            </Link>
-          ) : (
-            <button
-              key={f.name}
-              type="button"
-              onClick={() => toast.info(`${f.name} ${f.ver} 提供`)}
-              className="card-float cursor-pointer rounded-xl border border-border bg-card p-4 text-left"
-            >
-              <div className="flex items-center justify-between text-sm font-semibold">
-                {f.name}
-                <span className="rounded-full border border-border px-[7px] py-px text-[10px] font-normal text-muted-foreground">
-                  {f.ver}
-                </span>
-              </div>
-              <div className="mt-2 text-xs text-muted-foreground">{f.desc}</div>
-            </button>
-          ),
-        )}
+  const [loaded, setLoaded] = useState(false);
+  const [plan, setPlan] = useState<PlanSummary | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const resp = await fetch("/api/vocab-study-plan");
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = (await resp.json()) as PlanSummary;
+        setPlan(data);
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : "加载失败");
+      } finally {
+        setLoaded(true);
+      }
+    })();
+  }, []);
+
+  if (!loaded) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-[13px] text-muted-foreground">加载中…</p>
       </div>
-    </>
+    );
+  }
+
+  if (err) {
+    return (
+      <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+        加载失败:{err}
+      </div>
+    );
+  }
+
+  // 形态 A:背词计划零选词 → 中央引导去单词库
+  if (!plan || plan.total === 0) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <h2 className="text-xl">还没有制定背词计划</h2>
+        <p className="max-w-[320px] text-[13px] leading-relaxed text-muted-foreground">
+          请先到单词库制定背词计划:选择一本词书,把想背的词加入计划,回来这里就可以开始背单词。
+        </p>
+        <Link
+          href="/learn/books"
+          className="press-bubble rounded-full bg-primary px-5 py-2 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          去单词库 →
+        </Link>
+      </div>
+    );
+  }
+
+  // 形态 B/C:有选词 → S1 极简占位(S3 复习 session 落地后替换)
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+      <h2 className="text-xl">复习功能即将上线</h2>
+      <p className="max-w-[360px] text-[13px] leading-relaxed text-muted-foreground">
+        你的背词计划已有 <span className="font-semibold text-foreground">{plan.total}</span>{" "}
+        个词(在学 {plan.active}
+        {plan.dueNow > 0 && `,今日到期 ${plan.dueNow}`})。
+        正式复习(认词卡 + 默写)在下一步开放,届时打开本页即可直接开背。
+      </p>
+      <Link
+        href="/learn/books"
+        className="press-bubble rounded-full border border-border bg-secondary px-5 py-2 text-[13px] font-medium text-secondary-foreground transition-colors hover:bg-accent"
+      >
+        继续去单词库选词 →
+      </Link>
+    </div>
   );
 }
