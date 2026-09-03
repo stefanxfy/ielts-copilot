@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 430" width="100%" role="img">
+  <title>核心词判定与生图策略</title>
+  <desc>导入词全集按纯频率阈值筛选核心词,三种生图策略对应不同覆盖范围</desc>
+  <rect x="0" y="0" width="680" height="430" fill="#FFFFFF"/>
+  <defs>
+    <marker id="arrow3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">核心词判定:纯频率阈值(2026-09-03 拍板)</text>
+
+  <rect x="40" y="64" width="270" height="120" rx="12" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+  <text x="175" y="92" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#27500A" text-anchor="middle">导入词全集</text>
+  <text x="175" y="114" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" fill="#3B6D11" text-anchor="middle">去重后的待导词表</text>
+  <text x="175" y="134" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11" text-anchor="middle">每词带 ECDICT 词频元数据</text>
+  <text x="175" y="152" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#3B6D11" text-anchor="middle">collins / bncRank / frqRank</text>
+
+  <rect x="370" y="64" width="270" height="120" rx="12" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.5"/>
+  <text x="505" y="88" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#633806" text-anchor="middle">核心词判据</text>
+  <text x="505" y="116" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="14" font-weight="500" fill="#854F0B" text-anchor="middle">collins ≥ 3</text>
+  <text x="505" y="136" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" fill="#854F0B" text-anchor="middle">或</text>
+  <text x="505" y="158" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="14" font-weight="500" fill="#854F0B" text-anchor="middle">bncRank ≤ 2000</text>
+  <text x="505" y="178" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#854F0B" text-anchor="middle">阈值存 app_settings 可配,不写死</text>
+
+  <path d="M310 124 L366 124" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow3)"/>
+
+  <rect x="40" y="220" width="188" height="80" rx="10" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <text x="134" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#3C3489" text-anchor="middle">策略 core(默认)</text>
+  <text x="134" y="266" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">只给核心词生图</text>
+  <text x="134" y="284" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">100 词实测命中 72</text>
+
+  <rect x="246" y="220" width="188" height="80" rx="10" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <text x="340" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#3C3489" text-anchor="middle">策略 all</text>
+  <text x="340" y="266" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">全量生图</text>
+  <text x="340" y="284" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">大词书耗时,慎选</text>
+
+  <rect x="452" y="220" width="188" height="80" rx="10" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <text x="546" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#3C3489" text-anchor="middle">策略 none</text>
+  <text x="546" y="266" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">暂不生图</text>
+  <text x="546" y="284" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">导入后可单词级补图</text>
+
+  <path d="M440 184 L134 216" fill="none" stroke="#888780" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrow3)"/>
+  <path d="M505 184 L340 216" fill="none" stroke="#888780" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrow3)"/>
+
+  <rect x="40" y="330" width="600" height="64" rx="10" fill="#FCEBEB" stroke="#F09595" stroke-width="0.5"/>
+  <text x="64" y="354" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#791F1F">缺图词调度联动(待实现)</text>
+  <text x="64" y="374" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#A32D2D">无图词在出题时跳过「视觉默写 40%」与「认词图型」,重配比到听觉/语境,保三型总量比例不失衡。</text>
+</svg>
