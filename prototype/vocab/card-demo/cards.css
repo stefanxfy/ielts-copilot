@@ -320,16 +320,17 @@ body {
 .audio-tip { text-align: center; color: var(--muted-foreground); font-size: 12px; margin-bottom: 8px; }
 
 /* ---------- 语境型 ---------- */
-.ctx-sentence { font-size: 18px; line-height: 1.7; }
-.ctx-sentence .blank {
-  display: inline-block;
-  min-width: 110px;
-  border-bottom: 2px solid var(--primary);
-  text-align: center;
-  color: var(--primary);
-  font-weight: 700;
+/* 布局与其他默写卡对齐：图居中在上 → 两级提示居中 → 例句沉到卡片偏下（margin-top:auto 钉底） */
+.ctx-img { margin-bottom: 6px; }
+.ctx-sentence {
+  margin-top: auto;      /* 弹性列内钉底：给上方两级提示留出显示空间 */
+  padding-top: 18px;
+  font-size: 17px;
+  line-height: 2.1;      /* 行高放宽：内联输入框的下划线不挤压上下行 */
 }
-.ctx-hint-img { width: 62%; border-radius: 10px; margin-top: 18px; border: 1px solid var(--border); display: block; }
+.ctx-blank { white-space: nowrap; }
+/* 判错/查看答案的对照块：语境型排在例句之下 */
+.ctx-answer { margin-top: 14px; }
 
 /* ---------- 输入与字母格 ---------- */
 .input-row { margin-top: auto; padding-top: 16px; }
@@ -383,6 +384,18 @@ body {
 .word-line-input.bad      { border-bottom-color: var(--destructive); color: var(--destructive); }
 .word-line-input.revealed { border-bottom-color: var(--border); color: var(--destructive); }
 .word-line-input:disabled { opacity: 1; cursor: not-allowed; }
+
+/* 语境型：键入位即挖空处——内联下划线输入框（必须排在 .word-line-input 之后才能覆写生效） */
+.ctx-blank-input {
+  display: inline-block;         /* 覆写 block；宽度由 demo.js 内联 ch 值控制（内联样式优先级高于 width:100%） */
+  border-bottom-color: var(--primary);
+  font-size: inherit;            /* 随例句字号，不用 22px 大字 */
+  font-weight: 400;
+  padding: 0 4px 2px;
+  vertical-align: baseline;
+  letter-spacing: 1px;
+}
+.ctx-blank-input:focus { border-bottom-color: var(--secondary-foreground); }
 
 /* ---------- 默写卡：提示区（分级揭示） ---------- */
 .dict-hint {

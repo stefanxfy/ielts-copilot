@@ -122,13 +122,17 @@ function editDistance(a, b) {
 }
 
 function exampleBlanked(word) {
-  // 例句挖空：先整体转义，再回插挖空占位 span（先插 span 会被 esc 转义成可见标签文本）
+  // 例句挖空：返回 前段/命中词/后段 三段（各段独立 esc 后拼接，避免先插标签再转义的坑）
   const re = new RegExp(word + "\\w*", "i");
   const m = WORDS[word].example.en.match(re);
   if (!m) return null;
-  const blanked = WORDS[word].example.en.replace(re, "@@BLANK@@");
-  const html = esc(blanked).replace("@@BLANK@@", '<span class="blank">______</span>');
-  return { html, answer: m[0] };
+  const i = m.index;
+  return {
+    before: WORDS[word].example.en.slice(0, i),
+    blank: m[0],
+    after: WORDS[word].example.en.slice(i + m[0].length),
+    answer: m[0],
+  };
 }
 
 // ---------- 渲染入口 ----------
@@ -389,29 +393,8 @@ function renderDictation(w, type) {
   const hasNext = idx < ids.length - 1;
   const navAllowed = spellNextAllowed();
 
-  // ---- 刺激区 ----
-  // 听觉型：一级提示后整个卡片重渲染为「大图居中 + 图下音标/播放钮」，与视觉卡一级提示同款布局
-  let stimulus = "";
-  if (type === "visual") {
-    stimulus = `<img class="vis-img" src="${w.img}" alt="视觉提示">`;
-  } else if (type === "audio") {
-    stimulus = (s.hints >= 1 || s.done) ? `
-      <img class="vis-img" src="${w.img}" alt="听觉提示配图">
-      <div class="dict-hint dict-hint-1">
-        <span class="recog-phon">${w.ipa}</span>
-        <button class="play-bare" id="hintPronBtn" title="播放单词发音" aria-label="播放单词发音">${speakerSvg(15)}</button>
-      </div>` : `
-      <button class="audio-play" id="playBtn" title="播放读音" aria-label="播放单词读音">${speakerSvg(34)}</button>`;
-  } else {
-    const b = exampleBlanked(w.word);
-    stimulus = `
-      <div class="ctx-sentence">${b.html}</div>
-      <img class="ctx-hint-img" src="${w.img}" alt="语境提示图">`;
-  }
-
   // ---- 提示区（分级揭示；done 后全展示） ----
-  // 视觉/语境型一级：音标 + 读音（自动 1 次 + 裸喇叭），居中在图/例句下方
-  // 听觉型一级已并入刺激区（大图居中 + 图下音标/播放钮），提示区只出二级中文释义
+  // 先构建 hintHtml：语境型要把它嵌进「图与例句之间」，其余型在刺激区之后输出
   const level = s.done ? 2 : s.hints;
   let hintHtml = "";
   if ((level >= 1 || s.done) && type !== "audio") {
@@ -428,12 +411,45 @@ function renderDictation(w, type) {
         <span class="dict-hint-text">${esc(w.translation)}</span>
       </div>`;
   }
-  if (s.done && s.result === "wrong" && !s.gaveUp) { // 查看答案态答案已在输入行，不重复展示
+  // 判错对照块：语境型答案已显示在例句挖空处（内联输入行），不再重复展示
+  if (s.done && s.result === "wrong" && !s.gaveUp && type !== "ctx") {
     hintHtml += `
       <div class="dict-answer">
         <span class="dict-answer-label">正确拼写</span>
         <span class="dict-answer-word">${w.word}</span>
       </div>`;
+  }
+
+  // ---- 刺激区 ----
+  // 语境型布局与其他默写卡对齐：图居中在上 → 两级提示居中 → 例句沉到卡片偏下；
+  // 键入位直接嵌在例句挖空处（内联下划线输入框，宽度按答案字数 ch 自适应），不再单独一行
+  const inputAttrs = `id="answerInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"${s.done ? " disabled" : ""}`;
+  let stimulus = "";
+  if (type === "visual") {
+    stimulus = `<img class="vis-img" src="${w.img}" alt="视觉提示">`;
+  } else if (type === "audio") {
+    // 听觉型：一级提示后整个卡片重渲染为「大图居中 + 图下音标/播放钮」，与视觉卡一级提示同款布局
+    stimulus = (s.hints >= 1 || s.done) ? `
+      <img class="vis-img" src="${w.img}" alt="听觉提示配图">
+      <div class="dict-hint dict-hint-1">
+        <span class="recog-phon">${w.ipa}</span>
+        <button class="play-bare" id="hintPronBtn" title="播放单词发音" aria-label="播放单词发音">${speakerSvg(15)}</button>
+      </div>` : `
+      <button class="audio-play" id="playBtn" title="播放读音" aria-label="播放单词读音">${speakerSvg(34)}</button>`;
+  } else {
+    const b = exampleBlanked(w.word);
+    // 判错对照块：语境型单独排在例句之下（gaveUp 时答案已在挖空处，不重复）
+    const ctxAnswer = (s.done && s.result === "wrong" && !s.gaveUp) ? `
+      <div class="dict-answer ctx-answer">
+        <span class="dict-answer-label">正确拼写</span>
+        <span class="dict-answer-word">${w.word}</span>
+      </div>` : "";
+    stimulus = `
+      <img class="vis-img ctx-img" src="${w.img}" alt="语境提示配图">
+      ${hintHtml}
+      <div class="ctx-sentence">${esc(b.before)}<span class="ctx-blank"><input class="word-line-input ctx-blank-input" ${inputAttrs} style="width:${b.answer.length + 2}ch" /></span>${esc(b.after)}</div>
+      ${ctxAnswer}
+      <div id="verdictSlot"></div>`;
   }
 
   $slot.innerHTML = `
@@ -444,13 +460,12 @@ function renderDictation(w, type) {
       <div class="flashcard">
         <div class="face dictation-face">
           ${stimulus}
-          ${hintHtml}
+          ${type === "ctx" ? "" : hintHtml}
+          ${type === "ctx" ? "" : `
           <div class="dict-input-area">
-            <input class="word-line-input" id="answerInput" type="text"
-                   autocomplete="off" autocapitalize="off" spellcheck="false"
-                   ${s.done ? "disabled" : ""} />
+            <input class="word-line-input" ${inputAttrs} />
             <div id="verdictSlot"></div>
-          </div>
+          </div>`}
         </div>
       </div>
       <button class="slide-nav slide-nav-next" id="nextBtn" ${hasNext && navAllowed ? "" : "disabled"} title="下一个单词(提交本词后解锁)" aria-label="下一个单词">
@@ -477,7 +492,9 @@ function renderDictation(w, type) {
   });
   if (s.done) {
     // 判分后回放：判错显示用户拼写并标红；查看答案显示正确单词（灰色锁定，不可修改）
-    input.value = s.gaveUp ? w.word : (s.guess || "");
+    // 语境型答案嵌在例句挖空处：gaveUp 显示句中屈折形式（如 abandoned），宽度随内容自适应
+    input.value = s.gaveUp ? (type === "ctx" ? exampleBlanked(w.word).answer : w.word) : (s.guess || "");
+    input.style.width = (input.value.length + 2) + "ch";
     input.classList.add(s.gaveUp ? "revealed" : (s.result === "good" ? "ok" : "bad"));
   } else {
     if (s.draft) input.value = s.draft; // 点提示等重渲染后恢复未提交草稿
@@ -573,7 +590,10 @@ function grade(w, type, guessRaw) {
   const guess = guessRaw.trim().toLowerCase();
   if (!guess) return;
 
-  const ok = guess === w.word.toLowerCase();
+  // 语境型答案嵌在句中：句中屈折形式（如 abandoned）与原形（abandon）均判对
+  const answers = [w.word.toLowerCase()];
+  if (type === "ctx") answers.push(exampleBlanked(w.word).answer.toLowerCase());
+  const ok = answers.includes(guess);
   const d = editDistance(guess, w.word.toLowerCase());
   s.done = true;
   s.result = ok ? "good" : "wrong";
