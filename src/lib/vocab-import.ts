@@ -41,6 +41,7 @@ import {
   type VocabImageStyleId,
 } from "@/lib/vocab-image-styles";
 import { generateVocabImageFile } from "@/lib/vocab-image";
+import { readCoreThresholds, isCoreWord } from "@/lib/vocab-core-word";
 
 /* ---------- 类型与任务注册表 ---------- */
 
@@ -447,7 +448,8 @@ async function fetchBcz(url: string, attempts = 3): Promise<Record<string, strin
   return null;
 }
 
-/* ---------- 子模块:ECDICT 行与核心词判据 ---------- */
+/* ---------- 子模块:ECDICT 行 ---------- */
+/* 核心词判据(readCoreThresholds/isCoreWord)已抽到 vocab-core-word.ts(批量补图共用) */
 
 interface EcdictRow {
   phonetic: string | null;
@@ -458,28 +460,6 @@ interface EcdictRow {
   bnc: number | null;
   frq: number | null;
   exchange: string | null;
-}
-
-export interface CoreThresholds {
-  collinsMin: number;
-  bncMax: number;
-}
-
-const DEFAULT_THRESHOLDS: CoreThresholds = { collinsMin: 3, bncMax: 2000 };
-
-/** 阈值读 app_settings.vocab_core_thresholds(设置页可改;非法/缺省回退 3/2000) */
-export function readCoreThresholds(): CoreThresholds {
-  const raw = getSetting<Partial<CoreThresholds>>("vocab_core_thresholds");
-  if (!raw || typeof raw !== "object") return { ...DEFAULT_THRESHOLDS };
-  const r = raw as Partial<CoreThresholds>;
-  return {
-    collinsMin: typeof r.collinsMin === "number" && r.collinsMin >= 1 && r.collinsMin <= 5 ? r.collinsMin : DEFAULT_THRESHOLDS.collinsMin,
-    bncMax: typeof r.bncMax === "number" && r.bncMax >= 100 && r.bncMax <= 50000 ? r.bncMax : DEFAULT_THRESHOLDS.bncMax,
-  };
-}
-
-function isCoreWord(c: WordContent, t: CoreThresholds): boolean {
-  return (c.collins !== undefined && c.collins >= t.collinsMin) || (c.bncRank !== undefined && c.bncRank <= t.bncMax);
 }
 
 /** ECDICT translation 拆分(按 \n 或 ;/；),兜底释义用 */

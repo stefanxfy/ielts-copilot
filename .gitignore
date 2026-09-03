@@ -23,6 +23,11 @@ npm-debug.log*
 # 音频由 scripts/import-vocab-pipeline.mjs 调 edge-tts 重新合成,
 # 二进制大不入库;clone 后跑脚本一键重生。
 public/audio/
+
+# ---------- 背单词单词配图 ----------
+# 由 /api/vocab-batch-image 调 MiniMax 生成,同为生成型二进制不入库,
+# 可重复调用批量补图接口重生(只补无图核心词)。
+public/images/words/
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*

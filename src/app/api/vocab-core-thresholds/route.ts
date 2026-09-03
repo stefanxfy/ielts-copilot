@@ -3,10 +3,10 @@
  *
  * 判据:collins ≥ collinsMin 或 bncRank ≤ bncMax(生图策略 core 用,docs/背单词词库导入与词库中心设计.md §4)。
  * GET:未配置返回默认值(3/2000);PUT:范围校验(collinsMin 1–5 / bncMax 100–50000)。
- * 阈值改动立即生效——导入管线每次跑 readCoreThresholds() 现读,无缓存。
+ * 阈值改动立即生效——导入管线/批量补图每次跑 readCoreThresholds() 现读,无缓存。
  */
 import { NextResponse } from "next/server";
-import { readCoreThresholds } from "@/lib/vocab-import";
+import { readCoreThresholds } from "@/lib/vocab-core-word";
 import { setSetting } from "@/lib/study/settings";
 
 export const runtime = "nodejs";

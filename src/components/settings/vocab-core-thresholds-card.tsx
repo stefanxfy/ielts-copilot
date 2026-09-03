@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { CoreThresholds } from "@/lib/vocab-import";
+import type { CoreThresholds } from "@/lib/vocab-core-word";
 
 const CARD = "mb-4 max-w-[680px] rounded-xl border border-border bg-card p-5";
 const ROW = "mb-3 flex items-center gap-2.5";
