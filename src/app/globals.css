@@ -328,3 +328,368 @@ html[data-theme="night"] {
     }
   }
 }
+
+/* ================================================================
+ * 背单词复习卡片(S3 /learn,自 prototype/vocab/card-demo/cards.css 移植)
+ * 色值全部走语义 token(八套皮肤零改动适配);类名与原型一一对应。
+ * ================================================================ */
+
+@layer components {
+  /* ---------- 卡片容器 ---------- */
+  .flashcard { position: relative; }
+  .flashcard .face {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(60, 50, 30, .07);
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+    overflow: hidden;
+  }
+
+  /* ---------- 认词卡(图上 → 词中 → 例句 → 评分) ---------- */
+  .recog-img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 320px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 18px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+  }
+  .recog-word-row { text-align: center; }
+  .recog-word-wrap { position: relative; display: inline-block; }
+  .recog-word {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+  .recog-word-side {
+    position: absolute;
+    left: 100%;
+    bottom: 2px;
+    margin-left: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  .recog-phon {
+    color: var(--muted-foreground);
+    font-size: 11px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  /* 认词卡·无图版:单词升级为主视觉 */
+  .recog-face-plain { justify-content: flex-end; }
+  .recog-word-row-main {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .recog-word-row-main .recog-word-wrap {
+    pointer-events: auto;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .recog-word-row-main .recog-word-side {
+    position: static;
+    margin-left: 0;
+    gap: 5px;
+  }
+  .recog-word-xl { font-size: 52px; letter-spacing: -1px; }
+  .recog-bottom { position: relative; z-index: 1; }
+  .recog-example .play-bare { margin-left: auto; }
+
+  /* 裸喇叭发音钮:无圈无底色,纯主题色图标(全项目统一范式) */
+  .play-bare {
+    border: none;
+    background: none;
+    padding: 0;
+    line-height: 0;
+    color: var(--primary);
+    cursor: pointer;
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: transform .15s, color .15s;
+  }
+  .play-bare:hover { color: var(--secondary-foreground); transform: scale(1.15); }
+  .play-bare:active { transform: scale(.9); }
+
+  /* 例句块(左文右朗读钮) */
+  .recog-example {
+    margin-top: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .recog-example-text { flex: 1; min-width: 0; }
+  .recog-example-en { margin: 0; font-size: 14.5px; line-height: 1.65; }
+  .recog-example-cn {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--muted-foreground);
+    animation: vocab-pop .25s ease;
+  }
+
+  /* 模糊/不认识后揭示的中文释义 */
+  .recog-translation {
+    margin-top: 14px;
+    border-radius: 12px;
+    border: 1px dashed var(--ring);
+    background: var(--secondary);
+    padding: 12px 14px;
+    animation: vocab-pop .25s ease;
+  }
+  .recog-translation-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted-foreground);
+  }
+  .recog-translation-text { margin-top: 4px; font-size: 17px; font-weight: 600; }
+
+  /* ---------- 悬浮左右导航(幻灯片播放钮风格) ---------- */
+  .recog-stage { position: relative; }
+  .slide-nav {
+    position: absolute;
+    top: 38%;
+    z-index: 5;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(60, 50, 30, .10);
+    transition: all .15s ease;
+    font-family: inherit;
+  }
+  .slide-nav-prev { left: -62px; }
+  .slide-nav-next { right: -62px; }
+  .slide-nav:hover:not(:disabled) {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-foreground);
+    transform: scale(1.06);
+    box-shadow: 0 4px 14px color-mix(in oklab, var(--primary) 30%, transparent);
+  }
+  .slide-nav:active:not(:disabled) { transform: scale(.95); }
+  .slide-nav:disabled { opacity: .28; cursor: not-allowed; box-shadow: none; }
+
+  /* ---------- 三键评分(卡下方,与卡片同宽均分) ---------- */
+  .rate-row { display: flex; gap: 14px; }
+  .rate-below { max-width: 400px; margin: 16px auto 0; }
+  .rate-below .rate-btn { flex: 1; min-width: 0; }
+  .rate-btn {
+    border-radius: 12px;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    color: #fff;
+    transition: all .15s;
+    font-family: inherit;
+  }
+  .rate-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+  .rate-again { background: var(--destructive); }
+  .rate-hard  { background: var(--primary); }
+  .rate-good  { background: var(--success); }
+  .rate-btn:active { transform: scale(.97); }
+
+  /* ---------- 默写卡三型 ---------- */
+  .vis-img {
+    width: 100%;
+    border-radius: 12px;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    background: var(--muted);
+  }
+  .audio-play {
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    margin: 26px auto 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .15s, color .15s;
+  }
+  .audio-play:hover { transform: scale(1.08); color: var(--secondary-foreground); }
+  .audio-play:active { transform: scale(.94); }
+
+  .ctx-img { margin-bottom: 6px; }
+  .ctx-sentence {
+    margin-top: auto;
+    padding-top: 18px;
+    font-size: 17px;
+    line-height: 2.1;
+  }
+  .ctx-blank { white-space: nowrap; }
+  .ctx-answer { margin-top: 14px; }
+
+  /* ---------- 默写卡:单行下划线输入 ---------- */
+  .dictation-face { justify-content: flex-start; }
+  .dict-input-area { margin-top: auto; padding-top: 18px; }
+  .word-line-input {
+    display: block;
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid var(--border);
+    background: transparent;
+    padding: 6px 4px 10px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 2px;
+    text-transform: lowercase;
+    white-space: nowrap;
+    overflow-x: auto;
+    outline: none;
+    color: var(--foreground);
+    caret-color: var(--primary);
+    transition: border-color .15s, color .15s;
+  }
+  .word-line-input:focus { border-bottom-color: var(--primary); }
+  .word-line-input::placeholder { color: var(--muted-foreground); opacity: .45; letter-spacing: 0; font-weight: 400; }
+  .word-line-input.ok       { border-bottom-color: var(--success);    color: var(--success); }
+  .word-line-input.bad      { border-bottom-color: var(--destructive); color: var(--destructive); }
+  .word-line-input.revealed { border-bottom-color: var(--border);     color: var(--destructive); }
+  .word-line-input:disabled { opacity: 1; cursor: not-allowed; }
+  .ctx-blank-input {
+    display: inline-block;
+    border-bottom-color: var(--primary);
+    font-size: inherit;
+    font-weight: 400;
+    padding: 0 4px 2px;
+    vertical-align: baseline;
+    letter-spacing: 1px;
+  }
+  .ctx-blank-input:focus { border-bottom-color: var(--secondary-foreground); }
+
+  /* ---------- 默写卡:提示区(分级揭示) ---------- */
+  .dict-hint {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: vocab-pop .25s ease;
+  }
+  .dict-hint-1 { justify-content: center; }
+  .dict-hint-1 .recog-phon { font-size: 14px; }
+  .dict-hint-2 {
+    border-radius: 12px;
+    border: 1px dashed var(--ring);
+    background: var(--secondary);
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .dict-hint-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted-foreground);
+    flex-shrink: 0;
+  }
+  .dict-hint-text { font-size: 16px; font-weight: 600; }
+
+  /* 判错后全揭示的正确拼写 */
+  .dict-answer {
+    margin-top: 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    border-radius: 12px;
+    border: 1.5px solid var(--destructive);
+    background: color-mix(in oklab, var(--destructive) 6%, transparent);
+    padding: 10px 14px;
+    animation: vocab-pop .25s ease;
+  }
+  .dict-answer-label {
+    font-size: 11px;
+    color: var(--muted-foreground);
+    letter-spacing: .08em;
+  }
+  .dict-answer-word {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--destructive);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 1px;
+  }
+
+  /* 判分徽标 */
+  .dict-verdict {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    animation: vocab-pop .25s ease;
+  }
+  .dict-verdict-ok  { color: var(--success); }
+  .dict-verdict-bad { color: var(--destructive); }
+
+  /* ---------- 卡外按钮行(提示 / 提交·下一个) ---------- */
+  .dict-actions {
+    max-width: 400px;
+    margin: 16px auto 0;
+    display: flex;
+    gap: 14px;
+  }
+  .dict-actions .btn { flex: 1; padding: 12px 18px; font-size: 14.5px; font-weight: 600; }
+  .dict-actions .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .vocab-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-family: inherit;
+  }
+  .vocab-btn:active { transform: scale(.97); }
+  .vocab-btn-ghost {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted-foreground);
+  }
+  .vocab-btn-ghost:hover { border-color: var(--ring); color: var(--foreground); }
+  .vocab-btn-primary { background: var(--primary); color: var(--primary-foreground); }
+}
+
+@keyframes vocab-pop {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 900px) {
+  .slide-nav-prev { left: -52px; }
+  .slide-nav-next { right: -52px; }
+}
