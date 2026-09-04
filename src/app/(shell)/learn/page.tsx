@@ -554,7 +554,7 @@ function RecogCard(props: {
     item.content.translation?.join("; ") || "(暂无释义)";
   const example = item.content.examples?.[0];
 
-  /* 方向键钉在单词行几何中心 + 无图版单词自适应(原型 fitPlainWord/alignSlideNav) */
+  /* 方向键钉在单词行几何中心 + 单词自适应收缩(带图 36→22 / 无图 52→40;音标+喇叭 CSS flex-wrap 整体换行) */
   useLayoutEffect(() => {
     const align = () => {
       const stage = stageRef.current;
@@ -566,33 +566,42 @@ function RecogCard(props: {
       if (prevRef.current) prevRef.current.style.top = `${top}px`;
       if (nextRef.current) nextRef.current.style.top = `${top}px`;
     };
-    const fitPlain = () => {
-      if (!plain) return;
+    const fitWord = () => {
       const face = faceRef.current;
       const wordEl = wordRef.current;
       const wrapEl = wrapRef.current;
-      const bottomEl = bottomRef.current;
-      if (!face || !wordEl || !wrapEl || !bottomEl) return;
+      if (!face || !wordEl || !wrapEl) return;
       const avail = face.clientWidth - 36;
-      let size = 52;
-      wordEl.style.fontSize = `${size}px`;
-      while (size > 40 && wordEl.offsetWidth > avail) {
-        size -= 1;
+      if (plain) {
+        const bottomEl = bottomRef.current;
+        if (!bottomEl) return;
+        let size = 52;
         wordEl.style.fontSize = `${size}px`;
+        while (size > 40 && wordEl.offsetWidth > avail) {
+          size -= 1;
+          wordEl.style.fontSize = `${size}px`;
+        }
+        wrapEl.style.transform = "translateY(0)";
+        const wr = wrapEl.getBoundingClientRect();
+        const br = bottomEl.getBoundingClientRect();
+        const overlap = wr.bottom - br.top + 10;
+        if (overlap > 0) wrapEl.style.transform = `translateY(${-overlap}px)`;
+      } else {
+        // 带图版:36px 起收缩,保证长单词不横向溢出(音标+喇叭由 CSS flex-wrap 换行)
+        let size = 36;
+        wordEl.style.fontSize = `${size}px`;
+        while (size > 22 && wordEl.offsetWidth > avail) {
+          size -= 1;
+          wordEl.style.fontSize = `${size}px`;
+        }
       }
-      wrapEl.style.transform = "translateY(0)";
-      const wr = wrapEl.getBoundingClientRect();
-      const br = bottomEl.getBoundingClientRect();
-      const overlap = wr.bottom - br.top + 10;
-      if (overlap > 0) wrapEl.style.transform = `translateY(${-overlap}px)`;
-      align();
     };
-    fitPlain();
+    fitWord();
     align();
-    window.addEventListener("resize", fitPlain);
+    window.addEventListener("resize", fitWord);
     window.addEventListener("resize", align);
     return () => {
-      window.removeEventListener("resize", fitPlain);
+      window.removeEventListener("resize", fitWord);
       window.removeEventListener("resize", align);
     };
   }, [plain, revealed, props.imgReady, item.wordId]);
