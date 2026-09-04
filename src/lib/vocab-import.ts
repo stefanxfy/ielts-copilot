@@ -54,6 +54,8 @@ export interface VocabImportParams {
   imageStyle: VocabImageStyleId;
   voiceWord: string;
   voiceSent: string;
+  /** 可选:传入已有 bookId 时重导同书(清旧关联重挂,内容幂等补全),不传则新建词书 */
+  bookId?: string;
 }
 
 export interface VocabImportTaskState {
@@ -155,7 +157,13 @@ export function startImportTask(raw: unknown): { ok: true; value: StartImportRes
 
   // 解析归一在任务内第一步做;这里先粗计数返回
   const id = `vt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-  const bookId = `custom-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).slice(2, 6)}`;
+  // 重导同书:入参带合法 bookId 且库里存在 → 复用;否则新建
+  const requestedBookId =
+    typeof body.bookId === "string" && body.bookId.trim() ? body.bookId.trim() : undefined;
+  const knownBook = requestedBookId
+    ? getDb().select({ id: wordBooks.id }).from(wordBooks).where(eq(wordBooks.bookId, requestedBookId)).get()
+    : undefined;
+  const bookId = knownBook ? requestedBookId! : `custom-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).slice(2, 6)}`;
   const state: VocabImportTaskState = {
     id,
     status: "running",
@@ -179,7 +187,7 @@ export function startImportTask(raw: unknown): { ok: true; value: StartImportRes
   taskMap().set(id, state);
   pruneTasks();
 
-  const params: VocabImportParams = { name, words: body.words as string[], genStrategy, imageStyle, voiceWord, voiceSent };
+  const params: VocabImportParams = { name, words: body.words as string[], genStrategy, imageStyle, voiceWord, voiceSent, bookId };
   // 后台跑,不 await;错误记入任务态
   void runImportPipeline(state, params).catch((e) => {
     state.status = "error";
