@@ -28,7 +28,6 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { bookWordRelation, wordBooks, words, type WordContent } from "@/db/schema";
 import { dataDir, publicDir } from "@/lib/paths";
-import { getSetting } from "@/lib/study/settings";
 import {
   DEFAULT_SENT_VOICE,
   DEFAULT_WORD_VOICE,
@@ -60,7 +59,7 @@ export interface VocabImportParams {
 
 export interface VocabImportTaskState {
   id: string;
-  status: "running" | "done" | "error";
+  status: "running" | "done" | "error" | "cancelled";
   /** parse → bcz → ecdict → db → tts → image → done */
   phase: string;
   phaseLabel: string;
@@ -96,6 +95,24 @@ function taskMap(): Map<string, VocabImportTaskState> {
 
 export function getImportTask(id: string): VocabImportTaskState | undefined {
   return taskMap().get(id);
+}
+
+/**
+ * 取消导入任务:仅改状态让「导入中」卡片消失;管线内的 TTS/生图循环检测到
+ * cancelled 后尽快自行退出(spawn 粒度,最多再跑完当前并发批)。
+ */
+export function cancelImportTask(id: string): boolean {
+  const t = taskMap().get(id);
+  if (!t || t.status !== "running") return false;
+  t.status = "cancelled";
+  t.phaseLabel = "已取消";
+  t.finishedAt = Date.now();
+  return true;
+}
+
+/** 任务是否已被取消/失效(管线各阶段循环里轮询,及时止损) */
+function taskCancelled(state: VocabImportTaskState): boolean {
+  return state.status !== "running";
 }
 
 /** 全部进行中任务(词库列表页「导入中」卡片渲染用) */
@@ -229,6 +246,7 @@ async function runImportPipeline(state: VocabImportTaskState, params: VocabImpor
     examples: { en: string; cn?: string }[];
   }>();
   for (let i = 0; i < list.length; i++) {
+    if (taskCancelled(state)) return;
     const w = list[i];
     const data = await fetchBcz(BCZ_BASE + encodeURIComponent(w) + ".json");
     if (data) {
@@ -422,16 +440,17 @@ async function runImportPipeline(state: VocabImportTaskState, params: VocabImpor
     }
   }
   state.imageTotal = imageTargets.length;
-  // 生图较慢(5~15s/张),并发 2,失败只记数
+  // 生图较慢(5~15s/张),并发 2,失败只记数;取消即停
   let imgCursor = 0;
   async function imageWorker(): Promise<void> {
-    while (imgCursor < imageTargets.length) {
+    while (imgCursor < imageTargets.length && !taskCancelled(state)) {
       const w = imageTargets[imgCursor++];
       const id = wordIdByName.get(w)!;
       const row = db.select({ contentJson: words.contentJson }).from(words).where(eq(words.id, id)).get();
       if (!row) continue;
       try {
         const { webPath } = await generateVocabImageFile(w, row.contentJson, params.imageStyle);
+        if (taskCancelled(state)) break; // 取消后不再回写
         const c = row.contentJson;
         db.update(words).set({ contentJson: { ...c, image: webPath }, updatedAt: now }).where(eq(words.id, id)).run();
         state.imageOk++;
@@ -441,6 +460,7 @@ async function runImportPipeline(state: VocabImportTaskState, params: VocabImpor
     }
   }
   await Promise.all([imageWorker(), imageWorker()]);
+  if (taskCancelled(state)) return; // 已取消:不覆盖 status,保持 cancelled 态
 
   // ===== 完成 =====
   setPhase(state, "done");
@@ -541,19 +561,32 @@ export async function synthOne(
     const ok = await new Promise<boolean>((resolve) => {
       const child = spawn(EDGE_TTS_PY, args, { stdio: ["ignore", "pipe", "pipe"] });
       let errText = "";
+      let settled = false;
+      const finish = (v: boolean) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        try { child.kill(); } catch { /* 已退出 */ }
+        resolve(v);
+      };
+      // 单次 45s 硬超时:代理/网络挂起时杀进程重试,防整条管线无限卡死
+      const timer = setTimeout(() => {
+        console.warn(`[vocab-import] edge-tts timeout(text=${text.slice(0, 24)},attempt=${attempt})`);
+        finish(false);
+      }, 45_000);
       child.stderr.on("data", (d: Buffer) => {
         errText += d.toString();
       });
       child.on("exit", (code) => {
-        if (code === 0 && existsSync(out) && statSync(out).size > 0) resolve(true);
+        if (code === 0 && existsSync(out) && statSync(out).size > 0) finish(true);
         else {
           console.warn(`[vocab-import] edge-tts fail(text=${text.slice(0, 24)!},attempt=${attempt}):`, errText.trim().slice(-300) || `exit ${code}`);
-          resolve(false);
+          finish(false);
         }
       });
       child.on("error", (e) => {
         console.warn(`[vocab-import] edge-tts spawn error:`, e.message);
-        resolve(false);
+        finish(false);
       });
     });
     if (ok) return true;
@@ -569,7 +602,7 @@ async function runTtsJobs(jobs: TtsJob[], params: VocabImportParams, state: Voca
   async function runList(list: TtsJob[]): Promise<void> {
     let cursor = 0;
     async function worker(): Promise<void> {
-      while (cursor < list.length) {
+      while (cursor < list.length && !taskCancelled(state)) {
         const job = list[cursor++];
         const voice = job.kind === "word" ? params.voiceWord : params.voiceSent;
         const rate = job.kind === "sent" ? SENT_RATE : null;
@@ -580,14 +613,19 @@ async function runTtsJobs(jobs: TtsJob[], params: VocabImportParams, state: Voca
   }
 
   await runList(jobs);
-  // 补扫:代理抖动(单次失败率可到 50%+)下首扫漏掉的再来一整轮
-  const missed = jobs.filter((j) => !ready(j.out));
+  // 补扫:代理抖动(单次失败率可到 50%+)下首扫漏掉的再来一整轮(取消即跳过)
+  const missed = taskCancelled(state) ? [] : jobs.filter((j) => !ready(j.out));
   if (missed.length) await runList(missed);
 
   // 计数按文件终态统计(补扫成功不会双计)
   for (const j of jobs) {
     const good = ready(j.out);
-    if (j.kind === "word") good ? state.audioWordOk++ : state.audioWordFail++;
-    else good ? state.audioSentOk++ : state.audioSentFail++;
+    if (j.kind === "word") {
+      if (good) state.audioWordOk++;
+      else state.audioWordFail++;
+    } else {
+      if (good) state.audioSentOk++;
+      else state.audioSentFail++;
+    }
   }
 }
