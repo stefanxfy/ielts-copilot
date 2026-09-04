@@ -234,6 +234,9 @@ html[data-theme="night"] {
   --accent: #32240f; --accent-foreground: #dda038;
   --border: #3a332b; --input: #3a332b;
   --ring: #b07312;
+  /* 暗底提亮:success/destructive 共用 :root 浅色值,在 #211d1a 卡底对比度仅 4.16/3.87(<AA 4.5),此处覆写 */
+  --success: oklch(0.72 0.14 155.8);
+  --destructive: oklch(0.68 0.19 25.9);
   --chart-1: #dda038; --chart-2: #b07312; --chart-3: #e6c37a; --chart-4: #a8927a; --chart-5: #8fae9f;
   --sidebar: #211d1a; --sidebar-foreground: #efeae4;
   --sidebar-primary: #b07312; --sidebar-primary-foreground: #171412;
