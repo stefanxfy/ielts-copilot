@@ -264,13 +264,14 @@ export default function LearnPage() {
     (it: QueueItem) => `${it.spellType ?? "audio"}:${it.wordId}`,
     [],
   );
-  const canNext = (() => {
-    if (!item) return false;
-    if (idx + 1 >= queue.length) return false;
-    if (item.stage === "recognize") return recogRated[item.wordId] !== undefined;
-    const s = spellStates[spellKeyOf(item)];
-    return !!s?.done;
-  })();
+  /** 当前词是否已背过(认词已评分 / 默写已判分) */
+  const ratedCur =
+    !!item &&
+    (item.stage === "recognize"
+      ? recogRated[item.wordId] !== undefined
+      : !!spellStates[spellKeyOf(item)]?.done);
+  // 背过即可右进;最后一个词背过后右进 = 结束本轮(进入完成页)
+  const canNext = !!item && ratedCur;
 
   const advanceFrom = useCallback(
     (fromIdx: number) => {
@@ -280,6 +281,15 @@ export default function LearnPage() {
     },
     [],
   );
+
+  /** 当前词是否已背过(与下方 ratedCur 同口径;tryNav 回调内用函数取最新 state) */
+  const ratedNow = useCallback((): boolean => {
+    const it = queue[idxRef.current];
+    if (!it) return false;
+    return it.stage === "recognize"
+      ? recogRated[it.wordId] !== undefined
+      : !!spellStates[`${it.spellType ?? "audio"}:${it.wordId}`]?.done;
+  }, [queue, recogRated, spellStates]);
 
   const tryNav = useCallback(
     (delta: -1 | 1) => {
@@ -292,20 +302,14 @@ export default function LearnPage() {
         }
         return;
       }
-      // 右进:仅当目标存在且当前词已背过(由 canNext 同口径判定)
+      // 右进:背过当前词即可;在最后一个词上右进 = 结束本轮(idx 越界 → 完成页)
       const it = queue[cur];
-      if (!it || cur + 1 >= queue.length) return;
-      const ok =
-        it.stage === "recognize"
-          ? recogRated[it.wordId] !== undefined
-          : !!spellStates[`${it.spellType ?? "audio"}:${it.wordId}`]?.done;
-      if (ok) {
-        setRecogRevealed(false);
-        setImgReady(false);
-        setIdx(cur + 1);
-      }
+      if (!it || !ratedNow()) return;
+      setRecogRevealed(false);
+      setImgReady(false);
+      setIdx(cur + 1);
     },
-    [queue, recogRated, spellStates],
+    [queue, ratedNow],
   );
 
   /* ---- 全局方向键(输入聚焦时不抢) ---- */
