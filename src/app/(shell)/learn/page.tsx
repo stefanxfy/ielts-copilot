@@ -282,7 +282,11 @@ export default function LearnPage() {
     (delta: -1 | 1) => {
       const cur = idxRef.current;
       if (delta === -1) {
-        if (cur > 0) advanceFrom(cur - 1 >= 0 ? cur - 1 : 0);
+        if (cur > 0) {
+          setRecogRevealed(false);
+          setImgReady(false);
+          setIdx(cur - 1);
+        }
         return;
       }
       // 右进:仅当目标存在且当前词已背过(由 canNext 同口径判定)
@@ -292,9 +296,13 @@ export default function LearnPage() {
         it.stage === "recognize"
           ? rated.has(it.wordId)
           : !!spellStates[`${it.spellType ?? "audio"}:${it.wordId}`]?.done;
-      if (ok) advanceFrom(cur + 1);
+      if (ok) {
+        setRecogRevealed(false);
+        setImgReady(false);
+        setIdx(cur + 1);
+      }
     },
-    [queue, rated, spellStates, advanceFrom],
+    [queue, rated, spellStates],
   );
 
   /* ---- 全局方向键(输入聚焦时不抢) ---- */
