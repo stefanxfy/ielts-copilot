@@ -8,11 +8,12 @@
  *   2. /learn 复习完成页中央弹窗(默认态,可放大);
  *   3. /learn/today 独立页(整页版式)。
  *
- * 内容:顶部一行统计(已记住/模糊/不认识/待复习)+ 轨迹词列表(仅今日学过的词,
- * 按下次到期升序、已到期同组最难在前——服务端排好序),每词可展开遗忘曲线
+ * 内容:顶部一行统计(今日总数/认识/模糊/不认识)+ 筛选/排序工具栏
+ * (按最后评分筛选;按到期时间/难易程度升降序排序)+ 轨迹词列表(仅今日学过的词,
+ * 服务端默认"已到期最先、同组难在前",客户端可重排),每词可展开遗忘曲线
  * 时间线(S/D 演变)。
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 /* ---------------- 类型(对齐 /api/vocab-memory) ---------------- */
 
@@ -91,14 +92,98 @@ function fmtTime(ms: number): string {
   return `${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+/* ---------------- 筛选/排序 ---------------- */
+
+type RatingFilter = "all" | 1 | 2 | 3;
+type SortKey = "default" | "due" | "difficulty";
+/** 难易程度专用方向:难度 D 大=难在前;切到「容易优先」反向 */
+type SortDir = "asc" | "desc";
+
+const FILTER_META: { key: RatingFilter; label: string; cls: string }[] = [
+  { key: "all", label: "全部", cls: "" },
+  { key: 1, label: "不认识", cls: "tmf-again" },
+  { key: 2, label: "模糊", cls: "tmf-hard" },
+  { key: 3, label: "认识", cls: "tmf-good" },
+];
+
+function Toolbar({
+  filter,
+  onFilter,
+  sortKey,
+  onSortKey,
+  sortDir,
+  onSortDir,
+  shown,
+  total,
+}: {
+  filter: RatingFilter;
+  onFilter: (f: RatingFilter) => void;
+  sortKey: SortKey;
+  onSortKey: (k: SortKey) => void;
+  sortDir: SortDir;
+  onSortDir: (d: SortDir) => void;
+  shown: number;
+  total: number;
+}) {
+  const dirLabel = sortDir === "asc" ? "↑" : "↓";
+  const toggleDir = () => onSortDir(sortDir === "asc" ? "desc" : "asc");
+  return (
+    <div className="tm-toolbar">
+      <div className="tm-filters" role="group" aria-label="按最后评分筛选">
+        {FILTER_META.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            className={`tm-chip ${f.cls}${filter === f.key ? " tm-chip-on" : ""}`}
+            aria-pressed={filter === f.key}
+            onClick={() => onFilter(f.key)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      <div className="tm-sorts">
+        <span className="tm-count">{shown === total ? `${total} 词` : `${shown} / ${total} 词`}</span>
+        <button
+          type="button"
+          className={`tm-chip${sortKey === "due" ? " tm-chip-on tm-chip-sort" : ""}`}
+          aria-pressed={sortKey === "due"}
+          onClick={() => onSortKey(sortKey === "due" ? "default" : "due")}
+        >
+          到期时间{sortKey === "due" ? ` ${dirLabel}` : ""}
+        </button>
+        <button
+          type="button"
+          className={`tm-chip${sortKey === "difficulty" ? " tm-chip-on tm-chip-sort" : ""}`}
+          aria-pressed={sortKey === "difficulty"}
+          onClick={() => onSortKey(sortKey === "difficulty" ? "default" : "difficulty")}
+        >
+          难易程度{sortKey === "difficulty" ? ` ${dirLabel}` : ""}
+        </button>
+        {sortKey !== "default" && (
+          <button
+            type="button"
+            className="tm-chip tm-chip-dir"
+            title="切换升/降序"
+            aria-label={`切换排序方向,当前${sortDir === "asc" ? "升序" : "降序"}`}
+            onClick={toggleDir}
+          >
+            {dirLabel === "↑" ? "升序" : "降序"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- 统计行 ---------------- */
 
-function StatsRow({ stats, now }: { stats: TodayMemory["stats"]; now: number }) {
+function StatsRow({ stats }: { stats: TodayMemory["stats"] }) {
   const cells = [
-    { label: "已记住", n: stats.remembered, cls: "tms-good" },
+    { label: "今日总数", n: stats.todayReviewed, cls: "tms-total" },
+    { label: "认识", n: stats.remembered, cls: "tms-good" },
     { label: "模糊", n: stats.fuzzy, cls: "tms-hard" },
     { label: "不认识", n: stats.forgot, cls: "tms-again" },
-    { label: "待复习", n: stats.dueNow, cls: "tms-due" },
   ];
   return (
     <div className="tm-stats">
@@ -108,10 +193,6 @@ function StatsRow({ stats, now }: { stats: TodayMemory["stats"]; now: number }) 
           <span>{c.label}</span>
         </div>
       ))}
-      <div className="tm-stat tm-stat-wide">
-        <b>{stats.todayReviewed}</b>
-        <span>今日评分 · {fmtTime(now)} 更新</span>
-      </div>
     </div>
   );
 }
@@ -216,6 +297,29 @@ export default function TodayMemoryPanel(props: {
   onRefresh?: () => void;
 }) {
   const { data, loading, error, onRefresh } = props;
+  // 筛选/排序是纯客户端视图状态:换数据源不重置,保持用户浏览上下文
+  const [filter, setFilter] = useState<RatingFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("default");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const words = useMemo(() => {
+    const list = data?.words ?? [];
+    const filtered = filter === "all" ? list : list.filter((w) => w.lastRating === filter);
+    if (!data || sortKey === "default") return filtered;
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      if (sortKey === "due") {
+        // 到期时间:升序=最先到期在前(已到期自然聚前),降序反之
+        const d = a.due - b.due;
+        return sortDir === "asc" ? d : -d;
+      }
+      // 难易程度:升序=最容易在前(D 小在前),降序=最难在前
+      const d = a.difficulty - b.difficulty;
+      return sortDir === "asc" ? d : -d;
+    });
+    return sorted;
+  }, [data, filter, sortKey, sortDir]);
+
   if (error) {
     return <div className="tm-panel"><div className="tm-error">加载失败:{error}</div></div>;
   }
@@ -228,15 +332,31 @@ export default function TodayMemoryPanel(props: {
   }
   return (
     <div className="tm-panel">
-      <StatsRow stats={data.stats} now={data.now} />
+      <StatsRow stats={data.stats} />
       {data.words.length === 0 ? (
         <div className="tm-loading">今天还没有学习记录——先去复习几个词吧。</div>
       ) : (
-        <ul className="tm-list">
-          {data.words.map((w) => (
-            <WordRow key={w.progressId} item={w} now={data.now} />
-          ))}
-        </ul>
+        <>
+          <Toolbar
+            filter={filter}
+            onFilter={setFilter}
+            sortKey={sortKey}
+            onSortKey={setSortKey}
+            sortDir={sortDir}
+            onSortDir={setSortDir}
+            shown={words.length}
+            total={data.words.length}
+          />
+          {words.length === 0 ? (
+            <div className="tm-loading">该筛选下没有单词。</div>
+          ) : (
+            <ul className="tm-list">
+              {words.map((w) => (
+                <WordRow key={w.progressId} item={w} now={data.now} />
+              ))}
+            </ul>
+          )}
+        </>
       )}
       {onRefresh && (
         <div className="tm-footer">
