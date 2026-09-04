@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { RegenDialog } from "@/components/vocab/regen-dialog";
+import { WordMemorySection } from "@/components/vocab/word-memory-section";
 import {
   Dialog,
   DialogContent,
@@ -673,6 +674,9 @@ function WordDetail({
           ))}
         </div>
       )}
+
+      {/* 记忆轨迹:该词的 FSRS 遗忘曲线(未学词降级提示) */}
+      <WordMemorySection wordId={row.id} word={row.word} />
 
       {/* 标签 + 词频 */}
       {(cj.tags?.length || cj.bncRank) && (

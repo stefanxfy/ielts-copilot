@@ -16,6 +16,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import {
+  TodayMemoryDrawer,
+  TodayMemoryModal,
+} from "@/components/vocab/today-memory-containers";
 
 /* ---------------- 类型(对齐 /api/vocab-review GET) ---------------- */
 
@@ -228,6 +232,8 @@ export default function LearnPage() {
   const [spellStates, setSpellStates] = useState<Record<string, SpellCardState>>({});
   const [todayExtra, setTodayExtra] = useState(0);
   const [imgReady, setImgReady] = useState(false);
+  /** 今日记忆轨迹宿主:drawer=复习中侧边抽屉 / modal=完成页弹窗 */
+  const [memoryHost, setMemoryHost] = useState<"drawer" | "modal" | null>(null);
 
   const queue = useMemo(() => data?.queue ?? [], [data]);
   const item: QueueItem | undefined = queue[idx];
@@ -486,12 +492,22 @@ export default function LearnPage() {
           <br />
           下一批词到期后会出现这里,由 FSRS 按遗忘曲线调度。
         </p>
-        <Link
-          href="/learn/books"
-          className="press-bubble rounded-full border border-border bg-secondary px-5 py-2 text-[13px] font-medium text-secondary-foreground transition-colors hover:bg-accent"
-        >
-          去词表看看 →
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMemoryHost("modal")}
+            className="press-bubble cursor-pointer rounded-full bg-primary px-5 py-2 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            查看今日单词轨迹 →
+          </button>
+          <Link
+            href="/learn/books"
+            className="press-bubble rounded-full border border-border bg-secondary px-5 py-2 text-[13px] font-medium text-secondary-foreground transition-colors hover:bg-accent"
+          >
+            去词表看看 →
+          </Link>
+        </div>
+        <TodayMemoryModal open={memoryHost === "modal"} onClose={() => setMemoryHost(null)} />
       </div>
     );
   }
@@ -510,6 +526,14 @@ export default function LearnPage() {
         <span>
           今日已复习 {data.stats.todayReviewed + todayExtra} 次 · 连续认识{" "}
           <b className="text-primary">{Math.min(item.streakNow, 2)}/2</b>
+          {" · "}
+          <button
+            type="button"
+            onClick={() => setMemoryHost("drawer")}
+            className="cursor-pointer underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground"
+          >
+            今日轨迹
+          </button>
         </span>
       </div>
 
@@ -544,6 +568,9 @@ export default function LearnPage() {
           onNav={(d) => tryNav(d)}
         />
       )}
+
+      {/* 今日记忆轨迹抽屉(复习进行中;Esc/遮罩关闭) */}
+      <TodayMemoryDrawer open={memoryHost === "drawer"} onClose={() => setMemoryHost(null)} />
     </div>
   );
 }
