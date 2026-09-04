@@ -449,7 +449,17 @@ async function runImportPipeline(state: VocabImportTaskState, params: VocabImpor
       const row = db.select({ contentJson: words.contentJson }).from(words).where(eq(words.id, id)).get();
       if (!row) continue;
       try {
-        const { webPath } = await generateVocabImageFile(w, row.contentJson, params.imageStyle);
+        // 生图偶发失败率高(MiniMax 限流/网络抖动),带退避重试 2 次
+        let webPath: string | null = null;
+        for (let attempt = 1; attempt <= 3 && !taskCancelled(state); attempt++) {
+          try {
+            webPath = (await generateVocabImageFile(w, row.contentJson, params.imageStyle)).webPath;
+            break;
+          } catch {
+            if (attempt < 3) await new Promise((r) => setTimeout(r, 1500 * attempt));
+          }
+        }
+        if (!webPath) throw new Error("image retry exhausted");
         if (taskCancelled(state)) break; // 取消后不再回写
         const c = row.contentJson;
         db.update(words).set({ contentJson: { ...c, image: webPath }, updatedAt: now }).where(eq(words.id, id)).run();
