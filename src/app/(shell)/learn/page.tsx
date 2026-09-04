@@ -56,7 +56,18 @@ interface QueueItem {
 }
 interface SessionData {
   queue: QueueItem[];
-  stats: { total: number; active: number; batch: number; todayReviewed: number };
+  stats: {
+    total: number;
+    active: number;
+    batch: number;
+    todayReviewed: number;
+    /** 今日目标词数(备考计划今日任务优先,回退偏好) */
+    dailyTarget: number;
+    /** 今日已背词数(按词去重) */
+    dailyDone: number;
+    /** 目标来源:plan=备考计划 / prefs=偏好 */
+    dailySource: "plan" | "prefs";
+  };
   prefs: { dailyNewWords: number };
 }
 
@@ -178,6 +189,15 @@ const sfxWrong = () => {
   tone(220, 0.18, 0, "square", 0.07);
   tone(165, 0.26, 0.14, "square", 0.07);
 };
+/** 完成页庆祝琶音:C 大调上行五音 + 收束高八度 */
+const sfxCelebrate = () => {
+  tone(523.25, 0.16, 0);
+  tone(659.25, 0.16, 0.12);
+  tone(783.99, 0.16, 0.24);
+  tone(1046.5, 0.3, 0.36);
+  tone(783.99, 0.14, 0.56);
+  tone(1046.5, 0.42, 0.68, "triangle", 0.14);
+};
 
 /* ---------------- 图标(裸喇叭/方向键,原型同源 SVG) ---------------- */
 
@@ -219,6 +239,35 @@ function ChevronIcon({ dir, size = 20 }: { dir: "left" | "right"; size?: number 
   );
 }
 
+/** 奖杯图标(完成页庆祝) */
+function TrophyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+      <path d="M7 6H4a1 1 0 0 0-1 1c0 2.2 1.8 4 4 4" />
+      <path d="M17 6h3a1 1 0 0 1 1 1c0 2.2-1.8 4-4 4" />
+    </svg>
+  );
+}
+
+/** 纸屑 12 片:位置/颜色/延迟/横移伪随机(固定种子式写法,避免每次渲染跳变) */
+const CONFETTI: { left: number; px: number; pd: number; c: string }[] = [
+  { left: 6, px: 60, pd: 0, c: "var(--primary)" },
+  { left: 14, px: -40, pd: 0.5, c: "var(--success)" },
+  { left: 22, px: 30, pd: 1.1, c: "var(--destructive)" },
+  { left: 30, px: -70, pd: 0.3, c: "var(--primary)" },
+  { left: 38, px: 45, pd: 1.6, c: "var(--muted-foreground)" },
+  { left: 47, px: -30, pd: 0.8, c: "var(--success)" },
+  { left: 55, px: 55, pd: 1.9, c: "var(--primary)" },
+  { left: 63, px: -55, pd: 0.2, c: "var(--destructive)" },
+  { left: 71, px: 35, pd: 1.3, c: "var(--primary)" },
+  { left: 79, px: -45, pd: 0.6, c: "var(--success)" },
+  { left: 87, px: 65, pd: 1.5, c: "var(--muted-foreground)" },
+  { left: 94, px: -60, pd: 1.0, c: "var(--primary)" },
+];
+
 /* ================= 主组件 ================= */
 
 export default function LearnPage() {
@@ -231,13 +280,67 @@ export default function LearnPage() {
   const [recogRated, setRecogRated] = useState<Record<number, RecogRating>>({});
   const [spellStates, setSpellStates] = useState<Record<string, SpellCardState>>({});
   const [todayExtra, setTodayExtra] = useState(0);
-  const [imgReady, setImgReady] = useState(false);
+  /** 「继续背新词 +10」已用次数:本轮完成页只许加一次(不能贪杯) */
+  const [extraUsed, setExtraUsed] = useState(false);
+  /** 加词加载中 */
+  const [extraLoading, setExtraLoading] = useState(false);
   /** 今日记忆轨迹宿主:drawer=复习中侧边抽屉 / modal=完成页弹窗 */
   const [memoryHost, setMemoryHost] = useState<"drawer" | "modal" | null>(null);
 
+  const [imgReady, setImgReady] = useState(false);
   const queue = useMemo(() => data?.queue ?? [], [data]);
   const item: QueueItem | undefined = queue[idx];
   const finished = loaded && !err && !!data && !item;
+
+  /* ---- 完成页庆祝判定:今日已背词数 ≥ 今日目标(备考计划任务口径) ---- */
+  // 服务端 dailyDone = 上一轮开始前的去重计数;加本批(本会话内)评过分的词与原数取并集
+  const dailyDoneNow = useMemo(() => {
+    if (!data) return 0;
+    const baseline = data.stats.dailyDone;
+    if (baseline <= 0) {
+      // 初值 0 也可能是真的零;按本日会话增量估算(认词已评 + 默写 done)
+      const ratedWordIds = new Set<number>();
+      for (const w of data.queue) {
+        if (w.stage === "recognize" && recogRated[w.wordId] !== undefined) {
+          ratedWordIds.add(w.wordId);
+        } else if (w.stage === "spell" && spellStates[`${w.spellType ?? "audio"}:${w.wordId}`]?.done) {
+          ratedWordIds.add(w.wordId);
+        }
+      }
+      return ratedWordIds.size;
+    }
+    return baseline;
+  }, [data, recogRated, spellStates]);
+  const celebratedRef = useRef(false);
+  useEffect(() => {
+    if (!finished || !data) return;
+    if (dailyDoneNow >= data.stats.dailyTarget && !celebratedRef.current) {
+      celebratedRef.current = true;
+      sfxCelebrate();
+    }
+  }, [finished, data, dailyDoneNow]);
+
+  /* ---- 继续背新词 +10:临时放宽限额拉新队列(本轮完成页仅一次) ---- */
+  const loadMore = useCallback(async () => {
+    if (extraUsed || extraLoading) return;
+    setExtraLoading(true);
+    try {
+      const resp = await fetch("/api/vocab-review?extra=10");
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const d = (await resp.json()) as SessionData;
+      if (d.queue.length === 0) return; // 没有新词可加(计划内全部学完)
+      setExtraUsed(true);
+      setRecogRated({});
+      setSpellStates({});
+      setIdx(0);
+      setTodayExtra(0);
+      setData(d);
+    } catch {
+      /* 拉取失败保持完成页原状,可再点 */
+    } finally {
+      setExtraLoading(false);
+    }
+  }, [extraUsed, extraLoading]);
 
   const spokenRef = useRef<string | null>(null);
   const autoTimerRef = useRef<number | null>(null);
@@ -483,14 +586,81 @@ export default function LearnPage() {
     );
   }
   if (finished) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+    const dailyDoneNow = data.stats.dailyDone;
+    const goalMet = dailyDoneNow >= data.stats.dailyTarget;
+    return goalMet ? (
+      <div className="fin-celebrate">
+        <div className="fin-rays" aria-hidden="true" />
+        <div className="fin-confetti" aria-hidden="true">
+          {CONFETTI.map((c, i) => (
+            <i
+              key={i}
+              style={
+                {
+                  left: `${c.left}%`,
+                  ["--pc" as string]: c.c,
+                  ["--px" as string]: `${c.px}px`,
+                  ["--pd" as string]: `${c.pd}s`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
+        <div className="fin-trophy">
+          <TrophyIcon />
+        </div>
+        <span className="fin-done-badge">✓ 今日任务已达成</span>
+        <h2 className="fin-title">今日背词目标达成！</h2>
+        <div className="fin-target">
+          今日 <b>{dailyDoneNow}</b> / {data.stats.dailyTarget} 词
+          {data.stats.dailySource === "plan" ? " · 备考计划任务" : " · 自定目标"}
+        </div>
+        <p className="fin-sub">
+          本轮完成 <b>{queue.length}</b> 词 · 今日累计复习{" "}
+          <b>{data.stats.todayReviewed + todayExtra}</b> 次。
+          {extraUsed
+            ? "加量已用完,明天再战——记忆需要时间沉淀。"
+            : "意犹未尽?可以再背 10 个新词。"}
+        </p>
+        {!extraUsed && (
+          <>
+            <button
+              type="button"
+              className="fin-more"
+              disabled={extraLoading}
+              onClick={loadMore}
+            >
+              {extraLoading ? "加词中…" : "继续背新词 +10"}
+            </button>
+            <span className="fin-more-hint">一次加 10 个,不能贪杯 😉</span>
+          </>
+        )}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMemoryHost("modal")}
+            className="press-bubble cursor-pointer rounded-full border border-border bg-secondary px-5 py-2 text-[13px] font-medium text-secondary-foreground transition-colors hover:bg-accent"
+          >
+            查看今日单词轨迹 →
+          </button>
+          <Link
+            href="/learn/books"
+            className="press-bubble cursor-pointer rounded-full border border-border bg-secondary px-5 py-2 text-[13px] font-medium text-secondary-foreground transition-colors hover:bg-accent"
+          >
+            去词表看看 →
+          </Link>
+        </div>
+        <TodayMemoryModal open={memoryHost === "modal"} onClose={() => setMemoryHost(null)} />
+      </div>
+    ) : (
+      <div className="fin-celebrate fin-plain">
         <h2 className="text-xl">本轮复习完成 🎉</h2>
-        <p className="text-[13px] leading-relaxed text-muted-foreground">
-          共完成 <span className="font-semibold text-foreground">{queue.length}</span>{" "}
-          个词 · 今日已复习 <span className="font-semibold text-foreground">{data.stats.todayReviewed + todayExtra}</span> 次
+        <p className="fin-sub">
+          共完成 <b>{queue.length}</b> 个词 · 今日已背 <b>{dailyDoneNow}</b>/{data.stats.dailyTarget} 词
+          、复习 <b>{data.stats.todayReviewed + todayExtra}</b> 次
           <br />
-          下一批词到期后会出现这里,由 FSRS 按遗忘曲线调度。
+          继续加油,今日目标还差 {data.stats.dailyTarget - dailyDoneNow} 个词;下一批到期词也由
+          FSRS 按遗忘曲线调度。
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <button

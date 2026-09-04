@@ -23,7 +23,9 @@ import {
   type WordContent,
 } from "@/db/schema";
 import { hasVocabImage } from "@/lib/vocab-card-policy";
+import { readDailyWordTarget, todayStartMs } from "@/lib/vocab-daily-target";
 import { readVocabStudyPrefs } from "@/lib/vocab-study-prefs";
+import { recordMemorizedWord } from "@/lib/study/activities";
 
 /** 默写卡三型(与原型 card-demo CARD_TYPES 一致) */
 export type SpellCardType = "visual" | "audio" | "ctx";
@@ -56,6 +58,12 @@ export interface ReviewSession {
     batch: number;
     /** 今日已复习次数(本地时区 0 点起) */
     todayReviewed: number;
+    /** 今日目标词数(备考计划今日任务优先,回退偏好) */
+    dailyTarget: number;
+    /** 今日已背词数(按词去重,与计划页勾选同口径) */
+    dailyDone: number;
+    /** 目标来源:plan=备考计划 / prefs=偏好 */
+    dailySource: "plan" | "prefs";
   };
   prefs: { dailyNewWords: number };
 }
@@ -124,10 +132,13 @@ function deriveStreak(progressId: number, cap = 2): number {
   return Math.min(n, cap);
 }
 
-/** 构建复习 session(纯查询无副作用) */
-export function buildReviewSession(nowMs = Date.now()): ReviewSession {
+/** 构建复习 session(纯查询无副作用);extraNew=完成页「继续背新词」临时放宽限额 */
+export function buildReviewSession(nowMs = Date.now(), extraNew = 0): ReviewSession {
   const db = getDb();
+  // 新词限额以备考计划「今日任务·背单词」个数为准(无计划回退偏好)+ 临时加量
+  const daily = readDailyWordTarget();
   const prefs = readVocabStudyPrefs();
+  const newLimit = Math.max(0, daily.target + Math.max(0, Math.trunc(extraNew)));
 
   const base = db
     .select({
@@ -147,11 +158,11 @@ export function buildReviewSession(nowMs = Date.now()): ReviewSession {
     .limit(MAX_BATCH)
     .all();
 
-  // 新词(reps=0)限额 prefs.dailyNewWords;到期复习(reps>0)不限,统一按 due 排
+  // 新词(reps=0)限额 newLimit;到期复习(reps>0)不限,统一按 due 排
   let newCount = 0;
   const picked = base.filter((r) => {
     if (r.reps > 0) return true;
-    if (newCount < prefs.dailyNewWords) {
+    if (newCount < newLimit) {
       newCount += 1;
       return true;
     }
@@ -183,6 +194,15 @@ export function buildReviewSession(nowMs = Date.now()): ReviewSession {
     .where(gte(wordReviewLog.reviewedAt, todayStart.getTime()))
     .get()?.n ?? 0;
 
+  // 今日已背词数:按词去重(今日流水里出现过的 progressId 数),与计划页勾选口径一致
+  const todayProgressIds = db
+    .select({ pid: wordReviewLog.progressId })
+    .from(wordReviewLog)
+    .where(gte(wordReviewLog.reviewedAt, todayStart.getTime()))
+    .all()
+    .map((r) => r.pid);
+  const dailyDone = new Set(todayProgressIds).size;
+
   const total = db
     .select({ n: sql<number>`count(*)` })
     .from(wordProgress)
@@ -200,6 +220,9 @@ export function buildReviewSession(nowMs = Date.now()): ReviewSession {
       active,
       batch: queue.length,
       todayReviewed: Number(todayReviewed),
+      dailyTarget: newLimit,
+      dailyDone,
+      dailySource: daily.source,
     },
     prefs,
   };
@@ -328,6 +351,19 @@ export function gradeReview(
       })
       .run();
   });
+
+  // 备考活动埋点(旁路,失败不阻塞):当日该词首条流水才计 1 词,与计划页「当日背词数」口径一致
+  const todayLog = db
+    .select({ id: wordReviewLog.id })
+    .from(wordReviewLog)
+    .where(
+      and(
+        eq(wordReviewLog.progressId, progressId),
+        gte(wordReviewLog.reviewedAt, todayStartMs(new Date(nowMs))),
+      ),
+    )
+    .all();
+  if (todayLog.length === 1) recordMemorizedWord(1);
 
   return {
     stage: newStage,

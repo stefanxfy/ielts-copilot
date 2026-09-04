@@ -834,6 +834,94 @@ html[data-theme="night"] {
 }
 .tm-refresh:hover { border-color: var(--ring); color: var(--foreground); }
 
+/* ---------- 完成页庆祝画面(全语义变量,八套皮肤适配) ---------- */
+.fin-celebrate {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; min-height: 62vh; padding: 24px; text-align: center;
+}
+/* 金光放射背景(中心亮四周暗,循环缓转) */
+.fin-rays {
+  position: absolute; inset: -40%;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in oklab, var(--primary) 16%, transparent) 0deg 12deg,
+    transparent 12deg 30deg
+  );
+  animation: fin-spin 24s linear infinite;
+  pointer-events: none;
+}
+@keyframes fin-spin { to { transform: rotate(360deg); } }
+/* 纸屑:12 片彩色小方片,从顶部落到底部,随机延迟/横移/旋转 */
+.fin-confetti { position: absolute; inset: 0; pointer-events: none; }
+.fin-confetti i {
+  position: absolute; top: -3%;
+  width: 8px; height: 13px; border-radius: 2px;
+  background: var(--pc, var(--primary));
+  opacity: 0;
+  animation: fin-fall 3.4s ease-in var(--pd, 0s) infinite;
+}
+@keyframes fin-fall {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+  6% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--px, 0px), 78vh) rotate(720deg); }
+}
+/* 奖杯徽章:圆形底 + 弹跳入场 + 呼吸浮动 */
+.fin-trophy {
+  position: relative; z-index: 1;
+  width: 92px; height: 92px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in oklab, var(--primary) 14%, var(--card));
+  border: 1px solid color-mix(in oklab, var(--primary) 40%, transparent);
+  box-shadow: 0 10px 34px color-mix(in oklab, var(--primary) 24%, transparent);
+  animation: fin-pop .5s cubic-bezier(.2,1.4,.4,1) both, fin-float 3.2s ease-in-out .5s infinite alternate;
+}
+@keyframes fin-pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes fin-float { to { transform: translateY(-7px); } }
+.fin-trophy svg { width: 46px; height: 46px; color: var(--primary); }
+/* 目标进度小卡 + 文案 */
+.fin-target {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: baseline; gap: 8px;
+  border: 1px solid var(--border); background: var(--card);
+  border-radius: 999px; padding: 7px 18px; font-size: 13px; color: var(--muted-foreground);
+}
+.fin-target b { font-size: 17px; color: var(--foreground); font-variant-numeric: tabular-nums; }
+.fin-title {
+  position: relative; z-index: 1;
+  font-size: 24px; font-weight: 700; color: var(--foreground);
+  letter-spacing: .02em;
+}
+.fin-sub { position: relative; z-index: 1; max-width: 420px; font-size: 13px; line-height: 1.7; color: var(--muted-foreground); }
+.fin-sub b { color: var(--foreground); }
+/* 「今日目标已达成」小徽标 */
+.fin-done-badge {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 999px; padding: 4px 14px; font-size: 12px; font-weight: 600;
+  color: var(--success);
+  border: 1px solid color-mix(in oklab, var(--success) 40%, transparent);
+  background: color-mix(in oklab, var(--success) 10%, transparent);
+}
+/* 继续背新词 +10 主按钮(带脉冲光晕引导) */
+.fin-more {
+  position: relative; z-index: 1;
+  cursor: pointer; border: none; border-radius: 999px;
+  padding: 11px 26px; font-size: 14px; font-weight: 600; font-family: inherit;
+  color: var(--primary-foreground); background: var(--primary);
+  transition: transform .15s, box-shadow .15s;
+  animation: fin-pulse 2.4s ease-in-out infinite;
+}
+@keyframes fin-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 34%, transparent); }
+  50% { box-shadow: 0 0 0 10px transparent; }
+}
+.fin-more:hover { transform: translateY(-1px); }
+.fin-more:active { transform: translateY(0) scale(.98); }
+.fin-more-hint { position: relative; z-index: 1; font-size: 11px; color: var(--muted-foreground); }
+/* 普通完成(未达今日目标)版式:窄化无庆祝 */
+.fin-plain { min-height: 46vh; gap: 12px; }
+
 /* ---------- 抽屉宿主 ---------- */
 .tm-scrim {
   position: fixed; inset: 0; z-index: 50;

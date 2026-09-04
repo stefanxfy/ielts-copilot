@@ -2,13 +2,16 @@
  * /api/vocab-review — 背单词复习 session(S3)
  *
  * GET :构建今日出题队列(到期复习 + 限额新词,spell 词服务端抽定卡型),纯查询无副作用
+ *      ?extra=N(0~100,默认 0):完成页「继续背新词」临时放宽新词限额 N 个(一次 +10,
+ *      客户端保证单次循环只加一次;服务端只做范围钳制)
  * POST:评分写回 —— body { progressId, stage, rating }
  *   rating 折算口径(客户端负责折算,服务端只认 FSRS 1~3):
  *     认词卡:认识=Good(3) 模糊=Hard(2) 不认识=Again(1)
  *     默写卡:0~1 提示答对=Good;两级提示用满答对=Hard(方案 B 上限);
  *            判错编辑距离≤2=Hard、>2=Again;查看答案=Again
  *   服务端 stage 状态机(docs/背单词数据模型设计.md §8.4):recognize 连续 2 次
- *   Good 升 spell;spell 非 Good 降 recognize。同事务写 word_progress + word_review_log。
+ *   Good 升 spell;spell 非 Good 降 recognize。同事务写 word_progress + word_review_log,
+ *   并旁路写备考活动埋点(当日该词首条流水计 1 词)。
  */
 import { NextResponse } from "next/server";
 import {
@@ -21,8 +24,12 @@ import { PROGRESS_STAGES, type ProgressStage } from "@/db/schema";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = buildReviewSession();
+export async function GET(request: Request) {
+  const raw = new URL(request.url).searchParams.get("extra");
+  const extraNum = raw == null ? 0 : Number(raw);
+  const extra =
+    Number.isFinite(extraNum) && extraNum > 0 ? Math.min(100, Math.trunc(extraNum)) : 0;
+  const session = buildReviewSession(undefined, extra);
   return NextResponse.json(session);
 }
 
