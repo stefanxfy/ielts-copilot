@@ -21,6 +21,8 @@ import Link from "next/link";
 
 type SpellCardType = "visual" | "audio" | "ctx";
 type ProgressStage = "recognize" | "spell";
+/** 认词卡评分:again=不认识 / hard=模糊 / good=认识 */
+type RecogRating = "again" | "hard" | "good";
 
 interface ExampleItem {
   en: string;
@@ -221,7 +223,8 @@ export default function LearnPage() {
   const [data, setData] = useState<SessionData | null>(null);
   const [idx, setIdx] = useState(0);
   const [recogRevealed, setRecogRevealed] = useState(false);
-  const [rated, setRated] = useState<Set<number>>(new Set());
+  /** 认词卡评分记录:wordId → 评分。有记录即该词本轮已评分,锁定不可重复提交 */
+  const [recogRated, setRecogRated] = useState<Record<number, RecogRating>>({});
   const [spellStates, setSpellStates] = useState<Record<string, SpellCardState>>({});
   const [todayExtra, setTodayExtra] = useState(0);
   const [imgReady, setImgReady] = useState(false);
@@ -264,7 +267,7 @@ export default function LearnPage() {
   const canNext = (() => {
     if (!item) return false;
     if (idx + 1 >= queue.length) return false;
-    if (item.stage === "recognize") return rated.has(item.wordId);
+    if (item.stage === "recognize") return recogRated[item.wordId] !== undefined;
     const s = spellStates[spellKeyOf(item)];
     return !!s?.done;
   })();
@@ -294,7 +297,7 @@ export default function LearnPage() {
       if (!it || cur + 1 >= queue.length) return;
       const ok =
         it.stage === "recognize"
-          ? rated.has(it.wordId)
+          ? recogRated[it.wordId] !== undefined
           : !!spellStates[`${it.spellType ?? "audio"}:${it.wordId}`]?.done;
       if (ok) {
         setRecogRevealed(false);
@@ -302,7 +305,7 @@ export default function LearnPage() {
         setIdx(cur + 1);
       }
     },
-    [queue, rated, spellStates],
+    [queue, recogRated, spellStates],
   );
 
   /* ---- 全局方向键(输入聚焦时不抢) ---- */
@@ -350,8 +353,9 @@ export default function LearnPage() {
 
   /* ---- 认词卡评分 ---- */
   const rateRecog = useCallback(
-    (it: QueueItem, r: "again" | "hard" | "good") => {
-      setRated((prev) => new Set(prev).add(it.wordId));
+    (it: QueueItem, r: RecogRating) => {
+      if (recogRated[it.wordId] !== undefined) return; // 已评分,幂等拦截(防重复写回刷复习次数)
+      setRecogRated((prev) => ({ ...prev, [it.wordId]: r }));
       void postRating(it, "recognize", r === "good" ? 3 : r === "hard" ? 2 : 1);
       if (r === "good") {
         advanceFrom(idxRef.current); // 认识 → 自动跳下一个
@@ -359,7 +363,7 @@ export default function LearnPage() {
       }
       setRecogRevealed(true); // 模糊/不认识 → 展开中文释义
     },
-    [postRating, advanceFrom],
+    [postRating, advanceFrom, recogRated],
   );
 
   /* ---- 默写卡:状态更新 ---- */
@@ -489,6 +493,9 @@ export default function LearnPage() {
   }
   if (!item) return null;
 
+  /** 认词卡:本轮已评分 → 锁定三键 + 展开释义(回看上一个词时同样生效) */
+  const recogLocked = recogRated[item.wordId] !== undefined;
+
   return (
     <div className="mx-auto flex max-w-[760px] flex-col items-center gap-3">
       {/* 顶部进度两件套 */}
@@ -507,7 +514,9 @@ export default function LearnPage() {
           key={`recog-${item.wordId}`}
           item={item}
           plain={!item.hasImage}
-          revealed={recogRevealed}
+          revealed={recogRevealed || recogLocked}
+          locked={recogLocked}
+          chosen={recogRated[item.wordId]}
           imgReady={imgReady}
           onImgReady={() => setImgReady(true)}
           onRate={(r) => rateRecog(item, r)}
@@ -541,9 +550,13 @@ function RecogCard(props: {
   item: QueueItem;
   plain: boolean;
   revealed: boolean;
+  /** 已评分锁定:三键禁用,防止重复提交重复累加复习次数 */
+  locked: boolean;
+  /** 本次选中的评分,用于按钮高亮(未评分时为 undefined) */
+  chosen?: RecogRating;
   imgReady: boolean;
   onImgReady: () => void;
-  onRate: (r: "again" | "hard" | "good") => void;
+  onRate: (r: RecogRating) => void;
   canPrev: boolean;
   canNext: boolean;
   onNav: (d: -1 | 1) => void;
@@ -710,16 +723,26 @@ function RecogCard(props: {
         </button>
       </div>
 
-      <div className="rate-row rate-below">
-        <button type="button" className="rate-btn rate-again" onClick={() => props.onRate("again")}>
-          不认识
-        </button>
-        <button type="button" className="rate-btn rate-hard" onClick={() => props.onRate("hard")}>
-          模糊
-        </button>
-        <button type="button" className="rate-btn rate-good" onClick={() => props.onRate("good")}>
-          认识
-        </button>
+      <div className={`rate-row rate-below${props.locked ? " rate-row-locked" : ""}`}>
+        {(
+          [
+            ["again", "不认识"],
+            ["hard", "模糊"],
+            ["good", "认识"],
+          ] as const
+        ).map(([r, label]) => (
+          <button
+            key={r}
+            type="button"
+            className={`rate-btn rate-${r}${props.chosen === r ? " rate-btn-chosen" : ""}`}
+            disabled={props.locked}
+            aria-pressed={props.chosen === r}
+            title={props.locked ? "本词已评分,不可重复提交" : undefined}
+            onClick={() => props.onRate(r)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   );

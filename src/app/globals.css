@@ -524,11 +524,19 @@ html[data-theme="night"] {
     transition: all .15s;
     font-family: inherit;
   }
-  .rate-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+  .rate-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); }
   .rate-again { background: var(--destructive); }
   .rate-hard  { background: var(--primary); }
   .rate-good  { background: var(--success); }
-  .rate-btn:active { transform: scale(.97); }
+  .rate-btn:active:not(:disabled) { transform: scale(.97); }
+  /* 已评分锁定:三键禁点,仅选中项保持实色并加描边,回看时仍能看出当初选了哪个 */
+  .rate-btn:disabled { cursor: not-allowed; }
+  .rate-row-locked .rate-btn { opacity: .32; box-shadow: none; }
+  .rate-row-locked .rate-btn-chosen {
+    opacity: 1;
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
 
   /* ---------- 默写卡三型 ---------- */
   .vis-img {
