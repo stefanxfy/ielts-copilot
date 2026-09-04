@@ -19,6 +19,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { RegenDialog } from "@/components/vocab/regen-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface WordContent {
   translation: string[];
@@ -84,6 +92,8 @@ export default function WordBrowsePage() {
   const [selectedOrder, setSelectedOrder] = useState(0);
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [submitting, setSubmitting] = useState(false);
+  /** 确认弹窗:待确认入计划的词(null=关闭);all=true 表示「一键加入」触发的全书场景 */
+  const [pending, setPending] = useState<{ ids: number[]; all: boolean } | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [nowPlaying, setNowPlaying] = useState<string | null>(null);
   /** 物料重生成弹窗开关(挂在当前选中词上) */
@@ -92,19 +102,33 @@ export default function WordBrowsePage() {
 
   useEffect(() => {
     let aborted = false;
-    setData(null);
-    setErr(null);
-    fetch(`/api/vocab-book?bookId=${encodeURIComponent(bookId)}`)
+    let resetPending = true;
+    // 重置加载态放微任务,规避 set-state-in-effect 规则(bookId 变化时首次 render 即清屏)
+    Promise.resolve().then(() => {
+      if (resetPending) {
+        setData(null);
+        setErr(null);
+      }
+    });
+    const controller = new AbortController();
+    fetch(`/api/vocab-book?bookId=${encodeURIComponent(bookId)}`, {
+      signal: controller.signal,
+    })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((d: BookResp) => {
         if (aborted) return;
+        resetPending = false;
         setData(d);
         setSelectedOrder(0);
         setChecked(new Set());
       })
-      .catch((e) => !aborted && setErr(String(e.message ?? e)));
+      .catch((e) => {
+        if (!aborted && e?.name !== "AbortError") setErr(String(e.message ?? e));
+      });
     return () => {
       aborted = true;
+      resetPending = false;
+      controller.abort();
     };
   }, [bookId]);
 
@@ -132,6 +156,49 @@ export default function WordBrowsePage() {
   }, [data, filter, onlyUnplanned]);
 
   const selected = data?.words[selectedOrder] ?? null;
+
+  /** 当前过滤视图下的统计(全选可见 / 一键加入都基于它) */
+  const viewStats = useMemo(() => {
+    const unplanned = filtered.filter((w) => !w.inPlan);
+    return {
+      unplannedIds: unplanned.map((w) => w.id),
+      /** 全书是否所有词都已在计划中(一键按钮的兼容提示依据) */
+      allInPlan: data ? data.words.length > 0 && unplanned.length === 0 : false,
+    };
+  }, [filtered, data]);
+
+  /** 全选/取消当前可见词(只挑未入选的,已入选词勾了也是浪费) */
+  function toggleSelectVisible() {
+    setChecked((prev) => {
+      const ids = viewStats.unplannedIds;
+      // 已全选 → 取消;否则把可见未入选词全部并入
+      const allSelected = ids.length > 0 && ids.every((id) => prev.has(id));
+      if (allSelected) {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      }
+      return new Set([...prev, ...ids]);
+    });
+  }
+
+  /** 一键加入背词计划:全书已入选则提示兼容;否则弹确认 */
+  function oneClickAddAll() {
+    if (!data) return;
+    if (viewStats.allInPlan) {
+      toast.info(`本书 ${data.words.length} 个单词已全部加入背词计划,无需重复操作`);
+      return;
+    }
+    setPending({ ids: viewStats.unplannedIds, all: true });
+  }
+
+  /** 确认弹窗点「确认加入」后的统一提交入口 */
+  async function confirmAdd() {
+    if (!pending) return;
+    const ids = pending.ids;
+    setPending(null);
+    await addToPlan(ids);
+  }
 
   const play = useCallback(
     (src: string, label: string) => {
@@ -199,6 +266,12 @@ export default function WordBrowsePage() {
     }
   }
 
+  /** 底部浮动条「加入背诵计划」也走确认弹窗(统一防误触) */
+  function requestAddChecked() {
+    if (checked.size === 0) return;
+    setPending({ ids: [...checked], all: false });
+  }
+
   return (
     <div className="space-y-4">
       {/* 面包屑 + 标题 */}
@@ -219,6 +292,28 @@ export default function WordBrowsePage() {
           </p>
         </div>
       </header>
+
+      {data && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleSelectVisible}
+            disabled={viewStats.unplannedIds.length === 0}
+            className="cursor-pointer rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] transition-colors hover:border-ring disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            全选可见词({viewStats.unplannedIds.length})
+          </button>
+          <button
+            type="button"
+            onClick={oneClickAddAll}
+            disabled={submitting || viewStats.allInPlan}
+            title={viewStats.allInPlan ? "本书全部单词已加入背词计划" : "把本书全部未入选单词加入背词计划"}
+            className="cursor-pointer rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            一键加入背词计划({viewStats.unplannedIds.length})
+          </button>
+        </div>
+      )}
 
       {err && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
@@ -333,7 +428,7 @@ export default function WordBrowsePage() {
           <button
             type="button"
             disabled={submitting}
-            onClick={() => void addToPlan([...checked])}
+            onClick={requestAddChecked}
             className="cursor-pointer rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "加入中…" : "加入背诵计划"}
@@ -347,6 +442,42 @@ export default function WordBrowsePage() {
           </button>
         </div>
       )}
+
+      {/* 加入背词计划确认弹窗(批量勾选与一键加入共用) */}
+      <Dialog open={pending !== null} onOpenChange={(o) => !o && setPending(null)}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>加入背词计划</DialogTitle>
+            <DialogDescription>
+              已选中 <b className="text-foreground">{pending?.ids.length ?? 0}</b>{" "}
+              个单词，请确认是否加入背词计划？
+              {pending?.all && (
+                <span className="mt-1 block">
+                  将把本书全部未入选单词（
+                  {data?.book.name ?? "当前词书"}）加入计划。
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setPending(null)}
+              className="cursor-pointer rounded-full border border-border px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => void confirmAdd()}
+              className="cursor-pointer rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? "加入中…" : "确认加入"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* 大图预览 lightbox */}
       {lightbox && (
