@@ -187,7 +187,7 @@ export function getTodayMemory(nowMs = Date.now()): TodayMemory {
     byProgress.set(l.progressId, arr);
   }
 
-  // 今日学过的词 + 当前到期词(ACTIVE & due<=now,截 500)合并为列表
+  // 「今日轨迹」列表只收今日学过的词;到期未学的词仅体现在「待复习」统计数里
   const progressIds = [...byProgress.keys()];
   const studiedRows: ProgressLike[] = progressIds.length
     ? (db
@@ -196,13 +196,6 @@ export function getTodayMemory(nowMs = Date.now()): TodayMemory {
         .where(inArray(wordProgress.id, progressIds))
         .all() as ProgressLike[])
     : [];
-  const dueRows: ProgressLike[] = db
-    .select(PROGRESS_COLS)
-    .from(wordProgress)
-    .where(and(eq(wordProgress.status, "ACTIVE"), lte(wordProgress.due, nowMs)))
-    .orderBy(asc(wordProgress.due))
-    .limit(500)
-    .all() as ProgressLike[];
 
   const dueNowCount =
     db
@@ -213,7 +206,6 @@ export function getTodayMemory(nowMs = Date.now()): TodayMemory {
 
   const rowMap = new Map<number, ProgressLike>();
   for (const r of studiedRows) rowMap.set(r.id, r);
-  for (const r of dueRows) if (!rowMap.has(r.id)) rowMap.set(r.id, r);
 
   const wordIds = [...new Set([...rowMap.values()].map((r) => r.wordId))];
   const wordRows = wordIds.length
@@ -261,7 +253,8 @@ export function getTodayMemory(nowMs = Date.now()): TodayMemory {
     });
   }
 
-  // 排序:最先到期在前;已到期一组(最难在前),未来到期按时间升序(同刻同样难的在前)
+  // 排序(全部为今日学过的词):已到期一组且最先到期在前(同组难在前),
+  // 未来到期按时间升序;同刻同样难的按答错多者在前、再按词名
   items.sort((a, b) => {
     const aExp = a.due <= nowMs ? 1 : 0;
     const bExp = b.due <= nowMs ? 1 : 0;

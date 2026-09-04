@@ -8,8 +8,9 @@
  *   2. /learn 复习完成页中央弹窗(默认态,可放大);
  *   3. /learn/today 独立页(整页版式)。
  *
- * 内容:顶部一行统计(已记住/模糊/不认识/待复习)+ 轨迹词列表(按下次到期升序、
- * 已到期同组最难在前——服务端排好序),每词可展开遗忘曲线时间线(S/D 演变)。
+ * 内容:顶部一行统计(已记住/模糊/不认识/待复习)+ 轨迹词列表(仅今日学过的词,
+ * 按下次到期升序、已到期同组最难在前——服务端排好序),每词可展开遗忘曲线
+ * 时间线(S/D 演变)。
  */
 import { useCallback, useEffect, useState } from "react";
 
@@ -229,7 +230,7 @@ export default function TodayMemoryPanel(props: {
     <div className="tm-panel">
       <StatsRow stats={data.stats} now={data.now} />
       {data.words.length === 0 ? (
-        <div className="tm-loading">今天还没有学习记录。</div>
+        <div className="tm-loading">今天还没有学习记录——先去复习几个词吧。</div>
       ) : (
         <ul className="tm-list">
           {data.words.map((w) => (
