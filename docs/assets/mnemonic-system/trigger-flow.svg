@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 540" width="100%" role="img">
+  <title>单词助记触发流程：用户主动求助驱动</title>
+  <desc>认词卡片正面仅给音节 + 音标；点认识直接跳下一词；点不认识/模糊才显示词根、熟词、词组三类助记；默写卡判对揭示后同样显示三类</desc>
+
+  <defs>
+    <marker id="arrTri" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L6 4 L0 8 Z" fill="#888780"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="680" height="520" fill="#FFFFFF"/>
+
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">助记触发流程:点不认识/模糊才倾囊, 点认识零负担</text>
+  <text x="40" y="54" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">Just-in-Time 学习 · 难词给全支架, 易词不浪费认知带宽 · 词组为第三区块全卡通用</text>
+
+  <!-- 中央节点:认词卡正面 -->
+  <rect x="240" y="74" width="200" height="50" rx="10" fill="#F1EFE8" stroke="#888780" stroke-width="1"/>
+  <text x="340" y="94" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#2C2C2A">认词卡正面</text>
+  <text x="340" y="112" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#5F5E5A">单词 + 音标 + 音节色块</text>
+
+  <!-- 三个按钮 -->
+  <rect x="60" y="160" width="160" height="40" rx="20" fill="#EAF3DE" stroke="#7AA857" stroke-width="1"/>
+  <text x="140" y="178" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#3F6328">✓ 认识</text>
+  <text x="140" y="192" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">(Good → 升默写)</text>
+
+  <rect x="260" y="160" width="160" height="40" rx="20" fill="#FAEEDB" stroke="#C2904A" stroke-width="1"/>
+  <text x="340" y="178" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#6B4614">~ 模糊</text>
+  <text x="340" y="192" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">(Hard → 降回认词)</text>
+
+  <rect x="460" y="160" width="160" height="40" rx="20" fill="#F5DDD7" stroke="#B85F4A" stroke-width="1"/>
+  <text x="540" y="178" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#7A2F1F">✗ 不认识</text>
+  <text x="540" y="192" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">(Again → 重学)</text>
+
+  <!-- 三条路径 -->
+  <path d="M140 200 L140 240 L300 240 L300 270" fill="none" stroke="#7AA857" stroke-width="1.5" marker-end="url(#arrTri)"/>
+  <text x="160" y="232" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#3F6328">已记住, 零助记</text>
+
+  <path d="M340 200 L340 240" fill="none" stroke="#C2904A" stroke-width="1.5" marker-end="url(#arrTri)"/>
+
+  <path d="M540 200 L540 220 L440 220 L440 240" fill="none" stroke="#B85F4A" stroke-width="1.5" marker-end="url(#arrTri)"/>
+
+  <!-- 揭示+助记 卡片区 -->
+  <rect x="180" y="278" width="320" height="46" rx="10" fill="#FAEEDB" stroke="#C2904A" stroke-width="0.8"/>
+  <text x="340" y="298" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#6B4614">揭示中文/例句/图</text>
+  <text x="340" y="315" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">下方依次滑出三类助记区块</text>
+
+  <!-- 三类助记 -->
+  <g>
+    <rect x="70" y="360" width="160" height="50" rx="8" fill="#F5E8E1" stroke="#D08F6A" stroke-width="0.8"/>
+    <text x="150" y="378" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#7A2F1F">词根词缀</text>
+    <text x="150" y="395" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">un- + believ + -able</text>
+  </g>
+  <g>
+    <rect x="260" y="360" width="160" height="50" rx="8" fill="#EAF3DE" stroke="#97C459" stroke-width="0.8"/>
+    <text x="340" y="378" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#3F6328">熟词拆分</text>
+    <text x="340" y="395" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">break + fast</text>
+  </g>
+  <g>
+    <rect x="450" y="360" width="160" height="50" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.8"/>
+    <text x="530" y="378" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#0C447C">词组搭配</text>
+    <text x="530" y="395" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">hard to believe…</text>
+  </g>
+
+  <!-- 揭示后下一动作 -->
+  <rect x="180" y="440" width="320" height="40" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.8"/>
+  <text x="340" y="458" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#2C2C2A">二次评分: 再认识 / 还模糊</text>
+  <text x="340" y="474" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">二次认识 → 记 Good; 还模糊 → 记 Hard(已看过助记)</text>
+
+  <!-- 底部说明 -->
+  <text x="40" y="504" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 三类区块全卡通用: 认词卡揭示后 + 三型默写卡判对揭示后统一显示, 无折叠无 modal · LLM 解读第四类: 形态未定, 延期</text>
+  <text x="40" y="520" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 音节切分正面给(零成本视觉), 不算"助记"</text>
+</svg>

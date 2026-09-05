@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 380" width="100%" role="img">
+  <title>助记 LLM 异步生成管线</title>
+  <desc>词库导入触发 → LLM 批生成 → 写回 SQLite contentJson → 词书详情页进度可视化 → 失败幂等重试</desc>
+
+  <defs>
+    <marker id="arrP" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L6 4 L0 8 Z" fill="#888780"/>
+    </marker>
+    <marker id="arrErr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L6 4 L0 8 Z" fill="#B85F4A"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="680" height="380" fill="#FFFFFF"/>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">LLM 助记异步管线(与生图/TTS 同构)</text>
+  <text x="40" y="54" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">一次触发 → 限速批生成 → 写回 SQLite → 失败幂等重试</text>
+
+  <!-- 节点 1: 词库导入触发 -->
+  <rect x="20" y="80" width="140" height="60" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="1"/>
+  <text x="90" y="100" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#0C447C">① 词库导入</text>
+  <text x="90" y="118" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">或 补全助记</text>
+  <text x="90" y="132" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">或 affix 词根书</text>
+
+  <!-- 节点 2: 任务队列 -->
+  <rect x="180" y="80" width="140" height="60" rx="10" fill="#FAEEDB" stroke="#C2904A" stroke-width="1"/>
+  <text x="250" y="100" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#6B4614">② 任务队列</text>
+  <text x="250" y="118" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">逐词 LLM 调</text>
+  <text x="250" y="132" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">限速 2 并发</text>
+
+  <!-- 节点 3: LLM -->
+  <rect x="340" y="80" width="160" height="60" rx="10" fill="#FFFFFF" stroke="#888780" stroke-width="1"/>
+  <text x="420" y="100" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#2C2C2A">③ LLM 生成</text>
+  <text x="420" y="118" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">返回 {affixBreakdown,</text>
+  <text x="420" y="132" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">trueWordSplit,…}(音节不算)</text>
+
+  <!-- 节点 4: 写 SQLite -->
+  <rect x="520" y="80" width="140" height="60" rx="10" fill="#EAF3DE" stroke="#97C459" stroke-width="1"/>
+  <text x="590" y="100" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#3F6328">④ 写 SQLite</text>
+  <text x="590" y="118" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">contentJson</text>
+  <text x="590" y="132" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">幂等合并</text>
+
+  <!-- 主线箭头 -->
+  <path d="M160 110 L180 110" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrP)"/>
+  <path d="M320 110 L340 110" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrP)"/>
+  <path d="M500 110 L520 110" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrP)"/>
+
+  <!-- 失败回环 -->
+  <path d="M340 130 L320 130 L320 160 L160 160 L160 110" fill="none" stroke="#B85F4A" stroke-width="1.2" marker-end="url(#arrErr)" stroke-dasharray="3 3"/>
+  <text x="250" y="155" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#7A2F1F">LLM 超时/JSON 解析失败 → 重试 2 次 → 标缺字段降级</text>
+
+  <!-- 验证环节 -->
+  <rect x="180" y="200" width="320" height="50" rx="10" fill="#F5E8E1" stroke="#D08F6A" stroke-width="1"/>
+  <text x="340" y="220" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#7A2F1F">⑤ 应用层二次校验</text>
+  <text x="340" y="238" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">真词拆分 → ECDICT 70 万词表命中确认 → 调高 conf</text>
+
+  <path d="M590 140 L590 200 L500 200" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrP)"/>
+
+  <!-- 进度展示 -->
+  <rect x="20" y="200" width="140" height="100" rx="10" fill="#FFFFFF" stroke="#85B7EB" stroke-width="1"/>
+  <text x="90" y="222" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#0C447C">⑥ 词书详情页</text>
+  <text x="90" y="244" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">补全助记进度条</text>
+  <text x="90" y="260" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">X / 567</text>
+  <text x="90" y="278" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">点击取消任务</text>
+  <text x="90" y="294" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">完成后弹「完成」</text>
+
+  <!-- 验证: app_settings 配置项 -->
+  <rect x="520" y="200" width="140" height="100" rx="10" fill="#F1EFE8" stroke="#888780" stroke-width="0.8"/>
+  <text x="590" y="222" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#2C2C2A">配置项</text>
+  <text x="590" y="240" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">mnemonic.enabled</text>
+  <text x="590" y="256" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">  true|false</text>
+  <text x="590" y="276" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">mnemonic.concurrency</text>
+  <text x="590" y="292" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">  (默认 2)</text>
+
+  <!-- 兜底展示 -->
+  <rect x="180" y="280" width="320" height="50" rx="10" fill="#FFFFFF" stroke="#B4B2A9" stroke-width="0.8" stroke-dasharray="3 3"/>
+  <text x="340" y="300" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#2C2C2A">⑦ 缺字段降级显示</text>
+  <text x="340" y="316" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">仅当 LLM 全失败且 ECDICT 无字段 → 该区块收起, 用户不感知</text>
+
+  <!-- 底部说明 -->
+  <text x="40" y="362" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">复用 import pipeline: tasks 表 / status / 限速 / 重试 / 取消 / DELETE 接口全部沿用</text>
+</svg>
