@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 540" width="100%" role="img">
-  <title>单词助记触发流程：用户主动求助驱动</title>
-  <desc>认词卡片正面仅给音节 + 音标；点认识直接跳下一词；点不认识/模糊才显示词根、熟词、词组三类助记；默写卡判对揭示后同样显示三类</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 588" width="100%" role="img">
+  <title>单词助记触发流程：用户主动求助驱动（v2.1）</title>
+  <desc>认词卡: 认识零助记, 模糊/不认识揭示三类助记后直接下一词(无二次评分); 默写卡: 一次判对≡认识无助记, 提示/查看答案两级求助揭示三类助记</desc>
 
   <defs>
     <marker id="arrTri" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
@@ -8,9 +8,9 @@
     </marker>
   </defs>
 
-  <rect x="0" y="0" width="680" height="520" fill="#FFFFFF"/>
+  <rect x="0" y="0" width="680" height="588" fill="#FFFFFF"/>
 
-  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">助记触发流程:点不认识/模糊才倾囊, 点认识零负担</text>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">助记触发流程(v2.1):求助即评分, 一次定档无二次评分</text>
   <text x="40" y="54" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">Just-in-Time 学习 · 难词给全支架, 易词不浪费认知带宽 · 词组为第三区块全卡通用</text>
 
   <!-- 中央节点:认词卡正面 -->
@@ -62,11 +62,15 @@
   </g>
 
   <!-- 揭示后下一动作 -->
-  <rect x="180" y="440" width="320" height="40" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.8"/>
-  <text x="340" y="458" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#2C2C2A">二次评分: 再认识 / 还模糊</text>
-  <text x="340" y="474" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">二次认识 → 记 Good; 还模糊 → 记 Hard(已看过助记)</text>
+  <rect x="180" y="440" width="320" height="40" rx="8" fill="#EAF3DE" stroke="#7AA857" stroke-width="0.8"/>
+  <text x="340" y="458" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#3F6328">看完助记 → 直接下一词</text>
+  <text x="340" y="474" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">无二次评分: 模糊→Hard / 不认识→Again 已随求助定档</text>
+
+  <!-- 默写卡契约流程 -->
+  <rect x="40" y="496" width="600" height="30" rx="8" fill="#FAEEDB" stroke="#C2904A" stroke-width="0.8"/>
+  <text x="340" y="516" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#6B4614">默写卡: 一次判对 ≡ 认识(Good·无助记直下一词)　|　提示后判对(Hard)　|　查看答案(Again)</text>
 
   <!-- 底部说明 -->
-  <text x="40" y="504" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 三类区块全卡通用: 认词卡揭示后 + 三型默写卡判对揭示后统一显示, 无折叠无 modal · LLM 解读第四类: 形态未定, 延期</text>
-  <text x="40" y="520" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 音节切分正面给(零成本视觉), 不算"助记"</text>
+  <text x="40" y="552" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 默写卡两级求助(提示 / 查看答案)均揭示三类助记: 提示保留主动回忆(≤Hard), 查看答案是放弃回忆兜底(Again)</text>
+  <text x="40" y="568" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 音节切分正面给(零成本视觉), 不算"助记" · LLM 解读第四类: 形态未定, 延期</text>
 </svg>
