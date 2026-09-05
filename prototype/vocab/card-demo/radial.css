@@ -16,7 +16,9 @@
   --warning: #d97706;
   --destructive: #d93636;
   --radius: 14px;
-  /* 四类助记卡各自的主题色 */
+  /* 五类助记卡各自的主题色 */
+  --mn-syl:   #b4530a;  /* 音节解析 · 琥珀棕 */
+  --mn-syl-bg:   #fdf1e3;
   --mn-affix:  #2f6b4f;  /* 词根词缀/熟词拆分 · 松绿 */
   --mn-affix-bg:  #f0f7f2;
   --mn-coll:   #1c6ea4;  /* 词组搭配 · 靛蓝 */
@@ -442,11 +444,18 @@ body {
 .mn-card.show .mn-body > *:nth-child(4) { animation-delay: .75s; }
 @keyframes riseIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* 各类助记条目 */
+/* 各类助记条目 —— 修复：卡片类名是 mn-<key>（mn-affix/mn-syl...），此前写成 mn-affix-card 等导致主题色不生效 */
+.mn-syl-card    { --c: var(--mn-syl);    --cbg: var(--mn-syl-bg); }
 .mn-affix-card  { --c: var(--mn-affix);  --cbg: var(--mn-affix-bg); }
 .mn-coll-card   { --c: var(--mn-coll);   --cbg: var(--mn-coll-bg); }
 .mn-derive-card { --c: var(--mn-derive); --cbg: var(--mn-derive-bg); }
 .mn-llm-card    { --c: var(--mn-llm);    --cbg: var(--mn-llm-bg); }
+
+.mn-card.mn-syl    { --c: var(--mn-syl);    --cbg: var(--mn-syl-bg); }
+.mn-card.mn-affix  { --c: var(--mn-affix);  --cbg: var(--mn-affix-bg); }
+.mn-card.mn-coll   { --c: var(--mn-coll);   --cbg: var(--mn-coll-bg); }
+.mn-card.mn-derive { --c: var(--mn-derive); --cbg: var(--mn-derive-bg); }
+.mn-card.mn-llm    { --c: var(--mn-llm);    --cbg: var(--mn-llm-bg); }
 
 .mn-card { border-top: 3px solid var(--c, var(--border)); }
 .mn-icon { background: var(--c, var(--muted)); }
@@ -514,6 +523,7 @@ body {
 .wires.drawn .wire:nth-of-type(2) { animation-delay: .2s; }
 .wires.drawn .wire:nth-of-type(3) { animation-delay: .28s; }
 .wires.drawn .wire:nth-of-type(4) { animation-delay: .36s; }
+.wires.drawn .wire:nth-of-type(5) { animation-delay: .44s; }
 @keyframes wireGrow { to { stroke-dashoffset: 0; } }
 /* hover 加粗 */
 .wire.hl { stroke-width: 3.5; opacity: 1; filter: drop-shadow(0 0 3px currentColor); }
@@ -525,6 +535,7 @@ body {
 .wires.drawn .wire-dot:nth-of-type(6) { animation-delay: .58s; }
 .wires.drawn .wire-dot:nth-of-type(7) { animation-delay: .66s; }
 .wires.drawn .wire-dot:nth-of-type(8) { animation-delay: .74s; }
+.wires.drawn .wire-dot:nth-of-type(9) { animation-delay: .82s; }
 @keyframes dotPop { from { opacity: 0; r: 0; } to { opacity: 1; r: 3.5; } }
 
 /* ---------- 收缩引导提示 ---------- */
@@ -575,6 +586,88 @@ body {
 .log .dim { color: var(--muted-foreground); }
 
 @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- 音节解析卡（第五张辐射卡） ---------- */
+.syl-word-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+.syl-whole {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: var(--c);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.syl-chip-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.syl-unit {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .35s ease, transform .45s cubic-bezier(.22,1.35,.36,1);
+}
+.mn-card.show .syl-unit { opacity: 1; transform: none; }
+.mn-card.show .syl-unit:nth-child(1) { transition-delay: .5s; }
+.mn-card.show .syl-unit:nth-child(2) { transition-delay: .6s; }
+.mn-card.show .syl-unit:nth-child(3) { transition-delay: .7s; }
+.mn-card.show .syl-unit:nth-child(4) { transition-delay: .8s; }
+.syl-unit-idx {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cbg);
+  color: var(--c);
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.syl-unit-ipa {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.syl-unit-mark { font-size: 10px; color: var(--c); font-weight: 600; }
+.syl-unit-mark-dim { color: var(--muted-foreground); font-weight: 400; opacity: .6; }
+/* 重音音节单元：序号圈高亮 */
+.syl-unit.stress .syl-unit-idx { background: var(--c); color: #fff; }
+
+/* 音节解析卡内色块落定态（animate=false 输出即含 .in） */
+.syl-unit .syl-block { font-size: 16px; padding: 2px 11px 4px; }
+.syl-unit .syl-block.stress { animation: stressPulse .7s ease .75s; }
+
+/* ---------- 音节色块（默写卡「正确拼写」框内 + 音节解析卡共用） ---------- */
+.syl-block {
+  display: inline-block;
+  padding: 2px 12px 4px;
+  border-radius: 10px;
+  background: var(--secondary);
+  border: 1.5px solid var(--ring);
+  color: var(--secondary-foreground);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.syl-block.stress {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+@keyframes stressPulse {
+  0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, .45); }
+  100% { box-shadow: 0 0 0 14px rgba(217, 119, 6, 0); }
+}
+/* 默写卡「正确拼写」框内的音节块：红底氛围下保持琥珀块，尺寸微缩 */
+.dict-answer .syl-block { font-size: 17px; padding: 1px 10px 3px; }
 
 @media (max-width: 1200px) {
   .layout { flex-direction: column; }

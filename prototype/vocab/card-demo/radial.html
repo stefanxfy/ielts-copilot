@@ -10,7 +10,7 @@
 
 <header class="demo-head" data-page-node-id="5oem5G48sFa2LKIkPfaKdE">
   <h1 data-page-node-id="JWtBaqA2MQh8Aap39YNFGR">辐射助记卡 · 交互原型</h1>
-  <p class="sub" data-page-node-id="UFAyICROgfQhHMTUMi9CUa">中心单词卡 + 四类助记卡思维导图辐射 · 触发点：认词卡「模糊 / 不认识」、默写卡「判错 / 查看答案」· 判对不辐射 · 看完直接下一词（无二次评分）· 连线生长 + 回弹落位动画</p>
+  <p class="sub" data-page-node-id="UFAyICROgfQhHMTUMi9CUa">中心单词卡 + 五类助记卡思维导图辐射 · 触发点：认词卡「模糊 / 不认识」、默写卡「判错 / 查看答案」· 辐射卡含<b>音节解析</b>（色块 + 逐音节音标，重音琥珀高亮）· 判对不辐射 · 看完直接下一词（无二次评分）</p>
 </header>
 
 <!-- 词选择 + 卡型选择 -->
@@ -32,6 +32,7 @@
     <div class="radial-stage" id="radialStage" data-page-node-id="F5ZrmcPFf2d4edIXcnvIg6">
       <svg class="wires" id="wiresSvg" aria-hidden="true" data-page-node-id="ATrUsnkCySan56YByDFC6Z"></svg>
 
+      <aside class="mn-card mn-syl"   data-mn="syl" data-page-node-id="SYLcard00000000000001"></aside>
       <aside class="mn-card mn-affix" data-mn="affix" data-page-node-id="SWgP8TJ9ifYBeJ8DoWhWfU"></aside>
       <aside class="mn-card mn-coll"  data-mn="coll" data-page-node-id="99yUoIlU6fx9xZRvuW2ymX"></aside>
       <aside class="mn-card mn-derive" data-mn="derive" data-page-node-id="e1Gf9fJpXodAtw9QBuG4pZ"></aside>
@@ -58,9 +59,9 @@
     <section class="panel" data-page-node-id="QmvNWPQmdymudcg8l6ocra">
       <h3 data-page-node-id="PHjPBBuENKMca6EsFavKYl">辐射触发说明</h3>
       <p class="hint" data-page-node-id="4hYrUItCn5hFCUz7ME2enF">
-        · 认词卡：<b data-page-node-id="jwze2utcAW1mfRnldY7vJq">模糊 / 不认识</b> → 主卡收缩，四类助记卡辐射展开<br data-page-node-id="SsxwJonzHDx1zyJSNQxEuH">
-        · 默写卡：<b data-page-node-id="5Iz99kdSLoPcGnBj8mj3jT">判错 / 查看答案</b> → 同上；<b data-page-node-id="j5JkEerA4WYwnD1NREx2hF">一次判对零辐射</b>，直接下一个<br data-page-node-id="pSJaC8WF6DFS1RsMImk4p5">
-        · 展开后<b data-page-node-id="fHv9YDrNgs2Vr4P2NYZEkw">无二次评分</b>，「下一个」直接走词
+        · 认词卡：<b data-page-node-id="jwze2utcAW1mfRnldY7vJq">模糊 / 不认识</b> → 主卡收缩下移，五类助记卡辐射展开（顶部居中为<b data-page-node-id="sylExplain1">音节解析</b>：音节色块 + 逐音节音标，重音琥珀）<br data-page-node-id="SsxwJonzHDx1zyJSNQxEuH">
+        · 默写卡：<b data-page-node-id="5Iz99kdSLoPcGnBj8mj3jT">判错 / 查看答案</b> → 「正确拼写」以音节色块呈现 + 辐射；<b data-page-node-id="j5JkEerA4WYwnD1NREx2hF">一次判对零辐射</b>，直接下一个<br data-page-node-id="pSJaC8WF6DFS1RsMImk4p5">
+        · 展开后<b data-page-node-id="fHv9YDrNgs2Vr4P2NYZEkw">无二次评分</b>，「下一个」直接走词；主卡单词始终保持原拼写
       </p>
     </section>
   </aside>

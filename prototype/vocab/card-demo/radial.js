@@ -5,6 +5,7 @@ const WORDS = {
   abandon: {
     word: "abandon",
     ipa: "/əˈbændən/",
+    syl: { parts: ["a", "ban", "don"], ipa: ["ə", "bæn", "dən"], stress: 1 },
     translation: "v. 抛弃，放弃",
     example: {
       en: "He abandoned his car in the desert.",
@@ -37,6 +38,7 @@ const WORDS = {
   abundant: {
     word: "abundant",
     ipa: "/əˈbʌndənt/",
+    syl: { parts: ["a", "bun", "dant"], ipa: ["ə", "bʌn", "dənt"], stress: 1 },
     translation: "adj. 大量的，丰富的",
     example: {
       en: "The fish in this pond are abundant.",
@@ -67,6 +69,7 @@ const WORDS = {
   discard: {
     word: "discard",
     ipa: "/dɪˈskɑːrd/",
+    syl: { parts: ["dis", "card"], ipa: ["dɪ", "skɑːrd"], stress: 1 },
     translation: "v. 丢掉，抛弃（牌）",
     example: {
       en: "I will discard this bottle into the garbage bin.",
@@ -96,6 +99,7 @@ const WORDS = {
   isolate: {
     word: "isolate",
     ipa: "/ˈaɪsəleɪt/",
+    syl: { parts: ["i", "so", "late"], ipa: ["aɪ", "sə", "leɪt"], stress: 1 },
     translation: "v. 使隔离，使孤立",
     example: {
       en: "The old man built a huge fence, to isolate himself from his neighbors.",
@@ -126,6 +130,7 @@ const WORDS = {
   accomplish: {
     word: "accomplish",
     ipa: "/əˈkʌmplɪʃ/",
+    syl: { parts: ["ac", "com", "plish"], ipa: ["ə", "kʌm", "plɪʃ"], stress: 1 },
     translation: "v. 完成，实现（目标）",
     example: {
       en: "She is so happy to have accomplished her weight-loss goal.",
@@ -226,6 +231,16 @@ function exampleBlanked(word) {
   };
 }
 
+// ---------- 音节色块（音节解析卡内容） ----------
+// syl: { parts: ["a","ban","don"], ipa: ["ə","bæn","dən"], stress: 1 } —— stress 为重音音节下标（琥珀实底）
+function sylBlocksHtml(w, animate) {
+  if (!w.syl) return esc(w.word);
+  return w.syl.parts.map((p, i) =>
+    `<span class="syl-block${i === w.syl.stress ? " stress" : ""}${animate ? "" : " in"}"` +
+    ` style="transition-delay:${i * 70}ms">${esc(p)}</span>`
+  ).join("");
+}
+
 // ---------- 音效 ----------
 let _actx = null;
 function tone(freq, dur, delay = 0, type = "sine", gain = 0.12) {
@@ -290,14 +305,15 @@ function recogNext(delta) {
 }
 
 // ---------- 辐射助记层 ----------
-// 四张助记卡目标位（相对 .radial-stage 1120x680）：左上/右上/左下/右下
+// 五张助记卡目标位（相对 .radial-stage 1120x680）：顶中/左上/右上/左下/右下
 const MN_POS = {
-  affix:  { x: 165, y: 120 },  // 词根词缀·熟词拆分 左上
-  coll:   { x: 955, y: 120 },  // 词组搭配 右上
+  syl:    { x: 560, y: 60  },  // 音节解析 顶部居中
+  affix:  { x: 165, y: 170 },  // 词根词缀·熟词拆分 左上
+  coll:   { x: 955, y: 170 },  // 词组搭配 右上
   derive: { x: 165, y: 560 },  // 派生/近义 左下
   llm:    { x: 955, y: 560 },  // LLM 解读 右下
 };
-const MN_KEY_ORDER = ["affix", "coll", "derive", "llm"];
+const MN_KEY_ORDER = ["syl", "affix", "coll", "derive", "llm"];
 // 助记卡尺寸（radial.css 固定宽 300；高度 JS 实测）
 const MN_W = 300;
 
@@ -308,6 +324,7 @@ function mnEls() {
 // 判定某词某键是否有内容（缺内容卡不出，符合「缺字段自动收起」契约）
 function mnHasContent(w, key) {
   if (!w) return false;
+  if (key === "syl") return !!(w.syl && w.syl.parts && w.syl.parts.length);
   if (key === "affix") return !!(w.affixBreakdown);
   if (key === "coll") return !!(w.collocations && w.collocations.length);
   if (key === "derive") return !!(w.derives && w.derives.length);
@@ -316,6 +333,20 @@ function mnHasContent(w, key) {
 }
 
 function buildMnContent(w, key) {
+  if (key === "syl") {
+    const s = w.syl;
+    const ipa = s.ipa || [];
+    let html = `<div class="syl-word-line"><span class="syl-whole">${esc(w.word)}</span><span class="recog-phon">${esc(w.ipa)}</span></div>`;
+    html += `<div class="syl-chip-row">` + s.parts.map((p, i) => `
+      <div class="syl-unit${i === s.stress ? " stress" : ""}" style="transition-delay:${i * 90}ms">
+        <span class="syl-unit-idx">${i + 1}</span>
+        <span class="syl-block in${i === s.stress ? " stress" : ""}">${esc(p)}</span>
+        ${ipa[i] ? `<span class="syl-unit-ipa">${esc(ipa[i])}</span>` : ""}
+        ${i === s.stress ? `<span class="syl-unit-mark">◉ 重音</span>` : `<span class="syl-unit-mark syl-unit-mark-dim">次弱</span>`}
+      </div>`).join("") + `</div>`;
+    html += `<div class="mn-line"><b>拼读：</b>${esc(s.parts.join(" · "))} —— 按音节拼读，重音落在第 ${s.stress + 1} 个音节</div>`;
+    return html;
+  }
   if (key === "affix") {
     const a = w.affixBreakdown;
     let html = "";
@@ -350,6 +381,7 @@ function buildMnContent(w, key) {
 
 function buildMnCard(k, w) {
   const meta = {
+    syl:    { icon: "🔊", title: "音节解析",           sub: "syllables" },
     affix:  { icon: "🧩", title: "词根词缀 · 熟词拆分", sub: "morphology" },
     coll:   { icon: "🔗", title: "词组搭配",           sub: "collocations" },
     derive: { icon: "🌱", title: "派生 / 近义词",       sub: "derivatives" },
@@ -367,7 +399,11 @@ function buildMnCard(k, w) {
 
 // 计算 SVG 连线路径：主卡边缘 → 助记卡边缘，贝塞尔曲线
 function wirePath(hx, hy, tx, ty, side) {
-  // side: 助记卡在主卡的哪一侧（左/右），控制曲线鼓包方向
+  // side 控制曲线鼓包方向：左/右卡水平走向，顶部卡垂直走向
+  if (side === "top") {
+    const cy1 = hy + (ty - hy) * 0.45, cy2 = hy + (ty - hy) * 0.55;
+    return `M${hx},${hy} C${hx},${cy1} ${tx},${cy2} ${tx},${ty}`;
+  }
   const dx = tx - hx, dy = ty - hy;
   const cx1 = hx + dx * 0.45, cy1 = hy;
   const cx2 = hx + dx * 0.55, cy2 = ty;
@@ -384,13 +420,21 @@ function drawWires() {
   mnEls().forEach((el, i) => {
     const k = el.dataset.mn;
     const r = el.getBoundingClientRect();
-    const tx = r.left - stageRect.left + (r.width / 2) + (k === "affix" || k === "derive" ? -r.width / 2 + 10 : r.width / 2 - 10);
-    const ty = r.top - stageRect.top + r.height / 2;
+    const cx = r.left - stageRect.left + r.width / 2;
+    const cy = r.top - stageRect.top + r.height / 2;
+    let tx, ty, side;
+    if (k === "syl") {
+      // 顶部居中卡：连线接到卡片底边中点
+      tx = cx; ty = r.top - stageRect.top + r.height - 6; side = "top";
+    } else {
+      const leftSide = (k === "affix" || k === "derive");
+      tx = cx + (leftSide ? -r.width / 2 + 10 : r.width / 2 - 10);
+      ty = cy; side = leftSide ? "left" : "right";
+    }
     const color = getComputedStyle(el).getPropertyValue("--c").trim() || "#888";
-    const side = (k === "affix" || k === "derive") ? "left" : "right";
     // 主卡边缘起点：从中心向目标方向推进到主卡边缘附近
     const hw = hubRect.width / 2 + 6, hh = hubRect.height / 2 + 6;
-    const sx = hx + (tx > hx ? hw : -hw) * 0.72;
+    const sx = hx + (tx - hx) * 0.001 + (tx > hx + 8 ? hw * 0.72 : tx < hx - 8 ? -hw * 0.72 : 0);
     const sy = hy + (ty > hy ? hh : -hh) * 0.55;
     wires += `<path class="wire" d="${wirePath(sx, sy, tx, ty, side)}" stroke="${color}" style="color:${color}"/>`;
     dots += `<circle class="wire-dot" cx="${tx}" cy="${ty}" r="0" fill="${color}"/>`;
@@ -408,9 +452,10 @@ function radiateMn(w) {
   if (_mnOpen) return;
   _mnOpen = true;
   $stage.classList.add("radial-on");
-  // 主卡收缩（视觉让位）
+  // 主卡收缩 + 下移（视觉让位，顶部留给音节解析卡）
   $("hubCardWrap").style.width = "340px";
   $("hubActions").style.maxWidth = "340px";
+  document.querySelector(".hub-slot").style.top = "54%";
 
   const stageRect = $stage.getBoundingClientRect();
   const hubRect = $("hubCardWrap").getBoundingClientRect();
@@ -462,6 +507,7 @@ function collapseMn() {
   $stage.classList.remove("radial-on");
   $("hubCardWrap").style.width = "";
   $("hubActions").style.maxWidth = "";
+  document.querySelector(".hub-slot").style.top = "";
   sfxCollapse();
   $wires.classList.remove("drawn");
   mnEls().forEach(el => {
@@ -516,7 +562,7 @@ function renderRecogCard(w, opts = {}) {
           ${plain ? "" : `<img class="recog-img" src="${w.img}" alt="${w.word} 配图">`}
           <div class="recog-word-row ${plain ? "recog-word-row-main" : ""}">
             <span class="recog-word-wrap">
-              <span class="recog-word ${plain ? "recog-word-xl" : ""}">${w.word}</span>
+              <span class="recog-word ${plain ? "recog-word-xl" : ""}">${esc(w.word)}</span>
               <span class="recog-word-side">
                 <span class="recog-phon">${w.ipa}</span>
                 <button class="play-bare" id="pronBtn" title="播放单词发音">${speakerSvg(15)}</button>
@@ -571,13 +617,12 @@ function renderRecogCard(w, opts = {}) {
       render();
       return;
     }
-    // 模糊 / 不认识 → 揭示 + 辐射助记
+    // 模糊 / 不认识 → 揭示中文 + 辐射助记（音节解析为五张辐射卡之一）
     p.streak = 0;
     if (p.stage === "spell") p.stage = "recognize";
     pushLog("认词", r);
     state.recogRevealed = true;
     render();
-    // 渲染完揭示态主卡后展开辐射层
     setTimeout(() => radiateMn(w), 60);
   }
 
@@ -633,7 +678,7 @@ function renderDictation(w, type) {
     hintHtml += `
       <div class="dict-answer">
         <span class="dict-answer-label">正确拼写</span>
-        <span class="dict-answer-word">${w.word}</span>
+        <span class="dict-answer-word">${w.syl ? sylBlocksHtml(w, false) : esc(w.word)}</span>
       </div>`;
   }
 
@@ -654,7 +699,7 @@ function renderDictation(w, type) {
     const ctxAnswer = (s.done && s.result === "wrong" && !s.gaveUp) ? `
       <div class="dict-answer ctx-answer">
         <span class="dict-answer-label">正确拼写</span>
-        <span class="dict-answer-word">${w.word}</span>
+        <span class="dict-answer-word">${w.syl ? sylBlocksHtml(w, false) : esc(w.word)}</span>
       </div>` : "";
     stimulus = `
       <img class="vis-img ctx-img" src="${w.img}" alt="语境提示配图" style="max-height:170px">
@@ -771,7 +816,7 @@ function renderDictation(w, type) {
       const label = s.hints === 0 ? "Perfect" : s.hints === 1 ? "Great" : "Good";
       badge = `<div class="dict-verdict dict-verdict-ok">✓ ${label}</div>`;
     } else {
-      badge = `<div class="dict-verdict dict-verdict-bad">✗ 看看四张助记卡，然后下一个</div>`;
+      badge = `<div class="dict-verdict dict-verdict-bad">✗ 看看五张助记卡，然后下一个</div>`;
     }
     verdictSlot.innerHTML = badge;
   }
