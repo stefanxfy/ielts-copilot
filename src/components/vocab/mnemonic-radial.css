@@ -102,8 +102,11 @@ html[data-theme="night"] {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  /* left/top 一并过渡:辐射起飞(中心→四角)与聚焦平移(四角↔主卡中心)都走平滑动画 */
   transition:
     transform 0.7s cubic-bezier(0.22, 1.35, 0.36, 1),
+    left 0.7s cubic-bezier(0.22, 1.35, 0.36, 1),
+    top 0.7s cubic-bezier(0.22, 1.35, 0.36, 1),
     opacity 0.35s ease;
 }
 .mn-card.hide {
@@ -150,6 +153,51 @@ html[data-theme="night"] {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
+  padding-right: 28px; /* 右上角留出聚焦钮空间,避免压住 mn-sub */
+}
+
+/* ---------- 聚焦钮(卡右上角放大/缩小)与聚焦态 ---------- */
+
+.mn-zoom-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+.mn-zoom-btn:hover {
+  border-color: var(--c, var(--ring));
+  color: var(--c, var(--foreground));
+  transform: scale(1.1);
+}
+.mn-zoom-btn.on {
+  background: var(--c, var(--primary));
+  border-color: var(--c, var(--primary));
+  color: var(--card);
+}
+/* 聚焦态:盖过其他卡,限高放宽让更多内容可见 */
+.mn-card.mn-zoom {
+  z-index: 8;
+}
+.mn-card.mn-zoom.show {
+  max-height: 480px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .mn-icon {
   width: 26px;

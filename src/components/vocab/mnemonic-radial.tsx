@@ -3,10 +3,13 @@
 /**
  * 助记辐射层（设计文档 v2.5 四卡制,自 prototype/vocab/card-demo/radial.* 高保真移植）
  *
- * 呈现形态(v2.7 无复刻):无蒙版无暗化、无 hub 复刻卡——1500×1000 无界画布整体
+ * 呈现形态(v2.8 可聚焦):无蒙版无暗化、无 hub 复刻卡——1500×1000 无界画布整体
  * scale 适配,四张助记卡 + SVG 连线直接锚定**真实主卡**(辐射中心=主卡中心,连线
  * 从主卡左右边缘出发)。主卡在辐射全程像素级不变样:不缩放、不被覆盖,认词卡/
  * 默写卡各自保持原版式;下层三键/方向键/灯泡/喇叭全程可点,仅助记卡自身可交互。
+ * 每卡右上角有放大/缩小钮:放大时该卡 scale 1.18 并平移至主卡中心正上方
+ * (z-index 抬升、限高放宽),连线在位移结束后重绘;同一时刻至多一张放大卡,
+ * 逐词自动复位(状态按 word 收敛,换词即失效)。
  *   左上 构词解析(morph) / 左下 派生·词性·近义(derive)
  *   右上 读音解析(syl)   / 右下 真实语境(context)
  * 触发口径(由 /learn page 决定):模糊/不认识/判错/查看答案 自动展开,判对零辐射;
@@ -196,6 +199,11 @@ export function MnemonicRadial(props: {
   const [wires, setWires] = useState<Wire[]>([]);
   const [hoverKey, setHoverKey] = useState<string | null>(null);
   const [phOpen, setPhOpen] = useState(false);
+  /** 聚焦态:哪张卡被放大(带词戳,换词自动失效;ref 供 effect/回调同步读取) */
+  const [zoom, setZoom] = useState<{ word: string; key: MnKey } | null>(null);
+  const zoomRef = useRef<{ word: string; key: MnKey } | null>(null);
+  const zoomWireTimer = useRef<number | null>(null);
+  const zoomActive = open && zoom && zoom.word === item.word ? zoom.key : null;
 
   /* ---- 画布 scale 适配:min(vw, vh) 留边距,1500×1000 等比 ---- */
   useLayoutEffect(() => {
@@ -303,7 +311,9 @@ export function MnemonicRadial(props: {
       hcy = (rr.top + rr.height / 2 - stageRect.top) / scaleCur;
     }
 
-    const visible: { k: MnKey; el: HTMLDivElement; pos: { x: number; y: number } }[] = [];
+    const visible: { k: MnKey; el: HTMLDivElement; pos: { x: number; y: number }; tf: string }[] = [];
+    // 同词重开时保留聚焦位(zoomRef 与 item.word 对齐才生效)
+    const zk = zoomRef.current && zoomRef.current.word === item.word ? zoomRef.current.key : null;
     for (const k of MN_KEY_ORDER) {
       const el = cardRefs.current[k];
       if (!el) continue;
@@ -317,15 +327,20 @@ export function MnemonicRadial(props: {
       el.style.transform = "translate(-50%, -50%) scale(.2)";
       el.style.opacity = "0";
       el.classList.add("show");
-      visible.push({ k, el, pos: MN_POS[k] });
+      visible.push({
+        k,
+        el,
+        pos: zk === k ? { x: hcx, y: hcy } : MN_POS[k],
+        tf: zk === k ? "translate(-50%, -50%) scale(1.18)" : "translate(-50%, -50%) scale(1)",
+      });
     }
 
-    visible.forEach(({ el, pos }, i) => {
+    visible.forEach(({ el, pos, tf }, i) => {
       timers.push(
         window.setTimeout(() => {
           el.style.left = `${pos.x}px`;
           el.style.top = `${pos.y}px`;
-          el.style.transform = "translate(-50%, -50%) scale(1)";
+          el.style.transform = tf;
           el.style.opacity = "";
         }, 120 + i * 90),
       );
@@ -350,6 +365,44 @@ export function MnemonicRadial(props: {
     document.addEventListener("keydown", h, true);
     return () => document.removeEventListener("keydown", h, true);
   }, [open, onClose]);
+
+  /* ---- 聚焦/还原(k=放大哪张卡;位移走 CSS transition,结束后重绘连线) ---- */
+  const applyZoom = useCallback(
+    (k: MnKey | null) => {
+      zoomRef.current = k ? { word: item.word, key: k } : null;
+      setZoom(zoomRef.current);
+      const scaleCur = scaleRef.current || 1;
+      const stage = stageRef.current;
+      if (!stage) return;
+      const stageRect = stage.getBoundingClientRect();
+      const realCard = [...document.querySelectorAll(".flashcard")].find(
+        (el) => !el.closest(".mn-overlay"),
+      );
+      let hcx = 750;
+      let hcy = 500;
+      if (realCard) {
+        const rr = realCard.getBoundingClientRect();
+        hcx = (rr.left + rr.width / 2 - stageRect.left) / scaleCur;
+        hcy = (rr.top + rr.height / 2 - stageRect.top) / scaleCur;
+      }
+      for (const key of MN_KEY_ORDER) {
+        const el = cardRefs.current[key];
+        if (!el || !el.classList.contains("show")) continue;
+        if (key === k) {
+          el.style.left = `${hcx}px`;
+          el.style.top = `${hcy}px`;
+          el.style.transform = "translate(-50%, -50%) scale(1.18)";
+        } else {
+          el.style.left = `${MN_POS[key].x}px`;
+          el.style.top = `${MN_POS[key].y}px`;
+          el.style.transform = "translate(-50%, -50%) scale(1)";
+        }
+      }
+      if (zoomWireTimer.current !== null) window.clearTimeout(zoomWireTimer.current);
+      zoomWireTimer.current = window.setTimeout(() => drawWires(scaleCur), 740);
+    },
+    [drawWires, item.word],
+  );
 
   const playContext = (c: MnContext) => {
     if (c.audio) {
@@ -391,18 +444,30 @@ export function MnemonicRadial(props: {
             ))}
           </svg>
 
-          {/* 四张助记卡(缺数据的卡不渲染内容/不出线) */}
+          {/* 四张助记卡(缺数据的卡不渲染内容/不出线;右上角聚焦钮) */}
           {MN_KEY_ORDER.map((k) => (
             <div
               key={k}
               data-mn={k}
-              className={`mn-card mn-${k}${hasMnKey(content, k) ? "" : " mn-empty"}`}
+              className={`mn-card mn-${k}${hasMnKey(content, k) ? "" : " mn-empty"}${zoomActive === k ? " mn-zoom" : ""}`}
               ref={(el) => {
                 cardRefs.current[k] = el;
               }}
               onMouseEnter={() => setHoverKey(k)}
               onMouseLeave={() => setHoverKey(null)}
             >
+              <button
+                type="button"
+                className={`mn-zoom-btn${zoomActive === k ? " on" : ""}`}
+                title={zoomActive === k ? "缩小" : "放大"}
+                aria-label={zoomActive === k ? `缩小${CARD_META[k].title}卡` : `放大${CARD_META[k].title}卡`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  applyZoom(zoomActive === k ? null : k);
+                }}
+              >
+                <ZoomIcon expanded={zoomActive === k} />
+              </button>
               <div className="mn-head">
                 <span className="mn-icon">{CARD_META[k].icon}</span>
                 <span className="mn-title">{CARD_META[k].title}</span>
@@ -697,8 +762,40 @@ function ContextBody({
   );
 }
 
-function SpeakerIcon({ size = 14 }: { size?: number }) {
+/** 聚焦钮图标:expanded=当前放大态,显示向内收拢箭头;否则向外扩散箭头 */
+function ZoomIcon({ expanded }: { expanded: boolean }) {
   return (
+    <svg
+      width={12}
+      height={12}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {expanded ? (
+        <>
+          <polyline points="4 14 10 14 10 20" />
+          <polyline points="20 10 14 10 14 4" />
+          <line x1="14" y1="10" x2="21" y2="3" />
+          <line x1="10" y1="14" x2="3" y2="21" />
+        </>
+      ) : (
+        <>
+          <polyline points="15 3 21 3 21 9" />
+          <polyline points="9 21 3 21 3 15" />
+          <line x1="21" y1="3" x2="14" y2="10" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function SpeakerIcon({ size = 14 }: { size?: number }) {  return (
     <svg
       width={size}
       height={size}
