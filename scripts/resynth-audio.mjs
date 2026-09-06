@@ -18,7 +18,10 @@
  *   node scripts/resynth-audio.mjs --seed=./seeds/xxx.txt --limit=20
  *
  * 音色默认(2026-09-03 试音定稿)：单词=en-US-AndrewMultilingualNeural,
- * 例句=en-US-EmmaMultilingualNeural + rate=-8%。
+ * 例句=en-US-EmmaMultilingualNeural。
+ * 速率：单词与例句统一 --rate=-8%(2026-09-06 决策,单词降速与例句听感一致)。
+ * ⚠ 2026-09-06 起单词口径已改,存量单词音频(audio/words/*.mp3)仍是原速,
+ *   需重跑本脚本生效(待执行任务,见 .workbuddy/memory)。
  */
 
 import Database from "better-sqlite3";
@@ -134,7 +137,7 @@ async function worker() {
   while (cursor < jobs.length) {
     const j = jobs[cursor++];
     const voice = j.kind === "word" ? VOICE_WORD : VOICE_SENT;
-    const extra = j.kind === "sent" ? [SENT_RATE] : [];
+    const extra = [SENT_RATE]; // 2026-09-06 起单词也统一 -8%
     const ok = await synth(j.text, j.outPath, voice, extra);
     ok ? okCount++ : failCount++;
     if ((cursor % 20 === 0) || cursor === jobs.length)

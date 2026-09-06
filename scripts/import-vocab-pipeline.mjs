@@ -40,7 +40,7 @@ const BOOK_ID = "ielts-core-pilot";
 const BCZ_BASE = "https://cdn.jsdelivr.net/gh/lyc8503/baicizhan-word-meaning-API/data/words/";
 // 音色策略(2026-09-03 用户试音定稿):单词=Andrew(节奏最佳男声),例句=Emma(女声韵律最佳)。
 // Multilingual 系韵律显著优于经典 Neural 系(停顿/连读/语调接近真人)。
-// CLI 可覆盖: --voice-word= --voice-sent= ;例句统一 --rate=-8% 稍慢,停顿感更明显。
+// CLI 可覆盖: --voice-word= --voice-sent= ;单词/例句统一 --rate=-8%(2026-09-06 决策,单词降速与例句听感一致)。
 const VOICE_WORD = args["voice-word"] ?? "en-US-AndrewMultilingualNeural";
 const VOICE_SENT = args["voice-sent"] ?? "en-US-EmmaMultilingualNeural";
 const SENT_RATE = "--rate=-8%";
@@ -291,7 +291,7 @@ async function worker() {
       job.text,
       job.outPath,
       job.kind === "word" ? VOICE_WORD : VOICE_SENT,
-      job.kind === "sent" ? [SENT_RATE] : [],
+      [SENT_RATE], // 2026-09-06 起单词也统一 -8%
     );
     if (r.ok) {
       if (job.kind === "word") wordAudioOk++;
