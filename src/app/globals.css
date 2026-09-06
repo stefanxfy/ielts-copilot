@@ -606,7 +606,9 @@ html[data-theme="night"] {
   .word-line-input.revealed { border-bottom-color: var(--border);     color: var(--destructive); }
   .word-line-input:disabled { opacity: 1; cursor: not-allowed; }
   /* ---------- 认词卡:底部拼写自练线(键入效果与默写卡一致) ---------- */
-  .recog-spell { margin-top: auto; padding-top: 14px; }
+  /* 禁用 margin-top:auto:auto 外边距会在 plain 版式(flex-end)吸走全部剩余空间,
+   * 把例句块顶到卡片顶部,进而触发 fitWord 防重叠 hack 把单词移出卡片(2026-09-07) */
+  .recog-spell { padding-top: 14px; }
   .recog-spell-line { position: relative; }
   /* 判错镜像:与 input 同字体/同内边距,绝对定位铺满同一盒,逐字符红白 */
   .recog-spell-diff {

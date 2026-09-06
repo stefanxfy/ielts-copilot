@@ -975,7 +975,13 @@ function RecogCard(props: {
         const wr = wrapEl.getBoundingClientRect();
         const br = bottomEl.getBoundingClientRect();
         const overlap = wr.bottom - br.top + 10;
-        if (overlap > 0) wrapEl.style.transform = `translateY(${-overlap}px)`;
+        if (overlap > 0) {
+          // 钳制:上移量不得超过单词顶边到卡片内容区顶边的余量,保证单词永不离开卡片
+          const faceTop = face.getBoundingClientRect().top + 26;
+          const maxShift = wr.top - faceTop;
+          const shift = Math.max(0, Math.min(overlap, maxShift));
+          wrapEl.style.transform = `translateY(${-shift}px)`;
+        }
       } else {
         // 带图版:36px 起收缩,保证长单词不横向溢出(音标+喇叭由 CSS flex-wrap 换行)
         let size = 36;
