@@ -66,6 +66,8 @@ export interface ReviewSession {
     dailySource: "plan" | "prefs";
   };
   prefs: { dailyNewWords: number };
+  /** 搜词「立即背这个词」:focus 词是否成功入队(不在计划/已暂停=false,前端据此提示) */
+  focusApplied?: boolean;
 }
 
 /** FSRS 调度器(默认参数 FSRS-6.0;每次调用现建,无状态) */
@@ -132,8 +134,13 @@ function deriveStreak(progressId: number, cap = 2): number {
   return Math.min(n, cap);
 }
 
-/** 构建复习 session(纯查询无副作用);extraNew=完成页「继续背新词」临时放宽限额 */
-export function buildReviewSession(nowMs = Date.now(), extraNew = 0): ReviewSession {
+/** 构建复习 session(纯查询无副作用);extraNew=完成页「继续背新词」临时放宽限额;
+ *  focusWordId=搜词「立即背这个词」强制入队并置顶(计划内 ACTIVE 词,未到期也算——FSRS 支持提前复习) */
+export function buildReviewSession(
+  nowMs = Date.now(),
+  extraNew = 0,
+  focusWordId?: number,
+): ReviewSession {
   const db = getDb();
   // 新词限额以备考计划「今日任务·背单词」个数为准(无计划回退偏好)+ 临时加量
   const daily = readDailyWordTarget();
@@ -168,6 +175,37 @@ export function buildReviewSession(nowMs = Date.now(), extraNew = 0): ReviewSess
     }
     return false;
   });
+
+  // focus 词注入:已在队列 → 移到最前;不在(未到期/新词限额截断)→ 查行强制入队置顶。
+  // 只认 ACTIVE(IGNORED 暂停态不注入),由 focusApplied=false 让前端提示。
+  if (focusWordId) {
+    const at = picked.findIndex((r) => r.wordId === focusWordId);
+    if (at > 0) {
+      const [it] = picked.splice(at, 1);
+      picked.unshift(it);
+    } else if (at === -1) {
+      const row = db
+        .select({
+          progressId: wordProgress.id,
+          wordId: words.id,
+          word: words.word,
+          phoneticUk: words.phoneticUk,
+          contentJson: words.contentJson,
+          stage: wordProgress.stage,
+          due: wordProgress.due,
+          reps: wordProgress.reps,
+          status: wordProgress.status,
+        })
+        .from(wordProgress)
+        .innerJoin(words, eq(words.id, wordProgress.wordId))
+        .where(eq(wordProgress.wordId, focusWordId))
+        .get();
+      if (row && row.status === "ACTIVE") picked.unshift(row);
+    }
+  }
+  const focusApplied = focusWordId
+    ? picked.some((r) => r.wordId === focusWordId)
+    : undefined;
 
   const queue: ReviewQueueItem[] = picked.map((r) => {
     const content = r.contentJson;
@@ -225,6 +263,7 @@ export function buildReviewSession(nowMs = Date.now(), extraNew = 0): ReviewSess
       dailySource: daily.source,
     },
     prefs,
+    focusApplied,
   };
 }
 

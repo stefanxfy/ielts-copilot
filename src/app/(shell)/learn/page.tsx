@@ -16,6 +16,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   TodayMemoryDrawer,
   TodayMemoryModal,
@@ -83,6 +84,8 @@ interface SessionData {
     dailySource: "plan" | "prefs";
   };
   prefs: { dailyNewWords: number };
+  /** 搜词「立即背这个词」:focus 词是否成功入队 */
+  focusApplied?: boolean;
 }
 
 /** 默写卡按「卡型:单词」复合键隔离(三型互不污染,原型 spellKey 语义) */
@@ -386,6 +389,28 @@ export default function LearnPage() {
     };
   }, []);
 
+  /* ---- 搜词「立即背这个词」:focus 重拉队列,该词置顶为当前卡 ---- */
+  const jumpToWord = useCallback(async (wordId: number) => {
+    try {
+      const resp = await fetch(`/api/vocab-review?focus=${wordId}`, {
+        cache: "no-store",
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const d = (await resp.json()) as SessionData;
+      if (!d.focusApplied) {
+        toast.info("该词不在背诵计划或已暂停调度");
+        return;
+      }
+      setData(d);
+      setRecogRevealed(false);
+      setImgReady(false);
+      setMnOpen(false);
+      setIdx(0); // focus 词已被服务端置顶
+    } catch {
+      toast.error("加载失败,请重试");
+    }
+  }, []);
+
   /* ---- 导航 ---- */
   const spellKeyOf = useCallback(
     (it: QueueItem) => `${it.spellType ?? "audio"}:${it.wordId}`,
@@ -609,7 +634,7 @@ export default function LearnPage() {
         <p className="max-w-[320px] text-[13px] leading-relaxed text-muted-foreground">
           请先到单词库制定背词计划:选择一本词书,把想背的词加入计划,回来这里就可以开始背单词。
         </p>
-        <WordSearchBox />
+        <WordSearchBox onJumpToWord={(id) => void jumpToWord(id)} />
         <Link
           href="/learn/books"
           className="press-bubble rounded-full bg-primary px-5 py-2 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -722,8 +747,8 @@ export default function LearnPage() {
 
   return (
     <div className="mx-auto flex max-w-[760px] flex-col items-center gap-3">
-      {/* 搜词框:计划内词直接看卡,词库词引导入计划(查词不打断复习节奏) */}
-      <WordSearchBox />
+      {/* 搜词框:下拉联想,点选即背(计划内直接跳卡,词库词确认后入计划+跳卡) */}
+      <WordSearchBox onJumpToWord={(id) => void jumpToWord(id)} />
 
       {/* 顶部进度两件套 */}
       <div className="flex w-full max-w-[400px] items-center justify-between text-[12px] text-muted-foreground">

@@ -4,6 +4,7 @@
  * GET :构建今日出题队列(到期复习 + 限额新词,spell 词服务端抽定卡型),纯查询无副作用
  *      ?extra=N(0~100,默认 0):完成页「继续背新词」临时放宽新词限额 N 个(一次 +10,
  *      客户端保证单次循环只加一次;服务端只做范围钳制)
+ *      ?focus=wordId:搜词「立即背这个词」——该词强制入队并置顶(计划内 ACTIVE,未到期也算)
  * POST:评分写回 —— body { progressId, stage, rating }
  *   rating 折算口径(客户端负责折算,服务端只认 FSRS 1~3):
  *     认词卡:认识=Good(3) 模糊=Hard(2) 不认识=Again(1)
@@ -25,11 +26,17 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const raw = new URL(request.url).searchParams.get("extra");
-  const extraNum = raw == null ? 0 : Number(raw);
+  const sp = new URL(request.url).searchParams;
+  const rawExtra = sp.get("extra");
+  const extraNum = rawExtra == null ? 0 : Number(rawExtra);
   const extra =
     Number.isFinite(extraNum) && extraNum > 0 ? Math.min(100, Math.trunc(extraNum)) : 0;
-  const session = buildReviewSession(undefined, extra);
+  // focus=wordId:搜词「立即背这个词」——该词强制入队并置顶(未到期也算)
+  const rawFocus = sp.get("focus");
+  const focusNum = rawFocus == null ? NaN : Number(rawFocus);
+  const focusWordId =
+    Number.isInteger(focusNum) && focusNum > 0 ? Math.trunc(focusNum) : undefined;
+  const session = buildReviewSession(undefined, extra, focusWordId);
   return NextResponse.json(session);
 }
 

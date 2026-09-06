@@ -1,70 +1,65 @@
 /**
- * /api/vocab-lookup — 背单词页搜词(P8.5)
+ * /api/vocab-lookup — 背单词页搜词下拉联想(P8.5 v2)
  *
- * GET ?word=xxx(前后空白忽略,大小写不敏感)——纯查询无副作用:
- *   status "none"    词库中没有这个词;
- *   status "plan"    词在背词计划内(word_progress 存在即算,IGNORED 暂停态也返回,
- *                    前端据此提示「已暂停」);
- *   status "library" 在词库但未入计划(前端弹「是否加入背词计划」确认框)。
+ * GET ?q=xxx(前后空白忽略,大小写不敏感)——纯查询无副作用:
+ *   返回候选列表(最多 8 条):精确匹配最前 → 前缀匹配 → 包含匹配,同组按字母序;
+ *   每条带 inPlan(在背词计划内)/ paused(IGNORED 暂停态)徽标字段,
+ *   前端据此决定「直接背」/「弹确认加入计划」。
  *
- * 入计划走既有 POST /api/vocab-study-plan(幂等,onConflictDoNothing),
- * 本接口不做写入——查询与写变更一刀切,与 vocab-study-plan 的职责边界一致。
+ * 「立即背这个词」的写入链路:入计划走 POST /api/vocab-study-plan(幂等),
+ * 出队列走 GET /api/vocab-review?focus=wordId —— 本接口只做联想查询,职责单一。
  */
 import { NextResponse } from "next/server";
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { words, wordProgress } from "@/db/schema";
-import { hasVocabImage } from "@/lib/vocab-card-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const LIMIT = 8;
+
 export async function GET(request: Request) {
-  const raw = new URL(request.url).searchParams.get("word") ?? "";
-  const q = raw.trim().toLowerCase();
+  const raw = new URL(request.url).searchParams.get("q") ?? "";
+  // 通配符直接剥掉,只按字面匹配单词
+  const q = raw.trim().toLowerCase().replace(/[%_]/g, "");
   if (!q) {
-    return NextResponse.json({ error: "word 参数不能为空" }, { status: 400 });
+    return NextResponse.json({ error: "q 参数不能为空" }, { status: 400 });
   }
 
   const db = getDb();
-  // words.word 小写归一存储,lower 比较对历史脏数据兜底
-  const wordRow = db
-    .select()
+  // words.word 小写归一存储,lower() 比较对历史脏数据兜底;精确→前缀→包含 三级排序
+  const rows = db
+    .select({
+      wordId: words.id,
+      word: words.word,
+      phoneticUk: words.phoneticUk,
+      contentJson: words.contentJson,
+      progressId: wordProgress.id,
+      progressStatus: wordProgress.status,
+    })
     .from(words)
-    .where(sql`lower(${words.word}) = ${q}`)
-    .get();
-  if (!wordRow) {
-    return NextResponse.json({ status: "none" });
-  }
+    .leftJoin(wordProgress, eq(wordProgress.wordId, words.id))
+    .where(sql`lower(${words.word}) LIKE ${`%${q}%`}`)
+    .orderBy(
+      sql`CASE
+            WHEN lower(${words.word}) = ${q} THEN 0
+            WHEN lower(${words.word}) LIKE ${`${q}%`} THEN 1
+            ELSE 2
+          END, ${words.word}`,
+    )
+    .limit(LIMIT)
+    .all();
 
-  const progress = db
-    .select()
-    .from(wordProgress)
-    .where(eq(wordProgress.wordId, wordRow.id))
-    .get();
-
-  const content = wordRow.contentJson;
-  const face = {
-    wordId: wordRow.id,
-    word: wordRow.word,
-    phoneticUk: wordRow.phoneticUk,
-    content,
-    hasImage: hasVocabImage(content),
-  };
-
-  if (progress) {
-    return NextResponse.json({
-      status: "plan",
-      item: {
-        ...face,
-        progressId: progress.id,
-        stage: progress.stage,
-        progressStatus: progress.status,
-        due: progress.due,
-        reps: progress.reps,
-        lapses: progress.lapses,
-      },
-    });
-  }
-  return NextResponse.json({ status: "library", item: face });
+  return NextResponse.json({
+    items: rows.map((r) => ({
+      wordId: r.wordId,
+      word: r.word,
+      phoneticUk: r.phoneticUk,
+      meaning:
+        (r.contentJson.translation ?? []).join("; ").slice(0, 40) || null,
+      inPlan: r.progressId != null,
+      paused: r.progressStatus === "IGNORED",
+    })),
+  });
 }
