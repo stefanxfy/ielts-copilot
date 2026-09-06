@@ -593,6 +593,21 @@ export interface WordCollocation {
   /** 词组中文,如 "取消；抵销"(可空) */
   cn?: string;
 }
+/** 真实语境条目(v2.5 单字段自含词组 + 例句音频;v2.9 例句全取时 coll 转可选) */
+export interface WordContext {
+  /** 词组英文(句中高亮锚点,可空——无词组命中的例句省略,渲染兜底高亮词头) */
+  coll?: string;
+  /** 词组中文(可空) */
+  collZh?: string;
+  /** 例句英文 */
+  en: string;
+  /** 例句中文(可空) */
+  cn?: string;
+  /** 例句音频路径(空表示未生成) */
+  audio?: string;
+  /** 血缘:example=回填/导入从例句复制;缺省=LLM 生成 */
+  src?: "llm" | "example";
+}
 export interface WordContent {
   /** 中文释义(多行,百词斩 mean_cn 按 "；" 拆) */
   translation: string[];
@@ -602,6 +617,10 @@ export interface WordContent {
   examples: WordExample[];
   /** 独立词组清单(可空,v2.8 词书源落库;contexts 仍为渲染唯一来源,见 docs/单词助记系统设计.md §2.4) */
   collocations?: WordCollocation[];
+  /** 真实语境(可空,LLM 生成 + 例句回填/导入双来源,见 docs/单词助记系统设计.md §2.4 v2.9) */
+  contexts?: WordContext[];
+  /** 构词拆分原文种子(可空,v2.9 词书 remMethod 原样整存,gen-mnemonic prompt 种子 + 血缘留档) */
+  morphSeed?: string;
   /** 词根拆解(可空,ECDICT wordroot.txt) */
   root?: string;
   /** 词形变化/重点短语(可空,百词斩 sentence_phrase / ECDICT exchange) */

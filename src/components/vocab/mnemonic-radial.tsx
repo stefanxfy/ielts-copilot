@@ -54,7 +54,8 @@ export interface MnDerive {
   meaningZh: string;
 }
 export interface MnContext {
-  coll: string;
+  /** 词组高亮锚点(可选 v2.9:全部例句入 contexts 时无词组命中的句子省略,渲染兜底高亮词头) */
+  coll?: string;
   collZh?: string;
   en: string;
   cn?: string;

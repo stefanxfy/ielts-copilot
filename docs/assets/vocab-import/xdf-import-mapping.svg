@@ -36,10 +36,10 @@
   <rect x="480" y="52" width="170" height="120" rx="12" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
   <text x="500" y="76" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#444441">words + contentJson</text>
   <text x="500" y="96" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">phonetic_uk · translation</text>
-  <text x="500" y="113" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">definition · examples(取2)</text>
+  <text x="500" y="113" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">definition · examples[0](判分)</text>
   <text x="500" y="130" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">collocations · derives</text>
   <text x="500" y="147" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">morphSeed(拆分原文)</text>
-  <text x="500" y="164" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">contexts(src=example)</text>
+  <text x="500" y="164" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">contexts 全例句(src=example)</text>
 
   <!-- bwr -->
   <rect x="480" y="192" width="170" height="52" rx="12" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>

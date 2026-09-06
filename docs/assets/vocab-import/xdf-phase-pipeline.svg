@@ -35,7 +35,7 @@
 
   <rect x="558" y="70" width="92" height="88" rx="10" fill="#EAF5EC" stroke="#8FC9A2" stroke-width="0.5"/>
   <text x="604" y="94" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#1E5B33">P4/P5 生图·验收</text>
-  <text x="604" y="116" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">核心词 MiniMax</text>
+  <text x="604" y="116" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">生图后置 · 冒烟</text>
   <text x="604" y="132" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">门禁:agent-browser</text>
   <text x="604" y="147" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">冒烟 · 分批建计划</text>
 
@@ -44,7 +44,7 @@
   <path d="M406 114 L422 114" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrowP)"/>
   <path d="M538 114 L554 114" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrowP)"/>
 
-  <text x="40" y="196" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">P0/P1 小时级 · P2 约 8800 次合成(分批后台,数小时) · P3 一次性全跑约 9000+ LLM 调用(分期推进)</text>
-  <text x="40" y="214" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">P4 核心词(collins≥3 或 bncRank≤2000)预估 1300-1500 张,配额受限可后置或调阈值</text>
+  <text x="40" y="196" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">P0/P1 小时级 · P2 约 11500 次合成(分批后台,数小时) · P3 首期 syl+morph 约 5900 LLM 调用(分期推进)</text>
+  <text x="40" y="214" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">P4 生图后置独立推进 · contexts LLM 条目随学随补 · derives 直转省 ~2400 调用</text>
   <text x="40" y="238" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">3575 词不一次性入学习计划:按 wordRank 每批 50-100 经选词页加入,节奏由 FSRS 每日新词上限控制</text>
 </svg>
