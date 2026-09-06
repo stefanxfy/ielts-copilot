@@ -28,6 +28,7 @@ import {
   type MnDerive,
   type MnContext,
 } from "@/components/vocab/mnemonic-radial";
+import { WordSearchBox } from "@/components/vocab/word-search";
 
 /* ---------------- 类型(对齐 /api/vocab-review GET) ---------------- */
 
@@ -364,11 +365,7 @@ export default function LearnPage() {
     idxRef.current = idx;
   }, [idx]);
 
-  /* ---- 换词即收起助记层(方向键翻词/自动跳词都会改 idx,统一在此关层) ---- */
-  const curWordId = item?.wordId;
-  useEffect(() => {
-    setMnOpen(false);
-  }, [curWordId]);
+  /* ---- 换词即收起助记层(方向键翻词/自动跳词都会改 idx,统一在改 idx 的入口关层,见 advanceFrom/tryNav) ---- */
 
   /* ---- 拉取复习队列(fetch 回调内 setState,规避 set-state-in-effect) ---- */
   useEffect(() => {
@@ -407,6 +404,7 @@ export default function LearnPage() {
     (fromIdx: number) => {
       setRecogRevealed(false);
       setImgReady(false);
+      setMnOpen(false);
       setIdx((cur) => (cur === fromIdx ? cur + 1 : cur));
     },
     [],
@@ -428,6 +426,7 @@ export default function LearnPage() {
         if (cur > 0) {
           setRecogRevealed(false);
           setImgReady(false);
+          setMnOpen(false);
           setIdx(cur - 1);
         }
         return;
@@ -437,6 +436,7 @@ export default function LearnPage() {
       if (!it || !ratedNow()) return;
       setRecogRevealed(false);
       setImgReady(false);
+      setMnOpen(false);
       setIdx(cur + 1);
     },
     [queue, ratedNow],
@@ -602,13 +602,14 @@ export default function LearnPage() {
     );
   }
   if (!data || data.stats.total === 0) {
-    // 形态 A:背词计划零选词 → 中央引导去单词库
+    // 形态 A:背词计划零选词 → 中央引导去单词库(搜词框可直接查词加入计划)
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <h2 className="text-xl">还没有制定背词计划</h2>
         <p className="max-w-[320px] text-[13px] leading-relaxed text-muted-foreground">
           请先到单词库制定背词计划:选择一本词书,把想背的词加入计划,回来这里就可以开始背单词。
         </p>
+        <WordSearchBox />
         <Link
           href="/learn/books"
           className="press-bubble rounded-full bg-primary px-5 py-2 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -721,6 +722,9 @@ export default function LearnPage() {
 
   return (
     <div className="mx-auto flex max-w-[760px] flex-col items-center gap-3">
+      {/* 搜词框:计划内词直接看卡,词库词引导入计划(查词不打断复习节奏) */}
+      <WordSearchBox />
+
       {/* 顶部进度两件套 */}
       <div className="flex w-full max-w-[400px] items-center justify-between text-[12px] text-muted-foreground">
         <span>
