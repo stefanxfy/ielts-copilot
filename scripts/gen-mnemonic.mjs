@@ -135,16 +135,25 @@ async function llmJson(userPrompt) {
 }
 
 /** 挑一个词的屈折容差匹配:coll 的每个实义词,例句里存在「词干前缀」命中(前 4 字符,短词取全长);
- *  反身代词特殊规则:coll 用 oneself/themselves 时,en 中任意 -self/-selves 词(himself 等)即算命中 */
+ *  反身代词特殊规则:coll 用 oneself/themselves 时,en 中任意 -self/-selves 词(himself 等)即算命中;
+ *  占位词规则:词典式搭配常带占位/虚词(one's、sth、the ability to do sth),这些词不参与定位,
+ *  只要求实义词命中——占位词强匹配会误杀真实例句(ability 批量生成实测教训) */
+const COLL_PLACEHOLDERS = new Set([
+  "sth", "sb", "one", "s", "someone", "something", "somebody", "oneself",
+  "the", "a", "an", "to", "of", "do", "be", "doing", "b", "x", "y",
+]);
 function stemHits(sentence, phrase) {
   const norm = (s) => s.toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/).filter(Boolean);
   const sent = norm(sentence);
   const reflexive = (w) => /(?:self|selves)$/.test(w);
-  return norm(phrase).every((w) => {
-    if (reflexive(w)) return sent.some(reflexive);
-    const stem = w.length <= 4 ? w : w.slice(0, 4);
-    return sent.some((s) => s.startsWith(stem));
-  });
+  const hit = (w, n) => sent.some((s) => s.startsWith(w.slice(0, n)));
+  return norm(phrase)
+    .filter((w) => !COLL_PLACEHOLDERS.has(w))
+    .every((w) => {
+      if (reflexive(w)) return sent.some(reflexive);
+      // 两级前缀:先 4 字符,未中回退 3 字符(兼容 make→making / become→became 等屈折)
+      return hit(w, 4) || (w.length > 3 && hit(w, 3));
+    });
 }
 
 // ===== 四路 prompt(设计文档 §5 定稿模板) =====
@@ -161,6 +170,8 @@ const PROMPTS = {
     `- compound: kind 一律 "word",每个 piece 填 fromWord=来源真词(如 outbreak = out + break)`,
     `- blend: kind ∈ blend-head|blend-tail,fromWord=被截取真词(如 brunch = breakfast 截头 + lunch 截尾)`,
     `- pieces 依序拼合必须覆盖整词拼写(去连字符后逐字符 === ${w})`,
+    `输出前自查:把各 piece 依序拼接、去掉连字符和括号,必须与 ${w} 逐字符完全相同——不得多写、漏写或改写任何字母(如 ${w} 不能拼成别的拼写)。`,
+    `- piece 写实际参与拼写的字符,禁止括号注记或变体写法(如写 facil 而非 "facil(e)");词源形式接后缀时省音的(如 facile→facil-、able→abil-),按省音后的实际拼写写`,
   ].join("\n"),
 
   syl: (w, ipa) => [
@@ -243,7 +254,7 @@ function validate(field, parsed, word, ipaInput) {
     const d = parsed.derives;
     if (!Array.isArray(d)) return ["derives 缺失或非数组"];
     if (d.length > 5) errs.push(`条数 ${d.length} > 5`);
-    const posOk = /^(n|v|adj|adv|phr)\.$/;
+    const posOk = /^(n|v|adj|adv|phr)\.((\/|\s*)(n|v|adj|adv|phr)\.)*$/;
     for (const it of d) {
       if (!it.word || !it.pos || !it.meaningZh) errs.push(`derives 缺字段: ${JSON.stringify(it).slice(0, 80)}`);
       if (it.pos && !posOk.test(it.pos)) errs.push(`pos 非标准缩写: ${it.pos}`);
