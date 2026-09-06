@@ -641,6 +641,122 @@ body {
 /* 重音音节单元：序号圈高亮 */
 .syl-unit.stress .syl-unit-idx { background: var(--c); color: #fff; }
 
+/* ---------- v2.2 音素层（音节解析卡 · 音素色片 + 细讲抽屉） ---------- */
+/* syl 卡限高内滚：音素层展开时不溢出舞台、不压主卡 */
+.mn-card.mn-syl.show {
+  max-height: 430px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+/* 辐射态主卡照片缩矮：顶部音素卡与主卡之间留出余量 */
+.radial-on .recog-img { max-height: 190px; }
+
+/* 音素色片条：按音节分组，组间以分隔点衔接 */
+.ph-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 9px 0 7px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--muted);
+}
+.ph-group { display: inline-flex; gap: 3px; }
+.ph-group + .ph-group::before { content: "·"; color: var(--muted-foreground); opacity: .55; margin-right: 4px; line-height: 1; align-self: center; }
+.ph-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 21px;
+  padding: 2px 5px 3px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  line-height: 1.25;
+  cursor: default;
+}
+.ph-chip.ph-v { background: #fbe4e0; color: #b3421e; }       /* 元音 · 暖红 */
+.ph-chip.ph-c { background: #dfeafa; color: #2b5da8; }       /* 辅音 · 靛蓝 */
+.ph-chip.ph-n { background: #ece9e4; color: #57534e; }       /* 未标注 · 中性 */
+.ph-chip.ph-thin { font-weight: 500; opacity: .8; }
+.ph-legend {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.ph-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.ph-legend .lg-v { background: #fbe4e0; }
+.ph-legend .lg-c { background: #dfeafa; margin-left: 6px; }
+
+/* 音素细讲抽屉 */
+.ph-toggle {
+  width: 100%;
+  border: 1px dashed var(--ring);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border-radius: 9px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background .15s, border-color .15s;
+}
+.ph-toggle:hover { border-color: var(--primary); }
+.ph-toggle .ph-caret { font-size: 9px; opacity: .7; }
+.ph-detail {
+  display: none;
+  margin-top: 8px;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+.ph-detail.open { display: block; animation: pop .25s ease; }
+.ph-row { display: flex; align-items: baseline; gap: 7px; padding: 3px 0; }
+.ph-sym {
+  flex-shrink: 0;
+  min-width: 24px;
+  text-align: center;
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 1px 5px 2px;
+}
+.ph-syl-ref { flex-shrink: 0; font-size: 10px; color: var(--muted-foreground); opacity: .8; white-space: nowrap; }
+.ph-desc { font-size: 12px; line-height: 1.55; color: var(--foreground); }
+.ph-combo {
+  font-size: 12px;
+  padding: 5px 0;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+.ph-combo b {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--c);
+  background: var(--cbg);
+  border-radius: 6px;
+  padding: 1px 6px 2px;
+  margin-right: 4px;
+}
+.ph-combo-desc { display: block; font-size: 11.5px; color: var(--muted-foreground); margin-top: 1px; }
+.ph-note {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--foreground);
+  padding: 4px 9px;
+  margin: 3px 0;
+  border-radius: 8px;
+  background: var(--secondary);
+}
+
 /* 音节解析卡内色块落定态（animate=false 输出即含 .in） */
 .syl-unit .syl-block { font-size: 16px; padding: 2px 11px 4px; }
 .syl-unit .syl-block.stress { animation: stressPulse .7s ease .75s; }

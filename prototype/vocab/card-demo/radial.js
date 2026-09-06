@@ -5,7 +5,10 @@ const WORDS = {
   abandon: {
     word: "abandon",
     ipa: "/əˈbændən/",
-    syl: { parts: ["a", "ban", "don"], ipa: ["ə", "bæn", "dən"], stress: 1 },
+    syl: {
+      parts: ["a", "ban", "don"], ipa: ["ə", "bæn", "dən"], stress: 1,
+      phonemes: [{ p: "ə" }, { p: "b" }, { p: "æ" }, { p: "n" }, { p: "d" }, { p: "ə" }, { p: "n" }],
+    },
     translation: "v. 抛弃，放弃",
     example: {
       en: "He abandoned his car in the desert.",
@@ -38,7 +41,10 @@ const WORDS = {
   abundant: {
     word: "abundant",
     ipa: "/əˈbʌndənt/",
-    syl: { parts: ["a", "bun", "dant"], ipa: ["ə", "bʌn", "dənt"], stress: 1 },
+    syl: {
+      parts: ["a", "bun", "dant"], ipa: ["ə", "bʌn", "dənt"], stress: 1,
+      phonemes: [{ p: "ə" }, { p: "b" }, { p: "ʌ" }, { p: "n" }, { p: "d" }, { p: "ə" }, { p: "n" }, { p: "t" }],
+    },
     translation: "adj. 大量的，丰富的",
     example: {
       en: "The fish in this pond are abundant.",
@@ -69,7 +75,10 @@ const WORDS = {
   discard: {
     word: "discard",
     ipa: "/dɪˈskɑːrd/",
-    syl: { parts: ["dis", "card"], ipa: ["dɪ", "skɑːrd"], stress: 1 },
+    syl: {
+      parts: ["dis", "card"], ipa: ["dɪ", "skɑːrd"], stress: 1,
+      phonemes: [{ p: "d" }, { p: "ɪ" }, { p: "s" }, { p: "kɑːr" }, { p: "d" }],
+    },
     translation: "v. 丢掉，抛弃（牌）",
     example: {
       en: "I will discard this bottle into the garbage bin.",
@@ -99,7 +108,10 @@ const WORDS = {
   isolate: {
     word: "isolate",
     ipa: "/ˈaɪsəleɪt/",
-    syl: { parts: ["i", "so", "late"], ipa: ["aɪ", "sə", "leɪt"], stress: 1 },
+    syl: {
+      parts: ["i", "so", "late"], ipa: ["aɪ", "sə", "leɪt"], stress: 1,
+      phonemes: [{ p: "aɪ" }, { p: "s" }, { p: "ə" }, { p: "l" }, { p: "eɪ" }, { p: "t" }],
+    },
     translation: "v. 使隔离，使孤立",
     example: {
       en: "The old man built a huge fence, to isolate himself from his neighbors.",
@@ -130,7 +142,11 @@ const WORDS = {
   accomplish: {
     word: "accomplish",
     ipa: "/əˈkʌmplɪʃ/",
-    syl: { parts: ["ac", "com", "plish"], ipa: ["ə", "kʌm", "plɪʃ"], stress: 1 },
+    syl: {
+      parts: ["ac", "com", "plish"], ipa: ["ə", "kʌm", "plɪʃ"], stress: 1,
+      phonemes: [{ p: "ə" }, { p: "k" }, { p: "ʌ" }, { p: "m" }, { p: "p" }, { p: "l" }, { p: "ɪ" }, { p: "ʃ" }],
+      phonemes: [{ p: "ə" }, { p: "k" }, { p: "ʌ" }, { p: "m" }, { p: "p" }, { p: "l" }, { p: "ɪ" }, { p: "ʃ" }],
+    },
     translation: "v. 完成，实现（目标）",
     example: {
       en: "She is so happy to have accomplished her weight-loss goal.",
@@ -158,6 +174,59 @@ const WORDS = {
       { en: "achieve", cn: "v. 达成（近义）" },
     ],
     llmInsight: "compl = 填满：complete 是「把空填满」，accomplish 是「朝着(ac-)目标把该填的都填满」——所以它天然搭配 goal / task / mission。三胞胎辨析：complete（填完）、complement（补足）、compliment（赞美，t 结尾多一撇 = 好话填心里）。",
+  },
+  literature: {
+    word: "literature",
+    ipa: "/ˈlɪtərətʃə/",
+    syl: {
+      parts: ["lit", "e", "ra", "ture"], ipa: ["lɪt", "ə", "rə", "tʃə"], stress: 0, secondary: [],
+      phonemes: [
+        { p: "l", syl: 0, type: "consonant", desc: "边音：舌尖抵上齿龈，气流从舌两侧通过" },
+        { p: "ɪ", syl: 0, type: "vowel", desc: "短元音：比 iː 松弛短促，同 sit 的元音" },
+        { p: "t", syl: 0, type: "consonant", desc: "清塞音：舌尖弹开轻爆破，不送气也自然" },
+        { p: "ə", syl: 1, type: "vowel", desc: "schwa：中央弱读，最懒的元音（本词共出现 3 次）" },
+        { p: "r", syl: 2, type: "consonant", desc: "近音：舌身卷起接近硬腭但不触碰" },
+        { p: "ə", syl: 2, type: "vowel", desc: "" },
+        { p: "tʃ", syl: 3, type: "consonant", desc: "塞擦音：t 与 ʃ 合体，先堵住再摩擦放出" },
+        { p: "ə", syl: 3, type: "vowel", desc: "" },
+      ],
+      combos: [
+        { letters: "ture", sound: "/tʃə/", desc: "t 与后随 j 融合成 /tʃ/，-ure 弱读为 /ə/——同 nature / future / picture" },
+        { letters: "ra", sound: "/rə/", desc: "非重读 ra 弱化为 r + schwa，一带而过" },
+      ],
+      notes: [
+        "全词 4 个音节里 3 个是 schwa——读好的关键是「重音清晰、其余全部含糊」",
+        "快速口语常缩成 3 音节 /ˈlɪtrətʃə/（中间的 /ə/ 脱落）",
+      ],
+    },
+    translation: "n. 文学，文献，著作",
+    example: {
+      en: "She is reading modern literature at Oxford.",
+      cn: "她在牛津大学读现代文学。",
+    },
+    img: "img/literature.png",
+    affixBreakdown: {
+      parts: ["liter", "-at", "-ure"],
+      morphs: [
+        { p: "liter", m: "词根：文字（littera，同 literal 逐字、literate 识字）" },
+        { p: "-at",  m: "连接成分（-atus 名/形容词化）" },
+        { p: "-ure", m: "名词后缀：行为或结果" },
+      ],
+      literal: "与文字相关的东西 → 文学、文献",
+      trueWordSplit: { anchor: "liter", meaning: "n. 升（litre 的变体拼写）", story: "一升(liter)瓶子里的墨水全倒出来写字——写的字多了就成了 literature 文学" },
+    },
+    collocations: [
+      { en: "classic literature", cn: "经典文学" },
+      { en: "scientific literature", cn: "科学文献" },
+      { en: "a body of literature", cn: "一大批文献/著作" },
+    ],
+    derives: [
+      { en: "literary", cn: "adj. 文学的" },
+      { en: "literate", cn: "adj. 识字的；有文化的" },
+      { en: "illiterate", cn: "adj. 不识字的（il- 否定）" },
+      { en: "literal", cn: "adj. 字面的（逐字的）" },
+    ],
+    llmInsight: "liter = 文字：同族词全在讲「读写能力」这条线——literal（字面）、literate（识字）、illiterate（文盲）、literary（文学的），而 literature 是文字沉淀成的结晶。雅思阅读里 scientific literature（科学文献）是学术场景高频搭配。",
   },
 };
 
@@ -345,6 +414,54 @@ function buildMnContent(w, key) {
         ${i === s.stress ? `<span class="syl-unit-mark">◉ 重音</span>` : `<span class="syl-unit-mark syl-unit-mark-dim">次弱</span>`}
       </div>`).join("") + `</div>`;
     html += `<div class="mn-line"><b>拼读：</b>${esc(s.parts.join(" · "))} —— 按音节拼读，重音落在第 ${s.stress + 1} 个音节</div>`;
+    // v2.2 音素层：音素色片（元暖红 / 辅靛蓝 / 未标注中性，按音节分组）+ 可折叠「音素细讲」
+    const phs = s.phonemes || [];
+    if (phs.length) {
+      // 分组：优先 phonemes[].syl；否则按 ipa 贪心拼接推断（旧数据只有 {p}）
+      let groups;
+      if (phs.some(p => Number.isInteger(p.syl))) {
+        groups = [];
+        phs.forEach(p => {
+          const gi = Number.isInteger(p.syl) ? p.syl : 0;
+          (groups[gi] = groups[gi] || []).push(p);
+        });
+      } else {
+        groups = [[]];
+        let acc = "";
+        let gi = 0;
+        for (const p of phs) {
+          groups[gi].push(p);
+          acc += p.p;
+          if (gi < ipa.length - 1 && acc === ipa[gi]) { groups.push([]); gi++; acc = ""; }
+        }
+      }
+      const typed = phs.some(p => p.type === "vowel" || p.type === "consonant");
+      const chipCls = p => p.type === "vowel" ? "ph-v" : p.type === "consonant" ? "ph-c" : "ph-n";
+      html += `<div class="ph-strip">` + groups.filter(g => g.length).map(g =>
+        `<span class="ph-group">` + g.map(p =>
+          `<span class="ph-chip ${chipCls(p)}${p.desc ? "" : " ph-thin"}"${p.desc ? ` title="${esc(p.desc)}"` : ""}>${esc(p.p)}</span>`).join("")
+        + `</span>`).join("")
+        + (typed ? `<span class="ph-legend"><i class="lg-v"></i>元音<i class="lg-c"></i>辅音</span>` : "") + `</div>`;
+      if (phs.some(p => p.desc)) {
+        html += `<button class="ph-toggle" type="button">音素细讲<span class="ph-caret">▶</span></button>`;
+        html += `<div class="ph-detail">`;
+        html += phs.filter(p => p.desc).map(p =>
+          `<div class="ph-row">` +
+          `<span class="ph-sym ${chipCls(p)}">${esc(p.p)}</span>` +
+          `<span class="ph-syl-ref">第${(Number.isInteger(p.syl) ? p.syl : 0) + 1}节</span>` +
+          `<span class="ph-desc">${esc(p.desc)}</span></div>`).join("");
+        if (s.combos && s.combos.length) {
+          html += `<div class="mn-block-label">字母组合 → 读音</div>`;
+          html += s.combos.map(c =>
+            `<div class="ph-combo"><b>${esc(c.letters)}</b> → ${esc(c.sound)}<span class="ph-combo-desc">${esc(c.desc)}</span></div>`).join("");
+        }
+        if (s.notes && s.notes.length) {
+          html += `<div class="mn-block-label">发音要点</div>`;
+          html += s.notes.map(n => `<div class="ph-note">${esc(n)}</div>`).join("");
+        }
+        html += `</div>`;
+      }
+    }
     return html;
   }
   if (key === "affix") {
@@ -381,7 +498,7 @@ function buildMnContent(w, key) {
 
 function buildMnCard(k, w) {
   const meta = {
-    syl:    { icon: "🔊", title: "音节解析",           sub: "syllables" },
+    syl:    { icon: "🔊", title: "音节解析",           sub: "syllables + phonemes" },
     affix:  { icon: "🧩", title: "词根词缀 · 熟词拆分", sub: "morphology" },
     coll:   { icon: "🔗", title: "词组搭配",           sub: "collocations" },
     derive: { icon: "🌱", title: "派生 / 近义词",       sub: "derivatives" },
@@ -395,6 +512,22 @@ function buildMnCard(k, w) {
       <span class="mn-sub">${meta.sub}</span>
     </div>
     <div class="mn-body">${buildMnContent(w, k)}</div>`;
+}
+
+// 音素细讲抽屉：展开/收起（事件委托挂在卡元素上，防止 hover 误触）
+function bindPhToggles() {
+  const sylCard = $stage.querySelector('.mn-card[data-mn="syl"]');
+  if (!sylCard) return;
+  sylCard.querySelectorAll(".ph-toggle").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const detail = sylCard.querySelector(".ph-detail");
+      if (!detail) return;
+      const open = detail.classList.toggle("open");
+      btn.classList.toggle("open", open);
+      btn.querySelector(".ph-caret").textContent = open ? "▼" : "▶";
+    });
+  });
 }
 
 // 计算 SVG 连线路径：主卡边缘 → 助记卡边缘，贝塞尔曲线
@@ -476,12 +609,20 @@ function radiateMn(w) {
     visible.push({ el, k, pos });
   });
 
-  // 逐张落位（stagger 90ms）
+  // 逐张落位（stagger 90ms）；顶部卡做高度钳制，防音素卡过高溢出舞台
   visible.forEach(({ el, k, pos }, i) => {
     setTimeout(() => {
+      const stageH = $stage.clientHeight || 680;
+      let top = pos.y;
+      if (k === "syl") {
+        const h = el.offsetHeight || 0;
+        const half = h / 2 + 8;
+        top = Math.max(half, Math.min(pos.y, stageH * 0.52 - half));
+      }
       el.style.left = pos.x + "px";
-      el.style.top = pos.y + "px";
+      el.style.top = top + "px";
       el.style.transform = "translate(-50%, -50%) scale(1)";
+      if (k === "syl") bindPhToggles();
     }, 120 + i * 90);
   });
 
@@ -702,7 +843,7 @@ function renderDictation(w, type) {
         <span class="dict-answer-word">${w.syl ? sylBlocksHtml(w, false) : esc(w.word)}</span>
       </div>` : "";
     stimulus = `
-      <img class="vis-img ctx-img" src="${w.img}" alt="语境提示配图" style="max-height:170px">
+      <img class="vis-img ctx-img" src="${w.img}" alt="语境提示配图" style="max-height:170px" onerror="this.style.display='none'">
       ${hintHtml}
       <div class="ctx-sentence">${esc(b.before)}<span class="ctx-blank"><input class="word-line-input ctx-blank-input" ${inputAttrs} style="width:${b.answer.length + 2}ch" /></span>${esc(b.after)}</div>
       ${ctxAnswer}
