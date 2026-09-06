@@ -679,7 +679,7 @@ function ContextBody({
       {contexts.map((c, i) => (
         <div key={i} className="mn-ctx-item">
           <div className="mn-ctx-en">
-            <span dangerouslySetInnerHTML={{ __html: hiColl(c.en, c.coll, word) }} />
+            <span dangerouslySetInnerHTML={{ __html: hiColl(c.en, c.coll || "", word) }} />
             <button
               type="button"
               className="mn-ctx-play"
