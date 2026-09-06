@@ -14,17 +14,23 @@ const WORDS = {
       en: "He abandoned his car in the desert.",
       cn: "他在沙漠中抛弃了车子。",
     },
+    pos: "v.",
     img: "img/abandon.png",
-    affixBreakdown: {
-      parts: ["a-", "band", "-on"],
-      morphs: [
-        { p: "a-",   m: "处于…状态（ad- 的同化变体）" },
-        { p: "band", m: "词根：控制、命令（日耳曼 *bannôn，同 ban 禁令）" },
-        { p: "-on",  m: "动词后缀" },
-      ],
+    morph: {
+      type: "derived",
       literal: "处于(被)命令(放弃)的状态 → 抛弃",
-      trueWordSplit: { anchor: "band", meaning: "n. 乐队；带子", story: "乐队(band)散场，大家把乐器一扔各自走人——abandon" },
+      pieces: [
+        { piece: "a-", kind: "前缀", meaningZh: "处于…状态（ad- 的同化变体）" },
+        { piece: "band", kind: "词根", meaningZh: "控制、命令（日耳曼 *bannôn，同 ban 禁令）" },
+        { piece: "-on", kind: "后缀", meaningZh: "动词后缀" },
+      ],
+      story: { anchor: "band", meaning: "n. 乐队；带子", text: "乐队(band)散场，大家把乐器一扔各自走人——abandon" },
     },
+    contexts: [
+      { en: "The captain ordered everyone to abandon ship when the hull cracked.", cn: "船体破裂时船长下令全员弃船。" },
+      { en: "We must never abandon hope, even in the darkest times.", cn: "即便在最黑暗的时候也不能放弃希望。" },
+      { en: "They abandoned the plan after the budget was cut.", cn: "预算被砍后他们放弃了那个计划。" },
+    ],
     collocations: [
       { en: "abandon ship", cn: "弃船（逃生口令）" },
       { en: "abandon hope", cn: "放弃希望" },
@@ -50,17 +56,21 @@ const WORDS = {
       en: "The fish in this pond are abundant.",
       cn: "池塘里的鱼太丰富了。",
     },
+    pos: "adj.",
     img: "img/abundant.png",
-    affixBreakdown: {
-      parts: ["ab-", "und", "-ant"],
-      morphs: [
-        { p: "ab-",  m: "离开、溢出（away from）" },
-        { p: "und",  m: "词根：波浪（unda，同 undulate 起伏）" },
-        { p: "-ant", m: "形容词后缀：…的" },
-      ],
+    morph: {
+      type: "derived",
       literal: "波浪一样涌出来 → 丰富的",
-      trueWordSplit: null,
+      pieces: [
+        { piece: "ab-", kind: "前缀", meaningZh: "离开、溢出（away from）" },
+        { piece: "und", kind: "词根", meaningZh: "波浪（unda，同 undulate 起伏）" },
+        { piece: "-ant", kind: "后缀", meaningZh: "形容词后缀：…的" },
+      ],
     },
+    contexts: [
+      { en: "The lake is abundant in fish and crabs.", cn: "这湖里鱼蟹资源丰富。" },
+      { en: "The region has abundant resources of wind and solar.", cn: "该地区风能与太阳能资源丰沛。" },
+    ],
     collocations: [
       { en: "abundant in", cn: "富于…（be abundant in fish）" },
       { en: "abundant resources", cn: "丰富的资源" },
@@ -84,16 +94,21 @@ const WORDS = {
       en: "I will discard this bottle into the garbage bin.",
       cn: "我要把这个瓶子丢进垃圾桶。",
     },
+    pos: "v.",
     img: "img/discard.png",
-    affixBreakdown: {
-      parts: ["dis-", "card"],
-      morphs: [
-        { p: "dis-", m: "分开、去掉（away）" },
-        { p: "card", m: "n. 卡片、纸牌" },
-      ],
+    morph: {
+      type: "derived",
       literal: "把手里的牌打出去 → 丢弃",
-      trueWordSplit: { anchor: "card", meaning: "n. 卡片；纸牌", story: "打牌时把没用的牌「打出去」——discard 就是把没用的东西像出牌一样丢掉" },
+      pieces: [
+        { piece: "dis-", kind: "前缀", meaningZh: "分开、去掉（away）" },
+        { piece: "card", kind: "词根", meaningZh: "卡片、纸牌" },
+      ],
+      story: { anchor: "card", meaning: "n. 卡片；纸牌", text: "打牌时把没用的牌「打出去」——discard 就是把没用的东西像出牌一样丢掉" },
     },
+    contexts: [
+      { en: "We should discard old ideas that no longer work.", cn: "该摒弃不再管用的旧观念。" },
+      { en: "In poker you discard a card you cannot use.", cn: "扑克里你把用不上的牌打出去。" },
+    ],
     collocations: [
       { en: "discard old ideas", cn: "摒弃旧观念" },
       { en: "discard a card", cn: "打出一张牌" },
@@ -117,16 +132,20 @@ const WORDS = {
       en: "The old man built a huge fence, to isolate himself from his neighbors.",
       cn: "老人筑了一道巨大的篱笆，将自己与邻居隔绝。",
     },
+    pos: "v.",
     img: "img/isolate.png",
-    affixBreakdown: {
-      parts: ["isol", "-ate"],
-      morphs: [
-        { p: "isol", m: "词根：岛（insula，同 island 半岛 peninsula）" },
-        { p: "-ate", m: "动词后缀：使…" },
-      ],
+    morph: {
+      type: "derived",
       literal: "使成为一座孤岛 → 隔离",
-      trueWordSplit: null,
+      pieces: [
+        { piece: "isol", kind: "词根", meaningZh: "岛（insula，同 island 半岛 peninsula）" },
+        { piece: "-ate", kind: "后缀", meaningZh: "动词后缀：使…" },
+      ],
     },
+    contexts: [
+      { en: "The lab isolates the virus from the samples.", cn: "实验室把病毒从样本里隔离出来。" },
+      { en: "Newcomers often feel isolated in a big city.", cn: "新来者在大城市常感到孤立。" },
+    ],
     collocations: [
       { en: "isolate ... from", cn: "把…与…隔离" },
       { en: "feel isolated", cn: "感到孤立（常被动/形容词化）" },
@@ -145,24 +164,27 @@ const WORDS = {
     syl: {
       parts: ["ac", "com", "plish"], ipa: ["ə", "kʌm", "plɪʃ"], stress: 1,
       phonemes: [{ p: "ə" }, { p: "k" }, { p: "ʌ" }, { p: "m" }, { p: "p" }, { p: "l" }, { p: "ɪ" }, { p: "ʃ" }],
-      phonemes: [{ p: "ə" }, { p: "k" }, { p: "ʌ" }, { p: "m" }, { p: "p" }, { p: "l" }, { p: "ɪ" }, { p: "ʃ" }],
     },
     translation: "v. 完成，实现（目标）",
     example: {
       en: "She is so happy to have accomplished her weight-loss goal.",
       cn: "她很高兴完成了自己的减肥目标。",
     },
+    pos: "v.",
     img: "img/accomplish.png",
-    affixBreakdown: {
-      parts: ["ac-", "compl", "-ish"],
-      morphs: [
-        { p: "ac-",   m: "朝向（ad- 同化变体）" },
-        { p: "compl", m: "词根：填满（complēre，同 complete）" },
-        { p: "-ish",  m: "动词后缀" },
-      ],
+    morph: {
+      type: "derived",
       literal: "朝目标把坑填满 → 完成",
-      trueWordSplit: null,
+      pieces: [
+        { piece: "ac-", kind: "前缀", meaningZh: "朝向（ad- 同化变体）" },
+        { piece: "compl", kind: "词根", meaningZh: "填满（complēre，同 complete）" },
+        { piece: "-ish", kind: "后缀", meaningZh: "动词后缀" },
+      ],
     },
+    contexts: [
+      { en: "She accomplished her goal of running a marathon.", cn: "她达成了跑完马拉松的目标。" },
+      { en: "Without a clear plan you accomplish nothing.", cn: "没有明确计划将一事无成。" },
+    ],
     collocations: [
       { en: "accomplish a goal/task", cn: "实现目标/完成任务" },
       { en: "accomplish nothing", cn: "一事无成" },
@@ -204,17 +226,23 @@ const WORDS = {
       en: "She is reading modern literature at Oxford.",
       cn: "她在牛津大学读现代文学。",
     },
+    pos: "n.",
     img: "img/literature.png",
-    affixBreakdown: {
-      parts: ["liter", "-at", "-ure"],
-      morphs: [
-        { p: "liter", m: "词根：文字（littera，同 literal 逐字、literate 识字）" },
-        { p: "-at",  m: "连接成分（-atus 名/形容词化）" },
-        { p: "-ure", m: "名词后缀：行为或结果" },
-      ],
+    morph: {
+      type: "derived",
       literal: "与文字相关的东西 → 文学、文献",
-      trueWordSplit: { anchor: "liter", meaning: "n. 升（litre 的变体拼写）", story: "一升(liter)瓶子里的墨水全倒出来写字——写的字多了就成了 literature 文学" },
+      pieces: [
+        { piece: "liter", kind: "词根", meaningZh: "文字（littera，同 literal 逐字、literate 识字）" },
+        { piece: "-at", kind: "连接成分", meaningZh: "连接成分（-atus 名/形容词化）" },
+        { piece: "-ure", kind: "后缀", meaningZh: "名词后缀：行为或结果" },
+      ],
+      story: { anchor: "liter", meaning: "n. 升（litre 的变体拼写）", text: "一升(liter)瓶子里的墨水全倒出来写字——写的字多了就成了 literature 文学" },
     },
+    contexts: [
+      { en: "He prefers classic literature to modern bestsellers.", cn: "比起现代畅销书他更爱经典文学。" },
+      { en: "The claim is unsupported by scientific literature.", cn: "这一说法缺乏科学文献支撑。" },
+      { en: "A large body of literature exists on this topic.", cn: "关于该主题已有大量文献。" },
+    ],
     collocations: [
       { en: "classic literature", cn: "经典文学" },
       { en: "scientific literature", cn: "科学文献" },
@@ -227,6 +255,80 @@ const WORDS = {
       { en: "literal", cn: "adj. 字面的（逐字的）" },
     ],
     llmInsight: "liter = 文字：同族词全在讲「读写能力」这条线——literal（字面）、literate（识字）、illiterate（文盲）、literary（文学的），而 literature 是文字沉淀成的结晶。雅思阅读里 scientific literature（科学文献）是学术场景高频搭配。",
+  },
+  outbreak: {
+    word: "outbreak",
+    pos: "n.",
+    ipa: "/ˈaʊtbreɪk/",
+    syl: {
+      parts: ["out", "break"], ipa: ["aʊt", "breɪk"], stress: 0,
+      phonemes: [{ p: "aʊ" }, { p: "t" }, { p: "b" }, { p: "r" }, { p: "eɪ" }, { p: "k" }],
+    },
+    translation: "n. （战争、疾病等的）爆发，突然发生",
+    example: {
+      en: "An outbreak of flu hit the school in winter.",
+      cn: "冬天学校爆发了流感。",
+    },
+    img: "img/outbreak.png",
+    morph: {
+      type: "compound",
+      literal: "out（向外）+ break（爆发）→ （突然）爆发",
+      pieces: [
+        { piece: "out", kind: "词", meaningZh: "向外、超出" },
+        { piece: "break", kind: "词", meaningZh: "破、爆发" },
+      ],
+    },
+    collocations: [
+      { en: "outbreak of war", cn: "战争爆发" },
+      { en: "outbreak of disease", cn: "疾病爆发" },
+    ],
+    contexts: [
+      { en: "The outbreak of war forced thousands to flee.", cn: "战争爆发迫使数千人逃离。" },
+      { en: "Health workers contained the outbreak of disease quickly.", cn: "卫生人员迅速控制住了疾病爆发。" },
+    ],
+    derives: [
+      { en: "break out", cn: "v. 爆发（短语动词）" },
+      { en: "broken", cn: "adj. 破碎的（同根 break）" },
+      { en: "outcome", cn: "n. 结果（同前缀 out-）" },
+    ],
+    llmInsight: "outbreak 是教科书式合成词：out（向外）+ break（破）→ 原本「破门而出」，引申为战争、疫情、火灾的「突然爆发」。记一个构词法，写作里 outbreak of war / outbreak of flu 都能直接套。",
+  },
+  brunch: {
+    word: "brunch",
+    pos: "n.",
+    ipa: "/brʌntʃ/",
+    syl: {
+      parts: ["br", "unch"], ipa: ["brʌn", "tʃ"], stress: 0,
+      phonemes: [{ p: "b" }, { p: "r" }, { p: "ʌ" }, { p: "n" }, { p: "tʃ" }],
+    },
+    translation: "n. 早午餐（早餐 + 午餐）",
+    example: {
+      en: "We had brunch on the rooftop terrace.",
+      cn: "我们在顶层露台吃了早午餐。",
+    },
+    img: "img/brunch.png",
+    morph: {
+      type: "blend",
+      literal: "breakfast + lunch 截搭混成 → 早午餐",
+      pieces: [
+        { piece: "br", kind: "截自", meaningZh: "来自 breakfast（早餐）前半", fromWord: "breakfast" },
+        { piece: "unch", kind: "截自", meaningZh: "来自 lunch（午餐）后半", fromWord: "lunch" },
+      ],
+    },
+    collocations: [
+      { en: "Sunday brunch", cn: "周日早午餐" },
+      { en: "brunch buffet", cn: "早午餐自助" },
+    ],
+    contexts: [
+      { en: "The hotel serves a lavish Sunday brunch.", cn: "这家酒店供应丰盛的周日早午餐。" },
+      { en: "We met friends for a brunch buffet downtown.", cn: "我们在市中心和朋友吃了早午餐自助。" },
+    ],
+    derives: [
+      { en: "breakfast", cn: "n. 早餐（混成来源）" },
+      { en: "lunch", cn: "n. 午餐（混成来源）" },
+      { en: "smog", cn: "n. 烟雾（同为混成词：smoke+fog）" },
+    ],
+    llmInsight: "brunch 是经典「混成词（blend）」：取 breakfast 的头 br- 接 lunch 的尾 -unch。英语里这类词很多——smog（smoke+fog 烟雾）、motel（motor+hotel 汽车旅馆）。看到 brunch 就想到「两餐合一」。",
   },
 };
 
@@ -374,15 +476,17 @@ function recogNext(delta) {
 }
 
 // ---------- 辐射助记层 ----------
-// 五张助记卡目标位（相对 .radial-stage 1120x680）：顶中/左上/右上/左下/右下
+// 六张助记卡目标位（相对 .radial-stage 1120x680）：顶中/左上/右上/右中/左下/右下
+// 顺序即连线生长顺序；context 为「链式连线」，挂在 coll 卡下方（见 drawWires）
 const MN_POS = {
-  syl:    { x: 560, y: 60  },  // 音节解析 顶部居中
-  affix:  { x: 165, y: 170 },  // 词根词缀·熟词拆分 左上
-  coll:   { x: 955, y: 170 },  // 词组搭配 右上
-  derive: { x: 165, y: 560 },  // 派生/近义 左下
-  llm:    { x: 955, y: 560 },  // LLM 解读 右下
+  syl:     { x: 560, y: 90  },  // 音节解析 顶部居中
+  morph:   { x: 150, y: 215 },  // 词形拆解 左上
+  coll:    { x: 970, y: 215 },  // 词组搭配 右上
+  context: { x: 970, y: 410 },  // 语境例句 右中（链式：挂在 coll 下）
+  derive:  { x: 150, y: 470 },  // 派生/近义 左下
+  llm:     { x: 560, y: 595 },  // LLM 解读 底部居中
 };
-const MN_KEY_ORDER = ["syl", "affix", "coll", "derive", "llm"];
+const MN_KEY_ORDER = ["syl", "morph", "coll", "context", "derive", "llm"];
 // 助记卡尺寸（radial.css 固定宽 300；高度 JS 实测）
 const MN_W = 300;
 
@@ -394,8 +498,9 @@ function mnEls() {
 function mnHasContent(w, key) {
   if (!w) return false;
   if (key === "syl") return !!(w.syl && w.syl.parts && w.syl.parts.length);
-  if (key === "affix") return !!(w.affixBreakdown);
+  if (key === "morph") return !!(w.morph && w.morph.pieces && w.morph.pieces.length);
   if (key === "coll") return !!(w.collocations && w.collocations.length);
+  if (key === "context") return !!(w.contexts && w.contexts.length);
   if (key === "derive") return !!(w.derives && w.derives.length);
   if (key === "llm") return !!(w.llmInsight);
   return false;
@@ -464,20 +569,40 @@ function buildMnContent(w, key) {
     }
     return html;
   }
-  if (key === "affix") {
-    const a = w.affixBreakdown;
-    let html = "";
-    html += `<div class="mn-chip-row">${a.parts.map(p => `<span class="mn-chip">${esc(p)}</span>`).join("")}</div>`;
-    html += a.morphs.map(m =>
-      `<div class="mn-pair"><span class="en">${esc(m.p)}</span><span class="cn">${esc(m.m)}</span></div>`).join("");
-    html += `<div class="mn-line"><b>字面：</b>${esc(a.literal)}</div>`;
-    if (a.trueWordSplit) {
-      const t = a.trueWordSplit;
+  if (key === "morph") {
+    const m = w.morph;
+    if (!m) return "";
+    const typeLabel = { derived: "派生词 · 词缀构词", compound: "合成词", blend: "混成词" }[m.type] || "词形拆解";
+    let html = `<div class="mn-chip-row"><span class="mn-chip mn-morph-type">${typeLabel}</span></div>`;
+    if (m.type === "compound") {
+      // 合成词：A + B 拼接
+      html += `<div class="morph-strip">` + m.pieces.map(p =>
+        `<span class="morph-piece">${esc(p.piece)}<small>${esc(p.meaningZh)}</small></span>`).join(`<span class="morph-plus">+</span>`) + `</div>`;
+    } else if (m.type === "blend") {
+      // 混成词：截断拼接，标注来源词
+      html += `<div class="morph-strip">` + m.pieces.map(p =>
+        `<span class="morph-piece">${esc(p.piece)}<small>${esc(p.meaningZh)}</small></span>`).join(`<span class="morph-plus">+</span>`) + `</div>`;
+      const froms = m.pieces.filter(p => p.fromWord);
+      if (froms.length) {
+        html += `<div class="morph-from">截自 ` + froms.map(p => `<b>${esc(p.fromWord)}</b> → ${esc(p.piece)}`).join("，") + `</div>`;
+      }
+    } else {
+      // 派生词：按 前缀/词根/后缀 逐块列出
+      html += m.pieces.map(p =>
+        `<div class="mn-pair"><span class="en">${esc(p.piece)}</span><span class="mn-kind">${esc(p.kind)}</span><span class="cn">${esc(p.meaningZh)}</span></div>`).join("");
+    }
+    html += `<div class="mn-line"><b>字面：</b>${esc(m.literal)}</div>`;
+    if (m.story) {
       html += `<hr class="mn-divider"><div class="mn-block-label">熟词拆分</div>`;
-      html += `<div class="mn-pair"><span class="en">${esc(t.anchor)}</span><span class="cn">${esc(t.meaning)}</span></div>`;
-      html += `<div class="mn-line">${esc(t.story)}</div>`;
+      html += `<div class="mn-pair"><span class="en">${esc(m.story.anchor)}</span><span class="cn">${esc(m.story.meaning)}</span></div>`;
+      html += `<div class="mn-line">${esc(m.story.text)}</div>`;
     }
     return html;
+  }
+  if (key === "context") {
+    if (!w.contexts || !w.contexts.length) return "";
+    return `<div class="mn-block-label">语境例句</div>` + w.contexts.map(c =>
+      `<div class="ctx-item"><div class="ctx-en">${esc(c.en)}</div><div class="ctx-cn">${esc(c.cn)}</div></div>`).join("");
   }
   if (key === "coll") {
     return `<div class="mn-block-label">词组搭配</div>` +
@@ -498,11 +623,12 @@ function buildMnContent(w, key) {
 
 function buildMnCard(k, w) {
   const meta = {
-    syl:    { icon: "🔊", title: "音节解析",           sub: "syllables + phonemes" },
-    affix:  { icon: "🧩", title: "词根词缀 · 熟词拆分", sub: "morphology" },
-    coll:   { icon: "🔗", title: "词组搭配",           sub: "collocations" },
-    derive: { icon: "🌱", title: "派生 / 近义词",       sub: "derivatives" },
-    llm:    { icon: "✨", title: "LLM 解读",           sub: "ai insight", badge: true },
+    syl:     { icon: "🔊", title: "音节解析",     sub: "syllables + phonemes" },
+    morph:   { icon: "🧩", title: "构词解析",     sub: "morphology" },
+    coll:    { icon: "🔗", title: "词组搭配",     sub: "collocations" },
+    context: { icon: "💬", title: "语境",         sub: "in context" },
+    derive:  { icon: "🌱", title: "派生 / 近义词", sub: "derivatives" },
+    llm:     { icon: "✨", title: "LLM 解读",     sub: "ai insight", badge: true },
   }[k];
   return `
     <div class="mn-head">
@@ -550,25 +676,33 @@ function drawWires() {
   const hy = hubRect.top - stageRect.top + hubRect.height / 2;
 
   let wires = "", dots = "";
-  mnEls().forEach((el, i) => {
+  mnEls().forEach((el) => {
     const k = el.dataset.mn;
     const r = el.getBoundingClientRect();
     const cx = r.left - stageRect.left + r.width / 2;
     const cy = r.top - stageRect.top + r.height / 2;
-    let tx, ty, side;
-    if (k === "syl") {
+    const color = getComputedStyle(el).getPropertyValue("--c").trim() || "#888";
+    let sx, sy, tx, ty, side;
+
+    if (k === "context") {
+      // 链式连线：从 coll 卡底边中点 → context 卡顶边中点（不直连主卡）
+      const cEl = $stage.querySelector('.mn-card[data-mn="coll"]');
+      const cr = cEl.getBoundingClientRect();
+      sx = cr.left - stageRect.left + cr.width / 2;
+      sy = cr.top - stageRect.top + cr.height;
+      tx = cx;
+      ty = r.top - stageRect.top;
+      side = "top";
+    } else if (k === "syl") {
       // 顶部居中卡：连线接到卡片底边中点
       tx = cx; ty = r.top - stageRect.top + r.height - 6; side = "top";
+      sx = hx; sy = hy;
     } else {
-      const leftSide = (k === "affix" || k === "derive");
+      const leftSide = (k === "morph" || k === "derive");
       tx = cx + (leftSide ? -r.width / 2 + 10 : r.width / 2 - 10);
       ty = cy; side = leftSide ? "left" : "right";
+      sx = hx; sy = hy;
     }
-    const color = getComputedStyle(el).getPropertyValue("--c").trim() || "#888";
-    // 主卡边缘起点：从中心向目标方向推进到主卡边缘附近
-    const hw = hubRect.width / 2 + 6, hh = hubRect.height / 2 + 6;
-    const sx = hx + (tx - hx) * 0.001 + (tx > hx + 8 ? hw * 0.72 : tx < hx - 8 ? -hw * 0.72 : 0);
-    const sy = hy + (ty > hy ? hh : -hh) * 0.55;
     wires += `<path class="wire" d="${wirePath(sx, sy, tx, ty, side)}" stroke="${color}" style="color:${color}"/>`;
     dots += `<circle class="wire-dot" cx="${tx}" cy="${ty}" r="0" fill="${color}"/>`;
   });
@@ -700,7 +834,7 @@ function renderRecogCard(w, opts = {}) {
     <div class="recog-stage">
       <div class="flashcard">
         <div class="face recog-face ${plain ? "recog-face-plain" : ""}">
-          ${plain ? "" : `<img class="recog-img" src="${w.img}" alt="${w.word} 配图">`}
+          ${plain || !w.img ? "" : `<img class="recog-img" src="${w.img}" alt="${w.word} 配图">`}
           <div class="recog-word-row ${plain ? "recog-word-row-main" : ""}">
             <span class="recog-word-wrap">
               <span class="recog-word ${plain ? "recog-word-xl" : ""}">${esc(w.word)}</span>
@@ -826,10 +960,10 @@ function renderDictation(w, type) {
   const inputAttrs = `id="answerInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"${s.done ? " disabled" : ""}`;
   let stimulus = "";
   if (type === "visual") {
-    stimulus = `<img class="vis-img" src="${w.img}" alt="视觉提示">`;
+    stimulus = w.img ? `<img class="vis-img" src="${w.img}" alt="视觉提示">` : `<div class="dict-hint">（该词无配图，请直接默写）</div>`;
   } else if (type === "audio") {
     stimulus = (s.hints >= 1 || s.done) ? `
-      <img class="vis-img" src="${w.img}" alt="听觉提示配图">
+      ${w.img ? `<img class="vis-img" src="${w.img}" alt="听觉提示配图">` : ""}
       <div class="dict-hint dict-hint-1">
         <span class="recog-phon">${w.ipa}</span>
         <button class="play-bare" id="hintPronBtn" title="播放单词发音">${speakerSvg(15)}</button>
@@ -843,7 +977,7 @@ function renderDictation(w, type) {
         <span class="dict-answer-word">${w.syl ? sylBlocksHtml(w, false) : esc(w.word)}</span>
       </div>` : "";
     stimulus = `
-      <img class="vis-img ctx-img" src="${w.img}" alt="语境提示配图" style="max-height:170px" onerror="this.style.display='none'">
+      ${w.img ? `<img class="vis-img ctx-img" src="${w.img}" alt="语境提示配图" style="max-height:170px" onerror="this.style.display='none'">` : ""}
       ${hintHtml}
       <div class="ctx-sentence">${esc(b.before)}<span class="ctx-blank"><input class="word-line-input ctx-blank-input" ${inputAttrs} style="width:${b.answer.length + 2}ch" /></span>${esc(b.after)}</div>
       ${ctxAnswer}

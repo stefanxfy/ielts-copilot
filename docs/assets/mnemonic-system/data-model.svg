@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="100%" role="img">
-  <title>单词助记数据模型：affix 特殊词入 words 表 + contentJson 助记扩字段</title>
-  <desc>不建独立 affix_words 表; 词根作为特殊 word 入 words 表(kind 存 contentJson); word_books 加 bookType; contentJson 扩 affixBreakdown/trueWordSplit/collocations/llmInsight</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 520" width="100%" role="img">
+  <title>单词助记数据模型：affix 特殊词入 words 表 + contentJson 助记扩字段（v2.3）</title>
+  <desc>不建独立 affix_words 表; 词根作为特殊 word 入 words 表(kind 存 contentJson); word_books 加 bookType; contentJson 扩 morph/contexts/pos, 删 affixBreakdown/trueWordSplit, collocations/llmInsight 保留</desc>
 
   <defs>
     <marker id="arrE" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
@@ -8,9 +8,9 @@
     </marker>
   </defs>
 
-  <rect x="0" y="0" width="680" height="500" fill="#FFFFFF"/>
-  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">数据模型:affix 特殊词入 words 表 + contentJson 助记扩字段</text>
-  <text x="40" y="54" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">v2: 不建 affix_words 表 · 调度/进度/复习全链路零改动复用 · 迁移 0004 仅加 bookType 列</text>
+  <rect x="0" y="0" width="680" height="520" fill="#FFFFFF"/>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">数据模型:affix 特殊词入 words 表 + contentJson 助记扩字段(v2.3)</text>
+  <text x="40" y="54" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">v2.3: 不建 affix_words 表 · 全链路零改动复用 · 迁 0004 仅加 bookType 列 · contentJson 扩 morph/contexts/pos</text>
 
   <!-- 表 1: word_books 扩展 -->
   <rect x="30" y="80" width="260" height="120" rx="10" fill="#FFFFFF" stroke="#888780" stroke-width="1"/>
@@ -38,18 +38,19 @@
   </g>
 
   <!-- 表 3: words.contentJson 扩展 -->
-  <rect x="30" y="270" width="620" height="180" rx="10" fill="#FFFFFF" stroke="#D08F6A" stroke-width="1"/>
+  <rect x="30" y="270" width="620" height="210" rx="10" fill="#FFFFFF" stroke="#D08F6A" stroke-width="1"/>
   <rect x="30" y="270" width="620" height="26" rx="10" fill="#F5E8E1" stroke="#D08F6A" stroke-width="1"/>
   <text x="340" y="288" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#7A2F1F">words.contentJson (扩字段, JSON 列直加无 DDL)</text>
   <g font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#2C2C2A">
     <text x="44" y="314">展示型  translation · phonetic · audio.word · audio.sent</text>
     <text x="44" y="332">元数据  collins · bncRank · frqRank · tags · root(已有ECDICT)</text>
-    <text x="44" y="350" font-weight="500" fill="#B85F4A">v2 新增(助记型)</text>
-    <text x="44" y="368" fill="#5F5E5A">  affixBreakdown: [{piece, kind, meaning, meaningZh}]      ← 词根词缀</text>
-    <text x="44" y="386" fill="#5F5E5A">  trueWordSplit: [{piece, start, meaning, isRealWord, conf}] ← 熟词拆分</text>
-    <text x="44" y="404" fill="#5F5E5A">  collocations: [{en, zh, source}]                          ← 词组搭配</text>
-    <text x="44" y="422" fill="#5F5E5A">  llmInsight: {type, content} | null   ← LLM 解读(形态未定, 延期)</text>
-    <text x="44" y="440" fill="#888780">  syllables 音节不落库: 运行时规则引擎算, 有 affixBreakdown 时按词根边界对齐展示</text>
+    <text x="44" y="350" font-weight="500" fill="#B85F4A">v2.3 新增(助记型)</text>
+    <text x="44" y="368" fill="#5F5E5A">  morph: { type, literal, pieces:[{piece, kind, meaningZh, fromWord?}] }  ← 构词解析(替代词根词缀+熟词拆分)</text>
+    <text x="44" y="386" fill="#5F5E5A">  derives: [{en, pos, zh}]   ← 派生·词性·近义(pos 在数组项内)</text>
+    <text x="44" y="404" fill="#5F5E5A">  contexts: [{coll, en, zh}]   ← 语境(与词组搭配 1:1, 卡挂词组搭配卡)</text>
+    <text x="44" y="422" fill="#5F5E5A">  collocations: [{en, zh, source}]   ← 词组搭配(保留)</text>
+    <text x="44" y="440" fill="#5F5E5A">  llmInsight: {type, content} | null   ← LLM 解读(形态未定, 延期, 保留)</text>
+    <text x="44" y="458" fill="#888780">  syl 音节由 LLM 独立调用落库; 有 morph 时按构词边界对齐展示</text>
   </g>
 
   <!-- 关联箭头: word_books → words -->
@@ -57,7 +58,7 @@
   <text x="310" y="118" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">1→N</text>
 
   <!-- 关联说明(底部空白区) -->
-  <text x="44" y="478" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9.5" fill="#888780">关联: word_books ↔ words 经 book_word_relation (1→N) · affix 词书与普通词书同构, 词根词条同入关联表</text>
+  <text x="44" y="500" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9.5" fill="#888780">关联: word_books ↔ words 经 book_word_relation (1→N) · affix 词书与普通词书同构, 词根词条同入关联表</text>
 
   <!-- 关联箭头: words → contentJson 说明 -->
   <path d="M490 250 L490 270" fill="none" stroke="#888780" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arrE)"/>

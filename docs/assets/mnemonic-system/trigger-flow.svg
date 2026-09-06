@@ -1,17 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 588" width="100%" role="img">
-  <title>单词助记触发流程：用户主动求助驱动（v2.1）</title>
-  <desc>认词卡: 认识零助记, 模糊/不认识揭示三类助记后直接下一词(无二次评分); 默写卡: 一次判对≡认识无助记, 提示/查看答案两级求助揭示三类助记</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 672" width="100%" role="img">
+  <title>单词助记触发流程：用户主动求助驱动（v2.3 六卡）</title>
+  <desc>认词卡: 认识零助记, 模糊/不认识揭示六卡助记后直接下一词(无二次评分); 默写卡: 一次判对≡认识无助记, 提示/查看答案两级求助揭示六卡。六卡: syl/morph/derives/context/collocations/llm(延期)</desc>
 
   <defs>
     <marker id="arrTri" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
       <path d="M0 0 L6 4 L0 8 Z" fill="#888780"/>
     </marker>
+    <marker id="arrHang" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L6 4 L0 8 Z" fill="#C2904A"/>
+    </marker>
   </defs>
 
-  <rect x="0" y="0" width="680" height="588" fill="#FFFFFF"/>
+  <rect x="0" y="0" width="680" height="672" fill="#FFFFFF"/>
 
-  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">助记触发流程(v2.1):求助即评分, 一次定档无二次评分</text>
-  <text x="40" y="54" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">Just-in-Time 学习 · 难词给全支架, 易词不浪费认知带宽 · 词组为第三区块全卡通用</text>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">助记触发流程(v2.3): 六卡助记, 求助即评分, 一次定档无二次评分</text>
+  <text x="40" y="54" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">Just-in-Time 学习 · morph 三型替代词根词缀+熟词拆分 · derive 含 pos · context 挂 collocations · llm 延期</text>
 
   <!-- 中央节点:认词卡正面 -->
   <rect x="240" y="74" width="200" height="50" rx="10" fill="#F1EFE8" stroke="#888780" stroke-width="1"/>
@@ -42,35 +45,57 @@
   <!-- 揭示+助记 卡片区 -->
   <rect x="180" y="278" width="320" height="46" rx="10" fill="#FAEEDB" stroke="#C2904A" stroke-width="0.8"/>
   <text x="340" y="298" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#6B4614">揭示中文/例句/图</text>
-  <text x="340" y="315" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">下方依次滑出三类助记区块</text>
+  <text x="340" y="315" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">下方六卡助记辐射展开</text>
 
-  <!-- 三类助记 -->
+  <text x="40" y="338" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#2C2C2A">六卡助记（v2.3）</text>
+
+  <!-- morph 构词解析（替代 词根词缀 + 熟词拆分） -->
+  <rect x="50" y="348" width="580" height="84" rx="10" fill="#F5E8E1" stroke="#D08F6A" stroke-width="1"/>
+  <text x="340" y="368" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#7A2F1F">morph 构词解析（替代 词根词缀 + 熟词拆分）</text>
+  <text x="66" y="388" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">derived 派生 — un- + believ + -able　｜　pos: adj</text>
+  <text x="66" y="406" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">compound 合成 — break + fast</text>
+  <text x="66" y="424" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">blend 混合 — brunch = br(eakfast) + (l)unch</text>
+
+  <!-- 四张小卡: derives / context / collocations / llm -->
   <g>
-    <rect x="70" y="360" width="160" height="50" rx="8" fill="#F5E8E1" stroke="#D08F6A" stroke-width="0.8"/>
-    <text x="150" y="378" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#7A2F1F">词根词缀</text>
-    <text x="150" y="395" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">un- + believ + -able</text>
+    <rect x="50" y="448" width="135" height="58" rx="8" fill="#EAF3DE" stroke="#97C459" stroke-width="0.8"/>
+    <text x="117" y="470" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#3F6328">派生·近义</text>
+    <text x="117" y="487" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#5F5E5A">derives｜含 pos 词性</text>
+    <text x="117" y="501" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#5F5E5A">believable / believer</text>
   </g>
   <g>
-    <rect x="260" y="360" width="160" height="50" rx="8" fill="#EAF3DE" stroke="#97C459" stroke-width="0.8"/>
-    <text x="340" y="378" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#3F6328">熟词拆分</text>
-    <text x="340" y="395" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">break + fast</text>
+    <rect x="195" y="448" width="135" height="58" rx="8" fill="#FAEEDB" stroke="#C2904A" stroke-width="0.8"/>
+    <text x="262" y="470" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#6B4614">语境 context</text>
+    <text x="262" y="487" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#5F5E5A">2-3 条真实例句</text>
+    <text x="262" y="501" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#5F5E5A">语境挂接词组</text>
   </g>
   <g>
-    <rect x="450" y="360" width="160" height="50" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.8"/>
-    <text x="530" y="378" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#0C447C">词组搭配</text>
-    <text x="530" y="395" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">hard to believe…</text>
+    <rect x="340" y="448" width="135" height="58" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.8"/>
+    <text x="407" y="470" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#0C447C">词组搭配</text>
+    <text x="407" y="487" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#5F5E5A">hard to believe…</text>
+    <text x="407" y="501" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#5F5E5A">find it 难以置信</text>
   </g>
+  <g>
+    <rect x="485" y="448" width="135" height="58" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.8" stroke-dasharray="3 3"/>
+    <text x="552" y="470" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#5F5E5A">llm 解读</text>
+    <text x="552" y="487" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">形态未定 · P2 延期</text>
+    <text x="552" y="501" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">不阻塞主流程</text>
+  </g>
+
+  <!-- context 挂 collocations -->
+  <path d="M330 477 L340 477" fill="none" stroke="#C2904A" stroke-width="1.5" marker-end="url(#arrHang)"/>
+  <text x="335" y="471" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="8" fill="#C2904A">挂</text>
 
   <!-- 揭示后下一动作 -->
-  <rect x="180" y="440" width="320" height="40" rx="8" fill="#EAF3DE" stroke="#7AA857" stroke-width="0.8"/>
-  <text x="340" y="458" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#3F6328">看完助记 → 直接下一词</text>
-  <text x="340" y="474" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">无二次评分: 模糊→Hard / 不认识→Again 已随求助定档</text>
+  <rect x="180" y="522" width="320" height="40" rx="8" fill="#EAF3DE" stroke="#7AA857" stroke-width="0.8"/>
+  <text x="340" y="540" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#3F6328">看完助记 → 直接下一词</text>
+  <text x="340" y="556" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">无二次评分: 模糊→Hard / 不认识→Again 已随求助定档</text>
 
   <!-- 默写卡契约流程 -->
-  <rect x="40" y="496" width="600" height="30" rx="8" fill="#FAEEDB" stroke="#C2904A" stroke-width="0.8"/>
-  <text x="340" y="516" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#6B4614">默写卡: 一次判对 ≡ 认识(Good·无助记直下一词)　|　提示后判对(Hard)　|　查看答案(Again)</text>
+  <rect x="40" y="578" width="600" height="30" rx="8" fill="#FAEEDB" stroke="#C2904A" stroke-width="0.8"/>
+  <text x="340" y="598" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#6B4614">默写卡: 一次判对 ≡ 认识(Good·无助记直下一词)　|　提示后判对(Hard)　|　查看答案(Again)</text>
 
   <!-- 底部说明 -->
-  <text x="40" y="552" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 默写卡两级求助(提示 / 查看答案)均揭示三类助记: 提示保留主动回忆(≤Hard), 查看答案是放弃回忆兜底(Again)</text>
-  <text x="40" y="568" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 音节切分正面给(零成本视觉), 不算"助记" · LLM 解读第四类: 形态未定, 延期</text>
+  <text x="40" y="632" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 默写卡两级求助(提示 / 查看答案)均揭示六卡助记: 提示保留主动回忆(≤Hard), 查看答案是放弃回忆兜底(Again)</text>
+  <text x="40" y="650" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">* 音节切分正面给(零成本视觉), 不算"助记" · llm 解读为第六卡, 形态未定, 延期 · 五类由 LLM 独立调用生成</text>
 </svg>

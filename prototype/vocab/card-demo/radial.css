@@ -19,10 +19,12 @@
   /* 五类助记卡各自的主题色 */
   --mn-syl:   #b4530a;  /* 音节解析 · 琥珀棕 */
   --mn-syl-bg:   #fdf1e3;
-  --mn-affix:  #2f6b4f;  /* 词根词缀/熟词拆分 · 松绿 */
-  --mn-affix-bg:  #f0f7f2;
+  --mn-morph:  #2f6b4f;  /* 词形拆解 · 松绿 */
+  --mn-morph-bg:  #f0f7f2;
   --mn-coll:   #1c6ea4;  /* 词组搭配 · 靛蓝 */
   --mn-coll-bg:   #eef5fa;
+  --mn-context: #0e7c86;  /* 语境例句 · 青 */
+  --mn-context-bg: #e6f4f5;
   --mn-derive: #8a5a00;  /* 派生/近义 · 赭金 */
   --mn-derive-bg: #fdf6e7;
   --mn-llm:    #6d4fc2;  /* LLM 解读 · 紫（AI 感） */
@@ -444,18 +446,20 @@ body {
 .mn-card.show .mn-body > *:nth-child(4) { animation-delay: .75s; }
 @keyframes riseIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* 各类助记条目 —— 修复：卡片类名是 mn-<key>（mn-affix/mn-syl...），此前写成 mn-affix-card 等导致主题色不生效 */
+/* 各类助记条目 —— 卡片类名是 mn-<key>（mn-morph/mn-syl...） */
 .mn-syl-card    { --c: var(--mn-syl);    --cbg: var(--mn-syl-bg); }
-.mn-affix-card  { --c: var(--mn-affix);  --cbg: var(--mn-affix-bg); }
+.mn-morph-card  { --c: var(--mn-morph);  --cbg: var(--mn-morph-bg); }
 .mn-coll-card   { --c: var(--mn-coll);   --cbg: var(--mn-coll-bg); }
+.mn-context-card{ --c: var(--mn-context);--cbg: var(--mn-context-bg); }
 .mn-derive-card { --c: var(--mn-derive); --cbg: var(--mn-derive-bg); }
 .mn-llm-card    { --c: var(--mn-llm);    --cbg: var(--mn-llm-bg); }
 
-.mn-card.mn-syl    { --c: var(--mn-syl);    --cbg: var(--mn-syl-bg); }
-.mn-card.mn-affix  { --c: var(--mn-affix);  --cbg: var(--mn-affix-bg); }
-.mn-card.mn-coll   { --c: var(--mn-coll);   --cbg: var(--mn-coll-bg); }
-.mn-card.mn-derive { --c: var(--mn-derive); --cbg: var(--mn-derive-bg); }
-.mn-card.mn-llm    { --c: var(--mn-llm);    --cbg: var(--mn-llm-bg); }
+.mn-card.mn-syl     { --c: var(--mn-syl);     --cbg: var(--mn-syl-bg); }
+.mn-card.mn-morph   { --c: var(--mn-morph);   --cbg: var(--mn-morph-bg); }
+.mn-card.mn-coll    { --c: var(--mn-coll);    --cbg: var(--mn-coll-bg); }
+.mn-card.mn-context { --c: var(--mn-context); --cbg: var(--mn-context-bg); }
+.mn-card.mn-derive  { --c: var(--mn-derive);  --cbg: var(--mn-derive-bg); }
+.mn-card.mn-llm     { --c: var(--mn-llm);     --cbg: var(--mn-llm-bg); }
 
 .mn-card { border-top: 3px solid var(--c, var(--border)); }
 .mn-icon { background: var(--c, var(--muted)); }
@@ -508,6 +512,100 @@ body {
   animation: blink .8s step-end infinite;
 }
 @keyframes blink { 50% { opacity: 0; } }
+
+/* ---------- 词形拆解卡（morph · 三型渲染） ---------- */
+.mn-morph-type {
+  background: var(--cbg, var(--muted));
+  color: var(--c, var(--foreground));
+  font-weight: 700;
+  border: 1px solid var(--c, var(--border));
+}
+/* 派生词：前缀/词根/后缀 标签 */
+.mn-kind {
+  font-size: 10px;
+  color: var(--c, var(--foreground));
+  background: var(--cbg, var(--muted));
+  border-radius: 6px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+  align-self: center;
+  letter-spacing: .03em;
+}
+/* 合成词 / 混成词：拼接条 */
+.morph-strip {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 6px;
+}
+.morph-piece {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--cbg, var(--muted));
+  color: var(--c, var(--foreground));
+  border: 1px solid var(--c, var(--border));
+  border-radius: 9px;
+  padding: 5px 10px 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.morph-piece small {
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 10px;
+  opacity: .8;
+  margin-top: 2px;
+  text-align: center;
+}
+.morph-plus {
+  align-self: center;
+  color: var(--c, var(--foreground));
+  font-weight: 700;
+  font-size: 16px;
+}
+.morph-from {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  margin-top: 2px;
+}
+.morph-from b {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--c, var(--foreground));
+}
+
+/* ---------- 语境例句卡（context · 与搭配 1:1） ---------- */
+.mn-card.mn-context.show {
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.mn-card.mn-morph.show {
+  max-height: 420px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.ctx-item {
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.ctx-item:last-child { border-bottom: none; }
+.ctx-en {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--foreground);
+  font-weight: 500;
+}
+.ctx-cn {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
 
 /* ---------- SVG 连线 ---------- */
 .wire {
