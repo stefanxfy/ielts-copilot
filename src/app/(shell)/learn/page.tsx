@@ -851,6 +851,95 @@ function RecogCard(props: {
     item.content.translation?.join("; ") || "(暂无释义)";
   const example = item.content.examples?.[0];
 
+  /* ---- 卡内拼写自练线:无限次键入,回车判定,不产生任何评分副作用 ----
+   * none=键入中 / ok=判对(绿) / vanish=判对淡出 / bad=判错(镜像逐字符标红) */
+  const [spellDraft, setSpellDraft] = useState("");
+  const [spellVerdict, setSpellVerdict] = useState<"none" | "ok" | "vanish" | "bad">("none");
+  const [spellHint, setSpellHint] = useState<string | null>(null);
+  const spellTimers = useRef<number[]>([]);
+  const clearSpellTimers = () => {
+    spellTimers.current.forEach((t) => window.clearTimeout(t));
+    spellTimers.current = [];
+  };
+  useEffect(() => clearSpellTimers, []);
+
+  const submitSpell = () => {
+    const g = spellDraft.trim();
+    clearSpellTimers();
+    if (!g) {
+      setSpellVerdict("none");
+      setSpellHint("请拼写单词，并回车");
+      spellTimers.current.push(window.setTimeout(() => setSpellHint(null), 2500));
+      return;
+    }
+    setSpellHint(null);
+    if (g === item.word) {
+      setSpellVerdict("ok");
+      spellTimers.current.push(window.setTimeout(() => setSpellVerdict("vanish"), 700));
+      spellTimers.current.push(
+        window.setTimeout(() => {
+          setSpellDraft("");
+          setSpellVerdict("none");
+        }, 1050),
+      );
+    } else {
+      setSpellVerdict("bad");
+    }
+  };
+
+  /* 判错镜像:对位白字/错位红字/缺失补红点;input 文字透明后由镜像呈现 */
+  const spellDiff = (
+    <div className="recog-spell-diff" aria-hidden>
+      {Array.from({ length: Math.max(spellDraft.length, item.word.length) }).map((_, i) => {
+        const ch = spellDraft[i];
+        const good = ch !== undefined && ch === item.word[i];
+        return (
+          <span key={i} className={good ? "" : "miss"}>
+            {ch ?? "·"}
+          </span>
+        );
+      })}
+    </div>
+  );
+
+  const spellArea = (
+    <div className="recog-spell">
+      <div className="recog-spell-line">
+        {spellVerdict === "bad" && spellDiff}
+        <input
+          className={`word-line-input ${
+            spellVerdict === "ok"
+              ? "ok"
+              : spellVerdict === "vanish"
+                ? "ok recog-spell-vanish"
+                : spellVerdict === "bad"
+                  ? "bad see-through"
+                  : ""
+          }`}
+          type="text"
+          value={spellDraft}
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          aria-label="拼写练习:键入当前单词后回车"
+          placeholder="拼写这个单词"
+          onChange={(e) => {
+            const v = e.target.value.toLowerCase().replace(/[^a-z]/g, "");
+            setSpellDraft(v);
+            if (spellHint) setSpellHint(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              submitSpell();
+            }
+          }}
+        />
+      </div>
+      {spellHint && <div className="recog-spell-hint">{spellHint}</div>}
+    </div>
+  );
+
   /* 方向键钉在单词行几何中心 + 单词自适应收缩(带图 36→22 / 无图 52→40;音标+喇叭 CSS flex-wrap 整体换行) */
   useLayoutEffect(() => {
     const align = () => {
@@ -981,6 +1070,7 @@ function RecogCard(props: {
                 <div className="recog-bottom" ref={bottomRef}>
                   <ExampleBlock item={item} example={example} revealed={revealed} translation={translation} />
                 </div>
+                {spellArea}
               </>
             ) : (
               <>
@@ -993,6 +1083,7 @@ function RecogCard(props: {
                   {wordRow}
                 </div>
                 <ExampleBlock item={item} example={example} revealed={revealed} translation={translation} />
+                {spellArea}
               </>
             )}
           </div>
