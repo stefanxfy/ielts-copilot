@@ -3,11 +3,13 @@
 /**
  * 助记辐射层（设计文档 v2.5 四卡制,自 prototype/vocab/card-demo/radial.* 高保真移植）
  *
- * 呈现形态:全屏半透明蒙层 + 1500×1000 无界画布整体 scale 适配——主卡及三键/方向键
- * 被蒙层盖住而非变形,真实主卡零变化;画布内复刻当前词主卡 + 四张助记卡 + SVG 连线。
+ * 呈现形态(v2.6 非阻塞):无蒙版无暗化——1500×1000 无界画布整体 scale 适配,
+ * 四张助记卡 + SVG 连线悬浮于页面之上;容器恒 pointer-events:none,下层主卡的
+ * 三键/方向键/灯泡开关/喇叭全程可点,仅助记卡自身(发音/音素细讲/hover)可交互。
  *   左上 构词解析(morph) / 左下 派生·词性·近义(derive)
  *   右上 读音解析(syl)   / 右下 真实语境(context)
- * 触发口径(由 /learn page 决定):模糊/不认识/判错/查看答案 自动展开,判对零辐射。
+ * 触发口径(由 /learn page 决定):模糊/不认识/判错/查看答案 自动展开,判对零辐射;
+ * 关闭走主卡右上角 💡 开关或 Esc。
  * 本组件只做渲染与关闭,不产生任何评分副作用。
  *
  * 色板铁律:卡面/边框/文字全部走全局语义 token(--card/--border/--foreground/…)，
@@ -370,21 +372,13 @@ export function MnemonicRadial(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, item.word, drawWires]);
 
-  /* ---- Esc 关闭 + Tab 焦点兜底(方向键归 /learn 全局监听,此处不碰) ---- */
+  /* ---- Esc 关闭(层已非阻塞不圈禁焦点;方向键归 /learn 全局监听,此处不碰) ---- */
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
         onClose();
-        return;
-      }
-      if (e.key === "Tab") {
-        const overlay = stageRef.current?.closest(".mn-overlay");
-        if (overlay && !overlay.contains(document.activeElement)) {
-          const first = overlay.querySelector<HTMLElement>("button:not(:disabled)");
-          first?.focus();
-        }
       }
     };
     document.addEventListener("keydown", h, true);
@@ -414,23 +408,7 @@ export function MnemonicRadial(props: {
   };
 
   return (
-    <div
-      className={`mn-overlay${open ? " mn-on" : ""}`}
-      aria-hidden={!open}
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <button
-        type="button"
-        className="mn-close"
-        title="关闭助记 (Esc)"
-        aria-label="关闭助记"
-        tabIndex={open ? 0 : -1}
-        onClick={onClose}
-      >
-        ✕
-      </button>
+    <div className={`mn-overlay${open ? " mn-on" : ""}`} aria-hidden={!open}>
       <div
         className="mn-scaler"
         style={{ width: 1500 * scale, height: 1000 * scale }}
