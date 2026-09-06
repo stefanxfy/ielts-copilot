@@ -59,6 +59,8 @@ export interface MnContext {
   en: string;
   cn?: string;
   audio?: string;
+  /** 血缘(v2.8):example=回填脚本从 examples 命中词组复制;缺省=LLM 生成 */
+  src?: "llm" | "example";
 }
 
 /** 渲染所需的最小队列项(与 /learn QueueItem 结构兼容) */

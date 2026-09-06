@@ -586,6 +586,13 @@ export interface WordExample {
   /** 例句音频路径,空表示未生成或生成失败 */
   audio?: string;
 }
+/** 独立词组清单条目(v2.8 回归,词书数据源直接落库;渲染不直接消费,唯一来源仍是 contexts) */
+export interface WordCollocation {
+  /** 词组英文原文,如 "cancel out" */
+  phrase: string;
+  /** 词组中文,如 "取消；抵销"(可空) */
+  cn?: string;
+}
 export interface WordContent {
   /** 中文释义(多行,百词斩 mean_cn 按 "；" 拆) */
   translation: string[];
@@ -593,6 +600,8 @@ export interface WordContent {
   definition?: string[];
   /** 例句:默认 1 条(百词斩 join),schema 支持多条无上限 */
   examples: WordExample[];
+  /** 独立词组清单(可空,v2.8 词书源落库;contexts 仍为渲染唯一来源,见 docs/单词助记系统设计.md §2.4) */
+  collocations?: WordCollocation[];
   /** 词根拆解(可空,ECDICT wordroot.txt) */
   root?: string;
   /** 词形变化/重点短语(可空,百词斩 sentence_phrase / ECDICT exchange) */
