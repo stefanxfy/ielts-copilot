@@ -20,6 +20,14 @@ import {
   TodayMemoryDrawer,
   TodayMemoryModal,
 } from "@/components/vocab/today-memory-containers";
+import {
+  MnemonicRadial,
+  hasMnemonicContent,
+  type MnSyl,
+  type MnMorph,
+  type MnDerive,
+  type MnContext,
+} from "@/components/vocab/mnemonic-radial";
 
 /* ---------------- 类型(对齐 /api/vocab-review GET) ---------------- */
 
@@ -41,6 +49,11 @@ interface WordContent {
   exchange?: string;
   audio?: { word?: string };
   image?: string;
+  /* 助记字段(v2.5,gen-mnemonic 管线生成;缺即降级,API 原样透传) */
+  syl?: MnSyl;
+  morph?: MnMorph;
+  derives?: MnDerive[];
+  contexts?: MnContext[];
 }
 interface QueueItem {
   progressId: number;
@@ -286,6 +299,8 @@ export default function LearnPage() {
   const [extraLoading, setExtraLoading] = useState(false);
   /** 今日记忆轨迹宿主:drawer=复习中侧边抽屉 / modal=完成页弹窗 */
   const [memoryHost, setMemoryHost] = useState<"drawer" | "modal" | null>(null);
+  /** 助记辐射层开关(触发口径:模糊/不认识/判错/查看答案 自动展开;判对零辐射) */
+  const [mnOpen, setMnOpen] = useState(false);
 
   const [imgReady, setImgReady] = useState(false);
   const queue = useMemo(() => data?.queue ?? [], [data]);
@@ -348,6 +363,12 @@ export default function LearnPage() {
   useEffect(() => {
     idxRef.current = idx;
   }, [idx]);
+
+  /* ---- 换词即收起助记层(方向键翻词/自动跳词都会改 idx,统一在此关层) ---- */
+  const curWordId = item?.wordId;
+  useEffect(() => {
+    setMnOpen(false);
+  }, [curWordId]);
 
   /* ---- 拉取复习队列(fetch 回调内 setState,规避 set-state-in-effect) ---- */
   useEffect(() => {
@@ -475,6 +496,10 @@ export default function LearnPage() {
         return;
       }
       setRecogRevealed(true); // 模糊/不认识 → 展开中文释义
+      // 助记辐射:评分先落(上方),再延迟展开——纯前端叠加,不碰评分写回
+      if (hasMnemonicContent(it.content)) {
+        window.setTimeout(() => setMnOpen(true), 150);
+      }
     },
     [postRating, advanceFrom, recogRated],
   );
@@ -515,6 +540,10 @@ export default function LearnPage() {
       } else {
         sfxWrong();
         void postRating(it, "spell", dist <= 2 ? 2 : 1);
+        // 判错 → 助记辐射(判对零辐射走 900ms 自动跳词)
+        if (hasMnemonicContent(it.content)) {
+          window.setTimeout(() => setMnOpen(true), 150);
+        }
       }
     },
     [patchSpell, postRating, advanceFrom],
@@ -534,6 +563,10 @@ export default function LearnPage() {
       patchSpell(key, { done: true, gaveUp: true, result: "wrong", guess: null, draft: null });
       sfxWrong();
       void postRating(it, "spell", 1);
+      // 查看答案 → 助记辐射
+      if (hasMnemonicContent(it.content)) {
+        window.setTimeout(() => setMnOpen(true), 150);
+      }
     },
     [patchSpell, postRating],
   );
@@ -721,6 +754,9 @@ export default function LearnPage() {
           canPrev={idx > 0}
           canNext={canNext}
           onNav={(d) => tryNav(d)}
+          mnAvailable={hasMnemonicContent(item.content)}
+          mnOpen={mnOpen}
+          onToggleMn={() => setMnOpen((v) => !v)}
         />
       ) : (
         <DictationCard
@@ -736,11 +772,17 @@ export default function LearnPage() {
           canPrev={idx > 0}
           canNext={canNext}
           onNav={(d) => tryNav(d)}
+          mnAvailable={hasMnemonicContent(item.content)}
+          mnOpen={mnOpen}
+          onToggleMn={() => setMnOpen((v) => !v)}
         />
       )}
 
       {/* 今日记忆轨迹抽屉(复习进行中;Esc/遮罩关闭) */}
       <TodayMemoryDrawer open={memoryHost === "drawer"} onClose={() => setMemoryHost(null)} />
+
+      {/* 助记辐射层(全屏蒙层叠加;Esc/蒙层/开关按钮/方向键翻词关闭,零评分副作用) */}
+      <MnemonicRadial item={item} open={mnOpen} onClose={() => setMnOpen(false)} onSpeakTts={speakTts} />
     </div>
   );
 }
@@ -761,6 +803,10 @@ function RecogCard(props: {
   canPrev: boolean;
   canNext: boolean;
   onNav: (d: -1 | 1) => void;
+  /* 助记手动开关(字段全缺 → 按钮隐藏) */
+  mnAvailable: boolean;
+  mnOpen: boolean;
+  onToggleMn: () => void;
 }) {
   const { item, plain, revealed } = props;
   const stageRef = useRef<HTMLDivElement>(null);
@@ -854,6 +900,17 @@ function RecogCard(props: {
   return (
     <div className="w-full max-w-[400px]">
       <div className="recog-stage" ref={stageRef}>
+        {props.mnAvailable && (
+          <button
+            type="button"
+            className={"mn-toggle" + (props.mnOpen ? " mn-toggle-on" : "")}
+            title={props.mnOpen ? "收起助记" : "打开助记"}
+            aria-label={props.mnOpen ? "收起助记" : "打开助记"}
+            onClick={props.onToggleMn}
+          >
+            💡
+          </button>
+        )}
         <button
           type="button"
           className="slide-nav slide-nav-prev"
@@ -1002,6 +1059,10 @@ function DictationCard(props: {
   canPrev: boolean;
   canNext: boolean;
   onNav: (d: -1 | 1) => void;
+  /* 助记手动开关(字段全缺 → 按钮隐藏) */
+  mnAvailable: boolean;
+  mnOpen: boolean;
+  onToggleMn: () => void;
 }) {
   const { item, s } = { item: props.item, s: props.state };
   const type: SpellCardType =
@@ -1219,6 +1280,17 @@ function DictationCard(props: {
   return (
     <div className="w-full max-w-[400px]">
       <div className="recog-stage" ref={stageRef}>
+        {props.mnAvailable && (
+          <button
+            type="button"
+            className={"mn-toggle" + (props.mnOpen ? " mn-toggle-on" : "")}
+            title={props.mnOpen ? "收起助记" : "打开助记"}
+            aria-label={props.mnOpen ? "收起助记" : "打开助记"}
+            onClick={props.onToggleMn}
+          >
+            💡
+          </button>
+        )}
         <button
           type="button"
           className="slide-nav slide-nav-prev"
