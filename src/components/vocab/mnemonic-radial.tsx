@@ -3,9 +3,10 @@
 /**
  * 助记辐射层（设计文档 v2.5 四卡制,自 prototype/vocab/card-demo/radial.* 高保真移植）
  *
- * 呈现形态(v2.6 非阻塞):无蒙版无暗化——1500×1000 无界画布整体 scale 适配,
- * 四张助记卡 + SVG 连线悬浮于页面之上;容器恒 pointer-events:none,下层主卡的
- * 三键/方向键/灯泡开关/喇叭全程可点,仅助记卡自身(发音/音素细讲/hover)可交互。
+ * 呈现形态(v2.7 无复刻):无蒙版无暗化、无 hub 复刻卡——1500×1000 无界画布整体
+ * scale 适配,四张助记卡 + SVG 连线直接锚定**真实主卡**(辐射中心=主卡中心,连线
+ * 从主卡左右边缘出发)。主卡在辐射全程像素级不变样:不缩放、不被覆盖,认词卡/
+ * 默写卡各自保持原版式;下层三键/方向键/灯泡/喇叭全程可点,仅助记卡自身可交互。
  *   左上 构词解析(morph) / 左下 派生·词性·近义(derive)
  *   右上 读音解析(syl)   / 右下 真实语境(context)
  * 触发口径(由 /learn page 决定):模糊/不认识/判错/查看答案 自动展开,判对零辐射;
@@ -189,15 +190,12 @@ export function MnemonicRadial(props: {
   const content = item.content;
 
   const stageRef = useRef<HTMLDivElement>(null);
-  const hubRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const scaleRef = useRef(1);
   const [scale, setScale] = useState(1);
   const [wires, setWires] = useState<Wire[]>([]);
   const [hoverKey, setHoverKey] = useState<string | null>(null);
   const [phOpen, setPhOpen] = useState(false);
-  /** hub 复刻卡对齐位(辐射时吸附到真实主卡视口位置,视觉上主卡零位移) */
-  const [hubPos, setHubPos] = useState<{ x: number; y: number } | null>(null);
 
   /* ---- 画布 scale 适配:min(vw, vh) 留边距,1500×1000 等比 ---- */
   useLayoutEffect(() => {
@@ -211,35 +209,6 @@ export function MnemonicRadial(props: {
     return () => window.removeEventListener("resize", fit);
   }, []);
 
-  /* ---- hub 复刻卡:长单词收缩 + 无图版防重叠(与真实主卡 fitWord 同规则,独立实例) ---- */
-  const wordRef = useRef<HTMLSpanElement>(null);
-  const wrapRef = useRef<HTMLSpanElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const wordEl = wordRef.current;
-    const face = hubRef.current;
-    if (!wordEl || !face) return;
-    const avail = face.clientWidth - 36;
-    const max = item.hasImage ? 36 : 52;
-    const min = item.hasImage ? 22 : 40;
-    let size = max;
-    wordEl.style.fontSize = `${size}px`;
-    while (size > min && wordEl.offsetWidth > avail) {
-      size -= 1;
-      wordEl.style.fontSize = `${size}px`;
-    }
-    if (!item.hasImage) {
-      const wrapEl = wrapRef.current;
-      const bottomEl = bottomRef.current;
-      if (!wrapEl || !bottomEl) return;
-      wrapEl.style.transform = "translateY(0)";
-      const wr = wrapEl.getBoundingClientRect();
-      const br = bottomEl.getBoundingClientRect();
-      const overlap = wr.bottom - br.top + 10;
-      if (overlap > 0) wrapEl.style.transform = `translateY(${-overlap}px)`;
-    }
-  }, [item.word, item.hasImage, scale, open]);
-
   /* ---- 内容变化时重置音素细讲抽屉 ---- */
   useEffect(() => {
     setPhOpen(false);
@@ -249,8 +218,7 @@ export function MnemonicRadial(props: {
   const drawWires = useCallback(
     (scaleCur: number) => {
       const stage = stageRef.current;
-      const hub = hubRef.current;
-      if (!stage || !hub) return;
+      if (!stage) return;
       const stageRect = stage.getBoundingClientRect();
       const toLayout = (r: DOMRect) => ({
         cx: (r.left - stageRect.left + r.width / 2) / scaleCur,
@@ -258,7 +226,12 @@ export function MnemonicRadial(props: {
         w: r.width / scaleCur,
         h: r.height / scaleCur,
       });
-      const hubL = toLayout(hub.getBoundingClientRect());
+      // 辐射中心 = 真实主卡(页面中不在辐射层内的 .flashcard);无复刻卡,主卡像素级不动
+      const realCard = [...document.querySelectorAll(".flashcard")].find(
+        (el) => !el.closest(".mn-overlay"),
+      );
+      if (!realCard) return;
+      const hubL = toLayout(realCard.getBoundingClientRect());
       const hx = hubL.cx;
       const hy = hubL.cy;
       const next: Wire[] = [];
@@ -318,23 +291,16 @@ export function MnemonicRadial(props: {
     stage.classList.add("radial-on");
     const scaleCur = scaleRef.current || 1;
     const stageRect = stage.getBoundingClientRect();
-    // hub 对齐真实主卡(画布外第一张 .flashcard):辐射中心=真实主卡中心,主卡视觉零位移
+    // 辐射中心 = 真实主卡(画布外唯一 .flashcard);无主卡兜底画布中心
     const realCard = [...document.querySelectorAll(".flashcard")].find(
       (el) => !el.closest(".mn-overlay"),
     );
-    let hcx: number;
-    let hcy: number;
+    let hcx = 750;
+    let hcy = 500;
     if (realCard) {
       const rr = realCard.getBoundingClientRect();
       hcx = (rr.left + rr.width / 2 - stageRect.left) / scaleCur;
       hcy = (rr.top + rr.height / 2 - stageRect.top) / scaleCur;
-      setHubPos({ x: hcx, y: hcy });
-    } else {
-      setHubPos(null);
-      const hubRect = hubRef.current?.getBoundingClientRect();
-      if (!hubRect) return;
-      hcx = (hubRect.left - stageRect.left + hubRect.width / 2) / scaleCur;
-      hcy = (hubRect.top - stageRect.top + hubRect.height / 2) / scaleCur;
     }
 
     const visible: { k: MnKey; el: HTMLDivElement; pos: { x: number; y: number } }[] = [];
@@ -385,19 +351,6 @@ export function MnemonicRadial(props: {
     return () => document.removeEventListener("keydown", h, true);
   }, [open, onClose]);
 
-  const plain = !item.hasImage;
-  const translation = content.translation?.join("; ") || "(暂无释义)";
-  const example = content.examples?.[0];
-
-  const playWord = () => {
-    const p = content.audio?.word;
-    if (p) {
-      const a = new Audio(p);
-      a.play().catch(() => onSpeakTts(item.word));
-      return;
-    }
-    onSpeakTts(item.word);
-  };
   const playContext = (c: MnContext) => {
     if (c.audio) {
       const a = new Audio(c.audio);
@@ -438,90 +391,6 @@ export function MnemonicRadial(props: {
             ))}
           </svg>
 
-          {/* hub 复刻卡(与真实主卡同数据源/同类名,独立挂载不参与对齐逻辑) */}
-          <div
-            className="mn-hub-slot"
-            style={hubPos ? { left: hubPos.x, top: hubPos.y } : undefined}
-          >
-            <div className="flashcard" ref={hubRef}>
-              <div className={`face ${plain ? "recog-face-plain" : ""}`}>
-                {!plain && content.image && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="recog-img" src={content.image} alt={`${item.word} 配图`} />
-                )}
-                {plain ? (
-                  <div className="recog-word-row-main">
-                    <span className="recog-word-wrap" ref={wrapRef}>
-                      <span className="recog-word recog-word-xl" ref={wordRef}>
-                        {item.word}
-                      </span>
-                      <span className="recog-word-side">
-                        {item.phoneticUk && <span className="recog-phon">{item.phoneticUk}</span>}
-                        <button type="button" className="play-bare" title="播放单词发音" aria-label={`播放单词发音 ${item.word}`} onClick={playWord}>
-                          <SpeakerIcon size={15} />
-                        </button>
-                      </span>
-                    </span>
-                  </div>
-                ) : (
-                  <div className="recog-word-row">
-                    <span className="recog-word-wrap" ref={wrapRef}>
-                      <span className="recog-word" ref={wordRef}>
-                        {item.word}
-                      </span>
-                      <span className="recog-word-side">
-                        {item.phoneticUk && <span className="recog-phon">{item.phoneticUk}</span>}
-                        <button type="button" className="play-bare" title="播放单词发音" aria-label={`播放单词发音 ${item.word}`} onClick={playWord}>
-                          <SpeakerIcon size={15} />
-                        </button>
-                      </span>
-                    </span>
-                  </div>
-                )}
-                {plain && <div className="recog-bottom" ref={bottomRef}>
-                  {example && (
-                    <div className="recog-example">
-                      <div className="recog-example-text">
-                        <p className="recog-example-en">
-                          <i>{example.en}</i>
-                        </p>
-                        {example.cn && <p className="recog-example-cn">{example.cn}</p>}
-                      </div>
-                      <button type="button" className="play-bare" title="朗读例句" aria-label="朗读例句" onClick={() => example && playExample(example)}>
-                        <SpeakerIcon size={14} />
-                      </button>
-                    </div>
-                  )}
-                  <div className="recog-translation">
-                    <div className="recog-translation-label">中文释义</div>
-                    <div className="recog-translation-text">{translation}</div>
-                  </div>
-                </div>}
-                {!plain && (
-                  <>
-                    {example && (
-                      <div className="recog-example">
-                        <div className="recog-example-text">
-                          <p className="recog-example-en">
-                            <i>{example.en}</i>
-                          </p>
-                          {example.cn && <p className="recog-example-cn">{example.cn}</p>}
-                        </div>
-                        <button type="button" className="play-bare" title="朗读例句" aria-label="朗读例句" onClick={() => example && playExample(example)}>
-                          <SpeakerIcon size={14} />
-                        </button>
-                      </div>
-                    )}
-                    <div className="recog-translation">
-                      <div className="recog-translation-label">中文释义</div>
-                      <div className="recog-translation-text">{translation}</div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
           {/* 四张助记卡(缺数据的卡不渲染内容/不出线) */}
           {MN_KEY_ORDER.map((k) => (
             <div
@@ -539,23 +408,13 @@ export function MnemonicRadial(props: {
                 <span className="mn-title">{CARD_META[k].title}</span>
                 <span className="mn-sub">{CARD_META[k].sub}</span>
               </div>
-              <div className="mn-body">{renderMnBody(k, content, { phOpen, setPhOpen, playContext, playWord, phoneticUk: item.phoneticUk })}</div>
+              <div className="mn-body">{renderMnBody(k, content, { phOpen, setPhOpen, playContext, phoneticUk: item.phoneticUk })}</div>
             </div>
           ))}
         </div>
       </div>
     </div>
   );
-
-  /** 例句发音(audio 优先,回退 TTS) */
-  function playExample(ex: { en: string; audio?: string }) {
-    if (ex.audio) {
-      const a = new Audio(ex.audio);
-      a.play().catch(() => onSpeakTts(ex.en));
-      return;
-    }
-    onSpeakTts(ex.en);
-  }
 }
 
 /* ---------------- 内容判定 ---------------- */
@@ -574,7 +433,6 @@ type BodyCtx = {
   phOpen: boolean;
   setPhOpen: (v: boolean) => void;
   playContext: (c: MnContext) => void;
-  playWord: () => void;
   phoneticUk: string | null;
 };
 

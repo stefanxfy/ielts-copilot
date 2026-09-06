@@ -75,28 +75,6 @@ html[data-theme="night"] {
   z-index: 1;
 }
 
-/* ---------- hub 复刻卡(类名复用全局 recog 系与 flashcard,仅定位在此) ---------- */
-
-.mn-hub-slot {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  transform: translate(-50%, -50%);
-  z-index: 3;
-  width: 400px;
-  display: flex;
-  justify-content: center;
-  /* 复刻卡纯视觉:点击/悬停全穿透到真实主卡(其喇叭/例句/三键/导航照常响应) */
-  pointer-events: none;
-}
-.mn-stage .flashcard {
-  width: 100%;
-}
-.mn-stage .face {
-  min-height: 400px;
-  box-shadow: 0 6px 24px color-mix(in srgb, var(--foreground) 12%, transparent);
-}
-
 /* ---------- 四张助记卡 ---------- */
 
 .mn-card {
