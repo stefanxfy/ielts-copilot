@@ -369,19 +369,9 @@ html[data-theme="night"] {
 /* ---------- 读音解析卡(syl) ---------- */
 
 .mn-syl-word-line {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
   margin-bottom: 10px;
   padding-bottom: 8px;
   border-bottom: 1px dashed var(--border);
-}
-.mn-syl-whole {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--c);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
 }
 .mn-syl-chip-row {
   display: flex;

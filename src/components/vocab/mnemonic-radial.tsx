@@ -102,7 +102,7 @@ const MN_KEY_ORDER = ["syl", "morph", "derive", "context"] as const;
 type MnKey = (typeof MN_KEY_ORDER)[number];
 
 const CARD_META: Record<MnKey, { icon: string; title: string; sub: string }> = {
-  syl: { icon: "🔊", title: "读音解析", sub: "pronunciation" },
+  syl: { icon: "🎧", title: "读音解析", sub: "pronunciation" },
   morph: { icon: "🧩", title: "构词解析", sub: "morphology" },
   derive: { icon: "🌱", title: "派生 / 近义词", sub: "derivatives" },
   context: { icon: "💬", title: "真实语境", sub: "real context" },
@@ -485,7 +485,6 @@ function SylBody({ syl, ctx }: { syl: MnSyl; ctx: BodyCtx }) {
   return (
     <>
       <div className="mn-syl-word-line">
-        <span className="mn-syl-whole">{syl.parts.join("")}</span>
         {ctx.phoneticUk && <span className="recog-phon">{ctx.phoneticUk}</span>}
       </div>
       <div className="mn-syl-chip-row">
