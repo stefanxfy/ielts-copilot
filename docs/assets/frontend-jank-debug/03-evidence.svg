@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" font-family="'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif">
+  <!-- 背景 -->
+  <rect width="680" height="480" fill="#f5f3ed"/>
+
+  <!-- 顶部标题 -->
+  <rect x="0" y="0" width="680" height="56" fill="#211d1a"/>
+  <text x="24" y="26" fill="#efeae4" font-size="15" font-weight="600">证据三连 · 三组实验如何排除替代假说</text>
+  <text x="24" y="46" fill="#9b9486" font-size="11">22:00 – 22:15 · 整数倍阶梯 → 唯一变量 = NODE_OPTIONS 注入</text>
+
+  <!-- ====== 实验卡片 1 ====== -->
+  <rect x="24" y="80" width="200" height="248" rx="6" fill="#ffffff" stroke="#d8d3c6" stroke-width="1"/>
+  <rect x="24" y="80" width="200" height="30" fill="#3d6680"/>
+  <text x="124" y="100" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle">① raw socket 分离计时</text>
+
+  <!-- 实验方法 -->
+  <text x="38" y="132" fill="#211d1a" font-size="11" font-weight="600">方法</text>
+  <text x="38" y="148" fill="#3d4a5c" font-size="10">直接拿 TCP socket</text>
+  <text x="38" y="161" fill="#3d4a5c" font-size="10">读 body，分阶段计时</text>
+
+  <!-- 观测 -->
+  <text x="38" y="184" fill="#211d1a" font-size="11" font-weight="600">观测</text>
+  <rect x="38" y="194" width="172" height="56" rx="3" fill="#f1f8f3" stroke="#2f8f3f" stroke-width="1"/>
+  <text x="48" y="210" fill="#2f8f3f" font-size="10" font-family="'Menlo','Courier New',monospace">body 读取:  0.000s</text>
+  <text x="48" y="226" fill="#b8323f" font-size="10" font-family="'Menlo','Courier New',monospace">连接建立:  0.600s</text>
+  <text x="48" y="242" fill="#3d4a5c" font-size="10">首次连接前 0.6s 的"沉默"</text>
+
+  <!-- 推断 -->
+  <text x="38" y="270" fill="#211d1a" font-size="11" font-weight="600">推断</text>
+  <text x="38" y="285" fill="#3d4a5c" font-size="10">· 延迟不在 body 传输阶段</text>
+  <text x="38" y="298" fill="#3d4a5c" font-size="10">· 而在连接建立阶段</text>
+  <text x="38" y="311" fill="#9b9486" font-size="10">→ 像进程启动期插桩</text>
+
+  <!-- ====== 实验卡片 2 ====== -->
+  <rect x="240" y="80" width="200" height="248" rx="6" fill="#ffffff" stroke="#d8d3c6" stroke-width="1"/>
+  <rect x="240" y="80" width="200" height="30" fill="#3d6680"/>
+  <text x="340" y="100" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle">② python http.server 对照</text>
+
+  <!-- 实验方法 -->
+  <text x="254" y="132" fill="#211d1a" font-size="11" font-weight="600">方法</text>
+  <text x="254" y="148" fill="#3d4a5c" font-size="10">起 python -m http.server</text>
+  <text x="254" y="161" fill="#3d4a5c" font-size="10">同端口同命令做对照</text>
+
+  <!-- 观测 -->
+  <text x="254" y="184" fill="#211d1a" font-size="11" font-weight="600">观测</text>
+  <rect x="254" y="194" width="172" height="56" rx="3" fill="#f1f8f3" stroke="#2f8f3f" stroke-width="1"/>
+  <text x="264" y="210" fill="#2f8f3f" font-size="10" font-family="'Menlo','Courier New',monospace">每次请求:  1–10 ms</text>
+  <text x="264" y="226" fill="#3d4a5c" font-size="10" font-family="'Menlo','Courier New',monospace">无阶梯特征</text>
+  <text x="264" y="242" fill="#3d4a5c" font-size="10">同机同时正常</text>
+
+  <!-- 推断 -->
+  <text x="254" y="270" fill="#211d1a" font-size="11" font-weight="600">推断</text>
+  <text x="254" y="285" fill="#3d4a5c" font-size="10">· 本机网络栈正常</text>
+  <text x="254" y="298" fill="#3d4a5c" font-size="10">· 不是 macOS / 防火墙问题</text>
+  <text x="254" y="311" fill="#9b9486" font-size="10">→ 问题仅出现在 node 进程</text>
+
+  <!-- ====== 实验卡片 3（决定性） ====== -->
+  <rect x="456" y="80" width="200" height="248" rx="6" fill="#ffffff" stroke="#2f8f3f" stroke-width="2"/>
+  <rect x="456" y="80" width="200" height="30" fill="#2f8f3f"/>
+  <text x="556" y="100" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle">③ env -u NODE_OPTIONS</text>
+
+  <!-- 实验方法 -->
+  <text x="470" y="132" fill="#211d1a" font-size="11" font-weight="600">方法</text>
+  <text x="470" y="148" fill="#3d4a5c" font-size="10" font-family="'Menlo','Courier New',monospace">env -u NODE_OPTIONS</text>
+  <text x="470" y="161" fill="#3d4a5c" font-size="10" font-family="'Menlo','Courier New',monospace">node next dev</text>
+
+  <!-- 观测 -->
+  <text x="470" y="184" fill="#211d1a" font-size="11" font-weight="600">观测</text>
+  <rect x="470" y="194" width="172" height="56" rx="3" fill="#f1f8f3" stroke="#2f8f3f" stroke-width="1"/>
+  <text x="480" y="210" fill="#2f8f3f" font-size="10" font-family="'Menlo','Courier New',monospace">heartbeat:    3 ms</text>
+  <text x="480" y="226" fill="#2f8f3f" font-size="10" font-family="'Menlo','Courier New',monospace">card-policy:  35 ms</text>
+  <text x="480" y="242" fill="#2f8f3f" font-size="10" font-weight="600">settings 页:  20 ms</text>
+
+  <!-- 推断 -->
+  <text x="470" y="270" fill="#211d1a" font-size="11" font-weight="600">推断</text>
+  <text x="470" y="285" fill="#3d4a5c" font-size="10">· 同 server，唯一变量：</text>
+  <text x="470" y="298" fill="#b8323f" font-size="10" font-weight="600">  NODE_OPTIONS</text>
+  <text x="470" y="311" fill="#2f8f3f" font-size="10">· 提速约 200×</text>
+
+  <!-- ====== 底部汇总 ====== -->
+  <line x1="24" y1="350" x2="656" y2="350" stroke="#211d1a" stroke-width="1"/>
+
+  <!-- 三个箭头汇聚到下方 -->
+  <line x1="124" y1="328" x2="340" y2="380" stroke="#d8d3c6" stroke-width="1.5"/>
+  <line x1="340" y1="328" x2="340" y2="380" stroke="#d8d3c6" stroke-width="1.5"/>
+  <line x1="556" y1="328" x2="340" y2="380" stroke="#d8d3c6" stroke-width="1.5"/>
+
+  <!-- 真凶框 -->
+  <rect x="160" y="380" width="360" height="84" rx="6" fill="#fdf3f3" stroke="#b8323f" stroke-width="2"/>
+  <text x="340" y="406" fill="#b8323f" font-size="13" font-weight="600" text-anchor="middle">真凶定位</text>
+  <rect x="178" y="416" width="324" height="36" rx="3" fill="#211d1a"/>
+  <text x="188" y="430" fill="#efeae4" font-size="10" font-family="'Menlo','Courier New',monospace">NODE_OPTIONS=--require=</text>
+  <text x="188" y="446" fill="#d97706" font-size="10" font-family="'Menlo','Courier New',monospace">.../WorkBuddy.app/.../node-language-shim.cjs</text>
+
+  <!-- 右侧警示标签 -->
+  <rect x="540" y="384" width="108" height="22" rx="3" fill="#b8323f"/>
+  <text x="594" y="399" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle">唯一变量</text>
+</svg>

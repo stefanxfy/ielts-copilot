@@ -26,15 +26,11 @@ const WORDS = {
       ],
       story: { anchor: "band", meaning: "n. 乐队；带子", text: "乐队(band)散场，大家把乐器一扔各自走人——abandon" },
     },
+    // v2.5 真实语境：contexts 单字段自含词组（coll/collZh 内嵌），audio 对齐 examples[].audio 契约
     contexts: [
-      { en: "The captain ordered everyone to abandon ship when the hull cracked.", cn: "船体破裂时船长下令全员弃船。" },
-      { en: "We must never abandon hope, even in the darkest times.", cn: "即便在最黑暗的时候也不能放弃希望。" },
-      { en: "They abandoned the plan after the budget was cut.", cn: "预算被砍后他们放弃了那个计划。" },
-    ],
-    collocations: [
-      { en: "abandon ship", cn: "弃船（逃生口令）" },
-      { en: "abandon hope", cn: "放弃希望" },
-      { en: "abandon a plan", cn: "放弃计划" },
+      { coll: "abandon ship", collZh: "弃船（逃生口令）", en: "The captain ordered everyone to abandon ship when the hull cracked.", cn: "船体破裂时船长下令全员弃船。" },
+      { coll: "abandon hope", collZh: "放弃希望", en: "We must never abandon hope, even in the darkest times.", cn: "即便在最黑暗的时候也不能放弃希望。" },
+      { coll: "abandon a plan", collZh: "放弃计划", en: "They abandoned the plan after the budget was cut.", cn: "预算被砍后他们放弃了那个计划。" },
     ],
     derives: [
       { en: "abandoned", cn: "adj. 被遗弃的" },
@@ -42,7 +38,6 @@ const WORDS = {
       { en: "ban", cn: "n. 禁令（同根）" },
       { en: "abandon oneself to", cn: "沉溺于" },
     ],
-    llmInsight: "abandon 的词根 band 源自日耳曼语「控制」，中世纪法语 abandoner 指「使自己不受控制」——所以它既有「彻底放弃」的决绝，也有「放纵（abandon oneself to）」的双面性。记忆抓手：把行李 band（带子）一松手，东西全 abandon 了。",
   },
   abundant: {
     word: "abundant",
@@ -68,19 +63,14 @@ const WORDS = {
       ],
     },
     contexts: [
-      { en: "The lake is abundant in fish and crabs.", cn: "这湖里鱼蟹资源丰富。" },
-      { en: "The region has abundant resources of wind and solar.", cn: "该地区风能与太阳能资源丰沛。" },
-    ],
-    collocations: [
-      { en: "abundant in", cn: "富于…（be abundant in fish）" },
-      { en: "abundant resources", cn: "丰富的资源" },
+      { coll: "abundant in", collZh: "富于…（be abundant in fish）", en: "The lake is abundant in fish and crabs.", cn: "这湖里鱼蟹资源丰富。" },
+      { coll: "abundant resources", collZh: "丰富的资源", en: "The region has abundant resources of wind and solar.", cn: "该地区风能与太阳能资源丰沛。" },
     ],
     derives: [
       { en: "abundance", cn: "n. 大量（an abundance of）" },
       { en: "abundantly", cn: "adv. 丰富地" },
       { en: "redundant", cn: "adj. 冗余的（同根 und）" },
     ],
-    llmInsight: "und 是「波浪」：水满到波浪一层层往外涌，就是 abundant。同一个 und 还藏在 redundant（re- 反复 + und 波浪 → 多余得溢出来 → 冗余）里——记一个词根，吃掉一对雅思高频词。",
   },
   discard: {
     word: "discard",
@@ -106,19 +96,14 @@ const WORDS = {
       story: { anchor: "card", meaning: "n. 卡片；纸牌", text: "打牌时把没用的牌「打出去」——discard 就是把没用的东西像出牌一样丢掉" },
     },
     contexts: [
-      { en: "We should discard old ideas that no longer work.", cn: "该摒弃不再管用的旧观念。" },
-      { en: "In poker you discard a card you cannot use.", cn: "扑克里你把用不上的牌打出去。" },
-    ],
-    collocations: [
-      { en: "discard old ideas", cn: "摒弃旧观念" },
-      { en: "discard a card", cn: "打出一张牌" },
+      { coll: "discard old ideas", collZh: "摒弃旧观念", en: "We should discard old ideas that no longer work.", cn: "该摒弃不再管用的旧观念。" },
+      { coll: "discard a card", collZh: "打出一张牌", en: "In poker you discard a card you cannot use.", cn: "扑克里你把用不上的牌打出去。" },
     ],
     derives: [
       { en: "discardable", cn: "adj. 可丢弃的" },
       { en: "discord", cn: "n. 不和（dis- 分开 + cord 心 → 离心）" },
       { en: "dispose of", cn: "处理掉（近义）" },
     ],
-    llmInsight: "discard 与 abandon 的语感差异：discard 是「有选择性、干脆地扔掉」（像打牌出牌，扔的多是具体物/旧观念），abandon 是「彻底、带情感地放弃」（弃船、弃养、放弃希望）。写作中 discard old habits 比 abandon 更常见。",
   },
   isolate: {
     word: "isolate",
@@ -143,12 +128,8 @@ const WORDS = {
       ],
     },
     contexts: [
-      { en: "The lab isolates the virus from the samples.", cn: "实验室把病毒从样本里隔离出来。" },
-      { en: "Newcomers often feel isolated in a big city.", cn: "新来者在大城市常感到孤立。" },
-    ],
-    collocations: [
-      { en: "isolate ... from", cn: "把…与…隔离" },
-      { en: "feel isolated", cn: "感到孤立（常被动/形容词化）" },
+      { coll: "isolate ... from", collZh: "把…与…隔离", en: "The lab isolates the virus from the samples.", cn: "实验室把病毒从样本里隔离出来。" },
+      { coll: "feel isolated", collZh: "感到孤立（常被动/形容词化）", en: "Newcomers often feel isolated in a big city.", cn: "新来者在大城市常感到孤立。" },
     ],
     derives: [
       { en: "isolation", cn: "n. 隔离（in isolation）" },
@@ -156,7 +137,6 @@ const WORDS = {
       { en: "peninsula", cn: "n. 半岛（几乎成岛）" },
       { en: "insulate", cn: "v. 隔热；绝缘（同根）" },
     ],
-    llmInsight: "isolate 的灵魂意象是「岛」：insula（岛）→ 使成孤岛。同族词全在画一张地图——peninsula（半岛：paene 几乎 + insula）、insulate（用「岛」把电/热带隔开）。雅思阅读里 in isolation（孤立地）是高频搭配。",
   },
   accomplish: {
     word: "accomplish",
@@ -182,12 +162,8 @@ const WORDS = {
       ],
     },
     contexts: [
-      { en: "She accomplished her goal of running a marathon.", cn: "她达成了跑完马拉松的目标。" },
-      { en: "Without a clear plan you accomplish nothing.", cn: "没有明确计划将一事无成。" },
-    ],
-    collocations: [
-      { en: "accomplish a goal/task", cn: "实现目标/完成任务" },
-      { en: "accomplish nothing", cn: "一事无成" },
+      { coll: "accomplish a goal/task", collZh: "实现目标/完成任务", en: "She accomplished her goal of running a marathon.", cn: "她达成了跑完马拉松的目标。" },
+      { coll: "accomplish nothing", collZh: "一事无成", en: "Without a clear plan you accomplish nothing.", cn: "没有明确计划将一事无成。" },
     ],
     derives: [
       { en: "accomplishment", cn: "n. 成就；造诣" },
@@ -195,7 +171,6 @@ const WORDS = {
       { en: "complement", cn: "n. 补足物（同根）" },
       { en: "achieve", cn: "v. 达成（近义）" },
     ],
-    llmInsight: "compl = 填满：complete 是「把空填满」，accomplish 是「朝着(ac-)目标把该填的都填满」——所以它天然搭配 goal / task / mission。三胞胎辨析：complete（填完）、complement（补足）、compliment（赞美，t 结尾多一撇 = 好话填心里）。",
   },
   literature: {
     word: "literature",
@@ -238,23 +213,19 @@ const WORDS = {
       ],
       story: { anchor: "liter", meaning: "n. 升（litre 的变体拼写）", text: "一升(liter)瓶子里的墨水全倒出来写字——写的字多了就成了 literature 文学" },
     },
+    // literature 标杆：audio 字段示意 TTS 落盘路径（原型内文件不存在，播放自动回退 speechSynthesis）
     contexts: [
-      { en: "He prefers classic literature to modern bestsellers.", cn: "比起现代畅销书他更爱经典文学。" },
-      { en: "The claim is unsupported by scientific literature.", cn: "这一说法缺乏科学文献支撑。" },
-      { en: "A large body of literature exists on this topic.", cn: "关于该主题已有大量文献。" },
-    ],
-    collocations: [
-      { en: "classic literature", cn: "经典文学" },
-      { en: "scientific literature", cn: "科学文献" },
-      { en: "a body of literature", cn: "一大批文献/著作" },
+      { coll: "classic literature", collZh: "经典文学", en: "He prefers classic literature to modern bestsellers.", cn: "比起现代畅销书他更爱经典文学。", audio: "/audio/contexts/literature_0.mp3" },
+      { coll: "scientific literature", collZh: "科学文献", en: "The claim is unsupported by scientific literature.", cn: "这一说法缺乏科学文献支撑。", audio: "/audio/contexts/literature_1.mp3" },
+      { coll: "a large body of literature", collZh: "一大批文献/著作", en: "A large body of literature exists on this topic.", cn: "关于该主题已有大量文献。", audio: "/audio/contexts/literature_2.mp3" },
     ],
     derives: [
       { en: "literary", cn: "adj. 文学的" },
       { en: "literate", cn: "adj. 识字的；有文化的" },
       { en: "illiterate", cn: "adj. 不识字的（il- 否定）" },
       { en: "literal", cn: "adj. 字面的（逐字的）" },
+      { en: "literacy", cn: "n. 读写能力" },
     ],
-    llmInsight: "liter = 文字：同族词全在讲「读写能力」这条线——literal（字面）、literate（识字）、illiterate（文盲）、literary（文学的），而 literature 是文字沉淀成的结晶。雅思阅读里 scientific literature（科学文献）是学术场景高频搭配。",
   },
   outbreak: {
     word: "outbreak",
@@ -278,20 +249,15 @@ const WORDS = {
         { piece: "break", kind: "词", meaningZh: "破、爆发" },
       ],
     },
-    collocations: [
-      { en: "outbreak of war", cn: "战争爆发" },
-      { en: "outbreak of disease", cn: "疾病爆发" },
-    ],
     contexts: [
-      { en: "The outbreak of war forced thousands to flee.", cn: "战争爆发迫使数千人逃离。" },
-      { en: "Health workers contained the outbreak of disease quickly.", cn: "卫生人员迅速控制住了疾病爆发。" },
+      { coll: "outbreak of war", collZh: "战争爆发", en: "The outbreak of war forced thousands to flee.", cn: "战争爆发迫使数千人逃离。" },
+      { coll: "outbreak of disease", collZh: "疾病爆发", en: "Health workers contained the outbreak of disease quickly.", cn: "卫生人员迅速控制住了疾病爆发。" },
     ],
     derives: [
       { en: "break out", cn: "v. 爆发（短语动词）" },
       { en: "broken", cn: "adj. 破碎的（同根 break）" },
       { en: "outcome", cn: "n. 结果（同前缀 out-）" },
     ],
-    llmInsight: "outbreak 是教科书式合成词：out（向外）+ break（破）→ 原本「破门而出」，引申为战争、疫情、火灾的「突然爆发」。记一个构词法，写作里 outbreak of war / outbreak of flu 都能直接套。",
   },
   brunch: {
     word: "brunch",
@@ -315,20 +281,15 @@ const WORDS = {
         { piece: "unch", kind: "截自", meaningZh: "来自 lunch（午餐）后半", fromWord: "lunch" },
       ],
     },
-    collocations: [
-      { en: "Sunday brunch", cn: "周日早午餐" },
-      { en: "brunch buffet", cn: "早午餐自助" },
-    ],
     contexts: [
-      { en: "The hotel serves a lavish Sunday brunch.", cn: "这家酒店供应丰盛的周日早午餐。" },
-      { en: "We met friends for a brunch buffet downtown.", cn: "我们在市中心和朋友吃了早午餐自助。" },
+      { coll: "Sunday brunch", collZh: "周日早午餐", en: "The hotel serves a lavish Sunday brunch.", cn: "这家酒店供应丰盛的周日早午餐。" },
+      { coll: "brunch buffet", collZh: "早午餐自助", en: "We met friends for a brunch buffet downtown.", cn: "我们在市中心和朋友吃了早午餐自助。" },
     ],
     derives: [
       { en: "breakfast", cn: "n. 早餐（混成来源）" },
       { en: "lunch", cn: "n. 午餐（混成来源）" },
       { en: "smog", cn: "n. 烟雾（同为混成词：smoke+fog）" },
     ],
-    llmInsight: "brunch 是经典「混成词（blend）」：取 breakfast 的头 br- 接 lunch 的尾 -unch。英语里这类词很多——smog（smoke+fog 烟雾）、motel（motor+hotel 汽车旅馆）。看到 brunch 就想到「两餐合一」。",
   },
 };
 
@@ -476,19 +437,21 @@ function recogNext(delta) {
 }
 
 // ---------- 辐射助记层 ----------
-// 六张助记卡目标位（相对 .radial-stage 1120x680）：顶中/左上/右上/右中/左下/右下
-// 顺序即连线生长顺序；context 为「链式连线」，挂在 coll 卡下方（见 drawWires）
+// 四张助记卡目标位（相对 .radial-stage 1500x1000，无界画布：卡间零挤压零遮挡）：
+//   左上 构词解析 · 左下 派生/近义 · 右上 读音解析 · 右下 真实语境
+//   主卡下方不放任何卡；主卡辐射态完全不变
 const MN_POS = {
-  syl:     { x: 560, y: 90  },  // 音节解析 顶部居中
-  morph:   { x: 150, y: 215 },  // 词形拆解 左上
-  coll:    { x: 970, y: 215 },  // 词组搭配 右上
-  context: { x: 970, y: 410 },  // 语境例句 右中（链式：挂在 coll 下）
-  derive:  { x: 150, y: 470 },  // 派生/近义 左下
-  llm:     { x: 560, y: 595 },  // LLM 解读 底部居中
+  morph:   { x: 220,  y: 280 },  // 构词解析 左上
+  syl:     { x: 1280, y: 250 },  // 读音解析 右上
+  derive:  { x: 220,  y: 640 },  // 派生/词性/近义 左下
+  context: { x: 1280, y: 640 },  // 真实语境 右下
 };
-const MN_KEY_ORDER = ["syl", "morph", "coll", "context", "derive", "llm"];
+const MN_KEY_ORDER = ["syl", "morph", "derive", "context"];
 // 助记卡尺寸（radial.css 固定宽 300；高度 JS 实测）
 const MN_W = 300;
+// 舞台高度（radial.css 同步 1000）；HUB_TOP_Y = 主卡上缘（hub-slot top 52% 处中心 - 半高）
+const STAGE_H = 1000;
+const HUB_TOP_Y = 265;
 
 function mnEls() {
   return MN_KEY_ORDER.map(k => $stage.querySelector(`.mn-card[data-mn="${k}"]`));
@@ -499,11 +462,34 @@ function mnHasContent(w, key) {
   if (!w) return false;
   if (key === "syl") return !!(w.syl && w.syl.parts && w.syl.parts.length);
   if (key === "morph") return !!(w.morph && w.morph.pieces && w.morph.pieces.length);
-  if (key === "coll") return !!(w.collocations && w.collocations.length);
   if (key === "context") return !!(w.contexts && w.contexts.length);
   if (key === "derive") return !!(w.derives && w.derives.length);
-  if (key === "llm") return !!(w.llmInsight);
   return false;
+}
+
+// 真实语境高亮：把词组在例句中显著标识出来（<mark class="ctx-coll">）
+// v2.5：词组内嵌 contexts[].coll。匹配规则——大小写不敏感 + 词形屈折（isolate→isolates）
+// + coll 中 " ... " 视为通配（"isolate ... from" 命中 "isolates the virus from"）；
+// 仍匹配不到时兜底高亮 headword（含屈折 word\w*，同语境默写卡命中规则）
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+function hiColl(sentence, coll, headword) {
+  const s = esc(sentence);
+  const c = (coll || "").trim();
+  if (c) {
+    // coll 中 " ... " 为通配段；段内空白归一为 \s+；首尾 \b+\w* 允许词形屈折（isolate→isolates）
+    const pat = "\\b" + c.split(/\s*\.\.\.\s*/)
+      .map(p => escRe(esc(p)).replace(/\s+/g, "\\s+"))
+      .join("\\w*[^,;.!?]*?\\s+") + "\\w*";
+    try {
+      const out = s.replace(new RegExp(pat, "gi"), m => `<mark class="ctx-coll">${m}</mark>`);
+      if (out !== s) return out;
+    } catch { /* 非法 pattern 落兜底 */ }
+  }
+  if (headword) {
+    const re = new RegExp("\\b" + escRe(esc(headword)) + "\\w*", "gi");
+    return s.replace(re, m => `<mark class="ctx-coll">${m}</mark>`);
+  }
+  return s;
 }
 
 function buildMnContent(w, key) {
@@ -600,35 +586,33 @@ function buildMnContent(w, key) {
     return html;
   }
   if (key === "context") {
-    if (!w.contexts || !w.contexts.length) return "";
-    return `<div class="mn-block-label">语境例句</div>` + w.contexts.map(c =>
-      `<div class="ctx-item"><div class="ctx-en">${esc(c.en)}</div><div class="ctx-cn">${esc(c.cn)}</div></div>`).join("");
-  }
-  if (key === "coll") {
-    return `<div class="mn-block-label">词组搭配</div>` +
-      w.collocations.map(c =>
-        `<div class="mn-pair"><span class="en">${esc(c.en)}</span><span class="cn">${esc(c.cn)}</span></div>`).join("");
+    // v2.5 真实语境：contexts 单字段自含词组——coll 内嵌每条例句，直接展示例句 + 中文释义，
+    // 词组在句中高亮；每条例句带发音（audio 有值播音频文件，无值 speechSynthesis 兜底）
+    const ctxs = w.contexts || [];
+    if (!ctxs.length) return "";
+    return ctxs.map(c => {
+      const say = esc(c.en).replace(/'/g, "&#39;");
+      const audio = c.audio ? esc(c.audio) : "";
+      return `<div class="ctx-item">
+        <div class="ctx-en">${hiColl(c.en, c.coll, w.word)}<button class="ctx-play" data-say="${say}"${audio ? ` data-audio="${audio}"` : ""} title="播放例句">${speakerSvg(16)}</button></div>
+        <div class="ctx-cn">${esc(c.cn)}</div>
+      </div>`;
+    }).join("");
   }
   if (key === "derive") {
     return `<div class="mn-block-label">派生 / 近义</div>` +
       w.derives.map(d =>
         `<div class="mn-pair"><span class="en">${esc(d.en)}</span><span class="cn">${esc(d.cn)}</span></div>`).join("");
   }
-  if (key === "llm") {
-    return `<div class="mn-block-label">AI 一句话讲透</div>` +
-      `<div class="llm-text">${esc(w.llmInsight)}<span class="llm-cursor"></span></div>`;
-  }
   return "";
 }
 
 function buildMnCard(k, w) {
   const meta = {
-    syl:     { icon: "🔊", title: "音节解析",     sub: "syllables + phonemes" },
+    syl:     { icon: "🔊", title: "读音解析",     sub: "pronunciation" },
     morph:   { icon: "🧩", title: "构词解析",     sub: "morphology" },
-    coll:    { icon: "🔗", title: "词组搭配",     sub: "collocations" },
-    context: { icon: "💬", title: "语境",         sub: "in context" },
+    context: { icon: "💬", title: "真实语境",     sub: "real context" },
     derive:  { icon: "🌱", title: "派生 / 近义词", sub: "derivatives" },
-    llm:     { icon: "✨", title: "LLM 解读",     sub: "ai insight", badge: true },
   }[k];
   return `
     <div class="mn-head">
@@ -641,10 +625,15 @@ function buildMnCard(k, w) {
 }
 
 // 音素细讲抽屉：展开/收起（事件委托挂在卡元素上，防止 hover 误触）
+// 真实语境例句发音：事件委托（卡片内容每次辐射重渲染，用冒泡统一接管 .ctx-play）
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".ctx-play");
+  if (btn) { e.stopPropagation(); speak(btn.dataset.say); }
+});
+
 function bindPhToggles() {
   const sylCard = $stage.querySelector('.mn-card[data-mn="syl"]');
-  if (!sylCard) return;
-  sylCard.querySelectorAll(".ph-toggle").forEach(btn => {
+  if (!sylCard) return;  sylCard.querySelectorAll(".ph-toggle").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
       const detail = sylCard.querySelector(".ph-detail");
@@ -682,27 +671,14 @@ function drawWires() {
     const cx = r.left - stageRect.left + r.width / 2;
     const cy = r.top - stageRect.top + r.height / 2;
     const color = getComputedStyle(el).getPropertyValue("--c").trim() || "#888";
-    let sx, sy, tx, ty, side;
-
-    if (k === "context") {
-      // 链式连线：从 coll 卡底边中点 → context 卡顶边中点（不直连主卡）
-      const cEl = $stage.querySelector('.mn-card[data-mn="coll"]');
-      const cr = cEl.getBoundingClientRect();
-      sx = cr.left - stageRect.left + cr.width / 2;
-      sy = cr.top - stageRect.top + cr.height;
-      tx = cx;
-      ty = r.top - stageRect.top;
-      side = "top";
-    } else if (k === "syl") {
-      // 顶部居中卡：连线接到卡片底边中点
-      tx = cx; ty = r.top - stageRect.top + r.height - 6; side = "top";
-      sx = hx; sy = hy;
-    } else {
-      const leftSide = (k === "morph" || k === "derive");
-      tx = cx + (leftSide ? -r.width / 2 + 10 : r.width / 2 - 10);
-      ty = cy; side = leftSide ? "left" : "right";
-      sx = hx; sy = hy;
-    }
+    // 四卡均直连主卡：锚在朝向主卡的内侧缘（morph/derive 右缘、syl/context 左缘），线不穿卡
+    const leftSide = (k === "morph" || k === "derive");
+    const tx = leftSide ? cx + r.width / 2 - 10 : cx - r.width / 2 + 10;
+    const ty = cy;
+    const side = leftSide ? "left" : "right";
+    // 从主卡侧缘出发（而非中心），避免连线横穿主卡
+    const sx = hx + (leftSide ? -hubRect.width / 2 : hubRect.width / 2);
+    const sy = hy;
     wires += `<path class="wire" d="${wirePath(sx, sy, tx, ty, side)}" stroke="${color}" style="color:${color}"/>`;
     dots += `<circle class="wire-dot" cx="${tx}" cy="${ty}" r="0" fill="${color}"/>`;
   });
@@ -719,10 +695,7 @@ function radiateMn(w) {
   if (_mnOpen) return;
   _mnOpen = true;
   $stage.classList.add("radial-on");
-  // 主卡收缩 + 下移（视觉让位，顶部留给音节解析卡）
-  $("hubCardWrap").style.width = "340px";
-  $("hubActions").style.maxWidth = "340px";
-  document.querySelector(".hub-slot").style.top = "54%";
+  // 主卡完全不变（尺寸/位置/内容），六卡在无界画布上让位展开
 
   const stageRect = $stage.getBoundingClientRect();
   const hubRect = $("hubCardWrap").getBoundingClientRect();
@@ -735,27 +708,22 @@ function radiateMn(w) {
     if (!mnHasContent(w, k)) { el.classList.remove("show"); el.innerHTML = ""; return; }
     el.innerHTML = buildMnCard(k, w);
     const pos = MN_POS[k];
-    // 初始：中心点缩团
+    // 初始：中心点缩团（强制透明，避免起飞前在主卡上显形；起飞时交还 .show 的 opacity:1）
     el.style.left = hcx + "px";
     el.style.top = hcy + "px";
     el.style.transform = "translate(-50%, -50%) scale(.2)";
+    el.style.opacity = "0";
     el.classList.add("show");
     visible.push({ el, k, pos });
   });
 
-  // 逐张落位（stagger 90ms）；顶部卡做高度钳制，防音素卡过高溢出舞台
+  // 逐张落位（stagger 90ms）
   visible.forEach(({ el, k, pos }, i) => {
     setTimeout(() => {
-      const stageH = $stage.clientHeight || 680;
-      let top = pos.y;
-      if (k === "syl") {
-        const h = el.offsetHeight || 0;
-        const half = h / 2 + 8;
-        top = Math.max(half, Math.min(pos.y, stageH * 0.52 - half));
-      }
       el.style.left = pos.x + "px";
-      el.style.top = top + "px";
+      el.style.top = pos.y + "px";
       el.style.transform = "translate(-50%, -50%) scale(1)";
+      el.style.opacity = "";
       if (k === "syl") bindPhToggles();
     }, 120 + i * 90);
   });
@@ -780,9 +748,6 @@ function collapseMn() {
   if (!_mnOpen) { $wires.classList.remove("drawn"); $wires.innerHTML = ""; return; }
   _mnOpen = false;
   $stage.classList.remove("radial-on");
-  $("hubCardWrap").style.width = "";
-  $("hubActions").style.maxWidth = "";
-  document.querySelector(".hub-slot").style.top = "";
   sfxCollapse();
   $wires.classList.remove("drawn");
   mnEls().forEach(el => {
@@ -1091,7 +1056,7 @@ function renderDictation(w, type) {
       const label = s.hints === 0 ? "Perfect" : s.hints === 1 ? "Great" : "Good";
       badge = `<div class="dict-verdict dict-verdict-ok">✓ ${label}</div>`;
     } else {
-      badge = `<div class="dict-verdict dict-verdict-bad">✗ 看看五张助记卡，然后下一个</div>`;
+      badge = `<div class="dict-verdict dict-verdict-bad">✗ 看看四张助记卡，然后下一个</div>`;
     }
     verdictSlot.innerHTML = badge;
   }
@@ -1155,12 +1120,12 @@ $("randomBtn").onclick = () => {
   render();
 };
 
-// ---------- 舞台自适应缩放（1120x680 等比适配 wrap 宽度） ----------
+// ---------- 舞台自适应缩放（1500x1000 等比适配 wrap 宽度） ----------
 function fitStage() {
   const wrap = $stage.parentElement;
-  const scale = Math.min(1, wrap.clientWidth / 1120);
+  const scale = Math.min(1, wrap.clientWidth / 1500);
   $stage.style.transform = `scale(${scale})`;
-  wrap.style.height = 680 * scale + "px";
+  wrap.style.height = STAGE_H * scale + "px";
 }
 window.addEventListener("resize", fitStage);
 

@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" font-family="'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif">
+  <!-- 背景 -->
+  <rect width="680" height="480" fill="#f5f3ed"/>
+
+  <!-- 顶部标题 -->
+  <rect x="0" y="0" width="680" height="56" fill="#211d1a"/>
+  <text x="24" y="26" fill="#efeae4" font-size="15" font-weight="600">插桩原理 · NODE_OPTIONS 是怎么吃掉 0.6s 的</text>
+  <text x="24" y="46" fill="#9b9486" font-size="11">WorkBuddy node-language-shim.cjs · brokered-sandbox 插桩 · 每 HTTP 请求固定开销</text>
+
+  <!-- 流水线主体 -->
+  <!-- 节点 1：用户命令 -->
+  <rect x="24" y="88" width="140" height="84" rx="6" fill="#eaf1f7" stroke="#3d6680" stroke-width="1"/>
+  <rect x="24" y="88" width="140" height="22" fill="#3d6680"/>
+  <text x="94" y="103" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle">① 用户启动</text>
+  <text x="34" y="130" fill="#211d1a" font-size="11" font-family="'Menlo','Courier New',monospace">node next dev</text>
+  <text x="34" y="146" fill="#211d1a" font-size="11" font-family="'Menlo','Courier New',monospace">-H 127.0.0.1</text>
+  <text x="34" y="162" fill="#211d1a" font-size="11" font-family="'Menlo','Courier New',monospace">-p 3177</text>
+
+  <!-- 箭头 1 -->
+  <line x1="166" y1="130" x2="200" y2="130" stroke="#211d1a" stroke-width="1.5"/>
+  <polygon points="200,124 210,130 200,136" fill="#211d1a"/>
+
+  <!-- 节点 2：环境变量注入 -->
+  <rect x="212" y="80" width="156" height="100" rx="6" fill="#fdf3e7" stroke="#d97706" stroke-width="1"/>
+  <rect x="212" y="80" width="156" height="22" fill="#d97706"/>
+  <text x="290" y="95" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle">② 注入环境变量</text>
+  <text x="222" y="122" fill="#211d1a" font-size="11" font-weight="600">NODE_OPTIONS</text>
+  <rect x="222" y="130" width="138" height="40" rx="3" fill="#211d1a"/>
+  <text x="228" y="145" fill="#efeae4" font-size="10" font-family="'Menlo','Courier New',monospace">--require=</text>
+  <text x="228" y="159" fill="#d97706" font-size="9" font-family="'Menlo','Courier New',monospace">...node-language-shim.cjs</text>
+
+  <!-- 箭头 2 -->
+  <line x1="370" y1="130" x2="404" y2="130" stroke="#211d1a" stroke-width="1.5"/>
+  <polygon points="404,124 414,130 404,136" fill="#211d1a"/>
+
+  <!-- 节点 3：shim 加载 -->
+  <rect x="416" y="88" width="140" height="84" rx="6" fill="#fdf3e7" stroke="#d97706" stroke-width="1"/>
+  <rect x="416" y="88" width="140" height="22" fill="#d97706"/>
+  <text x="486" y="103" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle">③ shim 加载</text>
+  <text x="426" y="130" fill="#211d1a" font-size="11">挂全局 hook：</text>
+  <text x="426" y="148" fill="#211d1a" font-size="10" font-family="'Menlo','Courier New',monospace">net / http / https</text>
+  <text x="426" y="164" fill="#211d1a" font-size="10" font-family="'Menlo','Courier New',monospace">brokered-sandbox</text>
+
+  <!-- 箭头 3 -->
+  <line x1="558" y1="130" x2="592" y2="130" stroke="#211d1a" stroke-width="1.5"/>
+  <polygon points="592,124 602,130 592,136" fill="#211d1a"/>
+
+  <!-- 节点 4：每个 HTTP 请求 -->
+  <rect x="604" y="80" width="56" height="100" rx="6" fill="#fdf3f3" stroke="#b8323f" stroke-width="1"/>
+  <rect x="604" y="80" width="56" height="22" fill="#b8323f"/>
+  <text x="632" y="95" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle">④ 拦截</text>
+  <text x="632" y="124" fill="#b8323f" font-size="20" font-weight="700" text-anchor="middle">+0.6s</text>
+  <text x="632" y="144" fill="#211d1a" font-size="9" text-anchor="middle">每请求</text>
+  <text x="632" y="160" fill="#211d1a" font-size="9" text-anchor="middle">固定</text>
+
+  <!-- 底部：阶梯时间线 -->
+  <text x="24" y="218" fill="#211d1a" font-size="13" font-weight="600">观测到的阶梯特征</text>
+  <text x="24" y="234" fill="#9b9486" font-size="10">同一 dev server，连续 HTTP 请求的累计耗时（实测）</text>
+
+  <!-- 时间线画布 -->
+  <rect x="24" y="248" width="632" height="148" rx="6" fill="#ffffff" stroke="#d8d3c6" stroke-width="1"/>
+
+  <!-- 纵轴标签 -->
+  <text x="34" y="264" fill="#9b9486" font-size="9">耗时</text>
+
+  <!-- 阶梯条形 -->
+  <!-- 请求 1：0.6s -->
+  <rect x="80" y="372" width="40" height="16" fill="#b8323f" opacity="0.85"/>
+  <text x="100" y="384" fill="#ffffff" font-size="9" font-weight="600" text-anchor="middle">0.6s</text>
+
+  <!-- 请求 2：1.2s -->
+  <rect x="160" y="348" width="40" height="40" fill="#b8323f" opacity="0.85"/>
+  <text x="180" y="368" fill="#ffffff" font-size="9" font-weight="600" text-anchor="middle">1.2s</text>
+
+  <!-- 请求 3：1.6s（注意不是1.8，证据中是1.6s） -->
+  <rect x="240" y="324" width="40" height="64" fill="#b8323f" opacity="0.85"/>
+  <text x="260" y="356" fill="#ffffff" font-size="9" font-weight="600" text-anchor="middle">1.6s</text>
+
+  <!-- 请求 4：再 +0.6s -->
+  <rect x="320" y="300" width="40" height="88" fill="#b8323f" opacity="0.85"/>
+  <text x="340" y="344" fill="#ffffff" font-size="9" font-weight="600" text-anchor="middle">2.2s</text>
+
+  <!-- 请求 5：再 +0.6s -->
+  <rect x="400" y="276" width="40" height="112" fill="#b8323f" opacity="0.85"/>
+  <text x="420" y="332" fill="#ffffff" font-size="9" font-weight="600" text-anchor="middle">2.8s</text>
+
+  <!-- 请求 6：再 +0.6s -->
+  <rect x="480" y="252" width="40" height="136" fill="#b8323f" opacity="0.85"/>
+  <text x="500" y="320" fill="#ffffff" font-size="9" font-weight="600" text-anchor="middle">3.4s</text>
+
+  <!-- 虚线水平参考 -->
+  <line x1="60" y1="372" x2="620" y2="372" stroke="#d8d3c6" stroke-width="1" stroke-dasharray="2 3"/>
+  <line x1="60" y1="348" x2="620" y2="348" stroke="#d8d3c6" stroke-width="1" stroke-dasharray="2 3"/>
+  <line x1="60" y1="324" x2="620" y2="324" stroke="#d8d3c6" stroke-width="1" stroke-dasharray="2 3"/>
+  <line x1="60" y1="300" x2="620" y2="300" stroke="#d8d3c6" stroke-width="1" stroke-dasharray="2 3"/>
+  <line x1="60" y1="276" x2="620" y2="276" stroke="#d8d3c6" stroke-width="1" stroke-dasharray="2 3"/>
+
+  <!-- 横轴标签 -->
+  <text x="100" y="406" fill="#9b9486" font-size="9" text-anchor="middle">请求 1</text>
+  <text x="180" y="406" fill="#9b9486" font-size="9" text-anchor="middle">请求 2</text>
+  <text x="260" y="406" fill="#9b9486" font-size="9" text-anchor="middle">请求 3</text>
+  <text x="340" y="406" fill="#9b9486" font-size="9" text-anchor="middle">请求 4</text>
+  <text x="420" y="406" fill="#9b9486" font-size="9" text-anchor="middle">请求 5</text>
+  <text x="500" y="406" fill="#9b9486" font-size="9" text-anchor="middle">请求 6</text>
+
+  <!-- 阶梯标注 -->
+  <path d="M 120 372 L 200 348" stroke="#d97706" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <text x="200" y="266" fill="#d97706" font-size="10" font-weight="600">每请求 +0.6s（整数倍阶梯）</text>
+
+  <!-- 底部关键注解 -->
+  <rect x="24" y="412" width="632" height="56" rx="6" fill="#211d1a"/>
+  <text x="36" y="432" fill="#d97706" font-size="11" font-weight="600">⚠ 关键认识</text>
+  <text x="36" y="450" fill="#efeae4" font-size="11">插桩位于 env 层（NODE_OPTIONS），不是 sandbox 层 ——</text>
+  <text x="36" y="464" fill="#efeae4" font-size="11">dangerouslyDisableSandbox 绕过沙箱也躲不掉，必须 env -u NODE_OPTIONS。</text>
+</svg>
