@@ -639,7 +639,7 @@ html[data-theme="night"] {
     letter-spacing: .5px;
     color: var(--muted-foreground);
     opacity: .55;
-    transform: scale(0.67);
+    transform: scale(1.33);
     transform-origin: center;
     pointer-events: none;
     white-space: nowrap;
