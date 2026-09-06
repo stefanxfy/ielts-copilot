@@ -21,6 +21,10 @@
  *   node scripts/gen-mnemonic.mjs --word=abandon --fields=morph,syl
  *   node scripts/gen-mnemonic.mjs --word=abandon --rebuild         # 先清旧四字段再生成
  *   node scripts/gen-mnemonic.mjs --word=abandon --dry-run         # 只调 LLM 不写库
+ *
+ * 生成模型(2026-09-06 定):GLM-5.3 走 coding plan 专用端点 /api/coding/paas/v4(包月额度,
+ * 不烧 MiniMax 按量余额)。bench 对比实验结论:GLM-5.3 语义错误率 0.30 vs MiniMax-M3 0.47。
+ * 写作批改仍走 config.json llm.* 的 MiniMax-M3,与本脚本互不影响。
  */
 import Database from "better-sqlite3";
 import { spawn } from "node:child_process";
@@ -73,9 +77,11 @@ function stripJsonComments(src) {
 }
 const CFG = JSON.parse(stripJsonComments(await readFile(join(process.cwd(), "config.json"), "utf8")));
 const LLM = CFG.llm;
-if (!LLM?.apiKey) { console.error("config.json 缺 llm.apiKey"); process.exit(1); }
-const MODEL = LLM.gradingModel;
-const TIMEOUT_MS = (LLM.timeoutSec ?? 120) * 1000;
+if (!LLM?.glmApiKey) { console.error("config.json 缺 llm.glmApiKey(GLM coding plan key)"); process.exit(1); }
+const MODEL = "glm-5.3";
+const BASE_URL = "https://open.bigmodel.cn/api/coding/paas/v4";
+const API_KEY = LLM.glmApiKey;
+const TIMEOUT_MS = 180000; // GLM 思考模式延迟更高,放宽到 180s(bench 实测)
 
 // ===== DB(裸 SQL,不 import TS schema) =====
 const sqlite = new Database("./data/app.db");
@@ -89,7 +95,8 @@ async function dumpDebug(word, field, n, payload) {
   await writeFile(join(dir, `${field}-try${n}.json`), JSON.stringify(payload, null, 2), "utf8");
 }
 
-// ===== LLM(OpenAI 协议;MiniMax-M3 为推理模型,必须关 thinking —— 写作批改实测教训) =====
+// ===== LLM(GLM-5.3,OpenAI 协议;glm-5.3 为常开思考模型:thinking 必须 enabled,
+//      思考强度用顶层 reasoning_effort 控制;错误码 1113=该端点无额度,1210=参数错) =====
 async function llmJson(userPrompt) {
   const body = {
     model: MODEL,
@@ -99,11 +106,12 @@ async function llmJson(userPrompt) {
     ],
     max_tokens: 4096,
     temperature: 0.6,
-    thinking: { type: "disabled" },
+    thinking: { type: "enabled" },
+    reasoning_effort: "low",
   };
-  const resp = await fetch(`${LLM.baseUrl.replace(/\/+$/, "")}/chat/completions`, {
+  const resp = await fetch(`${BASE_URL.replace(/\/+$/, "")}/chat/completions`, {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${LLM.apiKey}` },
+    headers: { "content-type": "application/json", authorization: `Bearer ${API_KEY}` },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
@@ -172,6 +180,9 @@ const PROMPTS = {
     `- pieces 依序拼合必须覆盖整词拼写(去连字符后逐字符 === ${w})`,
     `输出前自查:把各 piece 依序拼接、去掉连字符和括号,必须与 ${w} 逐字符完全相同——不得多写、漏写或改写任何字母(如 ${w} 不能拼成别的拼写)。`,
     `- piece 写实际参与拼写的字符,禁止括号注记或变体写法(如写 facil 而非 "facil(e)");词源形式接后缀时省音的(如 facile→facil-、able→abil-),按省音后的实际拼写写`,
+    `- **词源真实性是硬约束**:piece 只能是有词典依据的真实词根词缀(源自拉丁/希腊词素的标准构词分析),禁止把单词切成无词源意义的碎片来凑拆分(如 ${w} 不存在"ham+per""chal+leng"这类切法)。`,
+    `- 碰到不认识的词源、或该词是整体不可分析的基础词(如 cat、run 这类简单词),宁可给 type=derived + 单 piece(kind=root、meaningZh 写整词词源含义),也不要杜撰拆分。`,
+    `- root 的 meaningZh 写词素的真实含义,不得与整词释义矛盾;同形前缀要按本词词源取义(如 con- 在 consequence 中= together「共同」,不是「反对」)。`,
   ].join("\n"),
 
   syl: (w, ipa) => [
@@ -182,7 +193,9 @@ const PROMPTS = {
     `规则:`,
     `- parts=字母分段(依序拼合覆盖整词拼写);ipa=每段读音,重音符号 ˈ(主)/ˌ(次)放在对应音节段的 ipa 串开头`,
     `- stress=主重音音节下标(0 起);secondary=次重音下标数组(可省略则 [])`,
+    `- 音节划分按真实发音,每个音节必须含至少一个元音音素;成音节辅音 /l/ /n/ /m/ 可作弱音节核心(如 little 的 /l̩/)`,
     `- phonemes: p=纯音素(**不含重音符号/斜杠**),依序拼合必须 === ipa 拼合去掉重音符号后(逐字符);syl=归属音节下标;type ∈ vowel|consonant;desc=一句发音要领,重复音素(如多次 schwa)desc 允许 ""`,
+    `- 双元音(/aɪ/ /eɪ/ /ɔɪ/ /aʊ/ /əʊ/)是**单个音素**,禁止拆成两个;单音素如 /dʒ/ /tʃ/ /θ/ /ð/ /ŋ/ 同理不可再分`,
     `- **内部自洽是硬约束**:ipa 拼合、phonemes 拼合、parts 拼合三者在去重音符号后必须两两一致对应,不得自行增删音素`,
     `- combos/notes 可省略;combos 记字母组合读音规律(如 ture→/tʃə/ 同 nature/future)`,
   ].join("\n"),
@@ -193,7 +206,8 @@ const PROMPTS = {
     `输出模板:\n{ "derives": [ { "word": "belief", "pos": "n.", "meaningZh": "相信;信念" } ] }`,
     `规则:`,
     `- 2-5 条,优先高频、与 ${w} 形近/同根清晰的派生`,
-    `- pos 用标准缩写(n. / v. / adj. / adv. / phr.);meaningZh 简洁`,
+    `- 派生词必须与 ${w} 同根(真实构词派生,如 believe→belief)或词典公认的近义词;禁止把包含 ${w} 字母串但词源无关的词当派生(如 invest 不是 investigate 的派生词)`,
+    `- 不重复主词本身;pos 用标准缩写(n. / v. / adj. / adv. / phr.,词性组合写 n./v.);meaningZh 简洁准确`,
     `- 覆盖常见派生即可不穷举;确无合适派生时输出 "derives": []`,
   ].join("\n"),
 
@@ -205,6 +219,7 @@ const PROMPTS = {
     `- 2-3 条;coll=真实高频搭配(学术/日常场景优先),collZh=搭配中文`,
     `- en(8-20 词)须自然嵌入该 coll,不得只出现 ${w};各条 coll 不重复`,
     `- en 中须出现 ${w}(允许屈折变体,如 accomplish→accomplished);cn 自然通顺`,
+    `- coll 须能在 en 中按词形(含屈折,如 do→did/done)定位;搭配在例句中的用法须符合 ${w} 的实际语义`,
     `注:例句音频由 TTS 管线另行合成,本调用不生成音频。`,
   ].join("\n"),
 };
@@ -239,6 +254,16 @@ function validate(field, parsed, word, ipaInput) {
       const inputJoined = normIpa(ipaInput);
       if (ipaJoined !== inputJoined) console.warn(`  ℹ syl 音标与库内不同变体(模型标准读音 ${s.ipa?.join("")} vs 库内 ${ipaInput})——内部自洽即放行`);
     }
+    // 重音标记硬校验(100词审查发现的盲区):主重音段首必须 ˈ;ˌ 段必须在 secondary;孤立辅音不成音节
+    const mainSeg = s.ipa?.[s.stress] ?? "";
+    if (mainSeg && !String(mainSeg).startsWith("ˈ")) errs.push(`主重音段 ipa[${s.stress}]「${mainSeg}」缺 ˈ 前缀`);
+    (s.ipa ?? []).forEach((seg, i) => {
+      if (i === s.stress) return;
+      if (String(seg).includes("ˌ") && !(s.secondary ?? []).includes(i)) errs.push(`段${i}「${seg}」带 ˌ 但 secondary 未含`);
+    });
+    (s.parts ?? []).forEach((p, i) => {
+      if (/^[a-z]$/i.test(p) && !/[aeiouy]/i.test(p)) errs.push(`段${i}「${p}」为孤立辅音,不成音节`);
+    });
     if (!Array.isArray(s.phonemes) || !s.phonemes.length) errs.push("phonemes 空");
     else {
       const joined = normIpa(s.phonemes.map((p) => p.p ?? "").join(""));
@@ -257,6 +282,7 @@ function validate(field, parsed, word, ipaInput) {
     const posOk = /^(n|v|adj|adv|phr)\.((\/|\s*)(n|v|adj|adv|phr)\.)*$/;
     for (const it of d) {
       if (!it.word || !it.pos || !it.meaningZh) errs.push(`derives 缺字段: ${JSON.stringify(it).slice(0, 80)}`);
+      if (it.word?.toLowerCase() === word.toLowerCase()) errs.push(`派生词与主词相同: ${it.word}`);
       if (it.pos && !posOk.test(it.pos)) errs.push(`pos 非标准缩写: ${it.pos}`);
     }
   } else if (field === "context") {
@@ -372,8 +398,10 @@ for (const word of WORDS) {
     if (!done) failures[field] = `${TRIES_PER_FIELD} 次尝试均失败(详见 data/mnemonic-debug/${word}/)`;
   }
 
-  // TTS:成功生成的 contexts 逐句合成音频
-  if (generated.contexts?.length) {
+  // TTS:成功生成的 contexts 逐句合成音频(--dry-run 跳过:防止按未入库的新例句覆盖线上音频文件)
+  if (DRY_RUN) {
+    console.log("  (dry-run) 跳过 TTS");
+  } else if (generated.contexts?.length) {
     generated.contexts = await Promise.all(
       generated.contexts.map(async (it, i) => {
         const out = join(process.cwd(), "public", "audio", "contexts", `${safeName(word)}_${i}.mp3`);
