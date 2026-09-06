@@ -922,7 +922,7 @@ function RecogCard(props: {
           autoCapitalize="off"
           spellCheck={false}
           aria-label="拼写练习:键入当前单词后回车"
-          placeholder="拼写这个单词"
+          placeholder="请拼写单词，并回车"
           onChange={(e) => {
             const v = e.target.value.toLowerCase().replace(/[^a-z]/g, "");
             setSpellDraft(v);
