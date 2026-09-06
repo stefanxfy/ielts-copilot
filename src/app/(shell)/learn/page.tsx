@@ -300,7 +300,7 @@ export default function LearnPage() {
   const [extraLoading, setExtraLoading] = useState(false);
   /** 今日记忆轨迹宿主:drawer=复习中侧边抽屉 / modal=完成页弹窗 */
   const [memoryHost, setMemoryHost] = useState<"drawer" | "modal" | null>(null);
-  /** 助记辐射层开关(触发口径:模糊/不认识/判错/查看答案 自动展开;判对零辐射) */
+  /** 助记辐射层开关(触发口径:模糊/不认识/判错/查看答案 自动展开;判对零辐射;💡 灯泡同口径——答案揭示后才显示) */
   const [mnOpen, setMnOpen] = useState(false);
 
   const [imgReady, setImgReady] = useState(false);
@@ -807,7 +807,7 @@ function RecogCard(props: {
   canPrev: boolean;
   canNext: boolean;
   onNav: (d: -1 | 1) => void;
-  /* 助记手动开关(字段全缺 → 按钮隐藏) */
+  /* 助记手动开关(字段全缺 → 按钮隐藏;仅答案揭示后显示:认词卡=revealed,默写卡=done) */
   mnAvailable: boolean;
   mnOpen: boolean;
   onToggleMn: () => void;
@@ -904,7 +904,8 @@ function RecogCard(props: {
   return (
     <div className="w-full max-w-[400px]">
       <div className="recog-stage" ref={stageRef}>
-        {props.mnAvailable && (
+        {/* 灯泡仅答案揭示后可见(模糊/不认识/查看答案),避免辐射层直接剧透干扰自评 */}
+        {props.mnAvailable && revealed && (
           <button
             type="button"
             className={"mn-toggle" + (props.mnOpen ? " mn-toggle-on" : "")}
@@ -1063,7 +1064,7 @@ function DictationCard(props: {
   canPrev: boolean;
   canNext: boolean;
   onNav: (d: -1 | 1) => void;
-  /* 助记手动开关(字段全缺 → 按钮隐藏) */
+  /* 助记手动开关(字段全缺 → 按钮隐藏;仅答案揭示后显示:认词卡=revealed,默写卡=done) */
   mnAvailable: boolean;
   mnOpen: boolean;
   onToggleMn: () => void;
@@ -1284,7 +1285,8 @@ function DictationCard(props: {
   return (
     <div className="w-full max-w-[400px]">
       <div className="recog-stage" ref={stageRef}>
-        {props.mnAvailable && (
+        {/* 灯泡仅作答终结后可见(判错/查看答案),作答态不提供助记防剧透 */}
+        {props.mnAvailable && s.done && (
           <button
             type="button"
             className={"mn-toggle" + (props.mnOpen ? " mn-toggle-on" : "")}
