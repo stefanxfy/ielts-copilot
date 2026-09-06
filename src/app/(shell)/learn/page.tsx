@@ -906,6 +906,11 @@ function RecogCard(props: {
     <div className="recog-spell">
       <div className="recog-spell-line">
         {spellVerdict === "bad" && spellDiff}
+        {!spellDraft && spellVerdict === "none" && (
+          <div className="recog-spell-ph" aria-hidden>
+            请拼写单词，并回车
+          </div>
+        )}
         <input
           className={`word-line-input ${
             spellVerdict === "ok"
@@ -922,7 +927,6 @@ function RecogCard(props: {
           autoCapitalize="off"
           spellCheck={false}
           aria-label="拼写练习:键入当前单词后回车"
-          placeholder="请拼写单词，并回车"
           onChange={(e) => {
             const v = e.target.value.toLowerCase().replace(/[^a-z]/g, "");
             setSpellDraft(v);
