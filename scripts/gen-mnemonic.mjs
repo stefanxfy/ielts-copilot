@@ -267,7 +267,8 @@ const PROMPTS = {
 
   syl: (w, ipa) => [
     `你是英语发音教学专家。为单词 ${w} 生成「音节+音素」双层读音解析。`,
-    `参考音标(库内):${ipa}。若你确信的标准读音与该音标是不同变体(如 /ˈlɪtərətʃə/ 与 /ˈlɪtrətʃər/ 同为词典合法变体),以你确信的读音为准——但输出内部必须完全自洽。`,
+    `参考音标(库内,唯一权威):${ipa}`,
+    `**符号照搬(最高优先级)**:ipa 数组只允许做「音节切分」,所有符号必须严格照搬参考音标——禁止改写任何符号,包括:aʊ↔au、əʊ↔ou 等双元音写法互换、弱读 ə 脱落(ʃən→ʃ(n))、增删 (r)、ɛ↔e、ɪ↔iː 互换;参考音标含 ˈ/ˌ 的原位保留,不含的不得自行添加。你确信的其他读音变体一律放弃——库内音标是唯一标准。`,
     COMMON,
     `输出模板:\n{ "syl": { "parts": ["lit","e","ra","ture"], "ipa": ["lɪt","ə","rə","tʃə"], "stress": 0, "secondary": [], "phonemes": [ { "p": "l", "syl": 0, "type": "consonant", "desc": "边音:舌尖抵上齿龈,气流从舌两侧通过" } ], "combos": [ { "letters": "ture", "sound": "/tʃə/", "desc": "字母组合读音规律" } ], "notes": ["发音要点,1-3 条"] } }`,
     `规则:`,
@@ -275,6 +276,7 @@ const PROMPTS = {
     `- stress=主重音音节下标(0 起);secondary=次重音下标数组(可省略则 [])`,
     `- 音节划分按真实发音,每个音节必须含至少一个元音音素;成音节辅音 /l/ /n/ /m/ 可作弱音节核心(如 little 的 /l̩/)`,
     `- phonemes: p=纯音素(**不含重音符号/斜杠**),依序拼合必须 === ipa 拼合去掉重音符号后(逐字符);syl=归属音节下标;type ∈ vowel|consonant;desc=一句发音要领,重复音素(如多次 schwa)desc 允许 ""`,
+    `- **phonemes 的 p 同样逐符号照搬 ipa(去重音后)**:参考音标是弱读形式时原样保留,禁止在 phonemes 层「还原」听感上的 ə——如参考 /ˈpeɪʃn/ 则该段 phonemes 只能是 ʃ+n(n 作成音节辅音,desc 里说明),禁止写 ʃ+ə+n;参考 /baund/ 则是 b+au+n+d,禁止写 a+ʊ`,
     `- 双元音(/aɪ/ /eɪ/ /ɔɪ/ /aʊ/ /əʊ/)是**单个音素**,禁止拆成两个;单音素如 /dʒ/ /tʃ/ /θ/ /ð/ /ŋ/ 同理不可再分`,
     `- **内部自洽是硬约束**:ipa 拼合、phonemes 拼合、parts 拼合三者在去重音符号后必须两两一致对应,不得自行增删音素`,
     `- combos/notes 可省略;combos 记字母组合读音规律(如 ture→/tʃə/ 同 nature/future)`,
@@ -386,11 +388,25 @@ function validate(field, parsed, word, ipaInput, seedText) {
     if (ipaInput) {
       const ipaJoined = normIpa(s.ipa?.join("") ?? "");
       const inputJoined = normIpa(ipaInput);
-      if (ipaJoined !== inputJoined) console.warn(`  ℹ syl 音标与库内不同变体(模型标准读音 ${s.ipa?.join("")} vs 库内 ${ipaInput})——内部自洽即放行`);
+      // ɛ/e 同音异符(词典混用)映射后比对,与 check-phonetic-consistency.mjs 同规
+      const mapE = (x) => x.replace(/ɛ/g, "e");
+      const variantsIn = (s) => String(s ?? "").replace(/^\/|\/$/g, "").split(/[,;、]/).map((x) => mapE(normIpa(x))).filter(Boolean);
+      const cands = variantsIn(ipaInput);
+      const ok = cands.includes(mapE(ipaJoined));
+      if (ipaInput.includes(",") && ok) console.log(`  ✓ 多变体音标命中其中一项(${ipaJoined})`);
+      if (!ok) {
+        let hint = "";
+        const target = cands[0] ?? "";
+        const fd = [...ipaJoined].findIndex((ch, i) => ch !== target[i]);
+        if (fd >= 0) hint = `；首个分歧@${fd}: 你输出「${ipaJoined.slice(fd, fd + 3)}」候选是「${target.slice(fd, fd + 3)}」——逐字符对齐候选,常见错: 弱音节多写 ə、aʊ/au 与 əʊ/ou 互换、ə 与 ər 混用`;
+        errs.push(`ipa 拼合「${ipaJoined}」≠ phonetic_uk(候选:${cands.join(" / ")})——符号必须照搬库内音标,禁止变体改写${hint}`);
+      }
     }
     // 重音标记硬校验(100词审查发现的盲区):主重音段首必须 ˈ;ˌ 段必须在 secondary;孤立辅音不成音节
+    // 单音节词(parts.length===1)豁免:库内 phonetic_uk 单音节普遍不带 ˈ(如 bid /bɪd/)
+    const singleSyl = (s.parts?.length ?? 0) === 1;
     const mainSeg = s.ipa?.[s.stress] ?? "";
-    if (mainSeg && !String(mainSeg).startsWith("ˈ")) errs.push(`主重音段 ipa[${s.stress}]「${mainSeg}」缺 ˈ 前缀`);
+    if (mainSeg && !singleSyl && !String(mainSeg).startsWith("ˈ")) errs.push(`主重音段 ipa[${s.stress}]「${mainSeg}」缺 ˈ 前缀`);
     (s.ipa ?? []).forEach((seg, i) => {
       if (i === s.stress) return;
       if (String(seg).includes("ˌ") && !(s.secondary ?? []).includes(i)) errs.push(`段${i}「${seg}」带 ˌ 但 secondary 未含`);
@@ -498,7 +514,8 @@ async function runWord(word, opts = {}) {
     return;
   }
 
-  if (REBUILD) for (const k of ["morph", "syl", "derives", "contexts"]) delete content[k];
+  // --rebuild 只删本轮 FIELDS 涉及的字段(--fields=syl 时不误伤已有 morph)
+  if (REBUILD) for (const f of fields) delete content[f === "context" ? "contexts" : f];
 
   const generated = {};   // 成功字段
   const failures = {};    // 失败字段 → 原因
@@ -520,10 +537,14 @@ async function runWord(word, opts = {}) {
     }
     // 种子/判词素材每次 try 保持一致(重试是格式问题,不是素材问题)
     let done = false;
+    let lastReject = "";   // 上轮被拒原因,注入重试 prompt 做错误反馈
     for (let n = 1; n <= TRIES_PER_FIELD && !done; n++) {
       const t0 = Date.now();
       try {
-        const prompt = PROMPTS[field](word, ipa, meaningZh, field === "morph" ? seedText : undefined);
+        const basePrompt = PROMPTS[field](word, ipa, meaningZh, field === "morph" ? seedText : undefined);
+        const prompt = lastReject
+          ? `${basePrompt}\n\n**上一次输出因以下原因被拒,本轮必须修正(其余内容保持合规):**\n${lastReject}`
+          : basePrompt;
         const { parsed, usage, rawContent } = await llmJson(prompt);
         // skip 通道:仅双无证据词合法;拿到即终态,不重试
         if (field === "morph" && parsed.skip === true) {
@@ -543,6 +564,7 @@ async function runWord(word, opts = {}) {
         });
         if (errs.length) {
           console.warn(`  ✗ ${field} try${n} 校验不过: ${errs.join("; ")}`);
+          lastReject = errs.join(";\n");
           continue;
         }
         generated[dbKey] = parsed[dbKey];
