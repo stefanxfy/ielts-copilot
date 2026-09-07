@@ -306,10 +306,10 @@ fn read_port(path: &Path) -> Option<u16> {
 fn attach_job_object(child: &Child) {
     use std::os::windows::io::AsRawHandle;
     use windows_sys::Win32::System::JobObjects::{
-        AssignProcessToJobObject, JobObjectExtendedLimitInformation, SetInformationJobObject,
-        JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+        SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
     };
-    use windows_sys::Win32::System::Threading::CreateJobObjectW;
     unsafe {
         let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
         if job == 0 {
