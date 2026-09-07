@@ -360,12 +360,14 @@ function validate(field, parsed, word, ipaInput, seedText) {
             });
             if (!hit) errs.push(`pieces 均未命中 ECDICT 词根 [${seedMorphs.join(",")}]——疑似杜撰`);
           } else {
-            // morphSeed:双向集合一致(忽略连字符;允许模型把词素写成带前/后缀连字符的形式)
+            // morphSeed:种子词根必须全部被 pieces 覆盖(核心校验——防止模型换掉种子词根);
+            // 但允许 pieces 比种子多(种子常省略前/后缀,如 purchase 只给 chase,over+see 的 over 是合理补充)
             const norm = (s) => s.replace(/[-\s]/g, "").toLowerCase();
-            const genSet = new Set(m.pieces.map((p) => norm(p.piece ?? "")).filter(Boolean));
-            const seedSet = new Set(seedMorphs);
-            const same = genSet.size === seedSet.size && [...genSet].every((g) => seedSet.has(g) || [...seedSet].some((s) => g.endsWith(s) || s.endsWith(g)));
-            if (!same) errs.push(`pieces [${[...genSet].join(",")}] 与词源依据 [${seedMorphs.join(",")}] 不一致——禁止改动词素划分`);
+            const genArr = m.pieces.map((p) => norm(p.piece ?? "")).filter(Boolean);
+            const seedArr = seedMorphs.map(norm);
+            const flexEq = (a, b) => a === b || a.endsWith(b) || b.endsWith(a);
+            const missing = seedArr.filter((s) => !genArr.some((g) => flexEq(g, s)));
+            if (missing.length) errs.push(`种子词根 [${missing.join(",")}] 未出现在 pieces [${genArr.join(",")}]——禁止更换或遗漏词源依据词素`);
           }
         }
       }
