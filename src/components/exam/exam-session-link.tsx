@@ -156,8 +156,8 @@ export function ExamSessionLink({
       {transitioning && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#dfe4ec] border-t-[#1a6feb]" />
-            <div className="text-sm text-[#5a6472]">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-border border-t-primary" />
+            <div className="text-sm text-muted-foreground">
               {nextExamId
                 ? "Saving your answers…"
                 : "Saving & finishing your exam…"}

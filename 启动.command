@@ -28,7 +28,10 @@ fi
 # ---- 3. 产物缺失 → 兜底构建(postbuild 自动产出 next-server/) ----
 if [ ! -f next-server/server.js ]; then
   echo "[启动] 首次运行:安装依赖并构建(数分钟,仅此一次)…"
-  npm install || { read -r -p "构建失败,按回车关闭…" _; exit 1; }
+  # --ignore-scripts:跳过 npm 见 binding.gyp 触发的隐式 node-gyp 编译;
+  # better-sqlite3@13 包内自带全平台预编译,无需编译环境(与 start-windows.ps1 对齐)
+  npm install --ignore-scripts || npm install --ignore-scripts --no-audit --no-fund || \
+    { read -r -p "install 失败,按回车关闭…" _; exit 1; }
   npm run build || { read -r -p "构建失败,按回车关闭…" _; exit 1; }
 fi
 

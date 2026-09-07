@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" font-family="'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif">
+  <!-- 背景 -->
+  <rect width="680" height="480" fill="#f5f3ed"/>
+
+  <!-- 顶部标题 -->
+  <rect x="0" y="0" width="680" height="56" fill="#211d1a"/>
+  <text x="24" y="26" fill="#efeae4" font-size="15" font-weight="600">排查路径演进 · 从误判到真凶</text>
+  <text x="24" y="46" fill="#9b9486" font-size="11">IELTS Copilot · 设置页"前端很卡" · 2026-09-03 21:35 → 22:15</text>
+
+  <!-- 中间纵向参考线 -->
+  <line x1="340" y1="80" x2="340" y2="430" stroke="#d8d3c6" stroke-width="1" stroke-dasharray="2 4"/>
+
+  <!-- ====== 第一轮（左侧）====== -->
+  <!-- 阶段标签 -->
+  <rect x="24" y="76" width="84" height="22" rx="3" fill="#b8323f"/>
+  <text x="66" y="91" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle">第一轮 21:35</text>
+  <rect x="116" y="76" width="60" height="22" rx="3" fill="#e6e2d6" stroke="#b8323f" stroke-width="1"/>
+  <text x="146" y="91" fill="#b8323f" font-size="11" font-weight="600" text-anchor="middle">误判</text>
+
+  <!-- 实测特征卡 -->
+  <rect x="24" y="110" width="292" height="80" rx="6" fill="#ffffff" stroke="#d8d3c6" stroke-width="1"/>
+  <rect x="24" y="110" width="4" height="80" fill="#b8323f"/>
+  <text x="40" y="132" fill="#211d1a" font-size="13" font-weight="600">实测特征</text>
+  <text x="40" y="154" fill="#3d4a5c" font-size="11">· curl 直连：/api/heartbeat ~0.6s</text>
+  <text x="40" y="170" fill="#3d4a5c" font-size="11">· 设置类 API：0.6 ~ 1.7s</text>
+  <text x="40" y="184" fill="#3d4a5c" font-size="11">· 浏览器面板却：5 ~ 17s</text>
+
+  <!-- 误判结论卡 -->
+  <rect x="24" y="204" width="292" height="156" rx="6" fill="#fdf3f3" stroke="#b8323f" stroke-width="1"/>
+  <text x="40" y="226" fill="#b8323f" font-size="13" font-weight="600">误判结论（错的）</text>
+  <text x="40" y="248" fill="#3d4a5c" font-size="11">① dev(Turbopack) 按需编译基线</text>
+  <text x="40" y="266" fill="#3d4a5c" font-size="11">② React StrictMode 双发 effect</text>
+  <text x="40" y="284" fill="#3d4a5c" font-size="11">③ 7 卡并发扇出 14 个请求</text>
+  <text x="40" y="302" fill="#3d4a5c" font-size="11">④ 后台全量 tsc 抢 CPU</text>
+  <text x="40" y="334" fill="#9b9486" font-size="10">结论：dev 慢 ≠ 生产慢，治标不治本</text>
+
+  <!-- 状态圆 ✗ -->
+  <circle cx="170" cy="404" r="18" fill="#b8323f"/>
+  <text x="170" y="409" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">✗</text>
+  <text x="170" y="442" fill="#b8323f" font-size="11" font-weight="600" text-anchor="middle">未定位真因</text>
+
+  <!-- ====== 中间推翻箭头 ====== -->
+  <rect x="316" y="218" width="48" height="64" fill="#211d1a"/>
+  <text x="340" y="246" fill="#efeae4" font-size="11" font-weight="600" text-anchor="middle">推翻</text>
+  <polygon points="370,250 386,244 386,256" fill="#211d1a"/>
+
+  <!-- ====== 第二轮（右侧）====== -->
+  <rect x="408" y="76" width="156" height="22" rx="3" fill="#2f8f3f"/>
+  <text x="486" y="91" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle">第二轮 22:00–22:15</text>
+  <rect x="572" y="76" width="60" height="22" rx="3" fill="#e8f3eb" stroke="#2f8f3f" stroke-width="1"/>
+  <text x="602" y="91" fill="#2f8f3f" font-size="11" font-weight="600" text-anchor="middle">破案</text>
+
+  <!-- 关键观察卡 -->
+  <rect x="364" y="110" width="292" height="80" rx="6" fill="#ffffff" stroke="#d8d3c6" stroke-width="1"/>
+  <rect x="364" y="110" width="4" height="80" fill="#2f8f3f"/>
+  <text x="380" y="132" fill="#211d1a" font-size="13" font-weight="600">关键观察</text>
+  <text x="380" y="154" fill="#3d4a5c" font-size="11">· 整数倍阶梯特征</text>
+  <text x="380" y="170" fill="#b8323f" font-size="11" font-weight="600">  0.6 / 1.2 / 1.6s</text>
+  <text x="380" y="184" fill="#3d4a5c" font-size="11">· 不像随机波动，像固定插桩</text>
+
+  <!-- 三连实验卡 -->
+  <rect x="364" y="204" width="292" height="156" rx="6" fill="#f1f8f3" stroke="#2f8f3f" stroke-width="1"/>
+  <text x="380" y="226" fill="#2f8f3f" font-size="13" font-weight="600">三连实验</text>
+  <text x="380" y="248" fill="#3d4a5c" font-size="11">① raw socket 分离计时</text>
+  <text x="380" y="262" fill="#9b9486" font-size="10">  body 0.000s，但连接前 0.6s</text>
+  <text x="380" y="280" fill="#3d4a5c" font-size="11">② python http.server 对照组</text>
+  <text x="380" y="294" fill="#9b9486" font-size="10">  1 ~ 10ms 正常，排除本机栈</text>
+  <text x="380" y="312" fill="#3d4a5c" font-size="11">③ env -u NODE_OPTIONS 重启</text>
+  <text x="380" y="326" fill="#2f8f3f" font-size="10" font-weight="600">  heartbeat 0.003s（约 200× 提速）</text>
+  <text x="380" y="346" fill="#9b9486" font-size="10">结论：NODE_OPTIONS 注入是唯一变量</text>
+
+  <!-- 状态圆 ✓ -->
+  <circle cx="510" cy="404" r="18" fill="#2f8f3f"/>
+  <text x="510" y="409" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle">✓</text>
+  <text x="510" y="442" fill="#2f8f3f" font-size="11" font-weight="600" text-anchor="middle">真凶定位</text>
+</svg>

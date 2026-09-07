@@ -8,6 +8,34 @@
       "when": 1788174176610,
       "tag": "0000_narrow_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788262284774,
+      "tag": "0001_complete_stone_men",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788334108726,
+      "tag": "0002_vocabulary_books_words_relation",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1788362724535,
+      "tag": "0003_vocabulary_progress_review_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788751853339,
+      "tag": "0004_loud_ben_urich",
+      "breakpoints": true
     }
   ]
 }

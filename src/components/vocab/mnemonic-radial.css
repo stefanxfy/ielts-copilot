@@ -1,0 +1,694 @@
+/* ================================================================
+ * 助记辐射层(mnemonic-radial.tsx 配套样式,自 prototype radial.css 移植)
+ * 全部规则 scope 在 .mn-overlay 下,不污染全局。
+ *
+ * 色板映射表(八套皮肤适配,严禁写死皮肤色):
+ *   卡面/边框/正文/弱文字  → --card / --border / --foreground /
+ *                            --muted / --muted-foreground(全局语义 token)
+ *   高亮次色/按钮         → --primary / --secondary / --ring /
+ *                            --secondary-foreground / --primary-foreground
+ *   四卡语义色相           → 本文件局部变量 --mn-*(固定色相,非皮肤 token):
+ *       syl 读音解析  琥珀棕  /  morph 构词解析  松绿
+ *       context 真实语境 青   /  derive 派生近义 赭金
+ *   各浅底一律 color-mix(色相 × 10~16%, var(--card)) 自动适配任意皮肤;
+ *   暗色皮肤(night)色相提亮覆写,保证 AA 对比度(见下方 night 块)。
+ * ================================================================ */
+
+:root {
+  --mn-syl: #b4530a;
+  --mn-morph: #2f6b4f;
+  --mn-context: #0e7c86;
+  --mn-derive: #8a5a00;
+  /* 音素色片色相(元音暖红 / 辅音靛蓝,固定语义) */
+  --mn-ph-v: #b3421e;
+  --mn-ph-c: #2b5da8;
+}
+html[data-theme="night"] {
+  --mn-syl: #e2a95e;
+  --mn-morph: #85c4a0;
+  --mn-context: #62c8d1;
+  --mn-derive: #d9b25f;
+  --mn-ph-v: #e59070;
+  --mn-ph-c: #8fb6e8;
+}
+
+/* ---------- 蒙层与画布 ---------- */
+
+/* 非阻塞辐射层(v2.6):无蒙版无暗化,容器恒 pointer-events:none,
+ * 下层主卡三键/方向键/灯泡开关全程可点;仅四张助记卡自身可交互。 */
+.mn-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.28s ease, visibility 0.28s ease;
+}
+.mn-overlay.mn-on {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mn-scaler {
+  position: relative;
+  flex-shrink: 0;
+}
+/* 固定 1500×1000 无界画布,整体 scale(卡间零挤压零遮挡) */
+.mn-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1500px;
+  height: 1000px;
+  transform-origin: top left;
+}
+.mn-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---------- 四张助记卡 ---------- */
+
+.mn-card {
+  position: absolute;
+  z-index: 4;
+  width: 300px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--c, var(--border));
+  background: var(--card);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--foreground) 8%, transparent);
+  padding: 16px 18px;
+  opacity: 0;
+  visibility: hidden;
+  /* 初始位:堆在主卡中心缩成一点(辐射动画起点,JS 写 left/top/transform) */
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%) scale(0.2);
+  pointer-events: none;
+}
+.mn-card.mn-empty {
+  display: none;
+}
+.mn-card.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    transform 0.7s cubic-bezier(0.22, 1.35, 0.36, 1),
+    opacity 0.35s ease;
+}
+.mn-card.hide {
+  opacity: 0;
+  transition: transform 0.3s ease-in, opacity 0.3s ease-in;
+}
+
+.mn-card.mn-syl {
+  --c: var(--mn-syl);
+  --cbg: color-mix(in srgb, var(--mn-syl) 12%, var(--card));
+}
+.mn-card.mn-morph {
+  --c: var(--mn-morph);
+  --cbg: color-mix(in srgb, var(--mn-morph) 12%, var(--card));
+}
+.mn-card.mn-derive {
+  --c: var(--mn-derive);
+  --cbg: color-mix(in srgb, var(--mn-derive) 12%, var(--card));
+}
+.mn-card.mn-context {
+  --c: var(--mn-context);
+  --cbg: color-mix(in srgb, var(--mn-context) 12%, var(--card));
+}
+
+/* 卡内限高(内容多时滚动,不挤压画布) */
+.mn-card.mn-syl.show {
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.mn-card.mn-morph.show {
+  max-height: 420px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.mn-card.mn-context.show {
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.mn-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mn-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  flex-shrink: 0;
+  background: var(--c, var(--muted));
+}
+.mn-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--c, var(--foreground));
+}
+.mn-sub {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-left: auto;
+}
+
+/* 卡内内容逐行浮现 */
+.mn-body > * {
+  opacity: 0;
+}
+.mn-card.show .mn-body > * {
+  animation: mn-riseIn 0.4s ease forwards;
+}
+.mn-card.show .mn-body > *:nth-child(1) { animation-delay: 0.45s; }
+.mn-card.show .mn-body > *:nth-child(2) { animation-delay: 0.55s; }
+.mn-card.show .mn-body > *:nth-child(3) { animation-delay: 0.65s; }
+.mn-card.show .mn-body > *:nth-child(4) { animation-delay: 0.75s; }
+.mn-card.show .mn-body > *:nth-child(5) { animation-delay: 0.85s; }
+.mn-card.show .mn-body > *:nth-child(6) { animation-delay: 0.95s; }
+@keyframes mn-riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- 卡内通用条目 ---------- */
+
+.mn-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mn-chip {
+  border-radius: 8px;
+  background: var(--cbg, var(--muted));
+  color: var(--c, var(--foreground));
+  font-size: 12px;
+  padding: 4px 9px;
+  font-weight: 600;
+}
+.mn-line {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+.mn-line b {
+  color: var(--c);
+}
+.mn-pair {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.mn-pair .en {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--c);
+}
+.mn-pair .cn {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.mn-kind {
+  font-size: 10px;
+  color: var(--c, var(--foreground));
+  background: var(--cbg, var(--muted));
+  border-radius: 6px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+  align-self: center;
+  letter-spacing: 0.03em;
+}
+.mn-block-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+  margin-bottom: 4px;
+}
+
+/* ---------- 构词解析卡(morph 三型) ---------- */
+
+.mn-morph-type {
+  background: var(--cbg, var(--muted));
+  color: var(--c, var(--foreground));
+  font-weight: 700;
+  border: 1px solid var(--c, var(--border));
+}
+.mn-morph-strip {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 6px;
+}
+.mn-morph-piece {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--cbg, var(--muted));
+  color: var(--c, var(--foreground));
+  border: 1px solid var(--c, var(--border));
+  border-radius: 9px;
+  padding: 5px 10px 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.mn-morph-piece small {
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 10px;
+  opacity: 0.8;
+  margin-top: 2px;
+  text-align: center;
+}
+.mn-morph-plus {
+  align-self: center;
+  color: var(--c, var(--foreground));
+  font-weight: 700;
+  font-size: 16px;
+}
+.mn-morph-from {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  margin-top: 2px;
+}
+.mn-morph-from b {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--c, var(--foreground));
+}
+
+/* ---------- 派生·词性·近义卡(derive) ---------- */
+
+.mn-card.mn-derive .mn-pair {
+  padding: 3px 0;
+}
+
+/* ---------- 真实语境卡(context) ---------- */
+
+.mn-ctx-item {
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.mn-ctx-item:last-child {
+  border-bottom: none;
+}
+.mn-ctx-en {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--foreground);
+  font-weight: 500;
+}
+.mn-ctx-coll {
+  background: var(--cbg, color-mix(in srgb, var(--mn-context) 12%, var(--card)));
+  color: var(--c, var(--mn-context));
+  font-weight: 700;
+  padding: 0 3px;
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.mn-ctx-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  border: none;
+  border-radius: 50%;
+  background: var(--cbg, var(--muted));
+  color: var(--c, var(--mn-context));
+  cursor: pointer;
+  vertical-align: middle;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.mn-ctx-play:hover {
+  transform: scale(1.15);
+  background: var(--c, var(--mn-context));
+  color: var(--card);
+}
+.mn-ctx-cn {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+
+/* ---------- 读音解析卡(syl) ---------- */
+
+.mn-syl-word-line {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+.mn-syl-chip-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.mn-syl-unit {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1.35, 0.36, 1);
+}
+.mn-card.show .mn-syl-unit {
+  opacity: 1;
+  transform: none;
+}
+.mn-card.show .mn-syl-unit:nth-child(1) { transition-delay: 0.5s; }
+.mn-card.show .mn-syl-unit:nth-child(2) { transition-delay: 0.6s; }
+.mn-card.show .mn-syl-unit:nth-child(3) { transition-delay: 0.7s; }
+.mn-card.show .mn-syl-unit:nth-child(4) { transition-delay: 0.8s; }
+.mn-card.show .mn-syl-unit:nth-child(5) { transition-delay: 0.9s; }
+.mn-syl-unit-idx {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cbg);
+  color: var(--c);
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mn-syl-unit-ipa {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.mn-syl-unit-mark {
+  font-size: 10px;
+  color: var(--c);
+  font-weight: 600;
+}
+.mn-syl-unit-mark-dim {
+  color: var(--muted-foreground);
+  font-weight: 400;
+  opacity: 0.6;
+}
+.mn-syl-unit.stress .mn-syl-unit-idx {
+  background: var(--c);
+  color: var(--card);
+}
+.mn-syl-block {
+  display: inline-block;
+  padding: 2px 11px 4px;
+  border-radius: 10px;
+  background: var(--cbg);
+  border: 1.5px solid var(--c);
+  color: var(--c);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 16px;
+}
+.mn-syl-block.stress {
+  background: var(--c);
+  border-color: var(--c);
+  color: var(--card);
+  animation: mn-stress-pulse 0.7s ease 0.75s;
+}
+@keyframes mn-stress-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+/* ---------- 音素层(色片条 + 细讲抽屉) ---------- */
+
+.mn-ph-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 9px 0 7px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--muted);
+}
+.mn-ph-group {
+  display: inline-flex;
+  gap: 3px;
+}
+.mn-ph-group + .mn-ph-group::before {
+  content: "·";
+  color: var(--muted-foreground);
+  opacity: 0.55;
+  margin-right: 4px;
+  line-height: 1;
+  align-self: center;
+}
+.mn-ph-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 21px;
+  padding: 2px 5px 3px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  line-height: 1.25;
+  cursor: default;
+}
+.mn-ph-chip.ph-v {
+  background: color-mix(in srgb, var(--mn-ph-v) 16%, var(--card));
+  color: var(--mn-ph-v);
+}
+.mn-ph-chip.ph-c {
+  background: color-mix(in srgb, var(--mn-ph-c) 16%, var(--card));
+  color: var(--mn-ph-c);
+}
+.mn-ph-chip.ph-thin {
+  font-weight: 500;
+  opacity: 0.8;
+}
+.mn-ph-legend {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.mn-ph-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.mn-ph-legend .lg-v {
+  background: color-mix(in srgb, var(--mn-ph-v) 30%, var(--card));
+}
+.mn-ph-legend .lg-c {
+  background: color-mix(in srgb, var(--mn-ph-c) 30%, var(--card));
+  margin-left: 6px;
+}
+.mn-ph-toggle {
+  width: 100%;
+  border: 1px dashed var(--ring);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border-radius: 9px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mn-ph-toggle:hover {
+  border-color: var(--primary);
+}
+.mn-ph-toggle .mn-ph-caret {
+  font-size: 9px;
+  opacity: 0.7;
+}
+.mn-ph-detail {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+.mn-ph-row {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 3px 0;
+}
+.mn-ph-sym {
+  flex-shrink: 0;
+  min-width: 24px;
+  text-align: center;
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 1px 5px 2px;
+}
+.mn-ph-syl-ref {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+.mn-ph-desc {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--foreground);
+}
+.mn-ph-combo {
+  font-size: 12px;
+  padding: 5px 0;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+.mn-ph-combo b {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--c);
+  background: var(--cbg);
+  border-radius: 6px;
+  padding: 1px 6px 2px;
+  margin-right: 4px;
+}
+.mn-ph-combo-desc {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  margin-top: 1px;
+}
+.mn-ph-note {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--foreground);
+  padding: 4px 9px;
+  margin: 3px 0;
+  border-radius: 8px;
+  background: var(--secondary);
+}
+
+/* ---------- SVG 连线 ---------- */
+
+.mn-wire {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+.mn-wires.drawn .mn-wire {
+  opacity: 0.85;
+  animation: mn-wire-grow 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.mn-wires.drawn .mn-wire:nth-of-type(1) { animation-delay: 0.12s; }
+.mn-wires.drawn .mn-wire:nth-of-type(2) { animation-delay: 0.2s; }
+.mn-wires.drawn .mn-wire:nth-of-type(3) { animation-delay: 0.28s; }
+.mn-wires.drawn .mn-wire:nth-of-type(4) { animation-delay: 0.36s; }
+@keyframes mn-wire-grow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.mn-wire.hl {
+  stroke-width: 3.5;
+  opacity: 1;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.mn-wire-dot {
+  opacity: 0;
+}
+.mn-wires.drawn .mn-wire-dot {
+  animation: mn-dot-pop 0.4s ease 0.5s forwards;
+}
+@keyframes mn-dot-pop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- /learn 主卡右上角手动开关(page.tsx 渲染,不在蒙层内) ---------- */
+
+.mn-toggle {
+  position: absolute;
+  top: 8px;
+  right: -58px;
+  z-index: 6;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-size: 17px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--foreground) 10%, transparent);
+  transition: all 0.15s ease;
+}
+.mn-toggle:hover {
+  border-color: var(--ring);
+  color: var(--foreground);
+  transform: scale(1.06);
+}
+.mn-toggle.mn-toggle-on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+@media (max-width: 560px) {
+  .mn-toggle {
+    right: 8px;
+    top: 8px;
+  }
+}

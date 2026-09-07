@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" width="100%" role="img">
+  <title>词库导入异步任务流程</title>
+  <desc>POST 创建任务后四步串行推进,每步幂等可续跑,失败不阻塞导入主流程</desc>
+  <rect x="0" y="0" width="680" height="400" fill="#FFFFFF"/>
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">词库导入:异步任务四步流水线(#61)</text>
+
+  <rect x="40" y="60" width="176" height="72" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="128" y="86" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#0C447C" text-anchor="middle">解析去重</text>
+  <text x="128" y="106" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5" text-anchor="middle">一行一词 · #注释跳过</text>
+  <text x="128" y="121" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5" text-anchor="middle">小写化 · 屈折归并</text>
+
+  <path d="M216 96 L250 96" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <rect x="254" y="60" width="176" height="72" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="342" y="86" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#0C447C" text-anchor="middle">百词斩 join</text>
+  <text x="342" y="106" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5" text-anchor="middle">逐词 GET jsDelivr</text>
+  <text x="342" y="121" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5" text-anchor="middle">超时 8s · 重试 3 · 未命中跳过</text>
+
+  <path d="M430 96 L464 96" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <rect x="468" y="60" width="172" height="72" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="554" y="86" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#0C447C" text-anchor="middle">ECDICT 补全 + 入库</text>
+  <text x="554" y="106" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5" text-anchor="middle">词频/星级/词形/词根</text>
+  <text x="554" y="121" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#185FA5" text-anchor="middle">词已存在只补空字段</text>
+
+  <path d="M554 132 L554 168" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <rect x="40" y="172" width="290" height="88" rx="10" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.5"/>
+  <text x="185" y="198" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#633806" text-anchor="middle">edge-tts 批量合成(并发 4)</text>
+  <text x="185" y="218" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B" text-anchor="middle">单词 mp3 → public/audio/words/</text>
+  <text x="185" y="234" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B" text-anchor="middle">例句 mp3 → public/audio/sentences/</text>
+  <text x="185" y="250" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#854F0B" text-anchor="middle">落盘后回写 contentJson.audio</text>
+
+  <rect x="350" y="172" width="290" height="88" rx="10" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+  <text x="495" y="198" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#3C3489" text-anchor="middle">核心词生图(genStrategy=core 时)</text>
+  <text x="495" y="218" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">阈值筛:collins≥3 或 bncRank≤2000</text>
+  <text x="495" y="234" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">MiniMax image-01 → public/images/words/</text>
+  <text x="495" y="250" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#534AB7" text-anchor="middle">失败不阻塞 · 单词级可重生成</text>
+
+  <path d="M330 216 L346 216" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  <path d="M495 260 L495 296" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <rect x="40" y="300" width="600" height="64" rx="10" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+  <text x="64" y="324" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#085041">任务完成汇报</text>
+  <text x="64" y="344" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#0F6E56">词书建好 · 命中率 · 音频数 · 生图数 · 未命中 N 词清单(缺料词标记,后续可人工补)</text>
+
+  <text x="40" y="392" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">幂等约定:任何一步重跑不覆盖已有内容;音频/图片已存在直接跳过;任务状态落 app_settings 或内存任务表。</text>
+</svg>

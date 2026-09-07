@@ -1,0 +1,5 @@
+# CI 生成物,不入 git
+/target
+/server
+/runtime
+/gen/schemas

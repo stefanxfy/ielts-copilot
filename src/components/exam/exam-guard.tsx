@@ -307,9 +307,9 @@ export function ExamGuard() {
         title="点击运行防护自检"
         className="fixed right-3 bottom-3 z-50 cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium shadow-sm select-none"
         style={{
-          background: armed ? "#eefaf3" : "#f2f3f5",
-          borderColor: armed ? "#cde8da" : "#dfe4ec",
-          color: armed ? "#18925c" : "#8a93a2",
+          background: armed ? "var(--success)" : "var(--muted)",
+          borderColor: armed ? "var(--success)" : "var(--border)",
+          color: armed ? "var(--success)" : "var(--muted-foreground)",
         }}
       >
         {armed

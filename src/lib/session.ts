@@ -14,6 +14,7 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { examRecords, examSessions, examSets, papers } from "@/db/schema";
+import { recordExamSetCompletion } from "@/lib/study/activities";
 
 /** 四舍五入到最近 0.5(雅思 band 步进) */
 export function roundToHalf(n: number): number {
@@ -125,6 +126,14 @@ export function finalizeIfComplete(sessionId: string): boolean {
   const db = getDb();
   if (!isSessionComplete(sessionId)) return false;
 
+  // 幂等埋点:只有首次 IN_PROGRESS → COMPLETED 转换才计套卷完成,
+  // 重复 finalize(同科重试再触发)不重复计数
+  const current = db
+    .select({ status: examSessions.status })
+    .from(examSessions)
+    .where(eq(examSessions.sessionId, sessionId))
+    .get();
+
   const snap = computeSessionOverall(sessionId);
   if (!snap) return false;
 
@@ -137,6 +146,10 @@ export function finalizeIfComplete(sessionId: string): boolean {
     })
     .where(eq(examSessions.sessionId, sessionId))
     .run();
+
+  if (current && current.status !== "COMPLETED") {
+    recordExamSetCompletion(); // P7 活动埋点(旁路,失败不阻塞)
+  }
   return true;
 }
 

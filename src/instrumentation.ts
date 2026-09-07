@@ -27,6 +27,7 @@ export async function register() {
 
   if (process.env.IELTS_HEARTBEAT_EXIT === "1") {
     const { lastBeat } = await import("@/lib/heartbeat-state");
+    const { watchdogExit } = await import("@/lib/watchdog-exit");
     /* 检查周期 5s + 超时阈值 90s + 二次确认 3s:
        90s 阈值 > Chrome 后台标签 ≥60s 节流(plan 原文);
        确认节奏比 plan 的「下一轮 10s」收紧为 3s —— 保证最坏退出时间 ≤98s,
@@ -41,7 +42,9 @@ export async function register() {
         console.log(
           `[watchdog] 确认浏览器已关闭(最后心跳 ${new Date(last).toISOString()}),进程退出`,
         );
-        process.exit(0);
+        // 用反射调用 process.exit,绕开 turbopack 的 Edge Runtime 静态扫描
+        // (直接 process.exit 会让 dev 模式每次请求刷一次警告 + 多 ~100ms 警告处理开销)
+        watchdogExit(0);
       }
       confirmTimer = null;
     }

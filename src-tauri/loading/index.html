@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN" data-page-node-id="EF9w0f4l9TGOJfeEnRePUd">
+<head data-page-node-id="CLkjRaEBnyH974scDEhtqQ">
+  <meta charset="utf-8" data-page-node-id="sbeSP000xvmUof16Gvs1ZP" />
+  <title>IELTS Copilot</title>
+  <style>
+    :root {
+      --bg: #f7f3ea;         /* 米色底 */
+      --ink: #292524;        /* 石墨主文 */
+      --muted: #8a8177;      /* 次级灰 */
+      --amber: #b45309;      /* 麦田琥珀(主题 ramp 600 级) */
+      --amber-soft: #f59e0b; /* ramp 500 */
+      --track: #e7e0d2;      /* 进度底 */
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 28px; background: var(--bg); color: var(--ink);
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    }
+    .mark {
+      width: 84px; height: 84px; border-radius: 22px;
+      background: linear-gradient(135deg, var(--amber-soft), var(--amber));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 30px rgba(180, 83, 9, 0.25);
+    }
+    .mark svg { width: 46px; height: 46px; }
+    h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.04em; }
+    .status-row { display: flex; align-items: center; gap: 12px; }
+    .spinner {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2.5px solid var(--track); border-top-color: var(--amber);
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #status { font-size: 14px; color: var(--muted); min-width: 220px; }
+    .bar { width: 240px; height: 4px; border-radius: 2px; background: var(--track); overflow: hidden; }
+    .bar i {
+      display: block; height: 100%; width: 40%; border-radius: 2px;
+      background: linear-gradient(90deg, var(--amber-soft), var(--amber));
+      animation: slide 1.4s ease-in-out infinite;
+    }
+    @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+    #status.err { color: #b91c1c; }
+    #status.err ~ .bar, .bar.hold { display: none; }
+  </style>
+</head>
+<body data-page-node-id="nF3i1E5BrsBf94lTWib14p">
+  <div class="mark" data-page-node-id="L5XbasusfAVuAiS6lNgQmq">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round" data-page-node-id="HVYpExWE3LdYWGnkqO08SR">
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21z" data-page-node-id="fGUDFgLPEBAbdnlEP3YFl0"/>
+      <path d="M4 18.5V21h16" data-page-node-id="pIq2DR6AJPZ71s4hzGqwwh"/>
+      <path d="M8.5 8h7M8.5 11.5h5" data-page-node-id="Uf9LtY9gkCp8aPTUguoDU2"/>
+    </svg>
+  </div>
+  <h1 data-page-node-id="4kbb9VLxWmsCOHiXMxtfnM">IELTS Copilot</h1>
+  <div class="status-row" data-page-node-id="EQyYt4Atm1EJPlPyEMfptH">
+    <div class="spinner" data-page-node-id="EvEK4YyvVHoiJXckz3uVQL"></div>
+    <span id="status" data-page-node-id="Y9QZYE1o45YIXmHjiwv9LI">正在启动本地服务…</span>
+  </div>
+  <div class="bar" id="bar" data-page-node-id="JGxFAAudrmyP3szWGbJTgo"><i data-page-node-id="FxDbhuWIuII6K70WkmWTqM"></i></div>
+  <script>
+    /* 壳(Rust)通过 eval 调用 __set_status 更新文案;前缀「失败」即切错误态 */
+    window.__set_status = function (msg) {
+      var el = document.getElementById("status");
+      el.textContent = msg;
+      if (msg.indexOf("失败") !== -1 || msg.indexOf("占用") !== -1) {
+        el.classList.add("err");
+        document.getElementById("bar").classList.add("hold");
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 420" width="100%" role="img">
+  <title>新东方雅思词汇 3575:数据转换映射</title>
+  <desc>词书 JSON 字段经转换脚本归一化后落入 words 三表与资产目录</desc>
+  <rect x="0" y="0" width="680" height="420" fill="#FFFFFF"/>
+  <defs>
+    <marker id="arrowX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <text x="40" y="34" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">新东方雅思词汇 3575:数据转换映射</text>
+
+  <!-- 源 JSON -->
+  <rect x="40" y="60" width="180" height="240" rx="12" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+  <text x="60" y="86" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#444441">词书 JSON(3575 词)</text>
+  <text x="60" y="103" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">IELTS_3 · 百词斩 JSONL</text>
+  <text x="60" y="132" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">trans(释义+英释) 100%</text>
+  <text x="60" y="152" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">sentence(例句) 96%</text>
+  <text x="60" y="172" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">relWord(同根) 81%</text>
+  <text x="60" y="192" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">phrase(词组) 70%</text>
+  <text x="60" y="212" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">remMethod(拆分) 68%</text>
+  <text x="60" y="232" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">ukphone 99.5%(坑:'非 ˈ)</text>
+  <text x="60" y="268" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">ukspeech/usspeech 在线</text>
+  <text x="60" y="284" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">TTS 参数 → 丢弃</text>
+
+  <!-- 转换 -->
+  <rect x="270" y="90" width="160" height="180" rx="12" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+  <text x="290" y="116" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="500" fill="#0C447C">转换脚本</text>
+  <text x="290" y="137" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">音标 '→ˈ + /…/ 包裹</text>
+  <text x="290" y="157" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">释义清洗·pos 合并</text>
+  <text x="290" y="177" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">与存量 633 词去重</text>
+  <text x="290" y="197" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">词组/同根/拆分种子</text>
+  <text x="290" y="217" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#444441">dry-run 报告先行</text>
+  <text x="290" y="245" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">净新增 2942 词</text>
+
+  <!-- words -->
+  <rect x="480" y="52" width="170" height="120" rx="12" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+  <text x="500" y="76" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#444441">words + contentJson</text>
+  <text x="500" y="96" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">phonetic_uk · translation</text>
+  <text x="500" y="113" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">definition · examples[0](判分)</text>
+  <text x="500" y="130" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">collocations · derives</text>
+  <text x="500" y="147" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">morphSeed(拆分原文)</text>
+  <text x="500" y="164" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">contexts 全例句(src=example)</text>
+
+  <!-- bwr -->
+  <rect x="480" y="192" width="170" height="52" rx="12" fill="#FFFFFF" stroke="#D3D1C7" stroke-width="0.5"/>
+  <text x="500" y="214" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#444441">book_word_relation</text>
+  <text x="500" y="232" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">order = wordRank 学习序</text>
+
+  <!-- assets -->
+  <rect x="480" y="264" width="170" height="80" rx="12" fill="#EAF5EC" stroke="#8FC9A2" stroke-width="0.5"/>
+  <text x="500" y="288" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#1E5B33">public/ 资产目录</text>
+  <text x="500" y="308" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">audio/words(Andrew -8%)</text>
+  <text x="500" y="325" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">audio/sentences(Emma -8%)</text>
+  <text x="500" y="342" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">images/words(核心词)</text>
+
+  <path d="M220 180 L266 180" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrowX)"/>
+  <path d="M430 150 L476 112" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrowX)"/>
+  <path d="M430 180 L476 218" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrowX)"/>
+  <path d="M430 210 L476 290" fill="none" stroke="#888780" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrowX)"/>
+  <text x="436" y="252" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">异步分阶段</text>
+
+  <text x="40" y="340" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">存量 633 重叠词:主内容不动(origin=baicizhan 先到),仅补 collocations / morphSeed 种子</text>
+  <text x="40" y="358" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">affix 特殊词(kind=affix)不参与匹配,词根唯一权威不受影响</text>
+  <text x="40" y="392" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">syno(同近义 93%)不落库:与 derives 职责重叠,LLM 种子经脚本直读 JSON 注入</text>
+</svg>

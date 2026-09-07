@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 490" width="100%" role="img">
+  <title>助记 LLM 异步生成管线（v2.3：五次独立调用）</title>
+  <desc>词库导入触发 → 任务队列限速 → ①morph ②syl ③derives ④collocations 并行 / ⑤contexts 依赖④串行 → 写回 SQLite contentJson → 进度可视化; prompt 可在设置修改; 单类失败独立重试</desc>
+
+  <defs>
+    <marker id="arrP" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L6 4 L0 8 Z" fill="#888780"/>
+    </marker>
+    <marker id="arrDep" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L6 4 L0 8 Z" fill="#0C447C"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="680" height="490" fill="#FFFFFF"/>
+  <text x="40" y="36" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="500" fill="#2C2C2A">LLM 助记异步管线(v2.3): 五次独立调用, 单类失败独立重试</text>
+  <text x="40" y="54" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" fill="#888780">词库导入触发 → 任务队列 → ①morph ②syl ③derives ④collocations 并行 / ⑤contexts 依赖④串行 → 写回 SQLite</text>
+
+  <!-- 节点 1: 词库导入触发 -->
+  <rect x="30" y="80" width="150" height="50" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="1"/>
+  <text x="105" y="100" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#0C447C">词库导入</text>
+  <text x="105" y="118" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">或 补全助记 / affix 词根书</text>
+
+  <!-- 节点 2: 任务队列 -->
+  <rect x="250" y="80" width="150" height="50" rx="10" fill="#FAEEDB" stroke="#C2904A" stroke-width="1"/>
+  <text x="325" y="100" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#6B4614">任务队列</text>
+  <text x="325" y="118" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">限速 2 并发 · 逐词</text>
+
+  <!-- fan-out 到四个并行 LLM 节点 -->
+  <path d="M325 130 L325 145 L102 145 L102 170" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrP)"/>
+  <path d="M325 130 L325 152 L262 152 L262 170" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrP)"/>
+  <path d="M325 130 L325 158 L422 158 L422 170" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrP)"/>
+  <path d="M325 130 L325 164 L582 164 L582 170" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arrP)"/>
+
+  <!-- 四个并行 LLM 调用节点 -->
+  <rect x="30" y="170" width="145" height="58" rx="10" fill="#FFFFFF" stroke="#888780" stroke-width="1"/>
+  <text x="102" y="192" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#2C2C2A">① morph</text>
+  <text x="102" y="210" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">构词解析</text>
+  <text x="102" y="222" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">独立调用·独立重试</text>
+
+  <rect x="190" y="170" width="145" height="58" rx="10" fill="#FFFFFF" stroke="#888780" stroke-width="1"/>
+  <text x="262" y="192" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#2C2C2A">② syl</text>
+  <text x="262" y="210" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">音节+音素</text>
+  <text x="262" y="222" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">独立调用·独立重试</text>
+
+  <rect x="350" y="170" width="145" height="58" rx="10" fill="#FFFFFF" stroke="#888780" stroke-width="1"/>
+  <text x="422" y="192" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#2C2C2A">③ derives</text>
+  <text x="422" y="210" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">派生·近义</text>
+  <text x="422" y="222" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">独立调用·独立重试</text>
+
+  <rect x="510" y="170" width="145" height="58" rx="10" fill="#FFFFFF" stroke="#888780" stroke-width="1"/>
+  <text x="582" y="192" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#2C2C2A">④ collocations</text>
+  <text x="582" y="210" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">词组搭配</text>
+  <text x="582" y="222" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">独立调用·独立重试</text>
+
+  <!-- 并行说明 -->
+  <text x="30" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9.5" fill="#888780">①②③④ 并行: 各自独立 LLM 调用, 单类失败独立重试, 不影响其余三类</text>
+
+  <!-- contexts 依赖 collocations 串行 -->
+  <rect x="510" y="256" width="145" height="52" rx="10" fill="#FFFFFF" stroke="#0C447C" stroke-width="1"/>
+  <text x="582" y="278" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#0C447C">⑤ contexts</text>
+  <text x="582" y="296" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">语境(挂接词组)</text>
+  <path d="M582 228 L582 256" fill="none" stroke="#0C447C" stroke-width="1.5" marker-end="url(#arrDep)"/>
+  <text x="525" y="246" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#0C447C">依赖④ collocations, 串行</text>
+
+  <!-- 合并写 SQLite -->
+  <rect x="265" y="340" width="150" height="56" rx="10" fill="#EAF3DE" stroke="#97C459" stroke-width="1"/>
+  <text x="340" y="362" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="500" fill="#3F6328">写 SQLite</text>
+  <text x="340" y="380" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#5F5E5A">contentJson</text>
+  <text x="340" y="392" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">幂等合并·单类独立</text>
+
+  <path d="M102 228 L102 300 L340 300 L340 340" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrP)"/>
+  <path d="M262 228 L262 312 L340 312 L340 340" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrP)"/>
+  <path d="M422 228 L422 324 L340 324 L340 340" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrP)"/>
+  <path d="M582 308 L582 332 L340 332 L340 340" fill="none" stroke="#0C447C" stroke-width="1.2" marker-end="url(#arrP)"/>
+
+  <!-- 下游三节点 -->
+  <rect x="30" y="420" width="180" height="44" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="1"/>
+  <text x="120" y="438" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#0C447C">词书详情页进度</text>
+  <text x="120" y="454" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#5F5E5A">X / 567 · 可取消</text>
+
+  <rect x="250" y="420" width="180" height="44" rx="10" fill="#F1EFE8" stroke="#888780" stroke-width="0.8"/>
+  <text x="340" y="438" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#2C2C2A">配置项(prompt 可改)</text>
+  <text x="340" y="454" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#5F5E5A">mnemonic.prompts.*</text>
+
+  <rect x="470" y="420" width="180" height="44" rx="10" fill="#FFFFFF" stroke="#B4B2A9" stroke-width="0.8" stroke-dasharray="3 3"/>
+  <text x="560" y="438" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="11" font-weight="500" fill="#5F5E5A">缺类降级显示</text>
+  <text x="560" y="454" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#888780">单类失败→收起该区块</text>
+
+  <path d="M340 396 L120 420" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrP)"/>
+  <path d="M340 396 L340 420" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrP)"/>
+  <path d="M340 396 L560 420" fill="none" stroke="#888780" stroke-width="1.2" marker-end="url(#arrP)"/>
+
+  <!-- 底部说明 -->
+  <text x="40" y="476" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="10" fill="#888780">复用 import pipeline: tasks 表 / status / 限速 / 重试 / 取消 / DELETE 接口全部沿用 · 五类 prompt 存 app_settings 可改</text>
+</svg>

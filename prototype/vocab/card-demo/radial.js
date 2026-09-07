@@ -1,0 +1,1133 @@
+/* 辐射助记卡原型 · 中心词卡 + 思维导图助记（纯前端模拟，无后端依赖） */
+
+// ---------- 词数据（words 表 contentJson 真实数据 + 助记字段模拟） ----------
+const WORDS = {
+  abandon: {
+    word: "abandon",
+    ipa: "/əˈbændən/",
+    syl: {
+      parts: ["a", "ban", "don"], ipa: ["ə", "bæn", "dən"], stress: 1,
+      phonemes: [{ p: "ə" }, { p: "b" }, { p: "æ" }, { p: "n" }, { p: "d" }, { p: "ə" }, { p: "n" }],
+    },
+    translation: "v. 抛弃，放弃",
+    example: {
+      en: "He abandoned his car in the desert.",
+      cn: "他在沙漠中抛弃了车子。",
+    },
+    pos: "v.",
+    img: "img/abandon.png",
+    morph: {
+      type: "derived",
+      literal: "处于(被)命令(放弃)的状态 → 抛弃",
+      pieces: [
+        { piece: "a-", kind: "前缀", meaningZh: "处于…状态（ad- 的同化变体）" },
+        { piece: "band", kind: "词根", meaningZh: "控制、命令（日耳曼 *bannôn，同 ban 禁令）" },
+        { piece: "-on", kind: "后缀", meaningZh: "动词后缀" },
+      ],
+      story: { anchor: "band", meaning: "n. 乐队；带子", text: "乐队(band)散场，大家把乐器一扔各自走人——abandon" },
+    },
+    // v2.5 真实语境：contexts 单字段自含词组（coll/collZh 内嵌），audio 对齐 examples[].audio 契约
+    contexts: [
+      { coll: "abandon ship", collZh: "弃船（逃生口令）", en: "The captain ordered everyone to abandon ship when the hull cracked.", cn: "船体破裂时船长下令全员弃船。" },
+      { coll: "abandon hope", collZh: "放弃希望", en: "We must never abandon hope, even in the darkest times.", cn: "即便在最黑暗的时候也不能放弃希望。" },
+      { coll: "abandon a plan", collZh: "放弃计划", en: "They abandoned the plan after the budget was cut.", cn: "预算被砍后他们放弃了那个计划。" },
+    ],
+    derives: [
+      { en: "abandoned", cn: "adj. 被遗弃的" },
+      { en: "abandonment", cn: "n. 遗弃；放任" },
+      { en: "ban", cn: "n. 禁令（同根）" },
+      { en: "abandon oneself to", cn: "沉溺于" },
+    ],
+  },
+  abundant: {
+    word: "abundant",
+    ipa: "/əˈbʌndənt/",
+    syl: {
+      parts: ["a", "bun", "dant"], ipa: ["ə", "bʌn", "dənt"], stress: 1,
+      phonemes: [{ p: "ə" }, { p: "b" }, { p: "ʌ" }, { p: "n" }, { p: "d" }, { p: "ə" }, { p: "n" }, { p: "t" }],
+    },
+    translation: "adj. 大量的，丰富的",
+    example: {
+      en: "The fish in this pond are abundant.",
+      cn: "池塘里的鱼太丰富了。",
+    },
+    pos: "adj.",
+    img: "img/abundant.png",
+    morph: {
+      type: "derived",
+      literal: "波浪一样涌出来 → 丰富的",
+      pieces: [
+        { piece: "ab-", kind: "前缀", meaningZh: "离开、溢出（away from）" },
+        { piece: "und", kind: "词根", meaningZh: "波浪（unda，同 undulate 起伏）" },
+        { piece: "-ant", kind: "后缀", meaningZh: "形容词后缀：…的" },
+      ],
+    },
+    contexts: [
+      { coll: "abundant in", collZh: "富于…（be abundant in fish）", en: "The lake is abundant in fish and crabs.", cn: "这湖里鱼蟹资源丰富。" },
+      { coll: "abundant resources", collZh: "丰富的资源", en: "The region has abundant resources of wind and solar.", cn: "该地区风能与太阳能资源丰沛。" },
+    ],
+    derives: [
+      { en: "abundance", cn: "n. 大量（an abundance of）" },
+      { en: "abundantly", cn: "adv. 丰富地" },
+      { en: "redundant", cn: "adj. 冗余的（同根 und）" },
+    ],
+  },
+  discard: {
+    word: "discard",
+    ipa: "/dɪˈskɑːrd/",
+    syl: {
+      parts: ["dis", "card"], ipa: ["dɪ", "skɑːrd"], stress: 1,
+      phonemes: [{ p: "d" }, { p: "ɪ" }, { p: "s" }, { p: "kɑːr" }, { p: "d" }],
+    },
+    translation: "v. 丢掉，抛弃（牌）",
+    example: {
+      en: "I will discard this bottle into the garbage bin.",
+      cn: "我要把这个瓶子丢进垃圾桶。",
+    },
+    pos: "v.",
+    img: "img/discard.png",
+    morph: {
+      type: "derived",
+      literal: "把手里的牌打出去 → 丢弃",
+      pieces: [
+        { piece: "dis-", kind: "前缀", meaningZh: "分开、去掉（away）" },
+        { piece: "card", kind: "词根", meaningZh: "卡片、纸牌" },
+      ],
+      story: { anchor: "card", meaning: "n. 卡片；纸牌", text: "打牌时把没用的牌「打出去」——discard 就是把没用的东西像出牌一样丢掉" },
+    },
+    contexts: [
+      { coll: "discard old ideas", collZh: "摒弃旧观念", en: "We should discard old ideas that no longer work.", cn: "该摒弃不再管用的旧观念。" },
+      { coll: "discard a card", collZh: "打出一张牌", en: "In poker you discard a card you cannot use.", cn: "扑克里你把用不上的牌打出去。" },
+    ],
+    derives: [
+      { en: "discardable", cn: "adj. 可丢弃的" },
+      { en: "discord", cn: "n. 不和（dis- 分开 + cord 心 → 离心）" },
+      { en: "dispose of", cn: "处理掉（近义）" },
+    ],
+  },
+  isolate: {
+    word: "isolate",
+    ipa: "/ˈaɪsəleɪt/",
+    syl: {
+      parts: ["i", "so", "late"], ipa: ["aɪ", "sə", "leɪt"], stress: 1,
+      phonemes: [{ p: "aɪ" }, { p: "s" }, { p: "ə" }, { p: "l" }, { p: "eɪ" }, { p: "t" }],
+    },
+    translation: "v. 使隔离，使孤立",
+    example: {
+      en: "The old man built a huge fence, to isolate himself from his neighbors.",
+      cn: "老人筑了一道巨大的篱笆，将自己与邻居隔绝。",
+    },
+    pos: "v.",
+    img: "img/isolate.png",
+    morph: {
+      type: "derived",
+      literal: "使成为一座孤岛 → 隔离",
+      pieces: [
+        { piece: "isol", kind: "词根", meaningZh: "岛（insula，同 island 半岛 peninsula）" },
+        { piece: "-ate", kind: "后缀", meaningZh: "动词后缀：使…" },
+      ],
+    },
+    contexts: [
+      { coll: "isolate ... from", collZh: "把…与…隔离", en: "The lab isolates the virus from the samples.", cn: "实验室把病毒从样本里隔离出来。" },
+      { coll: "feel isolated", collZh: "感到孤立（常被动/形容词化）", en: "Newcomers often feel isolated in a big city.", cn: "新来者在大城市常感到孤立。" },
+    ],
+    derives: [
+      { en: "isolation", cn: "n. 隔离（in isolation）" },
+      { en: "isolated", cn: "adj. 孤立的；偏远的" },
+      { en: "peninsula", cn: "n. 半岛（几乎成岛）" },
+      { en: "insulate", cn: "v. 隔热；绝缘（同根）" },
+    ],
+  },
+  accomplish: {
+    word: "accomplish",
+    ipa: "/əˈkʌmplɪʃ/",
+    syl: {
+      parts: ["ac", "com", "plish"], ipa: ["ə", "kʌm", "plɪʃ"], stress: 1,
+      phonemes: [{ p: "ə" }, { p: "k" }, { p: "ʌ" }, { p: "m" }, { p: "p" }, { p: "l" }, { p: "ɪ" }, { p: "ʃ" }],
+    },
+    translation: "v. 完成，实现（目标）",
+    example: {
+      en: "She is so happy to have accomplished her weight-loss goal.",
+      cn: "她很高兴完成了自己的减肥目标。",
+    },
+    pos: "v.",
+    img: "img/accomplish.png",
+    morph: {
+      type: "derived",
+      literal: "朝目标把坑填满 → 完成",
+      pieces: [
+        { piece: "ac-", kind: "前缀", meaningZh: "朝向（ad- 同化变体）" },
+        { piece: "compl", kind: "词根", meaningZh: "填满（complēre，同 complete）" },
+        { piece: "-ish", kind: "后缀", meaningZh: "动词后缀" },
+      ],
+    },
+    contexts: [
+      { coll: "accomplish a goal/task", collZh: "实现目标/完成任务", en: "She accomplished her goal of running a marathon.", cn: "她达成了跑完马拉松的目标。" },
+      { coll: "accomplish nothing", collZh: "一事无成", en: "Without a clear plan you accomplish nothing.", cn: "没有明确计划将一事无成。" },
+    ],
+    derives: [
+      { en: "accomplishment", cn: "n. 成就；造诣" },
+      { en: "complete", cn: "v. 完成（同根 compl）" },
+      { en: "complement", cn: "n. 补足物（同根）" },
+      { en: "achieve", cn: "v. 达成（近义）" },
+    ],
+  },
+  literature: {
+    word: "literature",
+    ipa: "/ˈlɪtərətʃə/",
+    syl: {
+      parts: ["lit", "e", "ra", "ture"], ipa: ["lɪt", "ə", "rə", "tʃə"], stress: 0, secondary: [],
+      phonemes: [
+        { p: "l", syl: 0, type: "consonant", desc: "边音：舌尖抵上齿龈，气流从舌两侧通过" },
+        { p: "ɪ", syl: 0, type: "vowel", desc: "短元音：比 iː 松弛短促，同 sit 的元音" },
+        { p: "t", syl: 0, type: "consonant", desc: "清塞音：舌尖弹开轻爆破，不送气也自然" },
+        { p: "ə", syl: 1, type: "vowel", desc: "schwa：中央弱读，最懒的元音（本词共出现 3 次）" },
+        { p: "r", syl: 2, type: "consonant", desc: "近音：舌身卷起接近硬腭但不触碰" },
+        { p: "ə", syl: 2, type: "vowel", desc: "" },
+        { p: "tʃ", syl: 3, type: "consonant", desc: "塞擦音：t 与 ʃ 合体，先堵住再摩擦放出" },
+        { p: "ə", syl: 3, type: "vowel", desc: "" },
+      ],
+      combos: [
+        { letters: "ture", sound: "/tʃə/", desc: "t 与后随 j 融合成 /tʃ/，-ure 弱读为 /ə/——同 nature / future / picture" },
+        { letters: "ra", sound: "/rə/", desc: "非重读 ra 弱化为 r + schwa，一带而过" },
+      ],
+      notes: [
+        "全词 4 个音节里 3 个是 schwa——读好的关键是「重音清晰、其余全部含糊」",
+        "快速口语常缩成 3 音节 /ˈlɪtrətʃə/（中间的 /ə/ 脱落）",
+      ],
+    },
+    translation: "n. 文学，文献，著作",
+    example: {
+      en: "She is reading modern literature at Oxford.",
+      cn: "她在牛津大学读现代文学。",
+    },
+    pos: "n.",
+    img: "img/literature.png",
+    morph: {
+      type: "derived",
+      literal: "与文字相关的东西 → 文学、文献",
+      pieces: [
+        { piece: "liter", kind: "词根", meaningZh: "文字（littera，同 literal 逐字、literate 识字）" },
+        { piece: "-at", kind: "连接成分", meaningZh: "连接成分（-atus 名/形容词化）" },
+        { piece: "-ure", kind: "后缀", meaningZh: "名词后缀：行为或结果" },
+      ],
+      story: { anchor: "liter", meaning: "n. 升（litre 的变体拼写）", text: "一升(liter)瓶子里的墨水全倒出来写字——写的字多了就成了 literature 文学" },
+    },
+    // literature 标杆：audio 字段示意 TTS 落盘路径（原型内文件不存在，播放自动回退 speechSynthesis）
+    contexts: [
+      { coll: "classic literature", collZh: "经典文学", en: "He prefers classic literature to modern bestsellers.", cn: "比起现代畅销书他更爱经典文学。", audio: "/audio/contexts/literature_0.mp3" },
+      { coll: "scientific literature", collZh: "科学文献", en: "The claim is unsupported by scientific literature.", cn: "这一说法缺乏科学文献支撑。", audio: "/audio/contexts/literature_1.mp3" },
+      { coll: "a large body of literature", collZh: "一大批文献/著作", en: "A large body of literature exists on this topic.", cn: "关于该主题已有大量文献。", audio: "/audio/contexts/literature_2.mp3" },
+    ],
+    derives: [
+      { en: "literary", cn: "adj. 文学的" },
+      { en: "literate", cn: "adj. 识字的；有文化的" },
+      { en: "illiterate", cn: "adj. 不识字的（il- 否定）" },
+      { en: "literal", cn: "adj. 字面的（逐字的）" },
+      { en: "literacy", cn: "n. 读写能力" },
+    ],
+  },
+  outbreak: {
+    word: "outbreak",
+    pos: "n.",
+    ipa: "/ˈaʊtbreɪk/",
+    syl: {
+      parts: ["out", "break"], ipa: ["aʊt", "breɪk"], stress: 0,
+      phonemes: [{ p: "aʊ" }, { p: "t" }, { p: "b" }, { p: "r" }, { p: "eɪ" }, { p: "k" }],
+    },
+    translation: "n. （战争、疾病等的）爆发，突然发生",
+    example: {
+      en: "An outbreak of flu hit the school in winter.",
+      cn: "冬天学校爆发了流感。",
+    },
+    img: "img/outbreak.png",
+    morph: {
+      type: "compound",
+      literal: "out（向外）+ break（爆发）→ （突然）爆发",
+      pieces: [
+        { piece: "out", kind: "词", meaningZh: "向外、超出" },
+        { piece: "break", kind: "词", meaningZh: "破、爆发" },
+      ],
+    },
+    contexts: [
+      { coll: "outbreak of war", collZh: "战争爆发", en: "The outbreak of war forced thousands to flee.", cn: "战争爆发迫使数千人逃离。" },
+      { coll: "outbreak of disease", collZh: "疾病爆发", en: "Health workers contained the outbreak of disease quickly.", cn: "卫生人员迅速控制住了疾病爆发。" },
+    ],
+    derives: [
+      { en: "break out", cn: "v. 爆发（短语动词）" },
+      { en: "broken", cn: "adj. 破碎的（同根 break）" },
+      { en: "outcome", cn: "n. 结果（同前缀 out-）" },
+    ],
+  },
+  brunch: {
+    word: "brunch",
+    pos: "n.",
+    ipa: "/brʌntʃ/",
+    syl: {
+      parts: ["br", "unch"], ipa: ["brʌn", "tʃ"], stress: 0,
+      phonemes: [{ p: "b" }, { p: "r" }, { p: "ʌ" }, { p: "n" }, { p: "tʃ" }],
+    },
+    translation: "n. 早午餐（早餐 + 午餐）",
+    example: {
+      en: "We had brunch on the rooftop terrace.",
+      cn: "我们在顶层露台吃了早午餐。",
+    },
+    img: "img/brunch.png",
+    morph: {
+      type: "blend",
+      literal: "breakfast + lunch 截搭混成 → 早午餐",
+      pieces: [
+        { piece: "br", kind: "截自", meaningZh: "来自 breakfast（早餐）前半", fromWord: "breakfast" },
+        { piece: "unch", kind: "截自", meaningZh: "来自 lunch（午餐）后半", fromWord: "lunch" },
+      ],
+    },
+    contexts: [
+      { coll: "Sunday brunch", collZh: "周日早午餐", en: "The hotel serves a lavish Sunday brunch.", cn: "这家酒店供应丰盛的周日早午餐。" },
+      { coll: "brunch buffet", collZh: "早午餐自助", en: "We met friends for a brunch buffet downtown.", cn: "我们在市中心和朋友吃了早午餐自助。" },
+    ],
+    derives: [
+      { en: "breakfast", cn: "n. 早餐（混成来源）" },
+      { en: "lunch", cn: "n. 午餐（混成来源）" },
+      { en: "smog", cn: "n. 烟雾（同为混成词：smoke+fog）" },
+    ],
+  },
+};
+
+// ---------- 卡型 ----------
+const CARD_TYPES = [
+  { id: "recog",      label: "认词卡",      ratio: null },
+  { id: "recogPlain", label: "认词卡·无图", ratio: null },
+  { id: "visual", label: "视觉默写", ratio: 40 },
+  { id: "audio",  label: "听觉默写", ratio: 30 },
+  { id: "ctx",    label: "语境默写", ratio: 30 },
+];
+
+// ---------- 模拟状态 ----------
+const state = {
+  wordId: "abandon",
+  typeId: "recog",
+  recogRevealed: false,
+  rated: new Set(),
+  progress: Object.fromEntries(Object.keys(WORDS).map(w => [w, { stage: "recognize", streak: 0 }])),
+  reviewLog: [],
+  spell: {},
+  _spoken: null,
+};
+
+const $ = id => document.getElementById(id);
+const $hubWrap = $("hubCardWrap");
+const $hubActions = $("hubActions");
+const $stage = $("radialStage");
+const $wires = $("wiresSvg");
+
+// ---------- 工具 ----------
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+
+function speakerSvg(size = 14) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+}
+function chevronSvg(dir, size = 20) {
+  const d = dir === "left" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6";
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+}
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  u.rate = 0.92;
+  window.speechSynthesis.speak(u);
+}
+
+function editDistance(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return dp[m][n];
+}
+
+function exampleBlanked(word) {
+  const re = new RegExp(word + "\\w*", "i");
+  const m = WORDS[word].example.en.match(re);
+  if (!m) return null;
+  const i = m.index;
+  return {
+    before: WORDS[word].example.en.slice(0, i),
+    blank: m[0],
+    after: WORDS[word].example.en.slice(i + m[0].length),
+    answer: m[0],
+  };
+}
+
+// ---------- 音节色块（音节解析卡内容） ----------
+// syl: { parts: ["a","ban","don"], ipa: ["ə","bæn","dən"], stress: 1 } —— stress 为重音音节下标（琥珀实底）
+function sylBlocksHtml(w, animate) {
+  if (!w.syl) return esc(w.word);
+  return w.syl.parts.map((p, i) =>
+    `<span class="syl-block${i === w.syl.stress ? " stress" : ""}${animate ? "" : " in"}"` +
+    ` style="transition-delay:${i * 70}ms">${esc(p)}</span>`
+  ).join("");
+}
+
+// ---------- 音效 ----------
+let _actx = null;
+function tone(freq, dur, delay = 0, type = "sine", gain = 0.12) {
+  try {
+    _actx = _actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = _actx.currentTime + delay;
+    const o = _actx.createOscillator();
+    const g = _actx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(gain, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(_actx.destination);
+    o.start(t0);
+    o.stop(t0 + dur);
+  } catch (e) { /* 静默 */ }
+}
+const sfxPerfect = () => { tone(660, .12); tone(880, .14, .1); tone(1100, .22, .2); };
+const sfxGreat   = () => { tone(580, .12); tone(780, .2, .1); };
+const sfxGood    = () => { tone(520, .18); };
+const sfxWrong   = () => { tone(220, .18, 0, "square", .07); tone(165, .26, .14, "square", .07); };
+// 辐射展开音效：轻快上行琶音
+const sfxRadiate = () => { tone(440, .1, 0, "sine", .06); tone(554, .1, .07, "sine", .06); tone(659, .16, .14, "sine", .06); };
+const sfxCollapse = () => { tone(520, .09, 0, "sine", .05); tone(392, .12, .06, "sine", .05); };
+
+function playSfxByHints(hints) {
+  if (hints === 0) sfxPerfect();
+  else if (hints === 1) sfxGreat();
+  else sfxGood();
+}
+
+// ---------- 渲染入口 ----------
+function render() {
+  renderChips();
+  renderProgress();
+  collapseMn(); // 换词/换卡型先收辐射
+  const w = WORDS[state.wordId];
+  const t = state.typeId;
+  if (t === "recog") renderRecogCard(w);
+  else if (t === "recogPlain") renderRecogCard(w, { plain: true });
+  else if (t === "visual") renderDictation(w, "visual");
+  else if (t === "audio") renderDictation(w, "audio");
+  else renderDictation(w, "ctx");
+}
+
+function goWord(id) {
+  state.wordId = id;
+  state.recogRevealed = false;
+  render();
+}
+
+function nextWordId(delta) {
+  const ids = Object.keys(WORDS);
+  const i = ids.indexOf(state.wordId) + delta;
+  if (i < 0 || i >= ids.length) return null;
+  return ids[i];
+}
+
+function recogNext(delta) {
+  const id = nextWordId(delta);
+  if (id) goWord(id);
+}
+
+// ---------- 辐射助记层 ----------
+// 四张助记卡目标位（相对 .radial-stage 1500x1000，无界画布：卡间零挤压零遮挡）：
+//   左上 构词解析 · 左下 派生/近义 · 右上 读音解析 · 右下 真实语境
+//   主卡下方不放任何卡；主卡辐射态完全不变
+const MN_POS = {
+  morph:   { x: 220,  y: 280 },  // 构词解析 左上
+  syl:     { x: 1280, y: 250 },  // 读音解析 右上
+  derive:  { x: 220,  y: 640 },  // 派生/词性/近义 左下
+  context: { x: 1280, y: 640 },  // 真实语境 右下
+};
+const MN_KEY_ORDER = ["syl", "morph", "derive", "context"];
+// 助记卡尺寸（radial.css 固定宽 300；高度 JS 实测）
+const MN_W = 300;
+// 舞台高度（radial.css 同步 1000）；HUB_TOP_Y = 主卡上缘（hub-slot top 52% 处中心 - 半高）
+const STAGE_H = 1000;
+const HUB_TOP_Y = 265;
+
+function mnEls() {
+  return MN_KEY_ORDER.map(k => $stage.querySelector(`.mn-card[data-mn="${k}"]`));
+}
+
+// 判定某词某键是否有内容（缺内容卡不出，符合「缺字段自动收起」契约）
+function mnHasContent(w, key) {
+  if (!w) return false;
+  if (key === "syl") return !!(w.syl && w.syl.parts && w.syl.parts.length);
+  if (key === "morph") return !!(w.morph && w.morph.pieces && w.morph.pieces.length);
+  if (key === "context") return !!(w.contexts && w.contexts.length);
+  if (key === "derive") return !!(w.derives && w.derives.length);
+  return false;
+}
+
+// 真实语境高亮：把词组在例句中显著标识出来（<mark class="ctx-coll">）
+// v2.5：词组内嵌 contexts[].coll。匹配规则——大小写不敏感 + 词形屈折（isolate→isolates）
+// + coll 中 " ... " 视为通配（"isolate ... from" 命中 "isolates the virus from"）；
+// 仍匹配不到时兜底高亮 headword（含屈折 word\w*，同语境默写卡命中规则）
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+function hiColl(sentence, coll, headword) {
+  const s = esc(sentence);
+  const c = (coll || "").trim();
+  if (c) {
+    // coll 中 " ... " 为通配段；段内空白归一为 \s+；首尾 \b+\w* 允许词形屈折（isolate→isolates）
+    const pat = "\\b" + c.split(/\s*\.\.\.\s*/)
+      .map(p => escRe(esc(p)).replace(/\s+/g, "\\s+"))
+      .join("\\w*[^,;.!?]*?\\s+") + "\\w*";
+    try {
+      const out = s.replace(new RegExp(pat, "gi"), m => `<mark class="ctx-coll">${m}</mark>`);
+      if (out !== s) return out;
+    } catch { /* 非法 pattern 落兜底 */ }
+  }
+  if (headword) {
+    const re = new RegExp("\\b" + escRe(esc(headword)) + "\\w*", "gi");
+    return s.replace(re, m => `<mark class="ctx-coll">${m}</mark>`);
+  }
+  return s;
+}
+
+function buildMnContent(w, key) {
+  if (key === "syl") {
+    const s = w.syl;
+    const ipa = s.ipa || [];
+    let html = `<div class="syl-word-line"><span class="syl-whole">${esc(w.word)}</span><span class="recog-phon">${esc(w.ipa)}</span></div>`;
+    html += `<div class="syl-chip-row">` + s.parts.map((p, i) => `
+      <div class="syl-unit${i === s.stress ? " stress" : ""}" style="transition-delay:${i * 90}ms">
+        <span class="syl-unit-idx">${i + 1}</span>
+        <span class="syl-block in${i === s.stress ? " stress" : ""}">${esc(p)}</span>
+        ${ipa[i] ? `<span class="syl-unit-ipa">${esc(ipa[i])}</span>` : ""}
+        ${i === s.stress ? `<span class="syl-unit-mark">◉ 重音</span>` : `<span class="syl-unit-mark syl-unit-mark-dim">次弱</span>`}
+      </div>`).join("") + `</div>`;
+    html += `<div class="mn-line"><b>拼读：</b>${esc(s.parts.join(" · "))} —— 按音节拼读，重音落在第 ${s.stress + 1} 个音节</div>`;
+    // v2.2 音素层：音素色片（元暖红 / 辅靛蓝 / 未标注中性，按音节分组）+ 可折叠「音素细讲」
+    const phs = s.phonemes || [];
+    if (phs.length) {
+      // 分组：优先 phonemes[].syl；否则按 ipa 贪心拼接推断（旧数据只有 {p}）
+      let groups;
+      if (phs.some(p => Number.isInteger(p.syl))) {
+        groups = [];
+        phs.forEach(p => {
+          const gi = Number.isInteger(p.syl) ? p.syl : 0;
+          (groups[gi] = groups[gi] || []).push(p);
+        });
+      } else {
+        groups = [[]];
+        let acc = "";
+        let gi = 0;
+        for (const p of phs) {
+          groups[gi].push(p);
+          acc += p.p;
+          if (gi < ipa.length - 1 && acc === ipa[gi]) { groups.push([]); gi++; acc = ""; }
+        }
+      }
+      const typed = phs.some(p => p.type === "vowel" || p.type === "consonant");
+      const chipCls = p => p.type === "vowel" ? "ph-v" : p.type === "consonant" ? "ph-c" : "ph-n";
+      html += `<div class="ph-strip">` + groups.filter(g => g.length).map(g =>
+        `<span class="ph-group">` + g.map(p =>
+          `<span class="ph-chip ${chipCls(p)}${p.desc ? "" : " ph-thin"}"${p.desc ? ` title="${esc(p.desc)}"` : ""}>${esc(p.p)}</span>`).join("")
+        + `</span>`).join("")
+        + (typed ? `<span class="ph-legend"><i class="lg-v"></i>元音<i class="lg-c"></i>辅音</span>` : "") + `</div>`;
+      if (phs.some(p => p.desc)) {
+        html += `<button class="ph-toggle" type="button">音素细讲<span class="ph-caret">▶</span></button>`;
+        html += `<div class="ph-detail">`;
+        html += phs.filter(p => p.desc).map(p =>
+          `<div class="ph-row">` +
+          `<span class="ph-sym ${chipCls(p)}">${esc(p.p)}</span>` +
+          `<span class="ph-syl-ref">第${(Number.isInteger(p.syl) ? p.syl : 0) + 1}节</span>` +
+          `<span class="ph-desc">${esc(p.desc)}</span></div>`).join("");
+        if (s.combos && s.combos.length) {
+          html += `<div class="mn-block-label">字母组合 → 读音</div>`;
+          html += s.combos.map(c =>
+            `<div class="ph-combo"><b>${esc(c.letters)}</b> → ${esc(c.sound)}<span class="ph-combo-desc">${esc(c.desc)}</span></div>`).join("");
+        }
+        if (s.notes && s.notes.length) {
+          html += `<div class="mn-block-label">发音要点</div>`;
+          html += s.notes.map(n => `<div class="ph-note">${esc(n)}</div>`).join("");
+        }
+        html += `</div>`;
+      }
+    }
+    return html;
+  }
+  if (key === "morph") {
+    const m = w.morph;
+    if (!m) return "";
+    const typeLabel = { derived: "派生词 · 词缀构词", compound: "合成词", blend: "混成词" }[m.type] || "词形拆解";
+    let html = `<div class="mn-chip-row"><span class="mn-chip mn-morph-type">${typeLabel}</span></div>`;
+    if (m.type === "compound") {
+      // 合成词：A + B 拼接
+      html += `<div class="morph-strip">` + m.pieces.map(p =>
+        `<span class="morph-piece">${esc(p.piece)}<small>${esc(p.meaningZh)}</small></span>`).join(`<span class="morph-plus">+</span>`) + `</div>`;
+    } else if (m.type === "blend") {
+      // 混成词：截断拼接，标注来源词
+      html += `<div class="morph-strip">` + m.pieces.map(p =>
+        `<span class="morph-piece">${esc(p.piece)}<small>${esc(p.meaningZh)}</small></span>`).join(`<span class="morph-plus">+</span>`) + `</div>`;
+      const froms = m.pieces.filter(p => p.fromWord);
+      if (froms.length) {
+        html += `<div class="morph-from">截自 ` + froms.map(p => `<b>${esc(p.fromWord)}</b> → ${esc(p.piece)}`).join("，") + `</div>`;
+      }
+    } else {
+      // 派生词：按 前缀/词根/后缀 逐块列出
+      html += m.pieces.map(p =>
+        `<div class="mn-pair"><span class="en">${esc(p.piece)}</span><span class="mn-kind">${esc(p.kind)}</span><span class="cn">${esc(p.meaningZh)}</span></div>`).join("");
+    }
+    html += `<div class="mn-line"><b>字面：</b>${esc(m.literal)}</div>`;
+    if (m.story) {
+      html += `<hr class="mn-divider"><div class="mn-block-label">熟词拆分</div>`;
+      html += `<div class="mn-pair"><span class="en">${esc(m.story.anchor)}</span><span class="cn">${esc(m.story.meaning)}</span></div>`;
+      html += `<div class="mn-line">${esc(m.story.text)}</div>`;
+    }
+    return html;
+  }
+  if (key === "context") {
+    // v2.5 真实语境：contexts 单字段自含词组——coll 内嵌每条例句，直接展示例句 + 中文释义，
+    // 词组在句中高亮；每条例句带发音（audio 有值播音频文件，无值 speechSynthesis 兜底）
+    const ctxs = w.contexts || [];
+    if (!ctxs.length) return "";
+    return ctxs.map(c => {
+      const say = esc(c.en).replace(/'/g, "&#39;");
+      const audio = c.audio ? esc(c.audio) : "";
+      return `<div class="ctx-item">
+        <div class="ctx-en">${hiColl(c.en, c.coll, w.word)}<button class="ctx-play" data-say="${say}"${audio ? ` data-audio="${audio}"` : ""} title="播放例句">${speakerSvg(16)}</button></div>
+        <div class="ctx-cn">${esc(c.cn)}</div>
+      </div>`;
+    }).join("");
+  }
+  if (key === "derive") {
+    return `<div class="mn-block-label">派生 / 近义</div>` +
+      w.derives.map(d =>
+        `<div class="mn-pair"><span class="en">${esc(d.en)}</span><span class="cn">${esc(d.cn)}</span></div>`).join("");
+  }
+  return "";
+}
+
+function buildMnCard(k, w) {
+  const meta = {
+    syl:     { icon: "🔊", title: "读音解析",     sub: "pronunciation" },
+    morph:   { icon: "🧩", title: "构词解析",     sub: "morphology" },
+    context: { icon: "💬", title: "真实语境",     sub: "real context" },
+    derive:  { icon: "🌱", title: "派生 / 近义词", sub: "derivatives" },
+  }[k];
+  return `
+    <div class="mn-head">
+      <span class="mn-icon">${meta.icon}</span>
+      <span class="mn-title">${meta.title}</span>
+      ${meta.badge ? `<span class="llm-badge">AI</span>` : ""}
+      <span class="mn-sub">${meta.sub}</span>
+    </div>
+    <div class="mn-body">${buildMnContent(w, k)}</div>`;
+}
+
+// 音素细讲抽屉：展开/收起（事件委托挂在卡元素上，防止 hover 误触）
+// 真实语境例句发音：事件委托（卡片内容每次辐射重渲染，用冒泡统一接管 .ctx-play）
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".ctx-play");
+  if (btn) { e.stopPropagation(); speak(btn.dataset.say); }
+});
+
+function bindPhToggles() {
+  const sylCard = $stage.querySelector('.mn-card[data-mn="syl"]');
+  if (!sylCard) return;  sylCard.querySelectorAll(".ph-toggle").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const detail = sylCard.querySelector(".ph-detail");
+      if (!detail) return;
+      const open = detail.classList.toggle("open");
+      btn.classList.toggle("open", open);
+      btn.querySelector(".ph-caret").textContent = open ? "▼" : "▶";
+    });
+  });
+}
+
+// 计算 SVG 连线路径：主卡边缘 → 助记卡边缘，贝塞尔曲线
+function wirePath(hx, hy, tx, ty, side) {
+  // side 控制曲线鼓包方向：左/右卡水平走向，顶部卡垂直走向
+  if (side === "top") {
+    const cy1 = hy + (ty - hy) * 0.45, cy2 = hy + (ty - hy) * 0.55;
+    return `M${hx},${hy} C${hx},${cy1} ${tx},${cy2} ${tx},${ty}`;
+  }
+  const dx = tx - hx, dy = ty - hy;
+  const cx1 = hx + dx * 0.45, cy1 = hy;
+  const cx2 = hx + dx * 0.55, cy2 = ty;
+  return `M${hx},${hy} C${cx1},${cy1} ${cx2},${cy2} ${tx},${ty}`;
+}
+
+function drawWires() {
+  const stageRect = $stage.getBoundingClientRect();
+  const hubRect = $("hubCardWrap").getBoundingClientRect();
+  const hx = hubRect.left - stageRect.left + hubRect.width / 2;
+  const hy = hubRect.top - stageRect.top + hubRect.height / 2;
+
+  let wires = "", dots = "";
+  mnEls().forEach((el) => {
+    const k = el.dataset.mn;
+    const r = el.getBoundingClientRect();
+    const cx = r.left - stageRect.left + r.width / 2;
+    const cy = r.top - stageRect.top + r.height / 2;
+    const color = getComputedStyle(el).getPropertyValue("--c").trim() || "#888";
+    // 四卡均直连主卡：锚在朝向主卡的内侧缘（morph/derive 右缘、syl/context 左缘），线不穿卡
+    const leftSide = (k === "morph" || k === "derive");
+    const tx = leftSide ? cx + r.width / 2 - 10 : cx - r.width / 2 + 10;
+    const ty = cy;
+    const side = leftSide ? "left" : "right";
+    // 从主卡侧缘出发（而非中心），避免连线横穿主卡
+    const sx = hx + (leftSide ? -hubRect.width / 2 : hubRect.width / 2);
+    const sy = hy;
+    wires += `<path class="wire" d="${wirePath(sx, sy, tx, ty, side)}" stroke="${color}" style="color:${color}"/>`;
+    dots += `<circle class="wire-dot" cx="${tx}" cy="${ty}" r="0" fill="${color}"/>`;
+  });
+  $wires.innerHTML = wires + dots;
+  // 触发生长动画（下一帧加 class 确保 transition 生效；rAF 不触发时 setTimeout 兜底）
+  const startDraw = () => $wires.classList.add("drawn");
+  requestAnimationFrame(() => requestAnimationFrame(startDraw));
+  setTimeout(startDraw, 200);
+}
+
+// 展开 / 收起辐射层
+let _mnOpen = false;
+function radiateMn(w) {
+  if (_mnOpen) return;
+  _mnOpen = true;
+  $stage.classList.add("radial-on");
+  // 主卡完全不变（尺寸/位置/内容），六卡在无界画布上让位展开
+
+  const stageRect = $stage.getBoundingClientRect();
+  const hubRect = $("hubCardWrap").getBoundingClientRect();
+  const hcx = hubRect.left - stageRect.left + hubRect.width / 2;
+  const hcy = hubRect.top - stageRect.top + hubRect.height / 2;
+
+  let visible = [];
+  mnEls().forEach((el, i) => {
+    const k = el.dataset.mn;
+    if (!mnHasContent(w, k)) { el.classList.remove("show"); el.innerHTML = ""; return; }
+    el.innerHTML = buildMnCard(k, w);
+    const pos = MN_POS[k];
+    // 初始：中心点缩团（强制透明，避免起飞前在主卡上显形；起飞时交还 .show 的 opacity:1）
+    el.style.left = hcx + "px";
+    el.style.top = hcy + "px";
+    el.style.transform = "translate(-50%, -50%) scale(.2)";
+    el.style.opacity = "0";
+    el.classList.add("show");
+    visible.push({ el, k, pos });
+  });
+
+  // 逐张落位（stagger 90ms）
+  visible.forEach(({ el, k, pos }, i) => {
+    setTimeout(() => {
+      el.style.left = pos.x + "px";
+      el.style.top = pos.y + "px";
+      el.style.transform = "translate(-50%, -50%) scale(1)";
+      el.style.opacity = "";
+      if (k === "syl") bindPhToggles();
+    }, 120 + i * 90);
+  });
+
+  sfxRadiate();
+
+  // 连线生长：等卡片基本落位后
+  setTimeout(() => drawWires(), 120 + visible.length * 90 + 80);
+
+  // hover 助记卡 → 对应连线加粗
+  setTimeout(() => {
+    visible.forEach(({ el, k }, i) => {
+      const wire = $wires.querySelectorAll(".wire")[i];
+      const dot = $wires.querySelectorAll(".wire-dot")[i];
+      el.addEventListener("mouseenter", () => { wire && wire.classList.add("hl"); });
+      el.addEventListener("mouseleave", () => { wire && wire.classList.remove("hl"); });
+    });
+  }, 600);
+}
+
+function collapseMn() {
+  if (!_mnOpen) { $wires.classList.remove("drawn"); $wires.innerHTML = ""; return; }
+  _mnOpen = false;
+  $stage.classList.remove("radial-on");
+  sfxCollapse();
+  $wires.classList.remove("drawn");
+  mnEls().forEach(el => {
+    el.classList.remove("show");
+    el.classList.add("hide");
+    el.style.left = "";
+    el.style.top = "";
+    el.style.transform = "";
+    setTimeout(() => { el.classList.remove("hide"); el.innerHTML = ""; }, 320);
+  });
+  setTimeout(() => { $wires.innerHTML = ""; }, 350);
+}
+
+// ---------- chips / 侧栏 ----------
+function renderChips() {
+  $("wordChips").innerHTML = Object.keys(WORDS).map(id =>
+    `<button class="chip ${id === state.wordId ? "active" : ""}" data-w="${id}">${id}</button>`).join("");
+  $("typeChips").innerHTML = CARD_TYPES.map(t =>
+    `<button class="chip ${t.id === state.typeId ? "active" : ""}" data-t="${t.id}">${t.label}${t.ratio ? ` <span style="opacity:.55">${t.ratio}%</span>` : ""}</button>`).join("");
+  $("wordChips").querySelectorAll("[data-w]").forEach(b =>
+    b.onclick = () => goWord(b.dataset.w));
+  $("typeChips").querySelectorAll("[data-t]").forEach(b =>
+    b.onclick = () => { state.typeId = b.dataset.t; render(); });
+}
+
+function renderProgress() {
+  const p = state.progress[state.wordId];
+  $("progressLine").innerHTML =
+    `${state.wordId} · stage <b>${p.stage}</b> · 连续认识 <b>${p.streak}/2</b>`;
+}
+
+function pushLog(type, rating) {
+  state.reviewLog.unshift({ word: state.wordId, type, rating, time: new Date() });
+  $("reviewLog").innerHTML = state.reviewLog.slice(0, 20).map(l =>
+    `<li><span>${l.word} <span class="dim">· ${l.type}</span></span><span class="lv-${l.rating}">${l.rating}</span></li>`).join("");
+}
+
+// ---------- 认词卡 ----------
+// v2.1 契约 + 辐射助记：模糊/不认识 → 揭示中文 + 辐射四类助记卡；认识 → 直接下一个
+function renderRecogCard(w, opts = {}) {
+  const plain = !!opts.plain;
+  const revealed = state.recogRevealed;
+  const ids = Object.keys(WORDS);
+  const idx = ids.indexOf(state.wordId);
+  const hasPrev = idx > 0;
+  const hasNext = idx < ids.length - 1;
+
+  $hubWrap.innerHTML = `
+    <div class="recog-stage">
+      <div class="flashcard">
+        <div class="face recog-face ${plain ? "recog-face-plain" : ""}">
+          ${plain || !w.img ? "" : `<img class="recog-img" src="${w.img}" alt="${w.word} 配图">`}
+          <div class="recog-word-row ${plain ? "recog-word-row-main" : ""}">
+            <span class="recog-word-wrap">
+              <span class="recog-word ${plain ? "recog-word-xl" : ""}">${esc(w.word)}</span>
+              <span class="recog-word-side">
+                <span class="recog-phon">${w.ipa}</span>
+                <button class="play-bare" id="pronBtn" title="播放单词发音">${speakerSvg(15)}</button>
+              </span>
+            </span>
+          </div>
+          ${plain ? `<div class="recog-bottom">` : ""}
+          <div class="recog-example">
+            <div class="recog-example-text">
+              <p class="recog-example-en"><i>${esc(w.example.en)}</i></p>
+              ${revealed ? `<p class="recog-example-cn">${esc(w.example.cn)}</p>` : ""}
+            </div>
+            <button class="play-bare" data-speak="${esc(w.example.en)}" title="朗读例句">${speakerSvg(14)}</button>
+          </div>
+          ${revealed ? `
+          <div class="recog-translation">
+            <div class="recog-translation-label">中文释义</div>
+            <div class="recog-translation-text">${esc(w.translation)}</div>
+          </div>` : ""}
+          ${plain ? `</div>` : ""}
+        </div>
+      </div>
+    </div>`;
+
+  // 左右导航 + 评分/下一个按钮行（hub-actions 钉在卡下）
+  if (!revealed) {
+    $hubActions.innerHTML = `
+      <button class="rate-btn rate-again" data-r="again">不认识</button>
+      <button class="rate-btn rate-hard" data-r="hard">模糊</button>
+      <button class="rate-btn rate-good" data-r="good">认识</button>`;
+  } else {
+    // 揭示态：无二次评分，「下一个」直接走词（v2.1）
+    $hubActions.innerHTML = `
+      <button class="btn btn-ghost" id="collapseBtn">收起助记</button>
+      <button class="btn btn-primary" id="nextWordBtn">下一个 →</button>`;
+  }
+
+  $("pronBtn").onclick = () => speak(w.word);
+  $hubWrap.querySelectorAll(".play-bare[data-speak]").forEach(b => {
+    b.onclick = () => speak(b.dataset.speak);
+  });
+
+  function rate(r) {
+    const p = state.progress[state.wordId];
+    state.rated.add(state.wordId);
+    if (r === "good") {
+      p.streak += 1;
+      if (p.streak >= 2) { p.stage = "spell"; }
+      pushLog("认词", r);
+      sfxGood();
+      if (hasNext) { goWord(ids[idx + 1]); return; }
+      render();
+      return;
+    }
+    // 模糊 / 不认识 → 揭示中文 + 辐射助记（音节解析为五张辐射卡之一）
+    p.streak = 0;
+    if (p.stage === "spell") p.stage = "recognize";
+    pushLog("认词", r);
+    state.recogRevealed = true;
+    render();
+    setTimeout(() => radiateMn(w), 60);
+  }
+
+  $hubActions.querySelectorAll(".rate-btn").forEach(b => { b.onclick = () => rate(b.dataset.r); });
+  const nw = $("nextWordBtn");
+  if (nw) nw.onclick = () => { const id = nextWordId(1); if (id) goWord(id); };
+  const cb = $("collapseBtn");
+  if (cb) cb.onclick = () => { collapseMn(); render(); };
+}
+
+// ---------- 默写卡 ----------
+function spellKey(wordId) { return `${state.typeId}:${wordId}`; }
+
+function spellState(wordId) {
+  const key = spellKey(wordId);
+  if (!state.spell[key]) {
+    state.spell[key] = { hints: 0, done: false, result: null, guess: null };
+  }
+  return state.spell[key];
+}
+
+function spellNextAllowed() {
+  const s = state.spell[spellKey(state.wordId)];
+  return !!(s && s.done);
+}
+function spellNav(delta) {
+  const id = nextWordId(delta);
+  if (id) goWord(id);
+}
+
+function renderDictation(w, type) {
+  const s = spellState(state.wordId);
+  const navAllowed = spellNextAllowed();
+
+  // ---- 提示区 ----
+  const level = s.done ? 2 : s.hints;
+  let hintHtml = "";
+  if ((level >= 1 || s.done) && type !== "audio") {
+    hintHtml += `
+      <div class="dict-hint dict-hint-1">
+        <span class="recog-phon">${w.ipa}</span>
+        <button class="play-bare" id="hintPronBtn" title="播放单词发音">${speakerSvg(15)}</button>
+      </div>`;
+  }
+  if (level >= 2 || s.done) {
+    hintHtml += `
+      <div class="dict-hint dict-hint-2">
+        <span class="dict-hint-label">中文释义</span>
+        <span class="dict-hint-text">${esc(w.translation)}</span>
+      </div>`;
+  }
+  if (s.done && s.result === "wrong" && !s.gaveUp && type !== "ctx") {
+    hintHtml += `
+      <div class="dict-answer">
+        <span class="dict-answer-label">正确拼写</span>
+        <span class="dict-answer-word">${w.syl ? sylBlocksHtml(w, false) : esc(w.word)}</span>
+      </div>`;
+  }
+
+  const inputAttrs = `id="answerInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"${s.done ? " disabled" : ""}`;
+  let stimulus = "";
+  if (type === "visual") {
+    stimulus = w.img ? `<img class="vis-img" src="${w.img}" alt="视觉提示">` : `<div class="dict-hint">（该词无配图，请直接默写）</div>`;
+  } else if (type === "audio") {
+    stimulus = (s.hints >= 1 || s.done) ? `
+      ${w.img ? `<img class="vis-img" src="${w.img}" alt="听觉提示配图">` : ""}
+      <div class="dict-hint dict-hint-1">
+        <span class="recog-phon">${w.ipa}</span>
+        <button class="play-bare" id="hintPronBtn" title="播放单词发音">${speakerSvg(15)}</button>
+      </div>` : `
+      <button class="audio-play" id="playBtn" title="播放读音">${speakerSvg(34)}</button>`;
+  } else {
+    const b = exampleBlanked(w.word);
+    const ctxAnswer = (s.done && s.result === "wrong" && !s.gaveUp) ? `
+      <div class="dict-answer ctx-answer">
+        <span class="dict-answer-label">正确拼写</span>
+        <span class="dict-answer-word">${w.syl ? sylBlocksHtml(w, false) : esc(w.word)}</span>
+      </div>` : "";
+    stimulus = `
+      ${w.img ? `<img class="vis-img ctx-img" src="${w.img}" alt="语境提示配图" style="max-height:170px" onerror="this.style.display='none'">` : ""}
+      ${hintHtml}
+      <div class="ctx-sentence">${esc(b.before)}<span class="ctx-blank"><input class="word-line-input ctx-blank-input" ${inputAttrs} style="width:${b.answer.length + 2}ch" /></span>${esc(b.after)}</div>
+      ${ctxAnswer}
+      <div id="verdictSlot"></div>`;
+  }
+
+  $hubWrap.innerHTML = `
+    <div class="recog-stage">
+      <div class="flashcard">
+        <div class="face dictation-face">
+          ${stimulus}
+          ${type === "ctx" ? "" : hintHtml}
+          ${type === "ctx" ? "" : `
+          <div class="dict-input-area">
+            <input class="word-line-input" ${inputAttrs} />
+            <div id="verdictSlot"></div>
+          </div>`}
+        </div>
+      </div>
+    </div>`;
+
+  if (!s.done) {
+    $hubActions.innerHTML = `
+      <button class="btn btn-ghost" id="hintBtn">${s.hints >= 2 ? "查看答案" : "提示"}</button>
+      <button class="btn btn-primary" id="submitBtn">提交</button>`;
+  } else {
+    // 判分后：判对自动跳词（同 v2.1 判对 ≡ 认识）；判错/查看答案 → 辐射助记 + 下一个
+    $hubActions.innerHTML = s.gaveUp || s.result === "wrong" ? `
+      <button class="btn btn-ghost" id="collapseBtn">收起助记</button>
+      <button class="btn btn-primary" id="nextWordBtn">下一个 →</button>` : `
+      <button class="btn btn-primary" id="nextWordBtn">下一个 →</button>`;
+  }
+
+  const input = $("answerInput");
+  if (input) {
+    input.addEventListener("input", () => {
+      input.value = input.value.toLowerCase().replace(/[^a-z]/g, "");
+      s.draft = input.value;
+    });
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); submit(); }
+    });
+    if (s.done) {
+      input.value = s.gaveUp ? (type === "ctx" ? exampleBlanked(w.word).answer : w.word) : (s.guess || "");
+      input.style.width = (input.value.length + 2) + "ch";
+      input.classList.add(s.gaveUp ? "revealed" : (s.result === "good" ? "ok" : "bad"));
+    } else {
+      if (s.draft) input.value = s.draft;
+      input.focus();
+    }
+  }
+
+  const submitBtn = $("submitBtn");
+  function submit() {
+    const guess = input.value.trim();
+    if (!guess) { input.focus(); return; }
+    grade(w, type, guess);
+  }
+  if (submitBtn) submitBtn.onclick = submit;
+
+  const hintBtn = $("hintBtn");
+  if (hintBtn && !s.done) hintBtn.onclick = () => {
+    if (s.hints < 2) {
+      s.hints += 1;
+      if (type !== "audio" && s.hints === 1) speak(w.word);
+      pushLog(typeName(type), `hint${s.hints}`);
+      render();
+    } else {
+      // 查看答案 = 不认识：揭示 + 辐射
+      s.done = true;
+      s.gaveUp = true;
+      s.result = "wrong";
+      s.guess = null;
+      s.draft = null;
+      sfxWrong();
+      pushLog(typeName(type), "reveal");
+      const p = state.progress[state.wordId];
+      p.stage = "recognize";
+      p.streak = 0;
+      renderDictation(w, type);
+      setTimeout(() => radiateMn(w), 60);
+    }
+  };
+
+  const hp = $("hintPronBtn");
+  if (hp) hp.onclick = () => speak(w.word);
+  const pb = $("playBtn");
+  if (pb) pb.onclick = () => speak(w.word);
+
+  const nw = $("nextWordBtn");
+  if (nw) nw.onclick = () => spellNav(1);
+  const cb = $("collapseBtn");
+  if (cb) cb.onclick = () => { collapseMn(); renderDictation(w, type); };
+
+  // 键盘全局方向键
+  if (!window._spellKeyBound) {
+    window._spellKeyBound = true;
+    document.addEventListener("keydown", e => {
+      const ae = document.activeElement;
+      if (ae && ae.tagName === "INPUT") return;
+      if (!["visual", "audio", "ctx"].includes(state.typeId)) return;
+      if (e.key === "ArrowRight") spellNav(1);
+    });
+  }
+
+  // 判分徽标
+  const verdictSlot = $("verdictSlot");
+  if (s.done && !s.gaveUp && verdictSlot) {
+    let badge = "";
+    if (s.result === "good") {
+      const label = s.hints === 0 ? "Perfect" : s.hints === 1 ? "Great" : "Good";
+      badge = `<div class="dict-verdict dict-verdict-ok">✓ ${label}</div>`;
+    } else {
+      badge = `<div class="dict-verdict dict-verdict-bad">✗ 看看四张助记卡，然后下一个</div>`;
+    }
+    verdictSlot.innerHTML = badge;
+  }
+
+  // 听觉型自动播 1 次
+  if (type === "audio" && !s.done && state._spoken !== spellKey(state.wordId)) {
+    state._spoken = spellKey(state.wordId);
+    setTimeout(() => speak(w.word), 350);
+  }
+}
+
+function typeName(t) { return { visual: "视觉", audio: "听觉", ctx: "语境" }[t]; }
+
+function grade(w, type, guessRaw) {
+  const s = spellState(state.wordId);
+  const guess = guessRaw.trim().toLowerCase();
+  if (!guess) return;
+
+  const answers = [w.word.toLowerCase()];
+  if (type === "ctx") answers.push(exampleBlanked(w.word).answer.toLowerCase());
+  const ok = answers.includes(guess);
+  const d = editDistance(guess, w.word.toLowerCase());
+  s.done = true;
+  s.result = ok ? "good" : "wrong";
+  s.guess = guess;
+  s.draft = null;
+
+  const p = state.progress[state.wordId];
+  if (ok) {
+    playSfxByHints(s.hints);
+    if (s.hints >= 2) p.stage = "recognize";
+    pushLog(typeName(type), s.hints === 0 ? "perfect" : s.hints === 1 ? "great" : "good");
+  } else {
+    sfxWrong();
+    p.stage = "recognize";
+    p.streak = 0;
+    pushLog(typeName(type), d <= 2 ? "hard" : "again");
+  }
+
+  renderDictation(w, type);
+
+  if (ok) {
+    // 判对 ≡ 认识：零辐射，自动下一个
+    const fromWord = state.wordId;
+    setTimeout(() => {
+      if (state.wordId !== fromWord) return;
+      const id = nextWordId(1);
+      if (id) goWord(id);
+      else renderDictation(w, type);
+    }, 900);
+  } else {
+    // 判错 → 辐射助记
+    setTimeout(() => radiateMn(w), 120);
+  }
+}
+
+// ---------- 随机默写卡 ----------
+$("randomBtn").onclick = () => {
+  const r = Math.random() * 100;
+  state.typeId = r < 40 ? "visual" : r < 70 ? "audio" : "ctx";
+  render();
+};
+
+// ---------- 舞台自适应缩放（1500x1000 等比适配 wrap 宽度） ----------
+function fitStage() {
+  const wrap = $stage.parentElement;
+  const scale = Math.min(1, wrap.clientWidth / 1500);
+  $stage.style.transform = `scale(${scale})`;
+  wrap.style.height = STAGE_H * scale + "px";
+}
+window.addEventListener("resize", fitStage);
+
+fitStage();
+render();

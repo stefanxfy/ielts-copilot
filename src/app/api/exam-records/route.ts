@@ -14,6 +14,7 @@ import type { AnswerSheetJson } from "@/db/schema";
 import { judgePaper, rawToBand } from "@/lib/scoring";
 import { finalizeIfComplete } from "@/lib/session";
 import { gradeWritingRecord } from "@/lib/grading/service";
+import { recordSubjectSubmission } from "@/lib/study/activities";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -138,6 +139,7 @@ export async function POST(request: Request) {
       })
       .returning({ id: examRecords.id })
       .all();
+    recordSubjectSubmission("writing"); // P7 活动埋点(新插入才计,覆盖分支不调)
     const completed = finalizeIfComplete(sessionId);
     triggerAutoGrading(result[0].id, sheet);
     return NextResponse.json({
@@ -204,6 +206,7 @@ export async function POST(request: Request) {
     })
     .returning({ id: examRecords.id })
     .all();
+  recordSubjectSubmission(paper.subject); // P7 活动埋点(新插入才计,覆盖分支不调)
 
   // 连考模式:交卷后检查场次是否三科齐全,齐全则回写 overall 快照
   const completed = sessionId ? finalizeIfComplete(sessionId) : false;

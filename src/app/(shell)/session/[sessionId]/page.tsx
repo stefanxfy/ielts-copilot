@@ -59,22 +59,22 @@ export default async function SessionPage({
   return (
     <div className="mx-auto max-w-[860px] px-5 py-6">
       <div className="mb-5 flex items-center gap-3">
-        <Link href="/" className="text-sm text-[#5b6574] hover:text-[#1c2330]">
+        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
           ← 返回仪表盘
         </Link>
       </div>
 
       {/* 场次摘要卡 */}
-      <div className="mb-5 rounded-xl border border-[#dfe4ec] bg-white p-5">
+      <div className="mb-5 rounded-xl border border-border bg-card p-5">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-lg font-bold">{set?.title ?? session.examSetId}</h1>
           <span
             className={`rounded-full px-2.5 py-0.5 text-[11px] ${
               session.status === "COMPLETED"
-                ? "bg-[#eefaf3] text-[#18925c]"
+                ? "bg-success/10 text-success"
                 : session.status === "ABANDONED"
-                  ? "bg-[#fdf1f1] text-[#c0392b]"
-                  : "bg-[#fff7e6] text-[#c07d10]"
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-warning/15 text-warning"
             }`}
           >
             {STATUS_TEXT[session.status]}
@@ -82,30 +82,30 @@ export default async function SessionPage({
         </div>
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
-            <div className="text-xs text-[#8a93a2]">总分</div>
-            <div className="mt-0.5 text-2xl font-bold text-[#1a6feb]">
+            <div className="text-xs text-muted-foreground">总分</div>
+            <div className="mt-0.5 text-2xl font-bold text-primary">
               {session.overallBand != null ? session.overallBand.toFixed(1) : "—"}
             </div>
           </div>
           <div>
-            <div className="text-xs text-[#8a93a2]">已完成科目</div>
+            <div className="text-xs text-muted-foreground">已完成科目</div>
             <div className="mt-0.5 text-2xl font-bold">{submittedCount} / {ordered.length}</div>
           </div>
           <div>
-            <div className="text-xs text-[#8a93a2]">总用时</div>
+            <div className="text-xs text-muted-foreground">总用时</div>
             <div className="mt-0.5 text-2xl font-bold">{fmtDur(session.totalUsedSec)}</div>
           </div>
           <div>
-            <div className="text-xs text-[#8a93a2]">场次</div>
+            <div className="text-xs text-muted-foreground">场次</div>
             <div className="mt-0.5 truncate text-sm font-medium">{session.sessionId}</div>
           </div>
         </div>
       </div>
 
       {/* 三科成绩明细 */}
-      <div className="overflow-hidden rounded-xl border border-[#dfe4ec] bg-white">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         <table className="w-full text-sm">
-          <thead className="bg-[#fafbfc] text-left text-xs text-[#8a93a2]">
+          <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
             <tr>
               <th className="px-4 py-3 font-medium">科目</th>
               <th className="px-4 py-3 font-medium">Band</th>
@@ -119,10 +119,10 @@ export default async function SessionPage({
             {ordered.map(({ subject, paper, record }) => {
               const done = record?.status === "SUBMITTED" || record?.status === "COMPLETED";
               return (
-                <tr key={subject} className="border-t border-[#eef0f3]">
+                <tr key={subject} className="border-t border-border">
                   <td className="px-4 py-3 font-medium">
                     {SUBJECT_LABEL[subject]}
-                    <div className="text-xs text-[#8a93a2]">{paper?.title}</div>
+                    <div className="text-xs text-muted-foreground">{paper?.title}</div>
                   </td>
                   <td className="px-4 py-3">
                     {done && record?.bandScore != null ? (
@@ -130,33 +130,33 @@ export default async function SessionPage({
                         /* AI 批改完成后才有真实 band;0 分 = 批改尚未完成,不误导 */
                         <BandCell recordId={record.id} fallback="—" />
                       ) : (
-                        <span className="text-base font-bold text-[#1a6feb]">
+                        <span className="text-base font-bold text-primary">
                           {record.bandScore.toFixed(1)}
                         </span>
                       )
                     ) : (
-                      <span className="text-[#8a93a2]">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     {subject === "writing" ? (
-                      <span className="text-xs text-[#8a93a2]">
+                      <span className="text-xs text-muted-foreground">
                         {done ? (record.bandScore ? "已批改" : "待 AI 批改") : "—"}
                       </span>
                     ) : (
                       <span>{done && record?.correctCount != null ? `${record.correctCount} / 40` : "—"}</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-[#5b6574]">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {done ? fmtDur(record?.usedSec ?? null) : "—"}
                   </td>
                   <td className="px-4 py-3">
                     {done ? (
-                      <span className="rounded-full bg-[#eefaf3] px-2 py-0.5 text-[11px] text-[#18925c]">
+                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] text-success">
                         已交卷
                       </span>
                     ) : (
-                      <span className="rounded-full border border-[#dfe4ec] px-2 py-0.5 text-[11px] text-[#8a93a2]">
+                      <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
                         未完成
                       </span>
                     )}
@@ -165,19 +165,19 @@ export default async function SessionPage({
                     {done && record ? (
                       <Link
                         href={`/records/${record.id}`}
-                        className="text-sm text-[#1a6feb] hover:underline"
+                        className="text-sm text-primary hover:underline"
                       >
                         成绩详情 →
                       </Link>
                     ) : paper ? (
                       <Link
                         href={`/exam/${paper.examId}?session=${session.sessionId}`}
-                        className="text-sm text-[#1a6feb] hover:underline"
+                        className="text-sm text-primary hover:underline"
                       >
                         继续作答 →
                       </Link>
                     ) : (
-                      <span className="text-[#8a93a2]">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
                 </tr>
@@ -189,7 +189,7 @@ export default async function SessionPage({
 
       {/* 未完成提示 */}
       {session.status === "IN_PROGRESS" && submittedCount < ordered.length && (
-        <div className="mt-4 rounded-xl border border-[#fff1d6] bg-[#fffbf2] px-4 py-3 text-sm text-[#8a5a00]">
+        <div className="mt-4 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-medium text-warning">
           本场还有 {ordered.length - submittedCount} 科未完成。总分将在三科交卷后自动汇总。
         </div>
       )}
@@ -232,13 +232,13 @@ function BandCell({ recordId, fallback }: { recordId: number; fallback: string }
   const status = getGradingStatus(recordId);
   if (status?.done && status.bandScore != null && status.bandScore > 0) {
     return (
-      <span className="text-base font-bold text-[#1a6feb]">
+      <span className="text-base font-bold text-primary">
         {status.bandScore.toFixed(1)}
       </span>
     );
   }
   if (status?.running) {
-    return <span className="text-xs text-[#c07d10]">批改中…</span>;
+    return <span className="text-xs text-warning">批改中…</span>;
   }
-  return <span className="text-xs text-[#8a93a2]">{fallback}</span>;
+  return <span className="text-xs text-muted-foreground">{fallback}</span>;
 }

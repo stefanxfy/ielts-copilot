@@ -14,10 +14,11 @@ import {
   DEFAULT_CONFIG,
   type AppConfig,
 } from "./config-schema";
-import { appRoot } from "./paths";
+import { appRoot, configDir } from "./paths";
 
+/** 桌面安装态 config.json 落数据目录(Rust 注入 IELTS_CONFIG_ROOT);其余态仍在 appRoot */
 export function configFilePath(): string {
-  return join(appRoot(), "config.json");
+  return join(configDir(), "config.json");
 }
 
 export interface ConfigRead {

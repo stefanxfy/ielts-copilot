@@ -18,6 +18,16 @@ desktop.ini
 # ---------- Node (保留的概率较低,但先列好) ----------
 node_modules/
 npm-debug.log*
+
+# ---------- 背单词音频(P8 切片) ----------
+# 音频由 scripts/import-vocab-pipeline.mjs 调 edge-tts 重新合成,
+# 二进制大不入库;clone 后跑脚本一键重生。
+public/audio/
+
+# ---------- 背单词单词配图 ----------
+# 由 /api/vocab-batch-image 调 MiniMax 生成,同为生成型二进制不入库,
+# 可重复调用批量补图接口重生(只补无图核心词)。
+public/images/words/
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
@@ -78,3 +88,5 @@ next-server/
 
 # ---------- WorkBuddy 本地工作记忆 ----------
 .workbuddy/
+
+# (原型产物一律入 prototype/ 留痕,不再忽略 tmp/)
