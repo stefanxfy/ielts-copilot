@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 470" font-family="PingFang SC,Microsoft YaHei,sans-serif">
+  <defs>
+    <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d97706"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="40" y="24" width="600" height="44" rx="10" fill="url(#hdr)"/>
+  <text x="340" y="52" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">桌面 App 分发路线：从 zip 包到 Tauri 安装包</text>
+
+  <g>
+    <rect x="40" y="92" width="135" height="270" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="107" cy="120" r="15" fill="#d97706"/>
+    <text x="107" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">A</text>
+    <text x="107" y="153" text-anchor="middle" font-size="14" font-weight="700" fill="#78350f">7z 自解压包</text>
+    <text x="107" y="176" text-anchor="middle" font-size="11" fill="#92400e">单 exe，双击解压+启动</text>
+    <rect x="52" y="192" width="111" height="20" rx="4" fill="#fde68a"/>
+    <text x="107" y="206" text-anchor="middle" font-size="10.5" fill="#78350f">工作量：0.5 天</text>
+    <rect x="52" y="218" width="111" height="20" rx="4" fill="#fde68a"/>
+    <text x="107" y="232" text-anchor="middle" font-size="10.5" fill="#78350f">体积：~380 MB</text>
+    <rect x="52" y="244" width="111" height="20" rx="4" fill="#fecaca"/>
+    <text x="107" y="258" text-anchor="middle" font-size="10.5" fill="#7f1d1d">源码解压后全可见</text>
+    <rect x="52" y="270" width="111" height="20" rx="4" fill="#fecaca"/>
+    <text x="107" y="284" text-anchor="middle" font-size="10.5" fill="#7f1d1d">客户机仍需 Node ≥ 22</text>
+    <rect x="52" y="296" width="111" height="20" rx="4" fill="#fde68a"/>
+    <text x="107" y="310" text-anchor="middle" font-size="10.5" fill="#78350f">跨机传输友好</text>
+    <rect x="52" y="326" width="111" height="18" rx="9" fill="#d97706"/>
+    <text x="107" y="339" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">定位：应急过渡</text>
+  </g>
+
+  <g>
+    <rect x="185" y="92" width="135" height="270" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+    <circle cx="252" cy="120" r="15" fill="#059669"/>
+    <text x="252" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">B</text>
+    <text x="252" y="153" text-anchor="middle" font-size="14" font-weight="700" fill="#064e3b">pkg 单 exe</text>
+    <text x="252" y="176" text-anchor="middle" font-size="11" fill="#065f46">Node + Server 打进二进制</text>
+    <rect x="197" y="192" width="111" height="20" rx="4" fill="#a7f3d0"/>
+    <text x="252" y="206" text-anchor="middle" font-size="10.5" fill="#064e3b">工作量：1-2 天</text>
+    <rect x="197" y="218" width="111" height="20" rx="4" fill="#a7f3d0"/>
+    <text x="252" y="232" text-anchor="middle" font-size="10.5" fill="#064e3b">体积：~90-120 MB</text>
+    <rect x="197" y="244" width="111" height="20" rx="4" fill="#a7f3d0"/>
+    <text x="252" y="258" text-anchor="middle" font-size="10.5" fill="#064e3b">免 Node：运行时内置</text>
+    <rect x="197" y="270" width="111" height="20" rx="4" fill="#fecaca"/>
+    <text x="252" y="284" text-anchor="middle" font-size="10.5" fill="#7f1d1d">动态加载是主要风险点</text>
+    <rect x="197" y="296" width="111" height="20" rx="4" fill="#fde68a"/>
+    <text x="252" y="310" text-anchor="middle" font-size="10.5" fill="#92400e">public/ 259MB 需外置随行</text>
+    <rect x="197" y="326" width="111" height="18" rx="9" fill="#059669"/>
+    <text x="252" y="339" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">定位：近期主力</text>
+  </g>
+
+  <g>
+    <rect x="330" y="92" width="135" height="270" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+    <circle cx="397" cy="120" r="15" fill="#2563eb"/>
+    <text x="397" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">C</text>
+    <text x="397" y="153" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">Tauri 安装包</text>
+    <text x="397" y="176" text-anchor="middle" font-size="11" fill="#1e40af">原生窗口 + WebView2</text>
+    <rect x="342" y="192" width="111" height="20" rx="4" fill="#bfdbfe"/>
+    <text x="397" y="206" text-anchor="middle" font-size="10.5" fill="#1e3a8a">工作量：3-5 天</text>
+    <rect x="342" y="218" width="111" height="20" rx="4" fill="#bfdbfe"/>
+    <text x="397" y="232" text-anchor="middle" font-size="10.5" fill="#1e3a8a">体积：~130-160 MB</text>
+    <rect x="342" y="244" width="111" height="20" rx="4" fill="#bfdbfe"/>
+    <text x="397" y="258" text-anchor="middle" font-size="10.5" fill="#1e3a8a">免 Node + 免浏览器</text>
+    <rect x="342" y="270" width="111" height="20" rx="4" fill="#bfdbfe"/>
+    <text x="397" y="284" text-anchor="middle" font-size="10.5" fill="#1e40af">WebView2 系统自带</text>
+    <rect x="342" y="296" width="111" height="20" rx="4" fill="#fecaca"/>
+    <text x="397" y="310" text-anchor="middle" font-size="10.5" fill="#7f1d1d">Rust 工具链 + CI 编译</text>
+    <rect x="342" y="326" width="111" height="18" rx="9" fill="#2563eb"/>
+    <text x="397" y="339" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">定位：长期产品形态</text>
+  </g>
+
+  <g>
+    <rect x="475" y="92" width="135" height="270" rx="10" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1.5"/>
+    <circle cx="542" cy="120" r="15" fill="#6b7280"/>
+    <text x="542" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">D</text>
+    <text x="542" y="153" text-anchor="middle" font-size="14" font-weight="700" fill="#374151">Electron</text>
+    <text x="542" y="176" text-anchor="middle" font-size="11" fill="#4b5563">Chromium 整体打包</text>
+    <rect x="487" y="192" width="111" height="20" rx="4" fill="#e5e7eb"/>
+    <text x="542" y="206" text-anchor="middle" font-size="10.5" fill="#374151">工作量：2-3 天</text>
+    <rect x="487" y="218" width="111" height="20" rx="4" fill="#e5e7eb"/>
+    <text x="542" y="232" text-anchor="middle" font-size="10.5" fill="#374151">体积：~250-350 MB</text>
+    <rect x="487" y="244" width="111" height="20" rx="4" fill="#e5e7eb"/>
+    <text x="542" y="258" text-anchor="middle" font-size="10.5" fill="#4b5563">免 Node + 免浏览器</text>
+    <rect x="487" y="270" width="111" height="20" rx="4" fill="#fecaca"/>
+    <text x="542" y="284" text-anchor="middle" font-size="10.5" fill="#7f1d1d">asar 可解包</text>
+    <rect x="487" y="296" width="111" height="20" rx="4" fill="#e5e7eb"/>
+    <text x="542" y="310" text-anchor="middle" font-size="10.5" fill="#4b5563">生态最成熟</text>
+    <rect x="487" y="326" width="111" height="18" rx="9" fill="#6b7280"/>
+    <text x="542" y="339" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">定位：不推荐</text>
+  </g>
+
+  <path d="M 175 380 L 239 380" stroke="#92400e" stroke-width="2"/>
+  <polygon points="247,380 237,375 237,385" fill="#92400e"/>
+  <text x="210" y="372" text-anchor="middle" font-size="10" fill="#92400e">资产复用</text>
+  <path d="M 320 380 L 384 380" stroke="#1e3a8a" stroke-width="2"/>
+  <polygon points="392,380 382,375 382,385" fill="#1e3a8a"/>
+  <text x="355" y="372" text-anchor="middle" font-size="10" fill="#1e3a8a">sidecar 复用</text>
+  <path d="M 465 380 L 529 380" stroke="#9ca3af" stroke-width="2" stroke-dasharray="5,4"/>
+  <polygon points="537,380 527,375 527,385" fill="#9ca3af"/>
+  <text x="500" y="372" text-anchor="middle" font-size="10" fill="#6b7280">（可选项）</text>
+
+  <rect x="40" y="404" width="600" height="50" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+  <text x="340" y="424" text-anchor="middle" font-size="11.5" fill="#374151">现状：zip 包（客户机需 Node ≥ 22 + 首次 npm install + build，源码全可见）</text>
+  <text x="340" y="442" text-anchor="middle" font-size="11.5" fill="#374151">推荐节奏：先 B（快速免 Node）→ 沉淀 sidecar 能力 → 再 C（正式桌面形态），A 仅作应急</text>
+</svg>
