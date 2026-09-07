@@ -215,7 +215,14 @@ for (const skill of SKILLS) {
         const buf = await fetchPage(t.href);
         const html = buf.toString("utf8");
         if (objective && !html.includes("data-num")) throw new Error("test.html 无 data-num(可能被风控/未登录)");
-        if (!objective && !/Practice Test/i.test(pageTitle(html))) throw new Error(`test.html 页面异常(标题非 Practice Test): ${pageTitle(html).slice(0, 60)}`);
+        // 有效标题三型: "… Practice Test"(美式) / "… Practise Test"(英式, 站方口语卷实际拼写) /
+        //   "雅思真题试卷 …"(站方中文系列卷, 无英文标题)
+        if (!objective) {
+          const pt = pageTitle(html);
+          if (!/Practise? Test/i.test(pt) && !pt.includes("雅思真题试卷")) {
+            throw new Error(`test.html 页面异常(标题非 Practice Test/Practise Test/雅思真题试卷): ${pt.slice(0, 60)}`);
+          }
+        }
         writeFileSync(testFile, rewritePage(html, skill));
       }
       await sleep(400);
