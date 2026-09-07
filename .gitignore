@@ -96,3 +96,5 @@ next-server/
 .workbuddy/
 
 # (原型产物一律入 prototype/ 留痕,不再忽略 tmp/)
+data/iot/cookies.txt
+questions.bak-manual-20260907/
