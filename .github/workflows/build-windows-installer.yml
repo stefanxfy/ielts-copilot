@@ -31,7 +31,14 @@ jobs:
         # public/ 与 prototype/ 下的爬虫原始整句标题文件名会进入 NSIS 资源,
         # 触发 makensis 报 'failed opening file ...'。提前报错优于在
         # tauri build 末尾才暴露(那时已浪费 5+ 分钟 Rust 编译)。
-        run: node scripts/check-asset-paths.mjs || (echo "::error::请先运行 scripts/normalize-questions-filenames.mjs 治理 questions/,并人工处理 public/prototype 中超长文件名"; exit 1)
+        # 注意:PowerShell 对中文+括号+分号混排的解析敏感,这里走 if 分支避免 one-liner 嵌套。
+        shell: pwsh
+        run: |
+          node scripts/check-asset-paths.mjs
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "资产路径长度超阈值。请运行 scripts/normalize-questions-filenames.mjs 治理 questions/，并人工处理 public/prototype 中的超长文件名"
+            exit 1
+          }
 
       - uses: actions/setup-node@v4
         with:
