@@ -204,11 +204,23 @@ for (const skill of SKILLS) {
       }
       await sleep(400);
 
-      // 2. 答案页(同样重写)
+      // 2. 答案页(同样重写; 登录页=会话瞬时失效, 重试3次)
       const solFile = join(dir, "solution.html");
       if (!existsSync(solFile) || statSync(solFile).size < 50_000) {
-        const buf = await fetchPage(t.href + "/solution");
-        writeFileSync(solFile, rewritePage(buf.toString("utf8"), skill));
+        let solHtml = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const buf = await fetchPage(t.href + "/solution");
+          solHtml = buf.toString("utf8");
+          if (solHtml.includes("sys-answer")) break;
+          if (solHtml.includes("<title>登录")) {
+            solHtml = null;
+            await sleep(4000 * (attempt + 1));
+          }
+        }
+        if (!solHtml || !solHtml.includes("sys-answer")) {
+          throw new Error(solHtml && solHtml.includes("<title>登录") ? "SESSION_EXPIRED: 会话失效(返回登录页)" : "solution.html 无 sys-answer");
+        }
+        writeFileSync(solFile, rewritePage(solHtml, skill));
       }
       await sleep(400);
 
@@ -255,6 +267,10 @@ for (const skill of SKILLS) {
       failed++;
       appendFileSync(FAIL_LOG, `${new Date().toISOString()} ${skill} ${slug} :: ${e.message}\n`);
       console.error(`✗ ${slug} :: ${e.message}`);
+      if (String(e.message).includes("SESSION_EXPIRED")) {
+        console.error("!! 会话失效，终止批跑——需更新 data/iot/cookies.txt 后重跑(幂等续传)");
+        process.exit(2);
+      }
     }
     if (localCount > 0 && localCount % 20 === 0) await sleep(3000); // 温和限速
   }
