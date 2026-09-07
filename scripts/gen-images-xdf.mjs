@@ -201,7 +201,9 @@ async function processAll(key, targets) {
           return { ok: true, bytes };
         }
         const u = updStmt();
-        const newCj = { ...cj, image: `/images/words/${row.word}.png` };
+        // 回写路径必须与落盘目录一致(含 PREFIX),否则展示层断链
+        const imagePath = `/images/words/${PREFIX ? PREFIX + "/" : ""}${row.word}.png`;
+        const newCj = { ...cj, image: imagePath };
         try {
           u.stmt.run(JSON.stringify(newCj), row.id);
         } finally {

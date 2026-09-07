@@ -82,10 +82,13 @@ fn bootstrap(app: tauri::AppHandle) {
         return;
     };
 
-    let Ok(resource_dir) = app.path().resource_dir() else {
+    let Ok(resource_dir_raw) = app.path().resource_dir() else {
         fail(&win, "无法定位安装资源目录");
         return;
     };
+    // 关键:Tauri v2 Windows 上 resource_dir() 会带 \\?\ verbatim 前缀,
+    // Node v22 无法处理该前缀,会报 EISDIR 'C:'。先剥掉。
+    let resource_dir = strip_verbatim_prefix(&resource_dir_raw);
     let server_root = resource_dir.join("server");
     let node_exe = resource_dir.join("runtime").join("node.exe");
     let entry = server_root.join("server.js");
@@ -366,6 +369,28 @@ fn attach_job_object(child: &Child) {
 
 #[cfg(not(windows))]
 fn attach_job_object(_child: &Child) {}
+
+/* ---------- 路径规范化 ----------
+   Tauri v2 的 resource_dir() 在 Windows 上会返回带 \\?\ 前缀的 DOS device path
+   (例如 \\?\C:\Users\admin\AppData\Local\IELTS Copilot)。Node v22 的 realpathSync
+   在解析这种路径时会调用 lstat('C:') 失败 —— 因为 Node 把 \\?\ 路径中的
+   盘符截短成 'C:' 然后 stat 失败,报 EISDIR (issue #61165)。
+
+   修法:把 \\?\ 前缀剥掉,返回普通 Win32 路径(用 verbatim 前缀也行,但
+   \\?\ 路径在传给 node 子进程时,Node 自己会出问题)。最稳的是 strip 前缀。*/
+#[cfg(windows)]
+fn strip_verbatim_prefix(p: &Path) -> PathBuf {
+    let s = p.to_string_lossy();
+    if let Some(rest) = s.strip_prefix(r"\\?\") {
+        PathBuf::from(rest)
+    } else {
+        p.to_path_buf()
+    }
+}
+#[cfg(not(windows))]
+fn strip_verbatim_prefix(p: &Path) -> PathBuf {
+    p.to_path_buf()
+}
 
 /* ---------- 日志(数据目录/desktop.log,真机排障用) ---------- */
 
