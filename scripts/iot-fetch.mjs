@@ -215,11 +215,12 @@ for (const skill of SKILLS) {
         const buf = await fetchPage(t.href);
         const html = buf.toString("utf8");
         if (objective && !html.includes("data-num")) throw new Error("test.html 无 data-num(可能被风控/未登录)");
-        // 有效标题三型: "… Practice Test"(美式) / "… Practise Test"(英式, 站方口语卷实际拼写) /
-        //   "雅思真题试卷 …"(站方中文系列卷, 无英文标题)
+        // 有效标题四型: "… Practice Test"(美式) / "… Practise Test"(英式, 站方口语卷实际拼写) /
+        //   "雅思真题试卷 …"(站方中文系列卷, 无英文标题) /
+        //   "IELTS Mock Test … 雅思(写作|口语|听力|阅读)真题 N"(站方 mock-test 中文系列卷)
         if (!objective) {
           const pt = pageTitle(html);
-          if (!/Practi[cs]e? Test/i.test(pt) && !pt.includes("雅思真题试卷")) {
+          if (!/Practi[cs]e? Test/i.test(pt) && !/雅思(听力|阅读|写作|口语)真题/.test(pt) && !pt.includes("雅思真题试卷")) {
             throw new Error(`test.html 页面异常(标题非 Practice Test/Practise Test/雅思真题试卷): ${pt.slice(0, 60)}`);
           }
         }
