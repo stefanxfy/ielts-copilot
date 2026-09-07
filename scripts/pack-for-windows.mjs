@@ -124,6 +124,23 @@ execFileSync("zip", ["-r", "-q", "-X", "-y", out, ".", "-x", ...excludes], {
 const mb = (statSync(out).size / 1024 / 1024).toFixed(1);
 console.log(`\n[pack] 完成:${out}(${mb} MB)`);
 
+// ---------- 4b. Windows MAX_PATH 预警(260 字符;包内路径 > 200 就有风险) ----------
+try {
+  const names = execFileSync("unzip", ["-Z1", out], { encoding: "utf8" })
+    .split("\n")
+    .filter(Boolean);
+  const long = names.filter((n) => n.length > 200).sort((a, b) => b.length - a.length);
+  if (long.length) {
+    console.warn(
+      `\n[pack] 警告:${long.length} 个条目路径 > 200 字符 —— Windows 资源管理器解压可能报 0x80010135(路径太长)`,
+    );
+    console.warn("[pack] 解法:用 7-Zip / Bandizip 解压(自带长路径 API),或解压到短目录如 C:\\ielts\\");
+    long.slice(0, 3).forEach((n) => console.warn(`       ${n.length}  ...${n.slice(-56)}`));
+  }
+} catch {
+  // 无 unzip 则跳过预警(不影响产物)
+}
+
 // ---------- 5. 目标机步骤 ----------
 if (forWin) {
   console.log(`

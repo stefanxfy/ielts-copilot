@@ -22,12 +22,13 @@
    - 内部调用 `scripts/start-windows.ps1`(已带 `-ExecutionPolicy Bypass`,无需改系统策略),逻辑与 macOS 完全一致
    - 额外:`config.json` 不存在时自动从 `config.example.json` 复制
    - 源码更新后需要重新构建:`powershell -NoProfile -ExecutionPolicy Bypass -File scripts\start-windows.ps1 -Rebuild`
-   - 若 `npm install` 报原生模块编译失败,重装 Node 时勾选 "Automatically install the necessary tools",或装 Visual Studio 生成工具
+   - `npm install` 带 `--ignore-scripts`(better-sqlite3 包内自带全平台预编译,目标机无需 Python/VS 编译环境)
 3. **打包到另一台机器测试**:`node scripts/pack-for-windows.mjs --with-data`(`--target=mac` 打 mac 包,默认 win)
    - 自动排除平台相关产物(`node_modules` / `.next` / `next-server` / `.git`)—— 本机编译的 `better-sqlite3` 原生模块在异平台/异架构上必然崩,且启动脚本见 `next-server/server.js` 存在就会跳过构建
    - `--with-data` 先 WAL checkpoint 再只带 `app.db` 单文件;默认还排除 `public/audio`(159M)、`questions/`、`prototype/`(`--full` 全带);`--keep-deps` 连依赖一起带(仅同平台同架构,包 ~1.6G)
    - 产物 `dist/ielts-copilot-<win|mac>-<时间戳>.zip`(约 120M,已 gitignore);目标机需 Node ≥22 + 联网(`npm install`,除非 `--keep-deps`)
    - Windows 包只放 ASCII 名的 `start.bat`(macOS zip 存 UTF-8 文件名,资源管理器解压会把 `启动.bat` 解成乱码名);mac 包保留中文名 `启动.command`(解压显示正常,执行位保留)
+   - **真机测试**:步骤、验收清单、故障排查见 `docs/windows-test-guide.md`(ASCII 文件名,避免 Windows 解压中文名乱码);环境不达标先跑 `scripts\check-windows-env.ps1` 一键体检
 3. **浏览器使用**:首屏仪表盘(DB / 配置 / LLM 三状态卡)→ 点「设置」填 API Key → 回仪表盘确认全绿
 4. **数据位置**:`data/app.db`(SQLite,自动建库)+ `config.json`(本地配置,**勿分享**)
 

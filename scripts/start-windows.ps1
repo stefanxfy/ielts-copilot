@@ -108,15 +108,29 @@ if ($Rebuild -and (Test-Path (Join-Path $Root "next-server"))) {
 }
 
 if (-not (Test-Path $ServerEntry)) {
-    $npmCmd = Get-Command npm -ErrorAction SilentlyContinue
+    # 必须显式解析 npm.cmd:Get-Command npm 在 PowerShell 下会优先命中 npm.ps1,
+    # 而下面经 cmd.exe 调用,cmd 不识别 .ps1,会走文件关联(弹出记事本)而不是执行 npm
+    $npmCmd = Get-Command npm.cmd -ErrorAction SilentlyContinue
     if (-not $npmCmd) { Stop-WithMessage "未检测到 npm(随 Node.js 一起安装),请先重装 Node.js" }
 
     Write-Host ""
     Write-Step "首次运行:安装依赖并构建(数分钟,仅此一次)..." "Cyan"
     Write-Host ""
-    & cmd.exe /c "`"$($npmCmd.Source)`" install"
+
+    # --ignore-scripts:跳过 npm 的隐式 node-gyp 源码编译。better-sqlite3@13 包内自带
+    # 全平台预编译(prebuilds/*.node),运行时直接加载,根本不需要 Python/VS 工具链;
+    # 而 npm 见到包根的 binding.gyp 会强制 node-gyp rebuild,在无 Python 的机器上
+    # 必然失败(真机实测)。依赖树里仅 esbuild/unrs-resolver 有 postinstall,均有
+    # 平台可选包兜底,跳过无损。npm run build 不加此参数,项目自身 postbuild 钩子照常执行。
+    & cmd.exe /c "`"$($npmCmd.Source)`" install --ignore-scripts"
     if ($LASTEXITCODE -ne 0) {
-        Stop-WithMessage "npm install 失败(退出码 $LASTEXITCODE)。常见原因:网络不通,或 better-sqlite3 需编译环境(安装 Node 时勾选 'Automatically install the necessary tools',或装 Visual Studio 生成工具)"
+        # Windows 下杀软/文件锁偶发 EPERM,清理缓存后重试一次
+        Write-Step "install 失败(退出码 $LASTEXITCODE),重试一次..." "Yellow"
+        Start-Sleep -Seconds 2
+        & cmd.exe /c "`"$($npmCmd.Source)`" install --ignore-scripts --no-audit --no-fund"
+        if ($LASTEXITCODE -ne 0) {
+            Stop-WithMessage "npm install 两次失败(退出码 $LASTEXITCODE)。常见原因:网络不通、杀软锁定文件(可暂时关闭杀软或删除 node_modules 后重试)"
+        }
     }
     & cmd.exe /c "`"$($npmCmd.Source)`" run build"
     if ($LASTEXITCODE -ne 0) { Stop-WithMessage "npm run build 失败(退出码 $LASTEXITCODE)" }
