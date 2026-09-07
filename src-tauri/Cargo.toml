@@ -20,6 +20,8 @@ windows-sys = { version = "0.59", features = [
   "Win32_Foundation",
   "Win32_System_JobObjects",
   "Win32_System_Threading",
+  # CreateJobObjectW 签名含 SECURITY_ATTRIBUTES,需要 Win32_Security feature
+  "Win32_Security",
 ] }
 
 [profile.release]
