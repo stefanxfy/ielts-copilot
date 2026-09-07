@@ -56,7 +56,9 @@ jobs:
       - name: 自检 better-sqlite3 预编译二进制
         shell: pwsh
         run: |
-          $r = node -e "const b=require('better-sqlite3'); const d=new b.Database(':memory:'); console.log('better-sqlite3 prebuild 加载 OK, sqlite ' + d.prepare('select sqlite_version() v').get().v)"
+          # 注意调用形式:better-sqlite3 v13 的 CommonJS 导出就是 Database 类本身,
+          # 不是 { Database } 命名空间。正确写法:const Database = require(...); new Database(...)
+          $r = node -e "const Database=require('better-sqlite3'); const d=new Database(':memory:'); console.log('better-sqlite3 prebuild 加载 OK, sqlite ' + d.prepare('select sqlite_version() v').get().v)"
           if ($LASTEXITCODE -ne 0) { Write-Error "better-sqlite3 加载失败(见上方输出)"; exit 1 }
           Write-Output $r
 
