@@ -26,6 +26,7 @@
 import { createRequire } from "node:module";
 import { copyFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { walkEnPunct } from "./lib/normalize-en-punct.mjs";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
@@ -294,6 +295,9 @@ function convertWord(o, fallbackRank) {
     ...(morphSeed ? { morphSeed } : {}),
     ...(derives.length ? { derives } : {}),
   };
+
+  // 英文域标点归一化(en/phrase/definition/coll;Noto Sans SC 弯引号渲染问题,导入层铁律)
+  walkEnPunct(content);
 
   const rank = Number.isFinite(o.wordRank) ? o.wordRank : fallbackRank;
   return { word: w, phoneticUk, phoneticUs, content, rank, morphSeed, warnings };

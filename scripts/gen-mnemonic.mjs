@@ -31,6 +31,7 @@ import { spawn } from "node:child_process";
 import { mkdir, writeFile, stat, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { walkEnPunct } from "./lib/normalize-en-punct.mjs";
 
 // ===== CLI =====
 const args = Object.fromEntries(
@@ -413,8 +414,9 @@ for (const word of WORDS) {
     );
   }
 
-  // 写回(幂等 merge;--dry-run 只打印)
+  // 写回(幂等 merge;--dry-run 只打印)。LLM 输出英文域可能带弯引号,merge 前归一化
   if (!DRY_RUN && Object.keys(generated).length) {
+    walkEnPunct(generated);
     const merged = { ...content, ...generated };
     sqlite
       .prepare("UPDATE words SET content_json = ?, updated_at = ? WHERE id = ?")

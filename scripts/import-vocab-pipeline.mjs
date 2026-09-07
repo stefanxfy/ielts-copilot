@@ -22,6 +22,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { eq, sql, inArray } from "drizzle-orm";
 import { wordBooks, words, bookWordRelation } from "../src/db/schema.ts";
+import { walkEnPunct } from "./lib/normalize-en-punct.mjs";
 import { spawn } from "node:child_process";
 import { mkdir, writeFile, access } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -164,6 +165,8 @@ for (const w of seedList) {
     ...(data.definition?.length ? { definition: data.definition } : {}),
     ...(data.exchange ? { exchange: data.exchange } : {}),
   };
+  // 英文域标点归一化(examples.en/definition;Noto 弯引号渲染问题,导入层铁律)
+  walkEnPunct(contentJson);
   // 先查
   const existing = db
     .select({ id: words.id, origin: words.origin, contentJson: words.contentJson })

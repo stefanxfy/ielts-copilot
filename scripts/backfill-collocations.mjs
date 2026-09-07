@@ -15,6 +15,7 @@
 import { createRequire } from "node:module";
 import { copyFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { walkEnPunct } from "./lib/normalize-en-punct.mjs";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
@@ -106,7 +107,10 @@ for (const r of rows) {
   }
   if (contexts.length) cj.contexts = contexts;
 
-  const changed = (cj.collocations?.length ?? 0) !== beforeColl || contexts.length !== beforeCtx;
+  // 英文域标点归一化(phrase/en/coll;导入层铁律,含新回填条目)
+  const punctChanged = walkEnPunct(cj);
+
+  const changed = (cj.collocations?.length ?? 0) !== beforeColl || contexts.length !== beforeCtx || punctChanged;
   if (changed) {
     details.push(wordLog);
     if (APPLY) updStmt.run(JSON.stringify(cj), r.id);
