@@ -89,11 +89,21 @@ function parseAnswers(html) {
 }
 
 function audioUrl(html) {
-  const m = html.match(/https:\/\/ieltsonlinetests\.oss[^"'\s)]+\.mp3/);
+  let m = html.match(/https:\/\/ieltsonlinetests\.oss[^"'\s)]+\.mp3/);
+  if (m) return m[0];
+  m = html.match(/https?:\/\/media\.intergreat\.com\/[^"'\s)]+\.mp3/);
   return m ? m[0] : null;
 }
 
-const slugYear = (slug) => (slug.match(/ielts-mock-test-(\d{4})-/) || [])[1] ?? "unknown";
+const slugYear = (slug) => {
+  let s = slug;
+  try { s = decodeURIComponent(slug); } catch {}
+  const m = s.match(/ielts-mock-test-(\d{4})-/) || s.match(/^(\d{4})(\d{2})/);
+  return m ? m[1] : "旧版";
+};
+const slugDirName = (slug) => {
+  try { return decodeURIComponent(slug); } catch { return slug; }
+};
 
 /* ---------- 共享资产(css/js hash 同源文件) + 卷内图片 ---------- */
 
@@ -132,8 +142,8 @@ function rewritePage(html, skill) {
   });
   // 2b) 图片加载失败时回退站方原图(离线缺图仍可在线兜底)
   html = html.replace(/data-iot-orig="(\/sites\/default\/files\/[^"]+?\.(?:png|jpe?g|gif|svg|webp)(?:\?[^"]*)?)"/gi, 'data-iot-orig="$1" onerror="this.onerror=null;this.src=\'$1\'"');
-  // 3) OSS 音频 → audio.mp3
-  html = html.replace(/(src)="(https:\/\/ieltsonlinetests\.oss[^"']+\.mp3)[^"]*"/g, '$1="audio.mp3" data-iot-orig="$2"');
+  // 3) 音频(OSS + intergreat 老卷) → audio.mp3
+  html = html.replace(/(src)="((?:https:\/\/ieltsonlinetests\.oss|https?:\/\/media\.intergreat\.com)[^"']+\.mp3)[^"]*"/g, '$1="audio.mp3" data-iot-orig="$2"');
   // 4) 本地已有对应件的 CDN
   html = html.replace(/(href|src)="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/jquery\.nicescroll[^"]*"/g, '$1="../../../exam-assets/jquery.nicescroll.min.js"');
   html = html.replace(/(href|src)="https:\/\/unpkg\.com\/qr-code-styling[^"]*"/g, '$1="../../../exam-assets/qr-code-styling.js"');
@@ -189,7 +199,7 @@ for (const skill of SKILLS) {
 
   for (const t of tests) {
     const slug = t.href.split("/").pop();
-    const dir = join(OUT_ROOT, SKILL_DIR[skill], slugYear(slug), slug);
+    const dir = join(OUT_ROOT, SKILL_DIR[skill], slugYear(slug), slugDirName(slug));
     mkdirSync(dir, { recursive: true });
     const localCount = done + failed;
 

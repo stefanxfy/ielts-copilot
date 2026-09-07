@@ -169,7 +169,9 @@ async function processAll(key, targets) {
 
   const updStmt = () => {
     const db = new Database(DB_PATH);
-    const stmt = db.prepare("UPDATE words SET content_json = ?, updated_at = unixepoch() WHERE id = ?");
+    const stmt = db.prepare(
+      "UPDATE words SET content_json = json_set(COALESCE(content_json,'{}'), '$.image', json(?)), updated_at = unixepoch() WHERE id = ?",
+    );
     return { db, stmt, close: () => db.close() };
   };
 
@@ -202,10 +204,10 @@ async function processAll(key, targets) {
         }
         const u = updStmt();
         // 回写路径必须与落盘目录一致(含 PREFIX),否则展示层断链
+        // 原子回写:SQL 层 json_set 只动 image 键,防与 gen-mnemonic 等脚本并发互覆盖丢字段
         const imagePath = `/images/words/${PREFIX ? PREFIX + "/" : ""}${row.word}.png`;
-        const newCj = { ...cj, image: imagePath };
         try {
-          u.stmt.run(JSON.stringify(newCj), row.id);
+          u.stmt.run(imagePath, row.id);
         } finally {
           u.close();
         }
