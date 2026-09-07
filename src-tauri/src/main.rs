@@ -1,21 +1,19 @@
-/**
- * src-tauri/src/main.rs — Tauri 壳:sidecar 生命周期(docs/桌面App分发方案设计.md §5.4)
- *
- * 职责链(复刻 scripts/start-windows.ps1 已验证语义):
- *   1) 数据目录 portable 双态:安装根可写 → 就地 data/;否则 %APPDATA%\ielts-copilot\data
- *   2) 首启 config.json 缺失 → 从随包 config.example.json 复制(apiKey 为空)
- *   3) 读 config.json 端口(JSONC 容注释,缺省 3177);被占用则 +1 递增(上限 +20)
- *   4) spawn runtime/node.exe server/server.js(env 注入 IELTS_APP_ROOT /
- *      IELTS_DATA_ROOT / IELTS_CONFIG_ROOT,src/lib/paths.ts 双态解析对接)
- *      · 不注入 IELTS_HEARTBEAT_EXIT —— 桌面态「关窗=退出」,心跳看门狗是浏览器形态语义
- *   5) Job Object(KILL_ON_JOB_CLOSE):主进程退出即回收 node 进程树,杜绝孤儿
- *   6) /api/health 轮询 60s → 通过后 WebView 从 loading 页 navigate 到服务地址
- *
- * 构建期布局(tauri.conf.json resources,CI 组装):
- *   <resource_dir>/server/         ← next-server 内容平铺(server.js + public + …)
- *   <resource_dir>/runtime/node.exe
- *   <resource_dir>/config.example.json
- */
+//! src-tauri/src/main.rs — Tauri 壳:sidecar 生命周期(docs/桌面App分发方案设计.md §5.4)
+//!
+//! 职责链(复刻 scripts/start-windows.ps1 已验证语义):
+//!   1) 数据目录 portable 双态:安装根可写 → 就地 data/;否则 %APPDATA%\ielts-copilot\data
+//!   2) 首启 config.json 缺失 → 从随包 config.example.json 复制(apiKey 为空)
+//!   3) 读 config.json 端口(JSONC 容注释,缺省 3177);被占用则 +1 递增(上限 +20)
+//!   4) spawn runtime/node.exe server/server.js(env 注入 IELTS_APP_ROOT /
+//!      IELTS_DATA_ROOT / IELTS_CONFIG_ROOT,src/lib/paths.ts 双态解析对接)
+//!      · 不注入 IELTS_HEARTBEAT_EXIT —— 桌面态「关窗=退出」,心跳看门狗是浏览器形态语义
+//!   5) Job Object(KILL_ON_JOB_CLOSE):主进程退出即回收 node 进程树,杜绝孤儿
+//!   6) /api/health 轮询 60s → 通过后 WebView 从 loading 页 navigate 到服务地址
+//!
+//! 构建期布局(tauri.conf.json resources,CI 组装):
+//!   <resource_dir>/server/         ← next-server 内容平铺(server.js + public + …)
+//!   <resource_dir>/runtime/node.exe
+//!   <resource_dir>/config.example.json
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -306,6 +304,7 @@ fn read_port(path: &Path) -> Option<u16> {
 
 #[cfg(windows)]
 fn attach_job_object(child: &Child) {
+    use std::os::windows::io::AsRawHandle;
     use windows_sys::Win32::System::JobObjects::{
         AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
         SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
@@ -325,8 +324,8 @@ fn attach_job_object(child: &Child) {
             std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
         );
         if ok != 0 {
-            if let Some(h) = child.raw_handle() {
-                AssignProcessToJobObject(job, h as isize);
+            if let Some(h) = child.as_raw_handle() {
+                AssignProcessToJobObject(job, h);
             }
         }
         // 故意不 CloseHandle:KILL_ON_JOB_CLOSE 保证主进程退出时杀整棵 node 进程树
