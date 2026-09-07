@@ -1,0 +1,67 @@
+name: 构建 Windows 免安装测试包
+
+# 用途:GitHub 托管 Windows runner 上把 npm ci + npm run build 做完,
+#      产出「解压即用」的包 —— 目标机无需联网、无需等待构建。
+#
+# 为什么不能在 macOS 开发机上直接做:
+#   next build 需要能加载 @next/swc-<平台> 原生二进制,mac 上跑不出 Windows 版产物;
+#   better-sqlite3 本身是多平台预编译(prebuilds/ 含 win32-x64.node),反而不是障碍。
+#
+# 用法:GitHub 仓库页 → Actions → 本工作流 → Run workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_node_modules:
+        description: 包含 node_modules(目标机可重新 build;去掉后包小很多,但只能直接运行)
+        type: boolean
+        default: true
+      upload_release:
+        description: 同时作为 Release 资产上传(需先有 tag 推送)
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建(postbuild 自动产出 next-server/)
+        run: npm run build
+
+      - name: 生成 config.json(空 apiKey,目标机在设置页填)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path config.json)) { Copy-Item config.example.json config.json }
+          # data/ 不入库:目标机首次启动由 instrumentation 自动建库 + 跑迁移
+
+      - name: 打包(zip)
+        shell: pwsh
+        run: |
+          $zip = "ielts-copilot-win-${{ github.run_number }}.zip"
+          $ex = @('-xr!.git', '-xr!.workbuddy', '-xr!dist', '-xr!.next')
+          if ('${{ inputs.include_node_modules }}' -ne 'true') { $ex += '-xr!node_modules' }
+          & 7z a -tzip $zip . $ex
+          Get-Item $zip | Select-Object Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ielts-copilot-win-${{ github.run_number }}
+          path: ielts-copilot-win-*.zip
+          retention-days: 30
+
+      - name: 上传到 Release(可选)
+        if: ${{ inputs.upload_release }}
+        shell: pwsh
+        run: gh release upload "${{ github.ref_name }}" ielts-copilot-win-*.zip --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

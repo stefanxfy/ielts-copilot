@@ -18,9 +18,18 @@
    - 产物缺失 → 自动 `npm install && npm run build`(仅此一次)
    - 端口 3177 被占 → 自动 +1 递增(最多 +20,不写回 `config.json`)
    - 60 秒健康轮询 → 自动开浏览器 → 浏览器关 ≤100s 应用退出
-2. **浏览器使用**:首屏仪表盘(DB / 配置 / LLM 三状态卡)→ 点「设置」填 API Key → 回仪表盘确认全绿
-3. **数据位置**:`data/app.db`(SQLite,自动建库)+ `config.json`(本地配置,**勿分享**)
-4. **Windows 启动**:M1 不交付(2026-08-30 用户决定),移至 M5
+2. **Windows · 首次启动**:在仓库根目录双击 `启动.bat`(或 ASCII 名的 `start.bat`,两者内容一致 —— 从 macOS 打的 zip 在资源管理器解压时中文名可能变乱码,用 `start.bat` 更保险)
+   - 内部调用 `scripts/start-windows.ps1`(已带 `-ExecutionPolicy Bypass`,无需改系统策略),逻辑与 macOS 完全一致
+   - 额外:`config.json` 不存在时自动从 `config.example.json` 复制
+   - 源码更新后需要重新构建:`powershell -NoProfile -ExecutionPolicy Bypass -File scripts\start-windows.ps1 -Rebuild`
+   - 若 `npm install` 报原生模块编译失败,重装 Node 时勾选 "Automatically install the necessary tools",或装 Visual Studio 生成工具
+3. **打包到另一台机器测试**:`node scripts/pack-for-windows.mjs --with-data`(`--target=mac` 打 mac 包,默认 win)
+   - 自动排除平台相关产物(`node_modules` / `.next` / `next-server` / `.git`)—— 本机编译的 `better-sqlite3` 原生模块在异平台/异架构上必然崩,且启动脚本见 `next-server/server.js` 存在就会跳过构建
+   - `--with-data` 先 WAL checkpoint 再只带 `app.db` 单文件;默认还排除 `public/audio`(159M)、`questions/`、`prototype/`(`--full` 全带);`--keep-deps` 连依赖一起带(仅同平台同架构,包 ~1.6G)
+   - 产物 `dist/ielts-copilot-<win|mac>-<时间戳>.zip`(约 120M,已 gitignore);目标机需 Node ≥22 + 联网(`npm install`,除非 `--keep-deps`)
+   - Windows 包只放 ASCII 名的 `start.bat`(macOS zip 存 UTF-8 文件名,资源管理器解压会把 `启动.bat` 解成乱码名);mac 包保留中文名 `启动.command`(解压显示正常,执行位保留)
+3. **浏览器使用**:首屏仪表盘(DB / 配置 / LLM 三状态卡)→ 点「设置」填 API Key → 回仪表盘确认全绿
+4. **数据位置**:`data/app.db`(SQLite,自动建库)+ `config.json`(本地配置,**勿分享**)
 
 ---
 
@@ -29,6 +38,7 @@
 ```
 ielts-copilot/
 ├─ 启动.command              # macOS 双击入口(M1)
+├─ 启动.bat                  # Windows 双击入口(调用 scripts/start-windows.ps1)
 ├─ config.example.json       # 配置样板(进 git,带完整注释)
 ├─ config.json               # 运行时配置(本地,不进 git)
 ├─ package.json / next.config.ts / tsconfig.json / eslint.config.mjs / drizzle.config.ts / components.json
@@ -43,6 +53,7 @@ ielts-copilot/
 ├─ scripts/                  # 工程脚本(M1)
 │  ├─ dev.mjs                # 读 config 端口 → next dev -H 127.0.0.1 -p PORT
 │  ├─ postbuild.mjs          # standalone 产物修补 → next-server/(自动 npm 钩子)
+│  ├─ start-windows.ps1      # Windows 启动主体逻辑(启动.bat 调用它)
 │  └─ db-inspect.mjs         # 调试:dump 表计数
 ├─ src/                      # Next.js 16 App Router
 │  ├─ instrumentation.ts     # 启动钩子:建库 + 心跳看门狗(仅打包模式)
@@ -132,6 +143,6 @@ prototype/
 | §8 `/` 与 `/settings` 两页面可用 | ✅ |
 | §9 技术栈齐(Next 16 + TS + Tailwind 4 + shadcn + zustand + better-sqlite3 + Drizzle) | ✅ |
 | 用户诉求预留:responses 逐题记录表 + attempts 可回放字段就绪(M2/M3 直接使用) | ✅ |
-| Windows 启动脚本 `.bat` | ⏸ M5(2026-08-30 用户决定延后) |
+| Windows 启动脚本 `启动.bat` + `scripts/start-windows.ps1` | ✅ 2026-09-07(对齐 `启动.command` 六步链路) |
 
 判分引擎、卷源解析入库、机考界面、成绩页 → 见 `docs/M1-实施计划.md` 后续里程碑(M2/M3)。
