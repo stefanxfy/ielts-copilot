@@ -22,6 +22,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+      - name: 启用 Windows 长路径(questions/ 真题目录文件名超 MAX_PATH,checkout 必挂)
+        run: git config --system core.longpaths true
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
