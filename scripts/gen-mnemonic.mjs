@@ -21,6 +21,17 @@
  *   node scripts/gen-mnemonic.mjs --word=abandon --fields=morph,syl
  *   node scripts/gen-mnemonic.mjs --word=abandon --rebuild         # 先清旧四字段再生成
  *   node scripts/gen-mnemonic.mjs --word=abandon --dry-run         # 只调 LLM 不写库
+ *   node scripts/gen-mnemonic.mjs --book=17                        # 整书批量(D7 选词,morph+syl)
+ *   node scripts/gen-mnemonic.mjs --book=17 --fields=morph         # 只跑 morph
+ *   node scripts/gen-mnemonic.mjs --book=17 --pilot=100            # 试点:morph 按 4 档分层抽 100 + syl 抽 25
+ *   node scripts/gen-mnemonic.mjs --book=17 --limit=200            # morph 任务截前 200
+ *
+ * D7 选词规则(2026-09-07 三轮收敛,docs/新东方雅思词汇3575入库计划.md):
+ *   morph: 有 morphSeed 必跑(不限词长);>8 有 ECDICT root 跑;>8 双无证据 LLM 自判(skip 合法);
+ *          ≤8 且无 seed 放弃;短语词条放弃
+ *   syl:   非短语且有 phonetic_uk 即跑(音标门禁兜底)
+ *   种子注入: morph prompt 喂 morphSeed/ECDICT root;validate 做 piece 级交叉校验
+ *     (有种子=piece 双向集合一致;仅 root=≥1 piece 命中词根;双无=skip 合法终态,不入库)
  *
  * 生成模型(2026-09-06 定):GLM-5.3 走 coding plan 专用端点 /api/coding/paas/v4(包月额度,
  * 不烧 MiniMax 按量余额)。bench 对比实验结论:GLM-5.3 语义错误率 0.30 vs MiniMax-M3 0.47。
@@ -41,6 +52,9 @@ const args = Object.fromEntries(
   }),
 );
 const WORDS = (args.word ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+const BOOK = args.book ? parseInt(args.book, 10) : null;
+const PILOT = args.pilot ? parseInt(args.pilot, 10) : null;
+const LIMIT = args.limit ? parseInt(args.limit, 10) : null;
 const REBUILD = !!args.rebuild;
 const DRY_RUN = !!args["dry-run"];
 const TTS_ONLY = !!args["tts-only"]; // 只对已存在 contexts 补缺失音频,不调 LLM
@@ -50,8 +64,66 @@ const FIELDS = (args.fields ?? "morph,syl,derives,context")
   .filter((f) => ["morph", "syl", "derives", "context"].includes(f));
 const TRIES_PER_FIELD = 3;
 
-if (!WORDS.length) {
-  console.error("用法: node scripts/gen-mnemonic.mjs --word=literature[,abandon] [--fields=morph,syl,derives,context] [--rebuild] [--dry-run]");
+// ===== D7 选词(book17 实测口径,词长=纯字母数) =====
+const letterLen = (w) => w.replace(/[^a-zA-Z]/g, "").length;
+const isPhrase = (w) => /\s/.test(w.trim());
+function morphTier(c, word) {
+  // 返回 [tier, 是否允许 skip];tier: seed | root | judge | drop
+  if (c.morphSeed) return ["seed", false];
+  if (isPhrase(word)) return ["drop", false];
+  if (letterLen(word) <= 8) return ["drop", false];
+  if (c.root) return ["root", false];
+  return ["judge", true]; // >8 双无证据:LLM 自判,skip 合法
+}
+
+// 批量模式(--book=17):按 D7 选出任务词表,打印分档统计
+async function buildBatchList(bookId) {
+  const { default: Database } = await import("better-sqlite3");
+  const db = new Database("./data/app.db", { readonly: true });
+  const rows = db
+    .prepare(
+      `SELECT w.id, w.word, w.phonetic_uk, w.content_json FROM words w
+       JOIN book_word_relation r ON r.word_id = w.id WHERE r.book_id = ?`,
+    )
+    .all(bookId);
+  db.close();
+  const tasks = { morph: [], syl: [] };
+  const stats = { morph: { seed: 0, root: 0, judge: 0, drop: 0 }, syl: { run: 0, skipNoIpa: 0, skipPhrase: 0, have: 0 } };
+  for (const r of rows) {
+    let c;
+    try { c = JSON.parse(r.content_json ?? "{}"); } catch { c = {}; }
+    c = c ?? {};
+    const word = r.word;
+    if (FIELDS.includes("morph") && !c.morph) {
+      const [tier] = morphTier(c, word);
+      if (tier === "drop") stats.morph.drop++;
+      else tasks.morph.push({ word, tier, c });
+      if (tier !== "drop") stats.morph[tier]++;
+      else stats.morph.drop = stats.morph.drop; // keep shape
+    }
+    if (FIELDS.includes("syl") && !c.syl) {
+      if (isPhrase(word)) stats.syl.skipPhrase++;
+      else if (!r.phonetic_uk) stats.syl.skipNoIpa++;
+      else { tasks.syl.push({ word, tier: "syl", c }); stats.syl.run++; }
+    }
+    if (c.morph) stats.morph.have = (stats.morph.have ?? 0) + 1;
+    if (c.syl) stats.syl.have = (stats.syl.have ?? 0) + 1;
+  }
+  // 试点抽样:morph 三档分层(45/10/20=75)+ syl 抽 25,合计 pilot
+  if (PILOT) {
+    const quota = { seed: Math.round(PILOT * 0.45), root: Math.round(PILOT * 0.1), judge: Math.round(PILOT * 0.2), syl: Math.round(PILOT * 0.25) };
+    const pick = (arr, n) => arr.filter((_, i) => i % Math.ceil(arr.length / Math.min(n, arr.length)) === 0).slice(0, n);
+    tasks.morph = [...pick(tasks.morph.filter((t) => t.tier === "seed"), quota.seed),
+      ...pick(tasks.morph.filter((t) => t.tier === "root"), quota.root),
+      ...pick(tasks.morph.filter((t) => t.tier === "judge"), quota.judge)];
+    tasks.syl = pick(tasks.syl, quota.syl);
+  }
+  if (LIMIT) tasks.morph = tasks.morph.slice(0, LIMIT);
+  return { tasks, stats };
+}
+
+if (!WORDS.length && !BOOK) {
+  console.error("用法: node scripts/gen-mnemonic.mjs --word=literature[,abandon] [--fields=...] [--rebuild] [--dry-run]\n      node scripts/gen-mnemonic.mjs --book=17 [--fields=morph,syl] [--pilot=100] [--limit=200]");
   process.exit(1);
 }
 
@@ -169,11 +241,18 @@ function stemHits(sentence, phrase) {
 const COMMON = "只输出一个 JSON 对象——不要 markdown 围栏、不要解释文字;字段名与嵌套结构严格按模板,不得增删字段;中文一律简体。";
 
 const PROMPTS = {
-  morph: (w, ipa, meaningZh) => [
-    `你是英语构词分析专家。分析单词 ${w}(音标 ${ipa},释义:${meaningZh})的构词方式。`,
+  // seedText: morphSeed(百词斩 remMethod 原文)/ECDICT root,作词源依据注入;双无时为 null(开放 skip)
+  morph: (w, ipa, meaningZh, seedText) => [
+    seedText
+      ? `你是英语构词分析专家。分析单词 ${w}(音标 ${ipa},释义:${meaningZh})的构词方式。`
+      : `你是英语构词分析专家。分析单词 ${w}(音标 ${ipa},释义:${meaningZh})的构词方式。若你确知其真实词源(词典可查的标准构词)则分析;若不确定,直接输出 {"skip":true,"reason":"..."}。`,
+    seedText ? `**词源依据(权威,必须严格遵循,不得增删改动词素)**:\n${seedText}` : "",
     COMMON,
-    `输出模板:\n{ "morph": { "type": "derived", "literal": "un- 否定 + believ 相信 + -able 能…的", "pieces": [ { "piece": "un-", "kind": "prefix", "meaningZh": "否定" } ] } }`,
+    seedText
+      ? `输出模板:\n{ "morph": { "type": "derived", "literal": "un- 否定 + believ 相信 + -able 能…的", "pieces": [ { "piece": "un-", "kind": "prefix", "meaningZh": "否定" } ] } }`
+      : `输出模板(确有词源依据时):\n{ "morph": { "type": "compound", "pieces": [ { "piece": "easy", "kind": "word", "fromWord": "easy", "meaningZh": "轻松" }, { "piece": "going", "kind": "word", "fromWord": "going", "meaningZh": "行事" } ] } }\n无依据时**必须且只能**输出:\n{ "skip": true, "reason": "具体原因" }\nskip 时禁止附带 morph 字段;有依据时禁止 skip`,
     `规则:`,
+    seedText ? `- 拆分必须与词源依据完全一致:piece 拼写与词素划分照搬依据,你只负责给出准确的中文含义与 type 判定,禁止改动、增删或重新切分词素` : `- 词源真实性是硬约束:piece 只能是有词典依据的真实词根词缀(源自拉丁/希腊词素的标准构词分析),禁止把单词切成无词源意义的碎片来凑拆分`,
     `- type ∈ derived(派生) | compound(合成) | blend(截搭混合);不强求 compound/blend——明确是派生就给 derived`,
     `- derived: piece 的 kind ∈ prefix|root|suffix,不填 fromWord;前/后缀 piece 含连字符(如 un- / -able)`,
     `- compound: kind 一律 "word",每个 piece 填 fromWord=来源真词(如 outbreak = out + break)`,
@@ -181,10 +260,10 @@ const PROMPTS = {
     `- pieces 依序拼合必须覆盖整词拼写(去连字符后逐字符 === ${w})`,
     `输出前自查:把各 piece 依序拼接、去掉连字符和括号,必须与 ${w} 逐字符完全相同——不得多写、漏写或改写任何字母(如 ${w} 不能拼成别的拼写)。`,
     `- piece 写实际参与拼写的字符,禁止括号注记或变体写法(如写 facil 而非 "facil(e)");词源形式接后缀时省音的(如 facile→facil-、able→abil-),按省音后的实际拼写写`,
-    `- **词源真实性是硬约束**:piece 只能是有词典依据的真实词根词缀(源自拉丁/希腊词素的标准构词分析),禁止把单词切成无词源意义的碎片来凑拆分(如 ${w} 不存在"ham+per""chal+leng"这类切法)。`,
-    `- 碰到不认识的词源、或该词是整体不可分析的基础词(如 cat、run 这类简单词),宁可给 type=derived + 单 piece(kind=root、meaningZh 写整词词源含义),也不要杜撰拆分。`,
+    seedText ? `- 词源依据中的括号注记(如 "ac(=to)")表示词素含义:piece 写括号外的拼写(ac),含义写入 meaningZh(=to 的中文);依据里已给中文含义的直接沿用,不得与整词释义矛盾` : `- 碰到不认识的词源、或该词是整体不可分析的基础词(如 cat、run 这类简单词),宁可给 type=derived + 单 piece(kind=root、meaningZh 写整词词源含义),也不要杜撰拆分`,
     `- root 的 meaningZh 写词素的真实含义,不得与整词释义矛盾;同形前缀要按本词词源取义(如 con- 在 consequence 中= together「共同」,不是「反对」)。`,
-  ].join("\n"),
+    seedText ? `- 本词已提供权威词源,输出 {"skip":true,...} 视为失败——禁止 skip` : `- 确无可查词源时 skip 是合法输出;宁可 skip 也不编造。skip 后不要输出 morph 字段`,
+  ].filter(Boolean).join("\n"),
 
   syl: (w, ipa) => [
     `你是英语发音教学专家。为单词 ${w} 生成「音节+音素」双层读音解析。`,
@@ -228,16 +307,70 @@ const PROMPTS = {
 // ===== 单路校验(不过=拒收该路,计入重试) =====
 // syl 规范化:去斜杠/重音符号/分隔点/空格(重音符号归 ipa 段,phonemes 只存纯音素)
 const normIpa = (x) => x.replace(/[/ˈˌ.\s]/g, "");
-function validate(field, parsed, word, ipaInput) {
+// 词素串解析:morphSeed "ac(=to) + celer(快速的) + ate(使…) → 加速" → ["ac","celer","ate"];
+// ECDICT root "tend, tent, tens = stretch (Latin)" → ["tend","tent","tens"]
+// 判别:morphSeed 含 "→"(箭头)——注意 "ac(=to)" 括号内的 = 不能当 ECDICT 判据(实测踩坑)
+function parseSeedMorphemes(seedText) {
+  if (!seedText) return null;
+  if (seedText.includes("→") || (!seedText.includes("=") && seedText.includes("+"))) {
+    // morphSeed:按 + 分段,取每段第一个括号前的字母串
+    return seedText.split("+").map((s) => {
+      const m = s.trim().match(/^([a-zA-Z]+)/);
+      return m ? m[1].toLowerCase() : "";
+    }).filter(Boolean);
+  }
+  if (seedText.includes("=")) {
+    // ECDICT root:取 = 左侧词根列表
+    const lhs = seedText.split("=")[0] ?? "";
+    return lhs.split(/[,，]/).map((s) => s.trim().replace(/^[-\s]+|[-\s]+$/g, "").toLowerCase()).filter((s) => /^[a-z]+$/.test(s));
+  }
+  return null;
+}
+function validate(field, parsed, word, ipaInput, seedText) {
   const errs = [];
   if (field === "morph") {
+    // skip 通道:双无证据词 LLM 自判弃答,合法终态
+    if (parsed.skip === true) {
+      if (seedText) return [`有词源依据却输出 skip——禁止`];
+      return []; // 调用方识别 parsed.skip 走 skip 分支
+    }
     const m = parsed.morph;
     if (!m || typeof m !== "object") return ["morph 缺失"];
+    // 模板偏离容错:模型偶发把 piece 写成 text(内容正确、仅键名偏离),归一化后重查而非浪费重试
+    if (Array.isArray(m.pieces)) {
+      for (const p of m.pieces) {
+        if (!p.piece && p.text) { p.piece = p.text; delete p.text; }
+      }
+    }
     if (!["derived", "compound", "blend"].includes(m.type)) errs.push(`type=${m.type} 非法`);
     if (!Array.isArray(m.pieces) || m.pieces.length === 0) errs.push("pieces 空");
     else {
       const joined = m.pieces.map((p) => (p.piece ?? "")).join("").replace(/[-\s]/g, "").toLowerCase();
-      if (joined !== word.toLowerCase()) errs.push(`pieces 拼合「${joined}」≠ ${word}`);
+      // 连字符词两侧都归一化(pieces 拼合无连字符,word 原文有,直接比对必败,如 easy-going)
+      if (joined !== word.replace(/[-\s]/g, "").toLowerCase()) errs.push(`pieces 拼合「${joined}」≠ ${word}`);
+      // piece 级交叉校验(2026-09-07 新增):生成结果必须落在种子词素边界上
+      if (seedText) {
+        const seedMorphs = parseSeedMorphemes(seedText);
+        if (seedMorphs?.length) {
+          if (seedText.includes("=")) {
+            // ECDICT root:≥1 个 piece 命中词根集合(词根常带屈折/连接元音变体,如 -ial vs -al,四向容忍)
+            const hit = m.pieces.some((p) => {
+              const pc = (p.piece ?? "").replace(/[-\s]/g, "").toLowerCase();
+              return seedMorphs.some((r) => pc === r || pc.startsWith(r) || r.startsWith(pc) || pc.endsWith(r) || r.endsWith(pc));
+            });
+            if (!hit) errs.push(`pieces 均未命中 ECDICT 词根 [${seedMorphs.join(",")}]——疑似杜撰`);
+          } else {
+            // morphSeed:种子词根必须全部被 pieces 覆盖(核心校验——防止模型换掉种子词根);
+            // 但允许 pieces 比种子多(种子常省略前/后缀,如 purchase 只给 chase,over+see 的 over 是合理补充)
+            const norm = (s) => s.replace(/[-\s]/g, "").toLowerCase();
+            const genArr = m.pieces.map((p) => norm(p.piece ?? "")).filter(Boolean);
+            const seedArr = seedMorphs.map(norm);
+            const flexEq = (a, b) => a === b || a.endsWith(b) || b.endsWith(a);
+            const missing = seedArr.filter((s) => !genArr.some((g) => flexEq(g, s)));
+            if (missing.length) errs.push(`种子词根 [${missing.join(",")}] 未出现在 pieces [${genArr.join(",")}]——禁止更换或遗漏词源依据词素`);
+          }
+        }
+      }
       for (const p of m.pieces) {
         if (!p.piece || !p.meaningZh) errs.push(`piece 缺字段: ${JSON.stringify(p).slice(0, 80)}`);
         if ((m.type === "compound" || m.type === "blend") && !p.fromWord) errs.push(`${m.type} 缺 fromWord: ${p.piece}`);
@@ -330,11 +463,14 @@ async function synth(text, outPath, retries = 3) {
 
 // ===== 主流程 =====
 const safeName = (w) => w.replace(/[^\w-]/g, "_");
+const CONC = args.conc ? parseInt(args.conc, 10) : 1;
+const batchSummary = { skip: [], fail: [] };
 
-for (const word of WORDS) {
+async function runWord(word, opts = {}) {
+  const fields = opts.fields ?? FIELDS;
   console.log(`\n========== ${word} ==========`);
   const row = getWord.get(word);
-  if (!row) { console.error(`  ✗ 词库中不存在: ${word}`); continue; }
+  if (!row) { console.error(`  ✗ 词库中不存在: ${word}`); return; }
   const content = JSON.parse(row.content_json ?? "{}");
   const ipa = row.phonetic_uk || "";
   const meaningZh = (content.translation ?? []).join("; ") || "(暂无释义)";
@@ -343,7 +479,7 @@ for (const word of WORDS) {
   if (TTS_ONLY) {
     if (!Array.isArray(content.contexts) || !content.contexts.length) {
       console.log("  ↷ 无 contexts,跳过");
-      continue;
+      return;
     }
     let changed = false;
     for (let i = 0; i < content.contexts.length; i++) {
@@ -359,7 +495,7 @@ for (const word of WORDS) {
         .run(JSON.stringify(content), new Date().toISOString(), row.id);
       console.log("  💾 audio 已回写");
     }
-    continue;
+    return;
   }
 
   if (REBUILD) for (const k of ["morph", "syl", "derives", "contexts"]) delete content[k];
@@ -367,19 +503,40 @@ for (const word of WORDS) {
   const generated = {};   // 成功字段
   const failures = {};    // 失败字段 → 原因
 
-  for (const field of FIELDS) {
+  for (const field of fields) {
     const dbKey = field === "context" ? "contexts" : field;
     if (!REBUILD && content[dbKey] !== undefined) {
       console.log(`  ↷ ${field}: 已存在(跳过;--rebuild 可重建)`);
       continue;
     }
+    // morph 种子注入(D7):seed=必跑不开放 skip;root=次级依据不开放 skip;judge=双无,LLM 自判
+    let seedText = null;
+    let judgeSkipAllowed = false;
+    if (field === "morph") {
+      const [tier, skipOk] = morphTier(content, word);
+      judgeSkipAllowed = skipOk;
+      if (tier === "seed") seedText = `词根拆分记忆法(权威):${content.morphSeed}`;
+      else if (tier === "root") seedText = `词典词根(权威):${content.root}`;
+    }
+    // 种子/判词素材每次 try 保持一致(重试是格式问题,不是素材问题)
     let done = false;
     for (let n = 1; n <= TRIES_PER_FIELD && !done; n++) {
       const t0 = Date.now();
       try {
-        const prompt = PROMPTS[field](word, ipa, meaningZh);
+        const prompt = PROMPTS[field](word, ipa, meaningZh, field === "morph" ? seedText : undefined);
         const { parsed, usage, rawContent } = await llmJson(prompt);
-        const errs = validate(field, parsed, word, field === "syl" ? ipa : undefined);
+        // skip 通道:仅双无证据词合法;拿到即终态,不重试
+        if (field === "morph" && parsed.skip === true) {
+          const errs = validate(field, parsed, word, undefined, seedText);
+          await dumpDebug(word, field, n, { status: "skip", latencyMs: Date.now() - t0, tokens: usage, rawContent, reason: parsed.reason ?? "", validation: errs });
+          if (errs.length) { console.warn(`  ✗ ${field} try${n} skip 被拒: ${errs.join("; ")}`); continue; }
+          if (!judgeSkipAllowed) { console.warn(`  ✗ ${field} try${n} skip 被拒: 有词源依据不允许 skip`); continue; }
+          console.log(`  ⊘ ${field} try${n} LLM 自判 skip: ${String(parsed.reason ?? "").slice(0, 80)}(不入库)`);
+          batchSummary.skip.push({ word, reason: String(parsed.reason ?? "").slice(0, 120) });
+          done = true;
+          continue;
+        }
+        const errs = validate(field, parsed, word, field === "syl" ? ipa : undefined, field === "morph" ? seedText : undefined);
         await dumpDebug(word, field, n, {
           status: "ok", latencyMs: Date.now() - t0, tokens: usage,
           rawContent, parsed, validation: errs,
@@ -396,7 +553,10 @@ for (const word of WORDS) {
         console.warn(`  ✗ ${field} try${n} 调用失败: ${String(e).slice(0, 160)}`);
       }
     }
-    if (!done) failures[field] = `${TRIES_PER_FIELD} 次尝试均失败(详见 data/mnemonic-debug/${word}/)`;
+    if (!done) {
+      failures[field] = `${TRIES_PER_FIELD} 次尝试均失败(详见 data/mnemonic-debug/${word}/)`;
+      batchSummary.fail.push({ word, field });
+    }
   }
 
   // TTS:成功生成的 contexts 逐句合成音频(--dry-run 跳过:防止按未入库的新例句覆盖线上音频文件)
@@ -426,6 +586,46 @@ for (const word of WORDS) {
     console.log(`  (dry-run) 成功字段: ${Object.keys(generated).join(", ") || "无"}`);
   }
   if (Object.keys(failures).length) console.warn(`  ⚠ 失败字段: ${JSON.stringify(failures)}`);
+}
+
+// ===== 批量模式(--book):D7 选词 + worker 并发池 =====
+if (BOOK) {
+  const { tasks, stats } = await buildBatchList(BOOK);
+  console.log(`[D7 选词] book=${BOOK} fields=${FIELDS.join(",")}`);
+  console.log(`  morph 任务: ${tasks.morph.length}(seed ${stats.morph.seed} / root ${stats.morph.root} / judge ${stats.morph.judge}), D7 放弃 ${stats.morph.drop}, 已有 ${stats.morph.have ?? 0}`);
+  console.log(`  syl 任务: ${tasks.syl.length}(可生成 ${stats.syl.run}, 缺音标跳过 ${stats.syl.skipNoIpa}, 短语跳过 ${stats.syl.skipPhrase}), 已有 ${stats.syl.have ?? 0}`);
+  const all = [
+    ...tasks.morph.map((t) => ({ word: t.word, fields: ["morph"] })),
+    ...tasks.syl.map((t) => ({ word: t.word, fields: ["syl"] })),
+  ];
+  let idx = 0;
+  let done = 0;
+  const worker = async () => {
+    while (idx < all.length) {
+      const t = all[idx++];
+      await runWord(t.word, { fields: t.fields });
+      done++;
+      if (done % 10 === 0 || done === all.length) {
+        console.log(`\n[进度] ${done}/${all.length}(skip ${batchSummary.skip.length}, fail ${batchSummary.fail.length})`);
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(CONC, all.length) || 1 }, worker));
+  console.log(`\n[gen-mnemonic 批量完成] 共 ${all.length} 词 | skip ${batchSummary.skip.length} | fail ${batchSummary.fail.length}`);
+  if (batchSummary.skip.length) {
+    console.log("[skip 明细]");
+    for (const s of batchSummary.skip) console.log(`  ${s.word}: ${s.reason}`);
+  }
+  if (batchSummary.fail.length) {
+    console.log("[fail 明细]");
+    for (const f of batchSummary.fail) console.log(`  ${f.word}: ${f.field}`);
+  }
+  sqlite.close();
+  process.exit(0);
+}
+
+for (const word of WORDS) {
+  await runWord(word);
 }
 sqlite.close();
 console.log("\n[gen-mnemonic] done");

@@ -137,6 +137,17 @@ fn bootstrap(app: tauri::AppHandle) {
 
     // 4) spawn sidecar(env 契约与 src/lib/paths.ts 对接)
     let _ = win.eval("window.__set_status && window.__set_status('正在启动本地服务…');");
+    // stderr 落日志:windows_subsystem="windows" 子进程无控制台,默认 inherit
+    // 会丢失全部错误信息。先写到临时文件,spawn 后改名避免 0 字节文件误导。
+    let stderr_path = std::env::temp_dir().join("ielts-copilot-node-stderr.log");
+    let _ = std::fs::remove_file(&stderr_path);
+    let stderr_file = match std::fs::File::create(&stderr_path) {
+        Ok(f) => f,
+        Err(e) => {
+            fail(&win, &format!("无法创建 stderr 日志:{e}"));
+            return;
+        }
+    };
     let mut command = Command::new(&node_exe);
     command
         .arg(&entry)
@@ -146,7 +157,9 @@ fn bootstrap(app: tauri::AppHandle) {
         .env("IELTS_APP_ROOT", &server_root)
         .env("IELTS_DATA_ROOT", &data_dir)
         .env("IELTS_CONFIG_ROOT", &data_dir)
-        .stdin(Stdio::null());
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::from(stderr_file));
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
@@ -162,14 +175,34 @@ fn bootstrap(app: tauri::AppHandle) {
     };
     attach_job_object(&child);
     let pid = child.id();
-    log_to(&data_dir, &format!("[bootstrap] node PID {pid} → http://127.0.0.1:{port}"));
+    log_to(&data_dir, &format!("[bootstrap] node PID {pid} → http://127.0.0.1:{port} (stderr→{})", stderr_path.display()));
 
     // 5) 健康轮询 60s
     let deadline = Instant::now() + Duration::from_secs(HEALTH_TIMEOUT_SECS);
     let mut ready = false;
     loop {
         if let Ok(Some(status)) = child.try_wait() {
-            fail(&win, &format!("本地服务提前退出(退出码 {:?}),请重装或反馈日志", status.code()));
+            // 把 stderr 内容一并报出(用户反馈时无需再找文件)
+            let stderr_tail = std::fs::read_to_string(&stderr_path)
+                .map(|s| {
+                    let trimmed = s.trim();
+                    if trimmed.is_empty() {
+                        String::from("(stderr 为空)")
+                    } else {
+                        // 取最后 800 字符,避免爆 UI
+                        let start = trimmed.len().saturating_sub(800);
+                        format!("stderr(末段):\n{}", &trimmed[start..])
+                    }
+                })
+                .unwrap_or_else(|e| format!("(读取 stderr 失败:{e})"));
+            log_to(&data_dir, &format!(
+                "[bootstrap] node 提前退出 code={:?}\n{stderr_tail}",
+                status.code()
+            ));
+            fail(&win, &format!(
+                "本地服务提前退出(退出码 {:?}),请重装或反馈日志\n{stderr_tail}",
+                status.code()
+            ));
             return;
         }
         if health_ok(port) {
