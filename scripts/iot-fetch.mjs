@@ -93,7 +93,15 @@ function audioUrl(html) {
   return m ? m[0] : null;
 }
 
-const slugYear = (slug) => (slug.match(/ielts-mock-test-(\d{4})-/) || [])[1] ?? "unknown";
+const slugYear = (slug) => {
+  let s = slug;
+  try { s = decodeURIComponent(slug); } catch {}
+  const m = s.match(/ielts-mock-test-(\d{4})-/) || s.match(/^(\d{4})(\d{2})/);
+  return m ? m[1] : "旧版";
+};
+const slugDirName = (slug) => {
+  try { return decodeURIComponent(slug); } catch { return slug; }
+};
 
 /* ---------- 共享资产(css/js hash 同源文件) + 卷内图片 ---------- */
 
@@ -189,7 +197,7 @@ for (const skill of SKILLS) {
 
   for (const t of tests) {
     const slug = t.href.split("/").pop();
-    const dir = join(OUT_ROOT, SKILL_DIR[skill], slugYear(slug), slug);
+    const dir = join(OUT_ROOT, SKILL_DIR[skill], slugYear(slug), slugDirName(slug));
     mkdirSync(dir, { recursive: true });
     const localCount = done + failed;
 
