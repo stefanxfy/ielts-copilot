@@ -7,8 +7,9 @@
  *   - 卡体:统计行(词/已学/配图) + 渐变进度条 + 「学习进度 pct%」标签 + gen-line
  *     (配图 X/Y · 音频 已就绪/未合成)
  *   - 导入中任务渲染为 generating 卡(spinner + 阶段文案),完成后刷新即消失
- *   - 无封面字段(words 表不存书封面):封面取该书第一张词配图,退化到通用底图;
- *     「重新生成封面」= 换一张该书词配图(随机种子轮换,无独立封面资产)
+ *   - 封面一等化(docs/词书封面一等化设计.md):word_books.cover_image 存选定封面,
+ *     NULL 回落池首;「重新生成封面」= 池内顺移一格 + PUT 落库,刷新/重启保持
+ *   - 无选定且池空(words 表无书封面可借):退化通用底图
  *
  * 数据源:
  *   GET    /api/vocab-book          全部词书汇总 + importing[](进行中导入任务)
@@ -51,8 +52,26 @@ export default function BookListPage() {
   const [importing, setImporting] = useState<ImportingTask[]>([]);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<BookSummary | null>(null);
-  /** 「重新生成封面」轮换游标:bookId → 已换次数 */
+  /**
+   * 封面轮换游标:bookId → 池内下标(docs/词书封面一等化设计.md §5.1)。
+   * 初始值由数据派生(选定封面在池中的位置,未选定 = 0);「重新生成封面」= 顺移一格
+   * 并 PUT 落库(word_books.cover_image),刷新/重启后保持。
+   */
   const [coverShift, setCoverShift] = useState<Record<string, number>>({});
+
+  /** 数据到达时按落库封面派生各书游标(选定图不在池内 → 回落 0) */
+  const syncShifts = useCallback((list: BookSummary[]) => {
+    setCoverShift((prev) => {
+      const next: Record<string, number> = { ...prev };
+      for (const b of list) {
+        if (next[b.bookId] === undefined) {
+          const idx = b.coverImage ? b.coverPool.indexOf(b.coverImage) : 0;
+          next[b.bookId] = idx >= 0 ? idx : 0;
+        }
+      }
+      return next;
+    });
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -61,13 +80,14 @@ export default function BookListPage() {
         const data = (await resp.json()) as { books: BookSummary[]; importing?: ImportingTask[] };
         setBooks(data.books);
         setImporting(data.importing ?? []);
+        syncShifts(data.books);
       } else {
         toast.error("词书列表加载失败");
       }
     } catch {
       toast.error("网络错误");
     }
-  }, []);
+  }, [syncShifts]);
 
   // 首次加载(fetch 回调里 setState,不直接进 effect 体)
   useEffect(() => {
@@ -78,12 +98,13 @@ export default function BookListPage() {
         if (aborted) return;
         setBooks(d.books);
         setImporting(d.importing ?? []);
+        syncShifts(d.books);
       })
       .catch(() => toast.error("词书列表加载失败"));
     return () => {
       aborted = true;
     };
-  }, []);
+  }, [syncShifts]);
 
   // 有进行中导入任务时轮询,完成即刷(卡片从「导入中」变为正式卡片)
   const importingCount = importing.length;
@@ -117,11 +138,41 @@ export default function BookListPage() {
     }
   }
 
-  // 封面:池内按轮换游标顺移;空池退化 null(渐变底图)
+  // 封面:池内按落库派生的游标取;空池退化 null(渐变底图)
   function coverOf(b: BookSummary): string | null {
     const shift = coverShift[b.bookId] ?? 0;
     if (b.coverPool.length === 0) return null;
     return b.coverPool[shift % b.coverPool.length];
+  }
+
+  /** 「重新生成封面」:顺移一格 + PUT 落库(word_books.cover_image),刷新/重启保持 */
+  async function rotateCover(b: BookSummary) {
+    if (b.coverPool.length === 0) {
+      toast.info("该书暂无词配图,导入时选「核心词生图」后即有封面");
+      return;
+    }
+    const nextIdx = ((coverShift[b.bookId] ?? 0) + 1) % b.coverPool.length;
+    const nextCover = b.coverPool[nextIdx];
+    // 乐观更新(游标即刻生效,落库失败仅提示不回滚——下次加载回落落库值)
+    setCoverShift((m) => ({ ...m, [b.bookId]: nextIdx }));
+    setBooks((list) =>
+      list?.map((x) => (x.bookId === b.bookId ? { ...x, coverImage: nextCover } : x)) ?? null,
+    );
+    try {
+      const resp = await fetch("/api/vocab-book", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId: b.bookId, coverImage: nextCover }),
+      });
+      if (!resp.ok) {
+        const data = (await resp.json()) as { error?: string };
+        toast.error(data.error ?? "封面保存失败");
+      } else {
+        toast.success("封面已切换并保存");
+      }
+    } catch {
+      toast.error("封面保存请求失败");
+    }
   }
 
   return (
@@ -179,7 +230,21 @@ export default function BookListPage() {
                 <Link href={`/learn/books/${b.bookId}`} className="relative block h-[130px] overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {cover ? (
-                    <img src={cover} alt={`${b.name} 封面`} className="h-full w-full object-cover" />
+                    <img
+                      src={cover}
+                      alt={`${b.name} 封面`}
+                      className="h-full w-full object-cover"
+                      // 选定封面图文件失效(词图重生成/删除残留)→ 回落池首;池首再失效 → 挖空走渐变底
+                      onError={(e) => {
+                        const el = e.currentTarget;
+                        const fallback = b.coverPool[0];
+                        if (fallback && fallback !== cover) {
+                          el.src = fallback;
+                        } else {
+                          el.style.display = "none";
+                        }
+                      }}
+                    />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-muted to-secondary" />
                   )}
@@ -188,11 +253,12 @@ export default function BookListPage() {
                     style={{ background: "linear-gradient(180deg, transparent 30%, rgba(255,255,255,0.92) 96%)" }}
                   />
                   <div className="absolute inset-x-3.5 bottom-2 z-1 flex items-end justify-between gap-2">
-                    <h3 className="m-0 text-base font-bold">{b.name}</h3>
+                    {/* 封面下缘叠的是硬编码白色渐隐(与主题无关),文字必须固定深色,不能用语义 token(暗色皮肤下 foreground 近白会没进渐隐里) */}
+                    <h3 className="m-0 text-base font-bold text-neutral-900">{b.name}</h3>
                     {b.source === "builtin" ? (
-                      <span className="shrink-0 rounded-full border border-primary/30 bg-secondary px-2.5 py-[3px] text-[11px] font-semibold text-secondary-foreground">内置</span>
+                      <span className="shrink-0 rounded-full border border-black/10 bg-white/85 px-2.5 py-[3px] text-[11px] font-semibold text-neutral-700">内置</span>
                     ) : (
-                      <span className="shrink-0 rounded-full border border-border bg-muted px-2.5 py-[3px] text-[11px] font-semibold text-muted-foreground">自定义</span>
+                      <span className="shrink-0 rounded-full border border-black/10 bg-white/70 px-2.5 py-[3px] text-[11px] font-semibold text-neutral-600">自定义</span>
                     )}
                   </div>
                 </Link>
@@ -239,14 +305,7 @@ export default function BookListPage() {
                   </Link>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (b.coverPool.length === 0) {
-                        toast.info("该书暂无词配图,导入时选「核心词生图」后即有封面");
-                        return;
-                      }
-                      setCoverShift((m) => ({ ...m, [b.bookId]: (m[b.bookId] ?? 0) + 1 }));
-                      toast.success("已切换封面图");
-                    }}
+                    onClick={() => void rotateCover(b)}
                     className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-all hover:border-ring hover:bg-secondary hover:text-secondary-foreground"
                   >
                     重新生成封面

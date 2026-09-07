@@ -653,6 +653,8 @@ export const wordBooks = sqliteTable(
     description: text("description"),
     /** builtin(管线导入)/ custom(用户导入) */
     source: text("source", { enum: BOOK_SOURCES }).notNull(),
+    /** 选定封面图 web 路径(/images/words/…);NULL=未选定,回落封面池首图(docs/词书封面一等化设计.md) */
+    coverImage: text("cover_image"),
     createdAt: int("created_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),

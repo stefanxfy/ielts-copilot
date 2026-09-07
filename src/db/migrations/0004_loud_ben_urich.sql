@@ -1,0 +1,1 @@
+ALTER TABLE `word_books` ADD `cover_image` text;
