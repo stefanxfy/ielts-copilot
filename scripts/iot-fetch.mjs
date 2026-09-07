@@ -204,39 +204,48 @@ for (const skill of SKILLS) {
     const localCount = done + failed;
 
     try {
+      // 0. 科目分型: 听/阅为客观题卷(data-num 题目网格 + sys-answer 答案键);
+      //    写/口为题目卷(页面无 data-num/sys-answer, 仅校验 <title>, 且无 answers.json)
+      const objective = skill === "listening" || skill === "reading";
+      const pageTitle = (h) => (h.match(/<title>([^<]*)<\/title>/) || [])[1] || "";
+
       // 1. 题面 HTML(抓取后立即重写资源引用)
       const testFile = join(dir, "test.html");
       if (!existsSync(testFile) || statSync(testFile).size < 10_000) {
         const buf = await fetchPage(t.href);
         const html = buf.toString("utf8");
-        if (!html.includes("data-num")) throw new Error("test.html 无 data-num(可能被风控/未登录)");
+        if (objective && !html.includes("data-num")) throw new Error("test.html 无 data-num(可能被风控/未登录)");
+        if (!objective && !/Practice Test/i.test(pageTitle(html))) throw new Error(`test.html 页面异常(标题非 Practice Test): ${pageTitle(html).slice(0, 60)}`);
         writeFileSync(testFile, rewritePage(html, skill));
       }
       await sleep(400);
 
       // 2. 答案页(同样重写; 登录页=会话瞬时失效, 重试3次)
+      //    写/口 solution 页无 sys-answer, 以标题含 "Solution for" 为有效标记
       const solFile = join(dir, "solution.html");
-      if (!existsSync(solFile) || statSync(solFile).size < 50_000) {
+      const solMinSize = objective ? 50_000 : 30_000;
+      const solOk = (h) => (objective ? h.includes("sys-answer") : /Solution for/i.test(pageTitle(h)));
+      if (!existsSync(solFile) || statSync(solFile).size < solMinSize) {
         let solHtml = null;
         for (let attempt = 0; attempt < 3; attempt++) {
           const buf = await fetchPage(t.href + "/solution");
           solHtml = buf.toString("utf8");
-          if (solHtml.includes("sys-answer")) break;
+          if (solOk(solHtml)) break;
           if (solHtml.includes("<title>登录")) {
             solHtml = null;
             await sleep(4000 * (attempt + 1));
           }
         }
-        if (!solHtml || !solHtml.includes("sys-answer")) {
-          throw new Error(solHtml && solHtml.includes("<title>登录") ? "SESSION_EXPIRED: 会话失效(返回登录页)" : "solution.html 无 sys-answer");
+        if (!solHtml || !solOk(solHtml)) {
+          throw new Error(solHtml && solHtml.includes("<title>登录") ? "SESSION_EXPIRED: 会话失效(返回登录页)" : objective ? "solution.html 无 sys-answer" : "solution.html 校验失败(标题非 Solution for)");
         }
         writeFileSync(solFile, rewritePage(solHtml, skill));
       }
       await sleep(400);
 
-      // 3. answers.json
+      // 3. answers.json (仅客观题科目; 写/口站方无公开答案键, 跳过)
       const ansFile = join(dir, "answers.json");
-      if (!existsSync(ansFile)) {
+      if (objective && !existsSync(ansFile)) {
         const answers = parseAnswers(readFileSync(solFile, "utf8"));
         if (Object.keys(answers).length === 0) throw new Error("solution.html 解析出 0 条答案");
         writeFileSync(ansFile, JSON.stringify(answers, null, 2));
