@@ -30,6 +30,13 @@ import {
   type MnContext,
 } from "@/components/vocab/mnemonic-radial";
 import { WordSearchBox } from "@/components/vocab/word-search";
+import {
+  isKeySfxStyle,
+  setKeySfxStyle,
+  sfxKey,
+  sfxSpellOk,
+  tone,
+} from "@/lib/vocab-sfx";
 
 /* ---------------- 类型(对齐 /api/vocab-review GET) ---------------- */
 
@@ -168,30 +175,8 @@ function speakTts(text: string): void {
   window.speechSynthesis.speak(u);
 }
 
-/* ---------------- WebAudio 判分音效(原型同款) ---------------- */
+/* ---------------- WebAudio 判分音效(原型同款;合成基建在 lib/vocab-sfx.ts) ---------------- */
 
-let _actx: AudioContext | null = null;
-function tone(freq: number, dur: number, delay = 0, type: OscillatorType = "sine", gain = 0.12) {
-  try {
-    if (typeof window === "undefined") return;
-    _actx =
-      _actx ??
-      new (window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const t0 = _actx.currentTime + delay;
-    const o = _actx.createOscillator();
-    const g = _actx.createGain();
-    o.type = type;
-    o.frequency.value = freq;
-    g.gain.setValueAtTime(gain, t0);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    o.connect(g).connect(_actx.destination);
-    o.start(t0);
-    o.stop(t0 + dur);
-  } catch {
-    /* 音频不可用则静默 */
-  }
-}
 const sfxPerfect = () => {
   tone(660, 0.12);
   tone(880, 0.14, 0.1);
@@ -310,6 +295,19 @@ export default function LearnPage() {
   const queue = useMemo(() => data?.queue ?? [], [data]);
   const item: QueueItem | undefined = queue[idx];
   const finished = loaded && !err && !!data && !item;
+
+  /* ---- 键入音效风格:挂载时从偏好回填(默认 tick;设置页保存后模块级即时覆写) ---- */
+  useEffect(() => {
+    fetch("/api/vocab-study-prefs")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { prefs?: { keySfxStyle?: unknown } } | null) => {
+        const s = d?.prefs?.keySfxStyle;
+        if (isKeySfxStyle(s)) setKeySfxStyle(s);
+      })
+      .catch(() => {
+        /* 静默:保持默认 */
+      });
+  }, []);
 
   /* ---- 完成页庆祝判定:今日已背词数 ≥ 今日目标(备考计划任务口径) ---- */
   // 服务端 dailyDone = 上一轮开始前的去重计数;加本批(本会话内)评过分的词与原数取并集
@@ -875,6 +873,7 @@ function RecogCard(props: {
     setSpellHint(null);
     if (g === item.word) {
       setSpellVerdict("ok");
+      sfxSpellOk();
       spellTimers.current.push(window.setTimeout(() => setSpellVerdict("vanish"), 700));
       spellTimers.current.push(
         window.setTimeout(() => {
@@ -884,6 +883,7 @@ function RecogCard(props: {
       );
     } else {
       setSpellVerdict("bad");
+      sfxWrong();
     }
   };
 
@@ -933,6 +933,17 @@ function RecogCard(props: {
             if (spellHint) setSpellHint(null);
           }}
           onKeyDown={(e) => {
+            // 键入音挂 keydown 而非 onChange:input 事件不属于浏览器"用户激活"事件,
+            // AudioContext 在非手势事件里创建/resume 会被拒(Safari 必现),导致全部静音
+            if (
+              e.key.length === 1 &&
+              /[a-z]/i.test(e.key) &&
+              !e.metaKey &&
+              !e.ctrlKey &&
+              !e.altKey
+            ) {
+              sfxKey();
+            }
             if (e.key === "Enter") {
               e.preventDefault();
               submitSpell();
