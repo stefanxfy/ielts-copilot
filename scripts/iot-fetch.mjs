@@ -17,7 +17,8 @@
  *   node scripts/iot-fetch.mjs                                # 全量(听/阅/写/口语)
  *   node scripts/iot-fetch.mjs --skill=listening              # 单科全量
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, appendFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, appendFileSync, readdirSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -26,6 +27,8 @@ const OUT_ROOT = join(ROOT, "questions");
 const LIST_DIR = join(ROOT, "data", "iot");
 const COOKIE_FILE = join(LIST_DIR, "cookies.txt");
 const FAIL_LOG = join(LIST_DIR, "failures.log");
+const ASSETS_DIR = join(OUT_ROOT, "exam-assets"); // 共享 css/js, 与 prototype/exam/exam-assets 同源
+const PROTO_ASSETS = join(ROOT, "prototype", "exam", "exam-assets"); // 种子(免下载)
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 const SKILL_DIR = { listening: "听力", reading: "阅读", writing: "写作", speaking: "口语" };
@@ -92,7 +95,89 @@ function audioUrl(html) {
 
 const slugYear = (slug) => (slug.match(/ielts-mock-test-(\d{4})-/) || [])[1] ?? "unknown";
 
+/* ---------- 共享资产(css/js hash 同源文件) + 卷内图片 ---------- */
+
+/** 种子: prototype/exam/exam-assets 里的 css/js 一次性拷入 questions/exam-assets(排除音频) */
+function seedAssets() {
+  mkdirSync(ASSETS_DIR, { recursive: true });
+  if (!existsSync(PROTO_ASSETS)) return;
+  for (const f of readdirSync(PROTO_ASSETS)) {
+    if (/\.(mp3|mp4|html)$/i.test(f)) continue;
+    const dst = join(ASSETS_DIR, f);
+    if (!existsSync(dst)) writeFileSync(dst, readFileSync(join(PROTO_ASSETS, f)));
+  }
+}
+
+const INNER_ASSET_RE = /(?:href|src)="(\/sites\/default\/files\/(?:css|js)\/[^"]+)"/g;
+const IMAGE_RE = /(?:href|src)="(\/sites\/default\/files\/[^"]+?\.(?:png|jpe?g|gif|svg|webp)(?:\?[^"]*)?)"/gi;
+const DROP_RE = /(?:href|src)="https:\/\/(?:oss\.maxcdn\.com|static\.addtoany\.com)[^"]*"/g;
+const LOCAL_CDN_RE = /(?:href|src)="https:\/\/(?:cdnjs\.cloudflare\.com\/ajax\/libs\/jquery\.nicescroll[^"]*|unpkg\.com\/qr-code-styling[^"]*)"/g;
+
+/**
+ * rewritePage(html): 见上
+ */
+function rewritePage(html, skill) {
+  const downloads = { cssjs: new Set(), images: new Map() };
+  // 1) 站内 css/js → ../../../exam-assets/ (卷目录在 questions/<科>/<年>/<slug>/ 下, 三级到 questions/exam-assets)
+  html = html.replace(/(href|src)="(\/sites\/default\/files\/(?:css|js)\/[^"]+)"/g, (_, attr, url) => {
+    const base = decodeURIComponent(url.split("/").pop());
+    downloads.cssjs.add(url);
+    return `${attr}="../../../exam-assets/${base}" data-iot-orig="${url}"`;
+  });
+  // 2) 站内图片 → img/
+  html = html.replace(/(href|src)="(\/sites\/default\/files\/[^"]+?\.(?:png|jpe?g|gif|svg|webp)(?:\?[^"]*)?)"/gi, (_, attr, url) => {
+    const base = decodeURIComponent(url.split("/").pop().split("?")[0]);
+    downloads.images.set(url, base);
+    return `${attr}="img/${base}" data-iot-orig="${url}"`;
+  });
+  // 2b) 图片加载失败时回退站方原图(离线缺图仍可在线兜底)
+  html = html.replace(/data-iot-orig="(\/sites\/default\/files\/[^"]+?\.(?:png|jpe?g|gif|svg|webp)(?:\?[^"]*)?)"/gi, 'data-iot-orig="$1" onerror="this.onerror=null;this.src=\'$1\'"');
+  // 3) OSS 音频 → audio.mp3
+  html = html.replace(/(src)="(https:\/\/ieltsonlinetests\.oss[^"']+\.mp3)[^"]*"/g, '$1="audio.mp3" data-iot-orig="$2"');
+  // 4) 本地已有对应件的 CDN
+  html = html.replace(/(href|src)="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/jquery\.nicescroll[^"]*"/g, '$1="../../exam-assets/jquery.nicescroll.min.js"');
+  html = html.replace(/(href|src)="https:\/\/unpkg\.com\/qr-code-styling[^"]*"/g, '$1="../../exam-assets/qr-code-styling.js"');
+  // 5) 无用外链删除
+  html = html.replace(/<(?:link|script)[^>]*(?:oss\.maxcdn\.com|static\.addtoany\.com)[^>]*><\/(?:link|script)>/g, "");
+  html = html.replace(/<(?:link|script)[^>]*(?:oss\.maxcdn\.com|static\.addtoany\.com)[^>]*>/g, "");
+  return html;
+}
+
+/** curl 单发下载(node fetch 连发静态资源会触发站方限速 404, curl 实测稳定) */
+function curlDownload(url, dst, timeoutSec = 90) {
+  execFileSync("curl", ["-s", "-A", UA, "-o", dst, "--max-time", String(timeoutSec), url], { stdio: "pipe" });
+}
+
+async function ensureAsset(url) {
+  const base = decodeURIComponent(url.split("/").pop());
+  const dst = join(ASSETS_DIR, base);
+  if (existsSync(dst) && statSync(dst).size > 0) return base;
+  try {
+    curlDownload("https://ieltsonlinetests.com" + url, dst);
+    if (!existsSync(dst) || statSync(dst).size === 0) throw new Error("empty");
+  } catch (e) {
+    if (existsSync(dst)) rmSync(dst);
+    throw new Error(`shared-asset ${url} :: ${e.message}`);
+  }
+  return base;
+}
+
+async function ensureImage(dir, url, base) {
+  const imgDir = join(dir, "img");
+  mkdirSync(imgDir, { recursive: true });
+  const dst = join(imgDir, base);
+  if (existsSync(dst) && statSync(dst).size > 0) return;
+  try {
+    curlDownload("https://ieltsonlinetests.com" + url, dst);
+    if (!existsSync(dst) || statSync(dst).size < 100) throw new Error("not-image/too-small");
+  } catch (e) {
+    if (existsSync(dst)) rmSync(dst);
+    throw new Error(`image ${url} :: ${e.message}`);
+  }
+}
+
 /* ---------- main ---------- */
+seedAssets();
 let done = 0, failed = 0;
 for (const skill of SKILLS) {
   const listFile = join(LIST_DIR, `academic-${skill}.json`);
@@ -109,20 +194,21 @@ for (const skill of SKILLS) {
     const localCount = done + failed;
 
     try {
-      // 1. 题面 HTML
+      // 1. 题面 HTML(抓取后立即重写资源引用)
       const testFile = join(dir, "test.html");
       if (!existsSync(testFile) || statSync(testFile).size < 10_000) {
         const buf = await fetchPage(t.href);
-        if (!buf.toString("utf8").includes("data-num")) throw new Error("test.html 无 data-num(可能被风控/未登录)");
-        writeFileSync(testFile, buf);
+        const html = buf.toString("utf8");
+        if (!html.includes("data-num")) throw new Error("test.html 无 data-num(可能被风控/未登录)");
+        writeFileSync(testFile, rewritePage(html, skill));
       }
       await sleep(400);
 
-      // 2. 答案页
+      // 2. 答案页(同样重写)
       const solFile = join(dir, "solution.html");
       if (!existsSync(solFile) || statSync(solFile).size < 50_000) {
         const buf = await fetchPage(t.href + "/solution");
-        writeFileSync(solFile, buf);
+        writeFileSync(solFile, rewritePage(buf.toString("utf8"), skill));
       }
       await sleep(400);
 
@@ -134,11 +220,30 @@ for (const skill of SKILLS) {
         writeFileSync(ansFile, JSON.stringify(answers, null, 2));
       }
 
-      // 4. 听力音频
+      // 4. 资产补齐: 共享 css/js 缺件 + 本卷图片(失败不连坐, onerror 已回退站方原图)
+      const htmlAll = readFileSync(testFile, "utf8") + readFileSync(solFile, "utf8");
+      const cssjsUrls = [...new Set([...htmlAll.matchAll(/data-iot-orig="(\/sites\/default\/files\/(?:css|js)\/[^"]+)"/g)].map((m) => m[1]))];
+      for (const url of cssjsUrls) {
+        try { await ensureAsset(url); } catch (e) { appendFileSync(FAIL_LOG, `${new Date().toISOString()} ${slug} :: ${e.message}\n`); console.error(`  ⚠ ${e.message}`); }
+        await sleep(250);
+      }
+      const imgMatches = [...htmlAll.matchAll(/data-iot-orig="(\/sites\/default\/files\/[^"]+?\.(?:png|jpe?g|gif|svg|webp)(?:\?[^"]*)?)"/gi)];
+      const seenImg = new Set();
+      for (const m of imgMatches) {
+        const url = m[1];
+        if (seenImg.has(url)) continue;
+        seenImg.add(url);
+        if (/\/(styles\/|inline-images\/|themes\/)/.test(url)) continue; // 站方装饰图(封面/二维码), 不占请求
+        const base = decodeURIComponent(url.split("/").pop().split("?")[0]);
+        try { await ensureImage(dir, url, base); } catch (e) { appendFileSync(FAIL_LOG, `${new Date().toISOString()} ${slug} :: ${e.message}\n`); console.error(`  ⚠ ${e.message}`); }
+        await sleep(250);
+      }
+
+      // 5. 听力音频
       if (skill === "listening") {
         const mp3File = join(dir, "audio.mp3");
         if (!existsSync(mp3File) || statSync(mp3File).size < 1_000_000) {
-          const url = audioUrl(readFileSync(testFile, "utf8"));
+          const url = audioUrl(readFileSync(testFile, "utf8")) ?? audioUrl(htmlAll);
           if (!url) throw new Error("test.html 无音频直链");
           const buf = await fetchPage(url, { binary: true });
           writeFileSync(mp3File, buf);
