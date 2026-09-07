@@ -10,7 +10,7 @@
  *      这是 M1 计划风险 #1 的兜底
  *   4. public 与 .next/static —— Next standalone 不含静态资源(M2 真题图片靠这步进包)
  */
-import { cpSync, rmSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { cpSync, rmSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
@@ -89,5 +89,39 @@ mkdirSync(join(target, ".next"), { recursive: true });
 cpSync(join(root, ".next", "static"), join(target, ".next", "static"), {
   recursive: true,
 });
+
+/* Next standalone 第二个已知 bug:server.js 内 nextConfig 字符串硬编码了构建机
+   的绝对路径("outputFileTracingRoot": "D:\\a\\ielts-copilot\\ielts-copilot")。
+   Next 启动时会 realpathSync 该路径 —— 在用户机器上根本不存在,导致
+   EISDIR 'C:' 错(把 'D:\\a' 的盘符当 root 解析)或 ENOENT。
+
+   修复策略:扫描 server.js,把 nextConfig 里的三个字段置为空字符串,Next
+   会自动从 process.cwd() 推断,不再依赖构建机路径。
+   - outputFileTracingRoot
+   - repoRoot
+   - turbopack.root
+*/
+const serverJsPath = join(target, "server.js");
+if (existsSync(serverJsPath)) {
+  let src = readFileSync(serverJsPath, "utf8");
+  let rewrote = false;
+  for (const field of ["outputFileTracingRoot", "repoRoot"]) {
+    // 匹配 "field":"<任何 Windows/macOS 绝对路径>" 字符串,置为空
+    const re = new RegExp(`("${field}":\\s*)"[^"]*"`, "g");
+    const before = src;
+    src = src.replace(re, `$1""`);
+    if (src !== before) rewrote = true;
+  }
+  // turbopack.root 是嵌套对象
+  const tpRe = new RegExp(`("turbopack":\\s*\\{[^}]*?"root":\\s*)"[^"]*"`, "g");
+  const before = src;
+  src = src.replace(tpRe, `$1""`);
+  if (src !== before) rewrote = true;
+
+  if (rewrote) {
+    writeFileSync(serverJsPath, src);
+    console.log("[postbuild] 已清空 server.js 中 nextConfig 的构建机绝对路径(outputFileTracingRoot/repoRoot/turbopack.root)");
+  }
+}
 
 console.log("[postbuild] next-server/ 就绪:server.js + drizzle-migrations + better-sqlite3 + public + static");
