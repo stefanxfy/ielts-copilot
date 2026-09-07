@@ -28,7 +28,7 @@ use std::time::{Duration, Instant};
 use tauri::Manager;
 
 const DEFAULT_PORT: u16 = 3177;
-const MAX_PORT_STEP: u32 = 20;
+const MAX_PORT_STEP: u16 = 20;
 const HEALTH_TIMEOUT_SECS: u64 = 60;
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
@@ -306,10 +306,10 @@ fn read_port(path: &Path) -> Option<u16> {
 fn attach_job_object(child: &Child) {
     use std::os::windows::io::AsRawHandle;
     use windows_sys::Win32::System::JobObjects::{
-        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
-        SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
-        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        AssignProcessToJobObject, JobObjectExtendedLimitInformation, SetInformationJobObject,
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
     };
+    use windows_sys::Win32::System::Threading::CreateJobObjectW;
     unsafe {
         let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
         if job == 0 {
@@ -324,9 +324,8 @@ fn attach_job_object(child: &Child) {
             std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
         );
         if ok != 0 {
-            if let Some(h) = child.as_raw_handle() {
-                AssignProcessToJobObject(job, h);
-            }
+            let h = child.as_raw_handle();
+            AssignProcessToJobObject(job, h);
         }
         // 故意不 CloseHandle:KILL_ON_JOB_CLOSE 保证主进程退出时杀整棵 node 进程树
     }
