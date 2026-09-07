@@ -30,7 +30,7 @@
     "resources": ["server/", "runtime/node.exe", "config.example.json"],
     "windows": {
       "nsis": {
-        "installMode": "perUser",
+        "installMode": "currentUser",
         "languages": ["SimpChinese"],
         "displayLanguageSelector": false
       }
