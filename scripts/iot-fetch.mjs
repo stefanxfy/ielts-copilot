@@ -219,7 +219,7 @@ for (const skill of SKILLS) {
         //   "雅思真题试卷 …"(站方中文系列卷, 无英文标题)
         if (!objective) {
           const pt = pageTitle(html);
-          if (!/Practise? Test/i.test(pt) && !pt.includes("雅思真题试卷")) {
+          if (!/Practi[cs]e? Test/i.test(pt) && !pt.includes("雅思真题试卷")) {
             throw new Error(`test.html 页面异常(标题非 Practice Test/Practise Test/雅思真题试卷): ${pt.slice(0, 60)}`);
           }
         }
