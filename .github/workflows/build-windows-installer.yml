@@ -30,10 +30,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
+          # 不用 cache: npm —— 缓存恢复曾致 npm ci 清理 EPERM 后走降级路径,
+          # 对免编译的 better-sqlite3 v13(包内 prebuilds)误触发 node-gyp rebuild
 
       - name: 安装依赖
-        run: npm ci
+        # --foreground-scripts: 任何 install 脚本的输出前置到主日志,
+        # 若再误触发编译可直接看到调用者
+        run: npm ci --no-audit --no-fund --foreground-scripts
+
+      - name: 自检 better-sqlite3 预编译二进制(免编译安装是否生效)
+        shell: pwsh
+        run: |
+          $r = node -e "const b=require('better-sqlite3'); const d=new b.Database(':memory:'); console.log('better-sqlite3 prebuild 加载 OK, sqlite ' + d.prepare('select sqlite_version() v').get().v)"
+          if ($LASTEXITCODE -ne 0) { Write-Error "better-sqlite3 加载失败(见上方输出,疑似走了源码编译)"; exit 1 }
+          Write-Output $r
+          $p = Join-Path (Get-Location) "node_modules/better-sqlite3/build"
+          if (Test-Path $p) { Write-Output "警告: 存在 build/ 目录(源码编译产物),安装未走 prebuild 路径" } else { Write-Output "确认: 无 build/ 目录,使用包内 prebuild ✓" }
 
       - name: 构建(postbuild 自动产出 next-server/)
         run: npm run build
