@@ -29,7 +29,6 @@ const Database = require("better-sqlite3");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 const DB_PATH = join(ROOT, "data", "app.db");
-const IMG_DIR = join(ROOT, "public", "images", "words");
 const FAIL_LOG = "/tmp/img-xdf-failures.log";
 
 /* ---------- CLI ---------- */
@@ -43,6 +42,11 @@ const argVal = (name) => {
 };
 const LIMIT = argVal("--limit") ? parseInt(argVal("--limit"), 10) : Infinity;
 const WORDS_ARG = argVal("--words");
+const PREFIX = argv.includes("--prefix") ? argVal("--prefix") : ""; // 子目录前缀, 避免覆盖主图
+const NO_WRITE_DB = argv.includes("--no-write-db"); // 只落盘不写库(对照实验用)
+const IMG_DIR = PREFIX
+  ? join(ROOT, "public", "images", "words", PREFIX)
+  : join(ROOT, "public", "images", "words");
 
 /* ---------- MiniMax key ---------- */
 function readMiniMaxKey() {
@@ -57,6 +61,10 @@ function readMiniMaxKey() {
 /* ---------- 风格 S8:暖调胶片摄影(与 debug-image-prompt.mjs STYLE_CANDIDATES.s8 一致) ---------- */
 const STYLE_S8 =
   "Warm analog film photography, Kodak Portra color tones, soft natural window light, subtle film grain, 35mm candid composition, nostalgic warm atmosphere, one clear subject, no text, no letters, no watermark";
+
+/* ---------- 风格 S1:暖色扁平插画(与 debug-image-prompt.mjs STYLE_CANDIDATES.s1 一致)---------- */
+const STYLE_S1 =
+  "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style";
 
 /* ---------- 词条查询(核心词筛选 + 已无图) ---------- */
 function pickTargets(wordFilter) {
@@ -76,17 +84,40 @@ function pickTargets(wordFilter) {
     return c >= 3 || (b > 0 && b <= 2000);
   });
   const need = core.filter((r) => {
+    if (wordFilter && !wordFilter.includes(r.word)) return false;
+    // wordFilter 模式:用户明确指定,不跳过已有图
+    if (wordFilter) return true;
     const cj = JSON.parse(r.content_json || "{}");
     if (cj.image) return false;
-    if (wordFilter && !wordFilter.includes(r.word)) return false;
     return true;
   });
   return { core, need };
 }
 
-/* ---------- v2 场景描述:从释义+例句提炼画面 ---------- */
-function buildV2Prompt(word, zh, ex) {
-  // 简洁的 v2 模板:不调 LLM,直接由释义+例句驱动,画面描述由 prompt_optimizer 接管
+/* ---------- v2/v3 场景:有 LLM 场景脚本则用 v3,无则回退 v2 ---------- */
+function loadScene(word) {
+  const f = join(ROOT, "data", "image-scenes", `${word}.txt`);
+  if (!existsSync(f)) return { mode: null, body: null };
+  const c = readFileSync(f, "utf8").trim();
+  if (!c || c === "SKIP" || c.startsWith("ERROR")) return { mode: "SKIP", body: null };
+  // 解析 [PHOTO]/[ILLUSTRATION] 标记
+  const m = c.match(/^\[(PHOTO|ILLUSTRATION)\]\s*([\s\S]*)/i);
+  if (m) return { mode: m[1].toUpperCase(), body: m[2].trim() };
+  // 旧格式(无标记): 默认 PHOTO
+  return { mode: "PHOTO", body: c };
+}
+function buildPrompt(word, zh, ex, scene) {
+  if (scene.mode === "SKIP") return null; // 上层判 null 跳过该词
+  if (scene.body) {
+    // v3: 用 LLM 预生的具体场景画面, 走 GLM 决定的风格
+    const style = scene.mode === "ILLUSTRATION" ? STYLE_S1 : STYLE_S8;
+    return [
+      style,
+      `Scene: ${scene.body}`,
+      "No text, no letters, no captions, no watermarks.",
+    ].join(" ");
+  }
+  // v2 回退: 词+释义+例句原样拼装, prompt_optimizer 自由发挥(准确率 30%)
   return [
     STYLE_S8,
     `One single scene that expresses the English word "${word}" (${zh}).`,
@@ -151,12 +182,24 @@ async function processAll(key, targets) {
     const cj = JSON.parse(row.content_json || "{}");
     const zh = (cj.translation ?? []).join("; ") || "";
     const ex = cj.examples?.[0]?.en || cj.contexts?.[0]?.en || "";
-    const prompt = buildV2Prompt(row.word, zh, ex);
+    const scene = loadScene(row.word);
+    // SKIP 词直接跳过(场景脚本明确返 SKIP, 不画图)
+    if (scene.mode === "SKIP") {
+      skipped++;
+      console.log(`  ↷ ${row.word} SKIP(脚本判定不可画), 跳过`);
+      return { skipped: true };
+    }
+    const prompt = buildPrompt(row.word, zh, ex, scene);
     let lastErr = null;
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const { bytes } = await genImage(key, prompt, outFile);
-        // 落盘+回写 DB
+        // 落盘+回写 DB(--no-write-db 时跳过)
+        if (NO_WRITE_DB) {
+          ok++;
+          console.log(`  ✅ ${row.word} ${bytes}B (${ok + fail + skipped}/${targets.length}) [no-db]`);
+          return { ok: true, bytes };
+        }
         const u = updStmt();
         const newCj = { ...cj, image: `/images/words/${row.word}.png` };
         try {
