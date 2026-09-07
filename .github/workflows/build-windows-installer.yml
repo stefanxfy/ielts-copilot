@@ -33,19 +33,32 @@ jobs:
           # 不用 cache: npm —— 缓存恢复曾致 npm ci 清理 EPERM 后走降级路径,
           # 对免编译的 better-sqlite3 v13(包内 prebuilds)误触发 node-gyp rebuild
 
-      - name: 安装依赖
-        # --foreground-scripts: 任何 install 脚本的输出前置到主日志,
-        # 若再误触发编译可直接看到调用者
-        run: npm ci --no-audit --no-fund --foreground-scripts
+      - name: 安装依赖并根除 better-sqlite3 误触发源码编译
+        # 根因:better-sqlite3 v13 是纯 prebuildify 分发(无 install 脚本),但包内
+        #   binding.gyp 触发 npm 自动 node-gyp rebuild → 撞 Windows runner 的 VS 2026
+        #   (node-gyp 11.5 识别范围只到 VS 2022) → 编译失败。
+        # 修法:`--ignore-scripts` 一次禁掉所有 install 脚本,再 `npm rebuild` 仅对
+        #   真正需要 postinstall 的 esbuild/unrs-resolver 单独触发(它们是拉平台预编译二进制)。
+        # 副作用:fsevents 是 darwin only,Windows 自动跳过;其它 4 个 esbuild 副本只需 rebuild 一份即可。
+        # 替代方案(放弃):修改 package-lock.json 注入 gypfile:false —— npm ci 会校验 lock drift
+        #   直接拒装。
+        shell: pwsh
+        run: |
+          # 装依赖但禁所有 install 脚本
+          npm ci --ignore-scripts --no-audit --no-fund --foreground-scripts
+          # 单独重建需要 postinstall 的包(拉平台预编译二进制)
+          npm rebuild esbuild unrs-resolver --no-audit --no-fund --foreground-scripts
+          # 校验:不应再生成 build/ 目录
+          if (Test-Path node_modules/better-sqlite3/build) {
+            Write-Error "better-sqlite3 仍有 build/ 目录,prebuild 路径未生效"; exit 1
+          } else { Write-Output "确认: better-sqlite3 无 build/ 目录,走 prebuild ✓" }
 
-      - name: 自检 better-sqlite3 预编译二进制(免编译安装是否生效)
+      - name: 自检 better-sqlite3 预编译二进制
         shell: pwsh
         run: |
           $r = node -e "const b=require('better-sqlite3'); const d=new b.Database(':memory:'); console.log('better-sqlite3 prebuild 加载 OK, sqlite ' + d.prepare('select sqlite_version() v').get().v)"
-          if ($LASTEXITCODE -ne 0) { Write-Error "better-sqlite3 加载失败(见上方输出,疑似走了源码编译)"; exit 1 }
+          if ($LASTEXITCODE -ne 0) { Write-Error "better-sqlite3 加载失败(见上方输出)"; exit 1 }
           Write-Output $r
-          $p = Join-Path (Get-Location) "node_modules/better-sqlite3/build"
-          if (Test-Path $p) { Write-Output "警告: 存在 build/ 目录(源码编译产物),安装未走 prebuild 路径" } else { Write-Output "确认: 无 build/ 目录,使用包内 prebuild ✓" }
 
       - name: 构建(postbuild 自动产出 next-server/)
         run: npm run build
