@@ -135,8 +135,8 @@ function rewritePage(html, skill) {
   // 3) OSS 音频 → audio.mp3
   html = html.replace(/(src)="(https:\/\/ieltsonlinetests\.oss[^"']+\.mp3)[^"]*"/g, '$1="audio.mp3" data-iot-orig="$2"');
   // 4) 本地已有对应件的 CDN
-  html = html.replace(/(href|src)="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/jquery\.nicescroll[^"]*"/g, '$1="../../exam-assets/jquery.nicescroll.min.js"');
-  html = html.replace(/(href|src)="https:\/\/unpkg\.com\/qr-code-styling[^"]*"/g, '$1="../../exam-assets/qr-code-styling.js"');
+  html = html.replace(/(href|src)="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/jquery\.nicescroll[^"]*"/g, '$1="../../../exam-assets/jquery.nicescroll.min.js"');
+  html = html.replace(/(href|src)="https:\/\/unpkg\.com\/qr-code-styling[^"]*"/g, '$1="../../../exam-assets/qr-code-styling.js"');
   // 5) 无用外链删除
   html = html.replace(/<(?:link|script)[^>]*(?:oss\.maxcdn\.com|static\.addtoany\.com)[^>]*><\/(?:link|script)>/g, "");
   html = html.replace(/<(?:link|script)[^>]*(?:oss\.maxcdn\.com|static\.addtoany\.com)[^>]*>/g, "");
