@@ -482,6 +482,22 @@ const safeName = (w) => w.replace(/[^\w-]/g, "_");
 const CONC = args.conc ? parseInt(args.conc, 10) : 1;
 const batchSummary = { skip: [], fail: [] };
 
+// 429 全局限速协调:任一 worker 撞限速,全体统一退避(烧 try 配额的重试只留给内容校验失败)
+let rateLimitUntil = 0;       // 全局恢复时间戳(ms)
+const RATE_BASE_MS = 10_000;  // 首撞退避 10s
+const RATE_MAX_MS = 120_000;  // 连续撞退避上限 2min
+let rateBackoff = RATE_BASE_MS;
+
+function isRateLimitError(e) {
+  return /HTTP 429|1302|速率限制|rate.?limit/i.test(String(e) + (e?.rawText ?? ""));
+}
+
+async function waitIfRateLimited() {
+  while (Date.now() < rateLimitUntil) {
+    await new Promise((r) => setTimeout(r, Math.min(rateLimitUntil - Date.now(), 2000)));
+  }
+}
+
 async function runWord(word, opts = {}) {
   const fields = opts.fields ?? FIELDS;
   console.log(`\n========== ${word} ==========`);
@@ -538,7 +554,8 @@ async function runWord(word, opts = {}) {
     // 种子/判词素材每次 try 保持一致(重试是格式问题,不是素材问题)
     let done = false;
     let lastReject = "";   // 上轮被拒原因,注入重试 prompt 做错误反馈
-    for (let n = 1; n <= TRIES_PER_FIELD && !done; n++) {
+    for (let n = 1; n <= TRIES_PER_FIELD && !done; ) {
+      await waitIfRateLimited();
       const t0 = Date.now();
       try {
         const basePrompt = PROMPTS[field](word, ipa, meaningZh, field === "morph" ? seedText : undefined);
@@ -565,14 +582,25 @@ async function runWord(word, opts = {}) {
         if (errs.length) {
           console.warn(`  ✗ ${field} try${n} 校验不过: ${errs.join("; ")}`);
           lastReject = errs.join(";\n");
+          n++;
           continue;
         }
         generated[dbKey] = parsed[dbKey];
         console.log(`  ✓ ${field} try${n} 通过(${Date.now() - t0}ms, ${usage ?? "?"} tok)`);
+        rateBackoff = Math.max(RATE_BASE_MS, Math.round(rateBackoff / 2)); // 连续成功逐步恢复
         done = true;
       } catch (e) {
+        if (isRateLimitError(e)) {
+          // 429 不烧 try 配额(n 不增):全局统一退避后重跑本轮
+          rateBackoff = Math.min(RATE_MAX_MS, rateBackoff * 2);
+          rateLimitUntil = Date.now() + rateBackoff;
+          console.warn(`  ⏳ ${field} 撞限速,全局退避 ${Math.round(rateBackoff / 1000)}s 后重跑本轮(try${n} 不消耗)`);
+          await dumpDebug(word, field, n, { status: "rate-limited", latencyMs: Date.now() - t0, error: String(e), rawText: e.rawText ?? undefined });
+          continue;
+        }
         await dumpDebug(word, field, n, { status: "error", latencyMs: Date.now() - t0, error: String(e), rawText: e.rawText ?? undefined });
         console.warn(`  ✗ ${field} try${n} 调用失败: ${String(e).slice(0, 160)}`);
+        n++;
       }
     }
     if (!done) {
@@ -599,10 +627,15 @@ async function runWord(word, opts = {}) {
   // 写回(幂等 merge;--dry-run 只打印)。LLM 输出英文域可能带弯引号,merge 前归一化
   if (!DRY_RUN && Object.keys(generated).length) {
     walkEnPunct(generated);
-    const merged = { ...content, ...generated };
+    // 原子字段回写:SQL 层 json_set 在单条语句内读-改-写,防与其他脚本(生图回写 image 字段)并发互覆盖
+    // 键名(morph/syl/contexts)来自本脚本 FIELDS,非用户输入,可作字面量拼入路径
+    const pairs = Object.keys(generated);
+    const setSql = pairs.map((k) => `'$.${k}', json(?)`).join(", ");
     sqlite
-      .prepare("UPDATE words SET content_json = ?, updated_at = ? WHERE id = ?")
-      .run(JSON.stringify(merged), new Date().toISOString(), row.id);
+      .prepare(
+        `UPDATE words SET content_json = json_set(COALESCE(content_json,'{}'), ${setSql}), updated_at = ? WHERE id = ?`,
+      )
+      .run(...pairs.map((k) => JSON.stringify(generated[k])), new Date().toISOString(), row.id);
     console.log(`  💾 content_json 已更新字段: ${Object.keys(generated).join(", ")}`);
   } else if (DRY_RUN) {
     console.log(`  (dry-run) 成功字段: ${Object.keys(generated).join(", ") || "无"}`);
