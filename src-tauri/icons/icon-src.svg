@@ -1,22 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- macOS 图标网格:主体 824x824 居中,四周各留 100 透明边距(整画布 1024) -->
+  <!-- macOS 图标网格:主体 824x824 居中,四周各留 100 透明边距 -->
   <g transform="translate(100 100) scale(0.8046875)">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f59e0b"/>
-      <stop offset="1" stop-color="#b45309"/>
-    </linearGradient>
-  </defs>
-  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
-  <!-- 书本 -->
-  <g fill="none" stroke="#ffffff" stroke-width="52" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M256 320a90 90 0 0 1 90-90h372v560H346a90 90 0 0 0-90 90z"/>
-    <path d="M256 790v80h462"/>
-  </g>
-  <!-- 行文线条 -->
-  <g stroke="#ffe4bd" stroke-width="36" stroke-linecap="round">
-    <path d="M420 360h220"/>
-    <path d="M420 480h160"/>
-  </g>
+    <rect width="1024" height="1024" rx="228" fill="#0F6E56"/>
+    <!-- 机考显示器 -->
+    <rect x="212" y="230" width="600" height="440" rx="48" fill="#FFFFFF"/>
+    <rect x="258" y="276" width="508" height="348" rx="24" fill="#E1F5EE"/>
+    <!-- 靶环 + 8.5 -->
+    <circle cx="512" cy="450" r="152" fill="none" stroke="#FFFFFF" stroke-width="24"/>
+    <circle cx="512" cy="450" r="104" fill="none" stroke="#5DCAA5" stroke-width="20"/>
+    <circle cx="512" cy="450" r="72" fill="#0F6E56"/>
+    <text x="512" y="483" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="86" font-weight="700" fill="#FFFFFF">8.5</text>
+    <!-- 支架与底座 -->
+    <path d="M442 670h140l-24 96h-92z" fill="#FFFFFF"/>
+    <path d="M352 820h320" stroke="#9FE1CB" stroke-width="52" stroke-linecap="round"/>
   </g>
 </svg>
