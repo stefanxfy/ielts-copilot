@@ -5,11 +5,8 @@
     <!-- 机考显示器 -->
     <rect x="212" y="230" width="600" height="440" rx="48" fill="#FFFFFF"/>
     <rect x="258" y="276" width="508" height="348" rx="24" fill="#E1F5EE"/>
-    <!-- 靶环 + 8.5 -->
-    <circle cx="512" cy="450" r="152" fill="none" stroke="#FFFFFF" stroke-width="24"/>
-    <circle cx="512" cy="450" r="104" fill="none" stroke="#5DCAA5" stroke-width="20"/>
-    <circle cx="512" cy="450" r="72" fill="#0F6E56"/>
-    <text x="512" y="483" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="86" font-weight="700" fill="#FFFFFF">8.5</text>
+    <!-- 屏幕对勾 -->
+    <path d="M382 452l92 92 168-182" fill="none" stroke="#0F6E56" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
     <!-- 支架与底座 -->
     <path d="M442 670h140l-24 96h-92z" fill="#FFFFFF"/>
     <path d="M352 820h320" stroke="#9FE1CB" stroke-width="52" stroke-linecap="round"/>
