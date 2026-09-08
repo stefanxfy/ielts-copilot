@@ -101,7 +101,7 @@ fn bootstrap(app: tauri::AppHandle) {
     let entry = server_root.join("server.js");
     for (label, p) in [
         ("server/server.js", &entry),
-        (node_label, node_path),
+        (node_label, &node_path),
     ] {
         if !p.exists() {
             fail(&win, &format!("缺少 {label},安装包可能不完整"));
