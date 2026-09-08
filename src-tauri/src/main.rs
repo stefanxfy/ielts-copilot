@@ -92,12 +92,12 @@ fn bootstrap(app: tauri::AppHandle) {
     // Node v22 无法处理该前缀,会报 EISDIR 'C:'。先剥掉。
     let resource_dir = strip_verbatim_prefix(&resource_dir_raw);
     let server_root = resource_dir.join("server");
-    let (node_label, node_path) = {
-        #[cfg(target_os = "windows")]
-        (resource_dir.join("runtime").join("node.exe"), "runtime/node.exe")
-        #[cfg(not(target_os = "windows"))]
-        (resource_dir.join("runtime").join("node"), "runtime/node")
-    };
+    #[cfg(target_os = "windows")]
+    let (node_label, node_path): (PathBuf, &str) =
+        (resource_dir.join("runtime").join("node.exe"), "runtime/node.exe");
+    #[cfg(not(target_os = "windows"))]
+    let (node_label, node_path): (PathBuf, &str) =
+        (resource_dir.join("runtime").join("node"), "runtime/node");
     let entry = server_root.join("server.js");
     for (label, p) in [
         ("server/server.js", &entry),
