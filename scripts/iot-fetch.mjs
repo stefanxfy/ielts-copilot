@@ -255,17 +255,21 @@ for (const skill of SKILLS) {
       const solOk = (h) => (objective ? h.includes("sys-answer") || h.includes('class="answer"') : /Solution for/i.test(pageTitle(h)));
       if (!existsSync(solFile) || statSync(solFile).size < solMinSize) {
         let solHtml = null;
+        let lastWasLogin = false;
         for (let attempt = 0; attempt < 3; attempt++) {
           const buf = await fetchPage(t.href + "/solution");
           solHtml = buf.toString("utf8");
-          if (solOk(solHtml)) break;
+          if (solOk(solHtml)) { lastWasLogin = false; break; }
           if (solHtml.includes("<title>登录")) {
+            lastWasLogin = true;
             solHtml = null;
             await sleep(4000 * (attempt + 1));
+          } else {
+            lastWasLogin = false;
           }
         }
         if (!solHtml || !solOk(solHtml)) {
-          throw new Error(solHtml && solHtml.includes("<title>登录") ? "SESSION_EXPIRED: 会话失效(返回登录页)" : objective ? "solution.html 无 sys-answer" : "solution.html 校验失败(标题非 Solution for)");
+          throw new Error(lastWasLogin ? "SESSION_EXPIRED: 会话失效(返回登录页)" : objective ? "solution.html 无 sys-answer" : "solution.html 校验失败(标题非 Solution for)");
         }
         writeFileSync(solFile, rewritePage(solHtml, skill));
       }
