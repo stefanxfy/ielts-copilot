@@ -11,7 +11,7 @@ name: 构建 macOS 安装包(Tauri)
 #   - 不需要 setup-node(.node 资源已通过 setup-node 装在 workflow 缓存),
 #     但 sidecar node.exe 仍要从 runner 全局 node 拷出
 
-on:
+"on":
   workflow_dispatch:
   push:
     branches: [master]
@@ -28,32 +28,32 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: Checkout
+      - name: "Checkout"
         uses: actions/checkout@v4
 
-      - name: 启用 macOS 长路径(questions/ 真题目录名超 200,checkout 必挂)
+      - name: "启用 macOS 长路径 questions/ 真题目录名超 200 checkout 必挂"
         run: git config --system core.longpaths true
 
-      - name: 资产路径长度门禁(防装包/压缩撞 MAX_PATH 类)
+      - name: "资产路径长度门禁 防装包/压缩撞 MAX_PATH 类"
         run: node scripts/check-asset-paths.mjs || (echo "::error::请先运行 scripts/normalize-questions-filenames.mjs 治理 questions/,并人工处理 public/prototype 中超长文件名"; exit 1)
 
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
 
-      - name: 安装依赖(同 Windows 策略: --ignore-scripts 避免 better-sqlite3 误编译)
+      - name: "安装依赖 同 Windows 策略 禁 better-sqlite3 编译"
         shell: bash
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npm rebuild esbuild unrs-resolver --no-audit --no-fund || true
 
-      - name: 自检 better-sqlite3 N-API prebuild(与 Windows 同款校验)
+      - name: "自检 better-sqlite3 N-API prebuild 与 Windows 同款校验"
         run: node -e "const Database=require('better-sqlite3'); const d=new Database(':memory:'); console.log('OK, sqlite', d.prepare('select sqlite_version() v').get().v)"
 
-      - name: 构建(postbuild 自动产出 next-server/)
+      - name: "构建 postbuild 自动产出 next-server/"
         run: npm run build
 
-      - name: 组装 Tauri 资源(server/ + runtime/node)
+      - name: "组装 Tauri 资源 server/ + runtime/node"
         shell: bash
         run: |
           mkdir -p src-tauri/server src-tauri/runtime
@@ -67,16 +67,16 @@ jobs:
           echo "node 大小: $(du -h src-tauri/runtime/node | cut -f1)"
           echo "server/ 文件数: $(find src-tauri/server -type f | wc -l)"
 
-      - name: Tauri 构建(.app + .dmg)
+      - name: "Tauri 构建 .app + .dmg"
         run: |
           npx --yes @tauri-apps/cli@^2 build
 
-      - name: 列出产物
+      - name: "列出产物"
         shell: bash
         run: |
           find src-tauri/target/release/bundle -type f \( -name "*.dmg" -o -name "*.app" \) -exec ls -lh {} \;
 
-      - name: Ad-hoc 签名(避免 Gatekeeper 拦截未签名二进制)
+      - name: "Ad-hoc 签名 避免 Gatekeeper 拦截未签名二进制"
         # Apple Developer 签名证书需付费,本工作流用 ad-hoc 自签
         # 用户首次启动仍会看到"未识别开发者"但可右键打开绕过
         shell: bash
