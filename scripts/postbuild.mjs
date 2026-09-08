@@ -10,7 +10,7 @@
  *      这是 M1 计划风险 #1 的兜底
  *   4. public 与 .next/static —— Next standalone 不含静态资源(M2 真题图片靠这步进包)
  */
-import { cpSync, rmSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, rmSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
@@ -44,6 +44,87 @@ cpSync(
   join(target, "node_modules", "better-sqlite3"),
   { recursive: true },
 );
+
+/* Next 16 Turbopack 已知缺陷(16.3.3 实测):serverExternalPackages 的外部模块
+   会被重命名为 "<包名>-<16位hex hash>" 写死进 chunk —— 运行时 runtime 直接
+   require 该 hash 名,但 standalone tracing 从不落盘对应目录(NFT 清单里只有
+   虚拟路径,install 后 Cannot find module 'better-sqlite3-90e2652d1716b047')。
+
+   修复:扫描产物 chunk 中的
+     __turbopack_context__.x("<hash名>", () => require("<hash名>"))
+   模式,对每个 hash 名生成 node_modules/<hash名>/package.json 重定向包
+   (main 指向真实包入口),等价于把 hash 名当作真实包的别名。
+   不整目录拷贝:一份 package.json 即可,原生 .node 仍由真实包目录加载。 */
+function fixTurbopackHashedExternals() {
+  const serverDir = join(target, ".next", "server");
+  if (!existsSync(serverDir)) return;
+
+  const jsFiles = [];
+  (function walk(dir) {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      let isFile = false;
+      try {
+        isFile = statSync(p).isFile();
+      } catch {
+        continue;
+      }
+      if (isFile) jsFiles.push(p);
+      else walk(p);
+    }
+  })(serverDir);
+
+  /* 兼容两种形态:
+     dev/unminified: __turbopack_context__.x("name", () => require("name"))
+     prod/minified:  e.x("name",()=>require("name")) */
+  const re = /[\w$.]+\.x\("([^"]+)",\s*\(\)\s*=>\s*require\("([^"]+)"\)/g;
+  const hashedExternals = new Map(); // hash名 -> 真实包名
+  for (const file of jsFiles) {
+    let src;
+    try {
+      src = readFileSync(file, "utf8");
+    } catch {
+      continue;
+    }
+    for (const m of src.matchAll(re)) {
+      const [, registered, required] = m;
+      if (registered === required && /^[0-9a-zA-Z@/._-]+-[0-9a-f]{16}$/.test(required)) {
+        hashedExternals.set(required, required.replace(/-[0-9a-f]{16}$/, ""));
+      }
+    }
+  }
+
+  for (const [hashedName, realName] of hashedExternals) {
+    const realPkgDir = join(target, "node_modules", realName);
+    const realPkgJsonPath = join(realPkgDir, "package.json");
+    if (!existsSync(realPkgJsonPath)) {
+      console.error(`[postbuild] 致命: hash 外部模块 ${hashedName} 的真实包 ${realName} 不在产物 node_modules 中`);
+      process.exit(1);
+    }
+    const realPkg = JSON.parse(readFileSync(realPkgJsonPath, "utf8"));
+    const main = realPkg.main || "index.js";
+    const aliasDir = join(target, "node_modules", hashedName);
+    mkdirSync(aliasDir, { recursive: true });
+    writeFileSync(
+      join(aliasDir, "package.json"),
+      JSON.stringify(
+        {
+          name: hashedName,
+          version: realPkg.version || "0.0.0",
+          description: `[postbuild] Turbopack hashed-external alias -> ${realName}`,
+          main: `../${realName}/${main}`,
+        },
+        null,
+        2,
+      ),
+    );
+    console.log(`[postbuild] 已生成 hash 外部模块别名: ${hashedName} -> ${realName}`);
+  }
+  if (hashedExternals.size === 0) {
+    console.warn("[postbuild] 未发现 Turbopack hash 外部模块(可能 Next 已修复该缺陷)");
+  }
+}
+fixTurbopackHashedExternals();
 
 /* Next tracing 偶发漏拷核心包(next/react/react-dom/server-only)——
    standalone 模式下 server.js 仍 require('next'),缺这些会启动立即 throw。
