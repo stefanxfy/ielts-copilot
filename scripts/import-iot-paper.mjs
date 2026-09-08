@@ -115,12 +115,87 @@ function transformPage(html, extraScripts) {
     .replace(/(\.\/|\.\.\/\.\.\/\.\.\/)exam-assets\//g, "../shared/exam-assets/")
     // 装饰图(页脚二维码/封面缩略图等 inline-images/styles/themes)本地从未下载,还原原站外链
     .replace(/(src)="img\/[^"]*"([^>]*)data-iot-orig="([^"]*(?:\/inline-images\/|\/styles\/|\/themes\/)[^"]*)"/gi, "$1=\"$3\"$2")
-    .replace(/ data-iot-orig="[^"]*"/g, "");
+    .replace(/ data-iot-orig="[^"]*"/g, "")
+    // 原站标识清洗(导入铁律③):favicon/canonical/hreflang/og/twitter 及 Drupal 管理链一律不留
+    .replace(/<link[^>]*rel="(?:shortcut )?icon"[^>]*>/g, "")
+    .replace(/<link[^>]*rel="(?:canonical|alternate|delete-[a-z-]*form|edit-form|add-form|version-history|devel-[a-z-]+|token-devel|drupal:[a-z-]+|to-[a-z-]+|revision[a-z-]*)"[^>]*>/g, "")
+    .replace(/<link[^>]*href="https?:\/\/[^"]*ieltsonlinetests\.com[^"]*"[^>]*>/g, "")
+    .replace(/<meta[^>]*property="og:[a-z:]+"[^>]*>/g, "")
+    .replace(/<meta[^>]*name="twitter:[a-z:]+"[^>]*>/g, "");
   if (extraScripts?.length) {
     const inject = extraScripts.map((s) => `<script src="../shared/exam-assets/${s}"></script>`).join("\n");
     out = out.replace(/<\/body>/i, `${inject}\n</body>`);
   }
   return out;
+}
+
+/* ---------- 听/阅卷面框架对齐(范本:原库 a-2025jan 卷面,用户 2026-09-09 立规) ---------- */
+
+/** 本地品牌 logo(与原库卷面同款"雅"字 SVG) */
+const BRAND_HEADER_SVG = `<svg class="realtest-header__logo" style="height:38px;width:38px" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a6feb"/><stop offset="1" stop-color="#0d4fa8"/></linearGradient></defs><rect width="38" height="38" rx="9" fill="url(#lg)"/><text x="19" y="25.5" font-size="16" font-weight="700" fill="#fff" text-anchor="middle" font-family="PingFang SC, sans-serif">雅</text></svg>`;
+
+/** 按 id 平衡删除整个 <div> 块(modal 等嵌套结构) */
+function removeDivById(html, id) {
+  const at = html.indexOf(`id="${id}"`);
+  if (at === -1) return html;
+  const start = html.lastIndexOf("<div", at);
+  const re = /<div\b|<\/div>/g;
+  re.lastIndex = start;
+  let depth = 0, m;
+  while ((m = re.exec(html))) {
+    depth += m[0] === "<div" ? 1 : -1;
+    if (depth === 0) return html.slice(0, start) + html.slice(re.lastIndex);
+  }
+  return html;
+}
+
+/** 听/阅卷面头部/框架与原库对齐:
+ *  ① 整头替换:原站 IOT logo + practice-nav 菜单(Share/Report/TextSize/Solution/Download/SaveDraft)
+ *     + Review 按钮 → 原库同款"雅"logo + 本地品牌标题块 + 纯净按钮组(便签/全屏/Submit);
+ *     保留原卷计时秒数(data-time)与本地 audio 元素
+ *  ② 原站功能 modal 清洗(原库卷面没有的 modal 一律删除)
+ *  ③ 原站音轨选择器(audioSource select)删除
+ *  ④ <title> 对齐原库命名 */
+function alignQuizFrame(html, subject) {
+  const headerMatch = html.match(/<header class="realtest-header[\s\S]*?<\/header>/);
+  if (!headerMatch) throw new Error(`${subject}: 未找到 realtest-header`);
+  const timeAttr = headerMatch[0].match(/id="time-clock"[^>]*?data-time="(\d+)"/) ?? headerMatch[0].match(/data-time="(\d+)"/);
+  const dataTime = timeAttr ? timeAttr[1] : subject === "listening" ? "1920" : "3600";
+  // 本地 audio 可能不在头部(新卷在 take-test__player-wrap 里)——全页提取,收进模板头部按钮组
+  const audioMatch = html.match(/<audio id="ielts-local-audio"[\s\S]*?<\/audio>/);
+  const audio = audioMatch ? audioMatch[0] : "";
+  if (audioMatch) {
+    html = html.replace(audioMatch[0], "").replace(
+      /<div class="take-test__player-wrap"><div class="take-test__player-container">\s*<\/div><\/div>/,
+      "",
+    );
+  }
+  const sub = `${SET.category}类 · ${SUBJECT_TITLE[subject]} · ${SET.enLabel}`;
+  const header = `<header class="realtest-header "> ${BRAND_HEADER_SVG}<div class="ieltshome-brand" style="display:flex;flex-direction:column;justify-content:center;margin-right:10px;line-height:1.25"><span style="font-size:14px;font-weight:700;color:#1c2330">IELTS 本地机考</span><span style="font-size:11px;color:#5a6472">${sub}</span></div><div class="realtest-header__time "> <span class="realtest-header__time-clock" data-time="${dataTime}" data-duration-default="${dataTime}" id="time-clock"><span class="realtest-header__time-val">--</span><span class="realtest-header__time-text">minutes remaining</span></span></div><div class="realtest-header__btn-group"><div class="realtest-header__btn-save save_hidden">Saved<span class="ioticon-check-v2"></span></div> ${audio}<div class="realtest-header__icon -note" id="js-bt-notepad"></div><div class="realtest-header__icon -full-screen" id="js-full-screen" data-original-title="Full Screen Mode" data-placement="bottom" data-trigger="hover"></div> <button class="realtest-header__bt-submit " data-original-title="" title=""> Submit </button></div> </header>`;
+  html = html.replace(headerMatch[0], header);
+  for (const id of [
+    "modal-exit-test",
+    "modal-review-test",
+    "modal-save-draft-message-lr",
+    "modal-share",
+    "modal-share-lesson",
+    "modal-submit-test",
+    "modal-time-up",
+    "modal-view-solution",
+  ]) {
+    html = removeDivById(html, id);
+  }
+  html = html.replace(/<select name="audioSource"[\s\S]*?<\/select>/g, "");
+  // 音频已收进头部,原播放器容器(audio+select 均已移出)若已为空壳则移除
+  html = html.replace(
+    /<div class="take-test__player-wrap"><div class="take-test__player-container">\s*<\/div><\/div>/g,
+    "",
+  );
+  html = html.replace(
+    /<title>[^<]*<\/title>/,
+    `<title>IELTS 本地机考 · ${SET.category}类${SUBJECT_TITLE[subject]} · ${SET.enLabel}</title>`,
+  );
+  return html;
 }
 
 /* ---------- 写作/口语模拟页生成 ---------- */
@@ -377,9 +452,10 @@ function copyStatic() {
         /<audio id="listening-practice-player"[^>]*>[\s\S]*?<\/audio>/,
         `<audio id="ielts-local-audio" preload="auto" autoplay muted class="ielts-local-audio" style="display:none" title="IELTS 本地机考 · 听力音频（本地 · 真考模式：仅播一次）"><source src="../shared/exam-assets/${p.audioDst}" type="audio/mp3"></audio>`,
       );
+      // 框架对齐范本(a-2025jan):头部/品牌/modal/标题统一,再注入判分链脚本
       writeFileSync(
         join(dir, "listening.html"),
-        transformPage(html, [
+        transformPage(alignQuizFrame(html, "listening"), [
           `answers-${examId}.js`,
           "clock-sec.js",
           "scoring.js",
@@ -402,7 +478,12 @@ function copyStatic() {
     } else if (p.subject === "reading") {
       writeFileSync(
         join(dir, "reading.html"),
-        transformPage(testHtml, [`answers-${examId}.js`, "clock-sec.js", "scoring.js", "exam-guard.js"]).replace(
+        transformPage(alignQuizFrame(transformPage(testHtml), "reading"), [
+          `answers-${examId}.js`,
+          "clock-sec.js",
+          "scoring.js",
+          "exam-guard.js",
+        ]).replace(
           /<script src="(\.\.\/shared\/exam-assets\/exam-guard\.js)"><\/script>/,
           '<script src="$1" defer></script>',
         ),
