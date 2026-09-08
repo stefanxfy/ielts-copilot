@@ -59,11 +59,16 @@ jobs:
           mkdir -p src-tauri/server src-tauri/runtime
           cp -R next-server/. src-tauri/server/
           NODE_BIN="$(which node)"
+          # 拷两份:runtime/node 是 macOS 实际启动用的;
+          # runtime/node.exe 是 tauri-build 出包阶段校验用的 —— Tauri resources
+          # 数组声明了两个文件名,出包时校验两个都存在。macOS 上 .exe 后缀文件
+          # 无意义但 Tauri 不在乎。
           cp "$NODE_BIN" src-tauri/runtime/node
-          chmod +x src-tauri/runtime/node
+          cp "$NODE_BIN" src-tauri/runtime/node.exe
+          chmod +x src-tauri/runtime/node src-tauri/runtime/node.exe
           # 关键:macOS 装包时 Code 签名 / Gatekeeper 会拒绝裸二进制,
           # 解除隔离属性避免首次启动 "无法打开,因为它来自身份不明的开发者"
-          xattr -dr com.apple.quarantine src-tauri/runtime/node 2>/dev/null || true
+          xattr -dr com.apple.quarantine src-tauri/runtime/node src-tauri/runtime/node.exe 2>/dev/null || true
           echo "node 大小: $(du -h src-tauri/runtime/node | cut -f1)"
           echo "server/ 文件数: $(find src-tauri/server -type f | wc -l)"
 

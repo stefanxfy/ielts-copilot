@@ -78,7 +78,7 @@ jobs:
       - name: 构建(postbuild 自动产出 next-server/)
         run: npm run build
 
-      - name: 组装 Tauri 资源(server/ + runtime/node.exe)
+      - name: 组装 Tauri 资源(server/ + runtime/node.exe + runtime/node)
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force src-tauri/server, src-tauri/runtime | Out-Null
@@ -86,8 +86,12 @@ jobs:
           Copy-Item next-server/* src-tauri/server -Recurse -Force
           # node.exe 直接复用 runner 的 setup-node 安装(22.x,与 npm ci 运行时同版本;
           # better-sqlite3 走 NAPI prebuilds,小版本无 ABI 问题)
+          # 拷两份:runtime/node.exe 是 Windows 实际启动用的;
+          # runtime/node 是 tauri-build 出包阶段校验用的(tauri.conf.json resources
+          # 数组声明了两个文件名,跨平台出包都要两个文件都存在)
           $node = (Get-Command node).Source
           Copy-Item $node src-tauri/runtime/node.exe
+          Copy-Item $node src-tauri/runtime/node
           "node.exe 大小: {0:N1} MB" -f ((Get-Item src-tauri/runtime/node.exe).Length/1MB)
           "server/ 文件数: $((Get-ChildItem src-tauri/server -Recurse -File).Count)"
 

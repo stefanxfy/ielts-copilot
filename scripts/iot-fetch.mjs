@@ -49,6 +49,9 @@ const cookie = existsSync(COOKIE_FILE) ? readFileSync(COOKIE_FILE, "utf8").trim(
 if (!cookie) console.error("⚠ 无登录 cookie(data/iot/cookies.txt), solution 页将 302 失败");
 
 async function fetchPage(url, { binary = false } = {}) {
+  // 域名归一化: 清单里混有无 s 的镜像域 ieltsonlinetest.com, 其会话库与主域不互通
+  // (登录态只在 ieltsonlinetests.com 有效, 2026-09-08 实测), 统一归一化到主域(内容同源)
+  url = url.replace("//www.ieltsonlinetest.com/", "//www.ieltsonlinetests.com/");
   // node fetch 连发会触发站方限流(curl 同 URL 始终 200), 统一走 curl 子进程
   const maxT = binary ? 600 : 90;
   for (let i = 0; i < 3; i++) {
