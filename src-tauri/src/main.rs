@@ -93,15 +93,15 @@ fn bootstrap(app: tauri::AppHandle) {
     let resource_dir = strip_verbatim_prefix(&resource_dir_raw);
     let server_root = resource_dir.join("server");
     #[cfg(target_os = "windows")]
-    let (node_label, node_path): (PathBuf, &str) =
-        (resource_dir.join("runtime").join("node.exe"), "runtime/node.exe");
+    let (node_label, node_path): (&str, PathBuf) =
+        ("runtime/node.exe", resource_dir.join("runtime").join("node.exe"));
     #[cfg(not(target_os = "windows"))]
-    let (node_label, node_path): (PathBuf, &str) =
-        (resource_dir.join("runtime").join("node"), "runtime/node");
+    let (node_label, node_path): (&str, PathBuf) =
+        ("runtime/node", resource_dir.join("runtime").join("node"));
     let entry = server_root.join("server.js");
     for (label, p) in [
         ("server/server.js", &entry),
-        (node_label, &node_path),
+        (node_label, node_path),
     ] {
         if !p.exists() {
             fail(&win, &format!("缺少 {label},安装包可能不完整"));
