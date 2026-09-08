@@ -149,6 +149,16 @@ function removeDivById(html, id) {
   return html;
 }
 
+/** 音量 UI 样式块(audio-lock.js 注入的 .ielts-vol 的视觉全靠它,缺失则音量条被裁剪不可见)。
+ *  从原型听力模板提取,与原库范本同款。 */
+function injectAudioLockStyle(html) {
+  if (html.includes('id="audio-lock-style"')) return html;
+  const tpl = readFileSync(join(PROTO, "a-listening-test.html"), "utf8");
+  const m = tpl.match(/<style id="audio-lock-style">[\s\S]*?<\/style>/);
+  if (!m) throw new Error("原型听力模板缺少 audio-lock-style 样式块");
+  return html.replace(/<\/head>/i, `${m[0]}\n</head>`);
+}
+
 /** 听/阅卷面头部/框架与原库对齐:
  *  ① 整头替换:原站 IOT logo + practice-nav 菜单(Share/Report/TextSize/Solution/Download/SaveDraft)
  *     + Review 按钮 → 原库同款"雅"logo + 本地品牌标题块 + 纯净按钮组(便签/全屏/Submit);
@@ -195,6 +205,7 @@ function alignQuizFrame(html, subject) {
     /<title>[^<]*<\/title>/,
     `<title>IELTS 本地机考 · ${SET.category}类${SUBJECT_TITLE[subject]} · ${SET.enLabel}</title>`,
   );
+  if (audio) html = injectAudioLockStyle(html);
   return html;
 }
 
