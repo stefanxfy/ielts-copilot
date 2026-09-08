@@ -132,7 +132,30 @@ function transformPage(html, extraScripts) {
 /* ---------- 听/阅卷面框架对齐(范本:原库 a-2025jan 卷面,用户 2026-09-09 立规) ---------- */
 
 /** 本地品牌 logo(与原库卷面同款"雅"字 SVG) */
-const BRAND_HEADER_SVG = `<svg class="realtest-header__logo" style="height:38px;width:38px" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a6feb"/><stop offset="1" stop-color="#0d4fa8"/></linearGradient></defs><rect width="38" height="38" rx="9" fill="url(#lg)"/><text x="19" y="25.5" font-size="16" font-weight="700" fill="#fff" text-anchor="middle" font-family="PingFang SC, sans-serif">雅</text></svg>`;
+/** 固定头部单一事实源:直接复用范本原型(prototype/exam/a-listening-test.html)的
+ *  <header class="realtest-header"> 整块,不手抄。可变槽位仅 3 个:副标题/计时秒数/audio。
+ *  范本头部日后改动(加按钮/调样式)只需改原型文件,导入自动跟随。 */
+function getProtoHeader() {
+  const tpl = readFileSync(join(PROTO, "a-listening-test.html"), "utf8");
+  const m = tpl.match(/<header class="realtest-header[\s\S]*?<\/header>/);
+  if (!m) throw new Error("原型听力模板缺少 realtest-header 头部块");
+  const hd = m[0];
+  // 关键结构断言:范本被误改时快速失败,避免静默产出残缺头部
+  for (const marker of [
+    "realtest-header__logo",
+    "ieltshome-brand",
+    'id="time-clock"',
+    "realtest-header__btn-group",
+    'id="ielts-local-audio"',
+    "js-bt-notepad",
+    "js-full-screen",
+    "realtest-header__bt-submit",
+    "ioticon-check-v2",
+  ]) {
+    if (!hd.includes(marker)) throw new Error(`原型头部缺少关键元素: ${marker}`);
+  }
+  return hd;
+}
 
 /** 按 id 平衡删除整个 <div> 块(modal 等嵌套结构) */
 function removeDivById(html, id) {
@@ -181,7 +204,20 @@ function alignQuizFrame(html, subject) {
     );
   }
   const sub = `${SET.category}类 · ${SUBJECT_TITLE[subject]} · ${SET.enLabel}`;
-  const header = `<header class="realtest-header "> ${BRAND_HEADER_SVG}<div class="ieltshome-brand" style="display:flex;flex-direction:column;justify-content:center;margin-right:10px;line-height:1.25"><span style="font-size:14px;font-weight:700;color:#1c2330">IELTS 本地机考</span><span style="font-size:11px;color:#5a6472">${sub}</span></div><div class="realtest-header__time "> <span class="realtest-header__time-clock" data-time="${dataTime}" data-duration-default="${dataTime}" id="time-clock"><span class="realtest-header__time-val">--</span><span class="realtest-header__time-text">minutes remaining</span></span></div><div class="realtest-header__btn-group"><div class="realtest-header__btn-save save_hidden">Saved<span class="ioticon-check-v2"></span></div> ${audio}<div class="realtest-header__icon -note" id="js-bt-notepad"></div><div class="realtest-header__icon -full-screen" id="js-full-screen" data-original-title="Full Screen Mode" data-placement="bottom" data-trigger="hover"></div> <button class="realtest-header__bt-submit " data-original-title="" title=""> Submit </button></div> </header>`;
+  // 头部直接取自范本原型,仅替换 3 个可变槽位:副标题 / 计时秒数 / audio
+  let header = getProtoHeader();
+  header = header.replace(
+    /(<span style="font-size:11px;color:#5a6472">)[^<]*(<\/span>)/,
+    `$1${sub}$2`,
+  );
+  header = header.replace(
+    /data-time="\d+" data-duration-default="\d+"/,
+    `data-time="${dataTime}" data-duration-default="${dataTime}"`,
+  );
+  header = header.replace(
+    /<audio id="ielts-local-audio">[\s\S]*?<\/audio>|<audio id="ielts-local-audio"[\s\S]*?<\/audio>/,
+    audio,
+  );
   html = html.replace(headerMatch[0], header);
   for (const id of [
     "modal-exit-test",
