@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * scripts/synth-audio-xdf.mjs — 新东方 3575 词 P2:TTS 音频合成(单词 + contexts 例句)
+ * scripts/synth-audio-xdf.mjs — P2 TTS 音频合成(单词 + contexts 例句)
  *
- * 范围(book17 = 新东方雅思词汇 3575):
+ * 范围:
  *  - 单词: contentJson.audio.word 缺失 → 合成 → public/audio/words/{safe}.mp3
  *  - 例句: contexts[] 缺 audio → 合成 → public/audio/contexts/{safe}_{i}.mp3
  *          (examples[0].en 与 contexts[k].en 同句时复用同一文件回写)
@@ -16,8 +16,9 @@
  * 失败清单: /tmp/tts-xdf-failures.log (重跑本脚本即自动补失败项)
  *
  * 用法:
- *  node scripts/synth-audio-xdf.mjs                # 全量
- *  node scripts/synth-audio-xdf.mjs --limit=5     # 冒烟:前 5 词
+ *  node scripts/synth-audio-xdf.mjs                       # 默认 book17
+ *  node scripts/synth-audio-xdf.mjs --book=ielts-luan-3427  # 换词书
+ *  node scripts/synth-audio-xdf.mjs --limit=5              # 冒烟:前 5 词
  */
 import Database from "better-sqlite3";
 import { spawn } from "node:child_process";
@@ -32,9 +33,8 @@ const args = Object.fromEntries(
   }),
 );
 const LIMIT = args.limit ? parseInt(args.limit, 10) : Infinity;
-
+const BOOK_ID = args.book ?? "ielts-xdf-3575"; // 默认 book17,luan 用 --book=ielts-luan-3427
 // ===== 常量(与 import-vocab-pipeline.mjs 对齐) =====
-const BOOK_NAME = "新东方雅思词汇 3575";
 const VOICE_WORD = "en-US-AndrewMultilingualNeural";
 const VOICE_SENT = "en-US-EmmaMultilingualNeural";
 const RATE = "--rate=-8%";
@@ -54,6 +54,16 @@ function safeFilename(word) {
 // ===== DB =====
 const db = new Database("./data/app.db");
 db.pragma("journal_mode = WAL");
+
+// 词书名动态查(支持多词书 P2,2026-09-08 加 book 参数)
+const book = db.prepare("SELECT id, name FROM word_books WHERE book_id = ?").get(BOOK_ID);
+if (!book) {
+  console.error(`✗ 词书不存在: ${BOOK_ID}`);
+  process.exit(1);
+}
+const BOOK_NAME = book.name;
+log(`book_id=${BOOK_ID}  name=${BOOK_NAME}`);
+
 const getWord = db.prepare("SELECT id, word, content_json FROM words WHERE id = ?");
 const rows = db
   .prepare(
@@ -63,7 +73,7 @@ const rows = db
      WHERE bk.name = ? ORDER BY b."order"`,
   )
   .all(BOOK_NAME);
-log(`book17 词: ${rows.length}`);
+log(`${BOOK_NAME} 词: ${rows.length}`);
 
 // ===== 组装任务 =====
 const jobs = []; // {wordId, word, kind:'word'|'ctx', ctxIdx?, text, outPath, relPath, voice}
@@ -139,12 +149,15 @@ async function flush() {
       if (!row) continue;
       const cj = JSON.parse(row.content_json || "{}");
       const safe = safeFilename(row.word);
-      if (!cj.audio?.word && existsSync(join(AUDIO_WORDS_DIR, `${safe}.mp3`))) {
+      // 铁律:只认 >1KB 的真文件。edge-tts 失败时 spawn 重定向会留下 0 字节壳,
+      // 仅 existsSync 会把空文件路径写进 DB → 僵尸记录(UI 显示有音频实则无声)。
+      const realMp3 = (p) => existsSync(p) && statSync(p).size > 1000;
+      if (!cj.audio?.word && realMp3(join(AUDIO_WORDS_DIR, `${safe}.mp3`))) {
         cj.audio = { ...(cj.audio || {}), word: `/audio/words/${safe}.mp3` };
       }
       (cj.contexts || []).forEach((c, i) => {
         const p = join(AUDIO_CTX_DIR, `${safe}_${i}.mp3`);
-        if (c.en && !c.audio && existsSync(p)) c.audio = `/audio/contexts/${safe}_${i}.mp3`;
+        if (c.en && !c.audio && realMp3(p)) c.audio = `/audio/contexts/${safe}_${i}.mp3`;
       });
       // examples[0] 与 contexts 同句复用同一文件
       if (cj.examples?.length && !cj.examples[0].audio) {
@@ -194,5 +207,5 @@ const remain = db
      JOIN word_books bk ON bk.id=b.book_id WHERE bk.name = ? AND w.content_json NOT LIKE '%"/audio/words/%'`,
   )
   .get(BOOK_NAME);
-log(`终态: 仍缺单词音频的 book17 词 ≈ ${remain.c}`);
+log(`终态: 仍缺单词音频的 ${BOOK_NAME} 词 ≈ ${remain.c}`);
 db.close();
