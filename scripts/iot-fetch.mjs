@@ -49,16 +49,18 @@ const cookie = existsSync(COOKIE_FILE) ? readFileSync(COOKIE_FILE, "utf8").trim(
 if (!cookie) console.error("⚠ 无登录 cookie(data/iot/cookies.txt), solution 页将 302 失败");
 
 async function fetchPage(url, { binary = false } = {}) {
+  // node fetch 连发会触发站方限流(curl 同 URL 始终 200), 统一走 curl 子进程
+  const maxT = binary ? 600 : 90;
   for (let i = 0; i < 3; i++) {
     try {
-      const res = await fetch(url, {
-        headers: { "User-Agent": UA, ...(cookie ? { Cookie: cookie } : {}) },
-        redirect: "follow",
-        signal: AbortSignal.timeout(binary ? 600_000 : 60_000),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const buf = Buffer.from(await res.arrayBuffer());
-      return buf;
+      const args = ["-sL", "-A", UA, "--max-time", String(maxT), "-w", "\n%{http_code}"];
+      if (cookie) args.push("-H", `Cookie: ${cookie}`);
+      args.push(url);
+      const out = execFileSync("curl", args, { maxBuffer: 300 * 1024 * 1024, timeout: (maxT + 10) * 1000 });
+      const idx = out.lastIndexOf(10);
+      const code = out.subarray(idx + 1).toString().trim();
+      if (!/^2\d\d$/.test(code)) throw new Error(`HTTP ${code}`);
+      return out.subarray(0, idx);
     } catch (e) {
       if (i === 2) throw e;
       await sleep(2000 * (i + 1));
