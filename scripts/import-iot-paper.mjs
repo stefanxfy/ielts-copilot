@@ -45,6 +45,8 @@ const SET = {
   title: "A类 · 2025年3月真题 Test 1",
   category: "A",
   testPeriod: "2025-03",
+  /** 英文卷标(写作/口语页标题与页眉用,与原库 "A类写作 · 2025 January Test 1" 同构) */
+  enLabel: "2025 March Test 1",
   papers: [
     {
       subject: "listening",
@@ -61,10 +63,14 @@ const SET = {
       subject: "writing",
       dir: "questions/写作/2025/ielts-mock-test-2025-march-writing-practice-test-1",
     },
+    {
+      subject: "speaking",
+      dir: "questions/口语/2025/ielts-mock-test-2025-march-speaking-practice-test-1",
+    },
   ],
 };
 
-const SUBJECT_TITLE = { reading: "阅读", listening: "听力", writing: "写作" };
+const SUBJECT_TITLE = { reading: "阅读", listening: "听力", writing: "写作", speaking: "口语" };
 const examIdOf = (p) => `${SET.examSetId}-${p.subject}-test1`;
 
 /* ---------- 工具 ---------- */
@@ -94,36 +100,6 @@ function parsePaperHtml(testHtml) {
   return { qTypeByNum, partOf, totalQ: n - 1 };
 }
 
-/** 写作卷:DOM .test-question 面板 → T1/T2 题干。
- *  新 IOT 卷的题干不在 drupal-settings-json(wot 仅是库名子串),在正文面板里:
- *  <div class="panel panel-default test-question"><h4>…Writing Task N…</h4>
- *    <div class="test-question__question">题干 HTML(含 "You should spend about 20 minutes")</div> */
-function loadWritingTasks(testHtml, srcLabel) {
-  const panels = [...testHtml.matchAll(/<div class="panel panel-default test-question">[\s\S]*?<div class="panel-body">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/g)];
-  const stripHtml = (s) => String(s ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  const out = {};
-  let idx = 0;
-  for (const m of testHtml.matchAll(/Writing Task ([12])<\/span>[\s\S]*?<div class="test-question__question">([\s\S]*?)<\/div>/g)) {
-    const key = m[1] === "1" ? "T1" : "T2";
-    if (out[key]) continue;
-    const body = m[2];
-    const minutes = Number((body.match(/about <strong>(\d+) minutes<\/strong>/) || [])[1]);
-    const isT1 = key === "T1";
-    out[key] = {
-      part: null,
-      type: "WRITING_TASK",
-      anchor: null,
-      max: null,
-      prompt: stripHtml(body),
-      wordMin: isT1 ? 150 : 250,
-      suggestedSec: (minutes || (isT1 ? 20 : 40)) * 60,
-    };
-    idx++;
-  }
-  if (idx < 2) throw new Error(`${srcLabel} 写作题干解析不足 2 条(得到 ${idx})`);
-  return out;
-}
-
 const LETTER_ANS = /^[A-D](\s*,\s*[A-D])?$/;
 
 function classify(num, answers, qTypeByNum) {
@@ -145,6 +121,224 @@ function transformPage(html, extraScripts) {
     out = out.replace(/<\/body>/i, `${inject}\n</body>`);
   }
   return out;
+}
+
+/* ---------- 写作/口语模拟页生成 ---------- */
+
+/** 写作内容页 → {T1:{html,img}, T2:{html}}。
+ *  .test-question__question 里是结构化题干 <p>(与原库模板插槽同构);
+ *  T1 图在 .test-question__img-writing 的 data-src(懒加载 div)。 */
+function loadWritingSections(testHtml, srcLabel) {
+  const out = {};
+  for (const m of testHtml.matchAll(/Writing Task ([12])<\/span>[\s\S]*?<div class="test-question__question">([\s\S]*?)<div class="test-question__expand/g)) {
+    const key = m[1] === "1" ? "T1" : "T2";
+    if (out[key]) continue;
+    let body = m[2].replace(/<\/div>\s*$/, ""); // 去掉 question div 自身的闭合
+    const imgMatch = body.match(/data-src="(img\/[^"]+)"/);
+    // 题干只留 <p> 段落(懒加载图 div/多余标签剔除)
+    const paras = [...body.matchAll(/<p[\s\S]*?<\/p>/g)].map((x) => x[0]).join("");
+    if (!paras) throw new Error(`${srcLabel} ${key} 题干段落解析为空`);
+    out[key] = { html: paras, img: imgMatch ? imgMatch[1] : null };
+  }
+  if (!out.T1 || !out.T2) throw new Error(`${srcLabel} 写作题干解析不足 2 组(得到 ${Object.keys(out).join(",")})`);
+  return out;
+}
+
+/** 原库写作模拟页模板(a-writing-test.html) + 题干插槽替换 → writing.html。
+ *  模板其余(计时/字数统计/草稿板/提交弹窗)原样保留。 */
+function buildWritingSim(testHtml, examId) {
+  const tpl = readFileSync(join(PROTO, "a-writing-test.html"), "utf8");
+  const sec = loadWritingSections(testHtml, examId);
+  let out = tpl;
+
+  // 标题 + 页眉副标题(两处:原库同构 "A类写作 · <enLabel>")
+  const pageTitle = `IELTS 本地机考 · ${SET.category}类写作 · ${SET.enLabel}`;
+  out = out.replace(/<title>[^<]*<\/title>/, `<title>${pageTitle}</title>`);
+  out = out.replace(
+    /(<span style="font-size:11px;color:#5a6472">)[^<]*(<\/span>)/,
+    `$1${SET.category}类 · 写作 · ${SET.enLabel}$2`,
+  );
+
+  // 两个题干 section:第一个可见(T1),第二个 display:none(T2)
+  const buildSection = (openTag, key) => {
+    const s = sec[key];
+    const title = key === "T1" ? "Writing Task 1" : "Writing Task 2";
+    const img = s.img
+      ? ` <img src="${s.img}" alt="${title}" class="test-contents__img-custom img-center"> `
+      : "";
+    return `${openTag}<h1 class="test-contents__title">${title}</h1>${s.html}${img}</section>`;
+  };
+  // 逐个替换两个题干 section(保留各自 open tag:第一个可见,第二个 display:none)
+  const secs = [...out.matchAll(/<section class="test-contents ckeditor-wrapper"[^>]*>[\s\S]*?<\/section>/g)];
+  if (secs.length !== 2) throw new Error(`${examId}: 写作模板题干 section 数量异常(${secs.length})`);
+  const tags = secs.map((m) => m[0].match(/^<section[^>]*>/)[0]);
+  out = out
+    .replace(secs[0][0], buildSection(tags[0], "T1"))
+    .replace(secs[1][0], buildSection(tags[1], "T2"));
+
+  // 资产路径 + 离开防护(与听/阅同款)
+  out = transformPage(out);
+  out = out.replace(
+    /<\/body>/i,
+    `<script src="../shared/exam-assets/exam-guard.js" defer></script>\n</body>`,
+  );
+  return out;
+}
+
+/** 口语内容页 → {P1:[q...], P2:{cue, points[]}, P3:[q...]}(recording accordion 三面板) */
+function loadSpeakingParts(testHtml, srcLabel) {
+  const cutAt = (start) => {
+    const next = testHtml.slice(start).search(/href="#part[23]|做题|class="recording__footer/);
+    return next === -1 ? testHtml.slice(start) : testHtml.slice(start, start + next);
+  };
+  const linesOf = (html) =>
+    [...html.matchAll(/>([^<>]+)</g)]
+      .map((m) => m[1].replace(/&amp;/g, "&").replace(/&#039;|&rsquo;/g, "'").replace(/&quot;/g, '"').trim())
+      .filter((t) => t && !/^(PART \d|Introduction and Interview|Topic|Topic Discussion)$/.test(t));
+
+  const seg1 = cutAt(testHtml.indexOf('id="part1"'));
+  const seg2 = cutAt(testHtml.indexOf('id="part2"'));
+  const seg3 = cutAt(testHtml.indexOf('id="part3"'));
+  const l1 = linesOf(seg1);
+  const l2 = linesOf(seg2);
+  const l3 = linesOf(seg3);
+  if (!l1.length || !l2.length || !l3.length) throw new Error(`${srcLabel} 口语题目解析为空(P1=${l1.length} P2=${l2.length} P3=${l3.length})`);
+  // P2 第一行 = cue card 任务,其后为 You should say 要点
+  const cueIdx = l2.findIndex((t) => /^You should say/i.test(t));
+  const cue = l2.slice(0, cueIdx === -1 ? 1 : cueIdx).join(" ");
+  const points = cueIdx === -1 ? l2.slice(1) : l2.slice(cueIdx + 1);
+  return { P1: l1, P2: { cue, points }, P3: l3 };
+}
+
+/** 口语模拟页(自研,无原站对应页):三部分导航 + P2 cue card 准备/作答计时。
+ *  视觉沿用原库 realtest-header 风格;无判分,行前离开确认。 */
+function buildSpeakingHtml(testHtml, examId) {
+  const parts = loadSpeakingParts(testHtml, examId);
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const title = `IELTS 本地机考 · ${SET.category}类口语 · ${SET.enLabel}`;
+  const qList = (arr) => `<ol class="sp-qlist">${arr.map((q) => `<li>${esc(q)}</li>`).join("")}</ol>`;
+  const p2 = parts.P2;
+  return `<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #1c2330; background: #f4f6fa; }
+  .rt-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; background: #fff; border-bottom: 1px solid #e3e8f0; position: sticky; top: 0; z-index: 10; }
+  .rt-brand__main { font-size: 17px; font-weight: 700; color: #1c2330; display: block; }
+  .rt-brand__sub { font-size: 11px; color: #5a6472; }
+  .rt-timer { text-align: right; }
+  .rt-timer__val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: #1c2330; }
+  .rt-timer__text { font-size: 11px; color: #5a6472; margin-left: 6px; }
+  .sp-tabs { display: flex; gap: 8px; max-width: 960px; margin: 20px auto 0; padding: 0 24px; }
+  .sp-tab { flex: 1; padding: 10px 12px; border: 1px solid #dfe4ec; border-radius: 8px 8px 0 0; background: #e9edf4; color: #5a6472; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: none; }
+  .sp-tab.-active { background: #fff; color: #1a6feb; border-color: #dfe4ec; }
+  .sp-panel { display: none; max-width: 960px; margin: 0 auto; padding: 24px; background: #fff; border: 1px solid #dfe4ec; border-top: none; border-radius: 0 0 8px 8px; min-height: 420px; }
+  .sp-panel.-active { display: block; }
+  .sp-part-tag { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: #1a6feb; border-radius: 4px; padding: 3px 10px; margin-bottom: 6px; letter-spacing: .5px; }
+  .sp-part-name { display: block; font-size: 15px; color: #5a6472; margin-bottom: 16px; }
+  .sp-qlist { padding-left: 22px; line-height: 2.1; font-size: 15.5px; }
+  .sp-qlist li::marker { color: #1a6feb; font-weight: 700; }
+  .sp-cue { border: 1.5px solid #1a6feb; border-radius: 10px; padding: 22px 26px; background: #f7faff; }
+  .sp-cue__topic { font-size: 16.5px; line-height: 1.7; font-weight: 600; }
+  .sp-cue__points { margin-top: 14px; padding-left: 20px; line-height: 2; font-size: 15px; color: #3c4657; }
+  .sp-cue__hint { margin-top: 14px; font-size: 12.5px; color: #8a93a2; }
+  .sp-timerbox { margin-top: 22px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .sp-clock { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; color: #1c2330; min-width: 120px; }
+  .sp-clock.-run { color: #1a6feb; }
+  .sp-clock.-warn { color: #d64545; }
+  .sp-btn { padding: 9px 18px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; background: #1a6feb; color: #fff; }
+  .sp-btn.-ghost { background: #fff; color: #1c2330; border: 1px solid #c9d2e0; }
+  .sp-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .sp-stage { font-size: 13px; color: #5a6472; }
+  .sp-foot { max-width: 960px; margin: 14px auto 40px; padding: 0 24px; font-size: 12px; color: #8a93a2; }
+</style>
+</head>
+<body>
+<header class="rt-header">
+  <div class="rt-brand"><span class="rt-brand__main">IELTS 本地机考</span><span class="rt-brand__sub">${SET.category}类 · 口语 · ${SET.enLabel}</span></div>
+  <div class="rt-timer"><span class="rt-timer__val" id="sp-elapsed">00:00</span><span class="rt-timer__text">已用时 · 口语全程 11–14 分钟</span></div>
+</header>
+<nav class="sp-tabs">
+  <button class="sp-tab -active" data-part="1">PART 1 · Introduction &amp; Interview</button>
+  <button class="sp-tab" data-part="2">PART 2 · Topic Card</button>
+  <button class="sp-tab" data-part="3">PART 3 · Discussion</button>
+</nav>
+<main>
+  <section class="sp-panel -active" id="sp-part1">
+    <span class="sp-part-tag">PART 1</span><span class="sp-part-name">Introduction and Interview(考官提问,每题 2–4 句作答)</span>
+    ${qList(parts.P1)}
+  </section>
+  <section class="sp-panel" id="sp-part2">
+    <span class="sp-part-tag">PART 2</span><span class="sp-part-name">Topic Card(准备 1 分钟,连续作答 1–2 分钟)</span>
+    <div class="sp-cue">
+      <div class="sp-cue__topic">${esc(p2.cue)}</div>
+      <ul class="sp-cue__points">${p2.points.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+      <div class="sp-cue__hint">You should say: 要点已列于卡片 · 可在准备阶段做笔记</div>
+    </div>
+    <div class="sp-timerbox">
+      <div class="sp-clock" id="sp-p2clock">01:00</div>
+      <button class="sp-btn" id="sp-prep">1 分钟准备</button>
+      <button class="sp-btn" id="sp-speak" disabled>开始作答(2 分钟)</button>
+      <button class="sp-btn -ghost" id="sp-reset">重置</button>
+      <span class="sp-stage" id="sp-stage">待开始</span>
+    </div>
+  </section>
+  <section class="sp-panel" id="sp-part3">
+    <span class="sp-part-tag">PART 3</span><span class="sp-part-name">Two-way Discussion(双向讨论,围绕 Part 2 话题展开)</span>
+    ${qList(parts.P3)}
+  </section>
+</main>
+<div class="sp-foot">IELTS 本地机考 · 自研口语模拟页(题目取自 IOT ${SET.enLabel}) · 答题请自行录音存档</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  // 全程计时
+  var t0 = Date.now(), el = $("sp-elapsed");
+  setInterval(function () {
+    var s = Math.floor((Date.now() - t0) / 1000);
+    el.textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  }, 500);
+  // Part 切换
+  document.querySelectorAll(".sp-tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".sp-tab").forEach(function (t) { t.classList.remove("-active"); });
+      document.querySelectorAll(".sp-panel").forEach(function (p) { p.classList.remove("-active"); });
+      tab.classList.add("-active");
+      $("sp-part" + tab.dataset.part).classList.add("-active");
+    });
+  });
+  // P2 计时:准备 60s → 作答 120s
+  var clock = $("sp-clock") || $("sp-p2clock"), stage = $("sp-stage");
+  var handle = null, mode = null;
+  var btnPrep = $("sp-prep"), btnSpeak = $("sp-speak"), btnReset = $("sp-reset");
+  function fmt(sec) { return String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(sec % 60).padStart(2, "0"); }
+  function run(total, label, done) {
+    stop(); mode = label; var left = total;
+    clock.textContent = fmt(left); clock.className = "sp-clock -run"; stage.textContent = label;
+    handle = setInterval(function () {
+      left--;
+      clock.textContent = fmt(Math.max(left, 0));
+      if (left <= 10) clock.className = "sp-clock -warn";
+      if (left <= 0) { stop(); stage.textContent = label + "结束"; if (done) done(); }
+    }, 1000);
+  }
+  function stop() { if (handle) clearInterval(handle); handle = null; }
+  btnPrep.addEventListener("click", function () { run(60, "准备中", function () { btnSpeak.disabled = false; }); });
+  btnSpeak.addEventListener("click", function () { run(120, "作答中"); });
+  btnReset.addEventListener("click", function () {
+    stop(); mode = null; clock.textContent = "01:00"; clock.className = "sp-clock";
+    stage.textContent = "待开始"; btnSpeak.disabled = true;
+  });
+  // 离开防护(与听/阅 exam-guard 同口径)
+  window.addEventListener("beforeunload", function (e) { e.preventDefault(); e.returnValue = ""; });
+})();
+</script>
+</body>
+</html>`;
 }
 
 /* ---------- 步骤 1:静态托管 ---------- */
@@ -213,15 +407,12 @@ function copyStatic() {
           '<script src="$1" defer></script>',
         ),
       );
+    } else if (p.subject === "writing") {
+      // 写作:自研模拟页(原库 a-writing-test 模板 + 本卷题干插槽),无判分,exam-note 上报 + 离开防护
+      writeFileSync(join(dir, "writing.html"), buildWritingSim(testHtml, examId));
     } else {
-      // 写作:无判分,exam-note 上报 + 离开防护
-      writeFileSync(
-        join(dir, "writing.html"),
-        transformPage(testHtml, ["clock-sec.js", "exam-note.js", "exam-guard.js"]).replace(
-          /<script src="(\.\.\/shared\/exam-assets\/exam-guard\.js)"><\/script>/,
-          '<script src="$1" defer></script>',
-        ),
-      );
+      // 口语:自研模拟页(无原站对应页)
+      writeFileSync(join(dir, "speaking.html"), buildSpeakingHtml(testHtml, examId));
     }
     console.log(`[import] 静态托管 ${examId} → public/exams/${examId}/`);
   }
@@ -231,7 +422,7 @@ function copyStatic() {
 
 function writeAnswersJs() {
   for (const p of SET.papers) {
-    if (p.subject === "writing") continue;
+    if (p.subject === "writing" || p.subject === "speaking") continue;
     const examId = examIdOf(p);
     const answers = JSON.parse(readFileSync(join(ROOT, p.dir, "answers.json"), "utf8"));
     const proto = loadProtoExam(p.bandTableSrc);
@@ -297,7 +488,21 @@ function importDb() {
       let questionsJson, answersJson = null, bandTable = [], durationSec = 3600;
       const testHtml = readFileSync(join(ROOT, p.dir, "test.html"), "utf8");
       if (p.subject === "writing") {
-        questionsJson = loadWritingTasks(testHtml, examId);
+        const sec = loadWritingSections(testHtml, examId);
+        const stripHtml = (s) => String(s ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        const mk = (key, isT1) => ({
+          part: null,
+          type: "WRITING_TASK",
+          anchor: null,
+          max: null,
+          prompt: stripHtml(sec[key].html),
+          wordMin: isT1 ? 150 : 250,
+          suggestedSec: (isT1 ? 20 : 40) * 60,
+        });
+        questionsJson = { T1: mk("T1", true), T2: mk("T2", false) };
+      } else if (p.subject === "speaking") {
+        questionsJson = loadSpeakingParts(testHtml, examId);
+        durationSec = 14 * 60; // 口语全程 11–14 分钟,按上限记
       } else {
         const answers = JSON.parse(readFileSync(join(ROOT, p.dir, "answers.json"), "utf8"));
         const { qTypeByNum, partOf, totalQ } = parsePaperHtml(testHtml);
