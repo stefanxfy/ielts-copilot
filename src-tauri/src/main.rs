@@ -121,21 +121,34 @@ fn bootstrap(app: tauri::AppHandle) {
         log_to(&data_dir, "[bootstrap] 已从 config.example.json 生成 config.json");
     }
 
-    // 2.5) 首启 app.db seed(若随包有,且用户数据目录无 db)
+    // 2.5) 首启 app.db seed(若随包有,且用户数据目录无 marker)
     //     装包时 CI 把 src-tauri/seed-data/app.db 通过 tauri resources 拷到
-    //     install_root/resources/seed-data/app.db(NSIS 装 per-user 时 resource_dir
-    //     指向 install_root)。Rust 启动时若用户 %APPDATA%\ielts-copilot\data\app.db
-    //     缺失 → 拷贝过去,首启即有完整词库/真题/学习数据。
+    //     install_root/seed-data/app.db(NSIS per-user 装时资源平铺到 install_root)。
+    //     Rust 启动时若 data/.seed-applied 不存在 → 拷贝 seed.db → 写 marker。
+    //     用 marker 而非 db 存在性判断:首次启动时即便 data/app.db 已存在(空 schema),
+    //     也能补拷 seed 覆盖;后续启动 marker 已写,跳过。
     let db_path = data_dir.join("app.db");
+    let seed_marker = data_dir.join(".seed-applied");
     let seed_db = resource_dir.join("seed-data").join("app.db");
-    if !db_path.exists() && seed_db.exists() {
-        if let Err(e) = std::fs::copy(&seed_db, &db_path) {
-            log_to(&data_dir, &format!("[bootstrap] 警告:app.db seed 拷贝失败:{e}"));
-        } else {
-            log_to(&data_dir, &format!(
-                "[bootstrap] 已从随包 seed 拷贝 app.db ({} 字节)",
-                std::fs::metadata(&db_path).map(|m| m.len()).unwrap_or(0)
-            ));
+    if !seed_marker.exists() && seed_db.exists() {
+        // 备份原 db(若用户已有数据)
+        if db_path.exists() {
+            let backup = data_dir.join("app.db.bak-pre-seed");
+            let _ = std::fs::copy(&db_path, &backup);
+            log_to(&data_dir, "[bootstrap] 检测到旧 db,已备份为 app.db.bak-pre-seed");
+        }
+        match std::fs::copy(&seed_db, &db_path) {
+            Ok(_) => {
+                let _ = std::fs::write(&seed_marker, b"applied");
+                log_to(
+                    &data_dir,
+                    &format!(
+                        "[bootstrap] 已从随包 seed 拷贝 app.db ({} 字节)",
+                        std::fs::metadata(&db_path).map(|m| m.len()).unwrap_or(0)
+                    ),
+                );
+            }
+            Err(e) => log_to(&data_dir, &format!("[bootstrap] 警告:app.db seed 拷贝失败:{e}")),
         }
     }
 

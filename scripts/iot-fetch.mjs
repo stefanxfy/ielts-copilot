@@ -85,6 +85,22 @@ function parseAnswers(html) {
       .trim();
     for (const num of nums) if (!(num in out)) out[num] = ans;
   }
+  // 新版结构后备: <li class="answer"><b>N</b> Answer: <span class="b-r">ANS</span> (2025-07+ 部分 listening/reading)
+  const re2 = /<li class="answer"><b>(\d+)<\/b>\s*Answer:\s*<span class="b-r">([\s\S]*?)<\/span>/g;
+  while ((m = re2.exec(html)) !== null) {
+    const num = Number(m[1]);
+    if (!(num >= 1 && num <= 60)) continue;
+    if (num in out) continue;
+    const ans = m[2]
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\s+/g, " ")
+      .trim();
+    out[num] = ans;
+  }
   return out;
 }
 
@@ -232,7 +248,7 @@ for (const skill of SKILLS) {
       //    写/口 solution 页无 sys-answer, 以标题含 "Solution for" 为有效标记
       const solFile = join(dir, "solution.html");
       const solMinSize = objective ? 50_000 : 30_000;
-      const solOk = (h) => (objective ? h.includes("sys-answer") : /Solution for/i.test(pageTitle(h)));
+      const solOk = (h) => (objective ? h.includes("sys-answer") || h.includes('class="answer"') : /Solution for/i.test(pageTitle(h)));
       if (!existsSync(solFile) || statSync(solFile).size < solMinSize) {
         let solHtml = null;
         for (let attempt = 0; attempt < 3; attempt++) {
