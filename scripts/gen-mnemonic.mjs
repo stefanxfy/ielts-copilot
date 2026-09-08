@@ -36,6 +36,10 @@
  * 生成模型(2026-09-06 定):GLM-5.3 走 coding plan 专用端点 /api/coding/paas/v4(包月额度,
  * 不烧 MiniMax 按量余额)。bench 对比实验结论:GLM-5.3 语义错误率 0.30 vs MiniMax-M3 0.47。
  * 写作批改仍走 config.json llm.* 的 MiniMax-M3,与本脚本互不影响。
+ *
+ * Provider 切换(2026-09-08):--provider=minmax 改走 MiniMax-M3。触发场景:GLM coding plan
+ * 5h 配额耗尽,临时切 minmax 写 phonetic_uk 与 syl。差异:① 不带 thinking 字段(参数错 1210);
+ *   ② response 含 <think>...</think> 包裹块,剥块逻辑要扩。默认仍走 GLM(保底配)。
  */
 import Database from "better-sqlite3";
 import { spawn } from "node:child_process";
@@ -62,6 +66,11 @@ const FIELDS = (args.fields ?? "morph,syl,derives,context")
   .split(",")
   .map((s) => s.trim())
   .filter((f) => ["morph", "syl", "derives", "context"].includes(f));
+const PROVIDER = (args.provider ?? "glm").toLowerCase(); // glm | minmax
+if (!["glm", "minmax"].includes(PROVIDER)) {
+  console.error(`--provider 必须是 glm|minmax,收到: ${PROVIDER}`);
+  process.exit(1);
+}
 const TRIES_PER_FIELD = 3;
 
 // ===== D7 选词(book17 实测口径,词长=纯字母数) =====
@@ -150,11 +159,24 @@ function stripJsonComments(src) {
 }
 const CFG = JSON.parse(stripJsonComments(await readFile(join(process.cwd(), "config.json"), "utf8")));
 const LLM = CFG.llm;
-if (!LLM?.glmApiKey) { console.error("config.json 缺 llm.glmApiKey(GLM coding plan key)"); process.exit(1); }
-const MODEL = "glm-5.3";
-const BASE_URL = "https://open.bigmodel.cn/api/coding/paas/v4";
-const API_KEY = LLM.glmApiKey;
-const TIMEOUT_MS = 180000; // GLM 思考模式延迟更高,放宽到 180s(bench 实测)
+// ===== LLM 配置(provider 分叉,2026-09-08 加 minmax) =====
+let MODEL, BASE_URL, API_KEY, TIMEOUT_MS, EXTRA_BODY;
+if (PROVIDER === "glm") {
+  if (!LLM?.glmApiKey) { console.error("config.json 缺 llm.glmApiKey(GLM coding plan key)"); process.exit(1); }
+  MODEL = "glm-5.3";
+  BASE_URL = "https://open.bigmodel.cn/api/coding/paas/v4";
+  API_KEY = LLM.glmApiKey;
+  TIMEOUT_MS = 180000; // GLM 思考模式延迟更高,放宽到 180s(bench 实测)
+  EXTRA_BODY = { thinking: { type: "enabled" }, reasoning_effort: "low" };
+} else { // minmax
+  if (!LLM?.apiKey) { console.error("config.json 缺 llm.apiKey(minmax key)"); process.exit(1); }
+  MODEL = LLM.gradingModel || "MiniMax-M3";
+  BASE_URL = (LLM.baseUrl || "https://api.minimaxi.com/v1").replace(/\/+$/, "");
+  API_KEY = LLM.apiKey;
+  TIMEOUT_MS = (LLM.timeoutSec || 120) * 1000;
+  EXTRA_BODY = {}; // minmax 不吃 thinking/reasoning_effort(实测 1210)
+}
+console.log(`[llm] provider=${PROVIDER} model=${MODEL} base=${BASE_URL} timeout=${TIMEOUT_MS}ms`);
 
 // ===== DB(裸 SQL,不 import TS schema) =====
 const sqlite = new Database("./data/app.db");
@@ -168,8 +190,7 @@ async function dumpDebug(word, field, n, payload) {
   await writeFile(join(dir, `${field}-try${n}.json`), JSON.stringify(payload, null, 2), "utf8");
 }
 
-// ===== LLM(GLM-5.3,OpenAI 协议;glm-5.3 为常开思考模型:thinking 必须 enabled,
-//      思考强度用顶层 reasoning_effort 控制;错误码 1113=该端点无额度,1210=参数错) =====
+// ===== LLM(provider 分叉;glm-5.3 必开 thinking,minmax 不吃 thinking 参数) =====
 async function llmJson(userPrompt) {
   const body = {
     model: MODEL,
@@ -179,8 +200,7 @@ async function llmJson(userPrompt) {
     ],
     max_tokens: 4096,
     temperature: 0.6,
-    thinking: { type: "enabled" },
-    reasoning_effort: "low",
+    ...EXTRA_BODY,
   };
   const resp = await fetch(`${BASE_URL.replace(/\/+$/, "")}/chat/completions`, {
     method: "POST",
@@ -198,6 +218,8 @@ async function llmJson(userPrompt) {
   if (typeof content !== "string" || !content.trim()) fail("响应缺少 content");
   // 剥可能的围栏 + 取首个 {...} 平衡块
   let text = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+  // 剥 minmax 输出自带的 <think>...</think> 块(provider 切到 minmax 后才有,glm 没有)
+  text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
   const start = text.indexOf("{");
   if (start < 0) throw new Error(`输出无 JSON 对象: ${text.slice(0, 200)}`);
   let depth = 0, end = -1, inStr = false, esc = false;

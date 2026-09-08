@@ -12,7 +12,9 @@
  *   B. phonemes 拼合 === ipa 拼合(内部自洽,原自检已有)
  *   C. phonetic_uk 非空(没音标却写了 syl = 结构残缺)
  *
- * 归一化规则 norm():剥 / 空格 . ˌ ' ’;保留 ˈ(主重音位置必须一致)
+ * 归一化规则 norm():剥 / 空格 . ˌ ' ’ **与 ˈ ˌ**;与 gen-mnemonic.normIpa 对齐(2026-09-08 修复:
+ *   单音节库内无 ˈ + syl.ipa 首段加 ˈ 等价于库内无 ˈ,应判过;旧版保留 ˈ 比对把单音节全误杀)。
+ *   重音位置错位由 gen-mnemonic 的 stress 自动纠偏兜底,本校验器只负责「字符级一致」。
  * 用法:node scripts/check-phonetic-consistency.mjs [--book=10] [--quiet]
  * 退出码:有伤=1,全过=0(可挂 CI / 生成管线尾部)
  */
@@ -29,7 +31,7 @@ const bookId = bookArg ? Number(bookArg.split("=")[1]) : null;
 
 const norm = (s) =>
   String(s ?? "")
-    .replace(/[/\s.'’]/g, "")
+    .replace(/[/\s.'ˈˌ]/g, "")
     .trim();
 
 /** B 断言用:phonemes 天然不含重音符号(只标在 ipa 段),比对时两侧都剥 */
