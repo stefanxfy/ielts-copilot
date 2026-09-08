@@ -49,16 +49,18 @@ const cookie = existsSync(COOKIE_FILE) ? readFileSync(COOKIE_FILE, "utf8").trim(
 if (!cookie) console.error("⚠ 无登录 cookie(data/iot/cookies.txt), solution 页将 302 失败");
 
 async function fetchPage(url, { binary = false } = {}) {
+  // node fetch 连发会触发站方限流(curl 同 URL 始终 200), 统一走 curl 子进程
+  const maxT = binary ? 600 : 90;
   for (let i = 0; i < 3; i++) {
     try {
-      const res = await fetch(url, {
-        headers: { "User-Agent": UA, ...(cookie ? { Cookie: cookie } : {}) },
-        redirect: "follow",
-        signal: AbortSignal.timeout(binary ? 600_000 : 60_000),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const buf = Buffer.from(await res.arrayBuffer());
-      return buf;
+      const args = ["-sL", "-A", UA, "--max-time", String(maxT), "-w", "\n%{http_code}"];
+      if (cookie) args.push("-H", `Cookie: ${cookie}`);
+      args.push(url);
+      const out = execFileSync("curl", args, { maxBuffer: 300 * 1024 * 1024, timeout: (maxT + 10) * 1000 });
+      const idx = out.lastIndexOf(10);
+      const code = out.subarray(idx + 1).toString().trim();
+      if (!/^2\d\d$/.test(code)) throw new Error(`HTTP ${code}`);
+      return out.subarray(0, idx);
     } catch (e) {
       if (i === 2) throw e;
       await sleep(2000 * (i + 1));
@@ -108,6 +110,8 @@ function audioUrl(html) {
   let m = html.match(/https:\/\/ieltsonlinetests\.oss[^"'\s)]+\.mp3/);
   if (m) return m[0];
   m = html.match(/https?:\/\/media\.intergreat\.com\/[^"'\s)]+\.mp3/);
+  if (m) return m[0];
+  m = html.match(/https?:\/\/test4kynang\.oss[^"'\s)]+\.mp3/);
   return m ? m[0] : null;
 }
 
@@ -159,7 +163,7 @@ function rewritePage(html, skill) {
   // 2b) 图片加载失败时回退站方原图(离线缺图仍可在线兜底)
   html = html.replace(/data-iot-orig="(\/sites\/default\/files\/[^"]+?\.(?:png|jpe?g|gif|svg|webp)(?:\?[^"]*)?)"/gi, 'data-iot-orig="$1" onerror="this.onerror=null;this.src=\'$1\'"');
   // 3) 音频(OSS + intergreat 老卷) → audio.mp3
-  html = html.replace(/(src)="((?:https:\/\/ieltsonlinetests\.oss|https?:\/\/media\.intergreat\.com)[^"']+\.mp3)[^"]*"/g, '$1="audio.mp3" data-iot-orig="$2"');
+  html = html.replace(/(src)="((?:https:\/\/ieltsonlinetests\.oss|https?:\/\/media\.intergreat\.com|https?:\/\/test4kynang\.oss)[^"']+\.mp3)[^"]*"/g, '$1="audio.mp3" data-iot-orig="$2"');
   // 4) 本地已有对应件的 CDN
   html = html.replace(/(href|src)="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/jquery\.nicescroll[^"]*"/g, '$1="../../../exam-assets/jquery.nicescroll.min.js"');
   html = html.replace(/(href|src)="https:\/\/unpkg\.com\/qr-code-styling[^"]*"/g, '$1="../../../exam-assets/qr-code-styling.js"');

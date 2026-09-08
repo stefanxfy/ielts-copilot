@@ -4,7 +4,7 @@
  *
  * 四次独立 LLM 调用生成 words.contentJson 的助记字段:
  *   ① morph    构词解析(derived/compound/blend 三型)
- *   ② syl      读音解析(音节+音素双层,phonemes 拼合 === ipa 拼合 硬校验)
+ *   ② syl      读音解析(音节划分;phonemes 音素层已于 2026-09-08 取消,前端对空值天然兼容)
  *   ③ derives  派生·词性·近义
  *   ④ context  真实语境(词组内嵌例句同条一体,v2.5 契约)
  *
@@ -266,19 +266,16 @@ const PROMPTS = {
   ].filter(Boolean).join("\n"),
 
   syl: (w, ipa) => [
-    `你是英语发音教学专家。为单词 ${w} 生成「音节+音素」双层读音解析。`,
+    `你是英语发音教学专家。为单词 ${w} 生成音节划分与读音解析。`,
     `参考音标(库内,唯一权威):${ipa}`,
     `**符号照搬(最高优先级)**:ipa 数组只允许做「音节切分」,所有符号必须严格照搬参考音标——禁止改写任何符号,包括:aʊ↔au、əʊ↔ou 等双元音写法互换、弱读 ə 脱落(ʃən→ʃ(n))、增删 (r)、ɛ↔e、ɪ↔iː 互换;参考音标含 ˈ/ˌ 的原位保留,不含的不得自行添加。你确信的其他读音变体一律放弃——库内音标是唯一标准。`,
     COMMON,
-    `输出模板:\n{ "syl": { "parts": ["lit","e","ra","ture"], "ipa": ["lɪt","ə","rə","tʃə"], "stress": 0, "secondary": [], "phonemes": [ { "p": "l", "syl": 0, "type": "consonant", "desc": "边音:舌尖抵上齿龈,气流从舌两侧通过" } ], "combos": [ { "letters": "ture", "sound": "/tʃə/", "desc": "字母组合读音规律" } ], "notes": ["发音要点,1-3 条"] } }`,
+    `输出模板:\n{ "syl": { "parts": ["lit","e","ra","ture"], "ipa": ["lɪt","ə","rə","tʃə"], "stress": 0, "secondary": [], "combos": [ { "letters": "ture", "sound": "/tʃə/", "desc": "字母组合读音规律" } ], "notes": ["发音要点,1-3 条"] } }`,
     `规则:`,
-    `- parts=字母分段(依序拼合覆盖整词拼写);ipa=每段读音,重音符号 ˈ(主)/ˌ(次)放在对应音节段的 ipa 串开头`,
+    `- parts=字母分段(依序拼合覆盖整词拼写);ipa=每段读音,重音符号 ˈ(主)/ˌ(次)照搬参考音标的原始位置放在对应音节段——可能在段中间(如 gˈnɪ),原样保留,不要求段首`,
     `- stress=主重音音节下标(0 起);secondary=次重音下标数组(可省略则 [])`,
-    `- 音节划分按真实发音,每个音节必须含至少一个元音音素;成音节辅音 /l/ /n/ /m/ 可作弱音节核心(如 little 的 /l̩/)`,
-    `- phonemes: p=纯音素(**不含重音符号/斜杠**),依序拼合必须 === ipa 拼合去掉重音符号后(逐字符);syl=归属音节下标;type ∈ vowel|consonant;desc=一句发音要领,重复音素(如多次 schwa)desc 允许 ""`,
-    `- **phonemes 的 p 同样逐符号照搬 ipa(去重音后)**:参考音标是弱读形式时原样保留,禁止在 phonemes 层「还原」听感上的 ə——如参考 /ˈpeɪʃn/ 则该段 phonemes 只能是 ʃ+n(n 作成音节辅音,desc 里说明),禁止写 ʃ+ə+n;参考 /baund/ 则是 b+au+n+d,禁止写 a+ʊ`,
-    `- 双元音(/aɪ/ /eɪ/ /ɔɪ/ /aʊ/ /əʊ/)是**单个音素**,禁止拆成两个;单音素如 /dʒ/ /tʃ/ /θ/ /ð/ /ŋ/ 同理不可再分`,
-    `- **内部自洽是硬约束**:ipa 拼合、phonemes 拼合、parts 拼合三者在去重音符号后必须两两一致对应,不得自行增删音素`,
+    `- 音节划分按真实发音,每个音节必须含至少一个元音;成音节辅音 /l/ /n/ /m/ 可作弱音节核心(如 little 的 /l̩/)`,
+    `- **内部自洽是硬约束**:ipa 依序拼合必须与参考音标(去斜杠)逐字符一致,parts 依序拼合必须覆盖整词拼写,不得自行增删符号`,
     `- combos/notes 可省略;combos 记字母组合读音规律(如 ture→/tʃə/ 同 nature/future)`,
   ].join("\n"),
 
@@ -312,18 +309,32 @@ const normIpa = (x) => x.replace(/[/ˈˌ.\s]/g, "");
 // 词素串解析:morphSeed "ac(=to) + celer(快速的) + ate(使…) → 加速" → ["ac","celer","ate"];
 // ECDICT root "tend, tent, tens = stretch (Latin)" → ["tend","tent","tens"]
 // 判别:morphSeed 含 "→"(箭头)——注意 "ac(=to)" 括号内的 = 不能当 ECDICT 判据(实测踩坑)
+// 标签前缀剥离(2026-09-08 修复):种子注入带 "词典词根(权威):"/"词根拆分记忆法(权威):" 标签,
+//   不剥离则分段后首段形如 "词典词根(权威):tend",整段字母匹配失败 → 首词根被静默吞掉
+//   (attendance 种子 [tend,tent,tens] 缩成 [tent,tens],正确拆分 at+tend+ance 被误判"疑似杜撰",
+//   夜间批量 16 词误杀的根因;形态:短标签+括号注记+冒号,裸种子无此前缀不受影响)
+// 种子类型判别(与 parseSeedMorphemes 共用同一正文口径):
+//   "seed"=morphSeed(强校验:种子词根必须全部被 pieces 覆盖) / "root"=ECDICT(弱校验:≥1 piece 命中即可)
+function seedKind(seedText) {
+  if (!seedText) return null;
+  const body = seedText.replace(/^[^:：()（）]{1,20}[(（][^:：()（）]{0,30}[)）][:：]\s*/, "");
+  if (body.includes("→") || (!body.includes("=") && body.includes("+"))) return "seed";
+  if (body.includes("=")) return "root";
+  return null;
+}
 function parseSeedMorphemes(seedText) {
   if (!seedText) return null;
-  if (seedText.includes("→") || (!seedText.includes("=") && seedText.includes("+"))) {
+  const body = seedText.replace(/^[^:：()（）]{1,20}[(（][^:：()（）]{0,30}[)）][:：]\s*/, "");
+  if (body.includes("→") || (!body.includes("=") && body.includes("+"))) {
     // morphSeed:按 + 分段,取每段第一个括号前的字母串
-    return seedText.split("+").map((s) => {
+    return body.split("+").map((s) => {
       const m = s.trim().match(/^([a-zA-Z]+)/);
       return m ? m[1].toLowerCase() : "";
     }).filter(Boolean);
   }
-  if (seedText.includes("=")) {
+  if (body.includes("=")) {
     // ECDICT root:取 = 左侧词根列表
-    const lhs = seedText.split("=")[0] ?? "";
+    const lhs = body.split("=")[0] ?? "";
     return lhs.split(/[,，]/).map((s) => s.trim().replace(/^[-\s]+|[-\s]+$/g, "").toLowerCase()).filter((s) => /^[a-z]+$/.test(s));
   }
   return null;
@@ -354,7 +365,7 @@ function validate(field, parsed, word, ipaInput, seedText) {
       if (seedText) {
         const seedMorphs = parseSeedMorphemes(seedText);
         if (seedMorphs?.length) {
-          if (seedText.includes("=")) {
+          if (seedKind(seedText) === "root") {
             // ECDICT root:≥1 个 piece 命中词根集合(词根常带屈折/连接元音变体,如 -ial vs -al,四向容忍)
             const hit = m.pieces.some((p) => {
               const pc = (p.piece ?? "").replace(/[-\s]/g, "").toLowerCase();
@@ -384,12 +395,22 @@ function validate(field, parsed, word, ipaInput, seedText) {
     if (!s || typeof s !== "object") return ["syl 缺失"];
     if (!Array.isArray(s.parts) || !Array.isArray(s.ipa) || s.parts.length !== s.ipa.length || !s.parts.length)
       errs.push("parts/ipa 数组不合法或长度不一致");
+    // stress 自动纠偏(2026-09-08):词典音标里 ˈ 未必落在 LLM 选的音节边界上(recognition 库内 ˌrekəgˈnɪʃn,
+    // LLM 切 ˌre|kə|gˈnɪʃn 时 ˈ 居段中;rehabilitate 则纯粹下标标错)——唯一含 ˈ 的段即主重音段,
+    // stress 指错时直接改指并落到入库数据(前端重音高亮读 syl.stress),不消耗重试
+    if ((s.ipa?.length ?? 0) > 1) {
+      const marks = (s.ipa ?? []).map((seg, i) => [String(seg), i]).filter(([seg]) => seg.includes("ˈ")).map(([, i]) => i);
+      if (marks.length === 1 && marks[0] !== s.stress) {
+        console.log(`  ↺ stress 自动纠偏: ${s.stress} → ${marks[0]}(唯一含 ˈ 的段)`);
+        s.stress = marks[0];
+      }
+    }
     if (typeof s.stress !== "number" || s.stress < 0 || s.stress >= (s.parts?.length ?? 0)) errs.push(`stress=${s.stress} 越界`);
     if (ipaInput) {
       const ipaJoined = normIpa(s.ipa?.join("") ?? "");
       const inputJoined = normIpa(ipaInput);
-      // ɛ/e 同音异符(词典混用)映射后比对,与 check-phonetic-consistency.mjs 同规
-      const mapE = (x) => x.replace(/ɛ/g, "e");
+      // ɛ/e 同音异符(词典混用)+ 尾缀成音节鼻音 ʃən/ʃn 两写并存(assimilation 实测踩坑),归一后比对
+      const mapE = (x) => x.replace(/ɛ/g, "e").replace(/ʃən$/, "ʃn");
       const variantsIn = (s) => String(s ?? "").replace(/^\/|\/$/g, "").split(/[,;、]/).map((x) => mapE(normIpa(x))).filter(Boolean);
       const cands = variantsIn(ipaInput);
       const ok = cands.includes(mapE(ipaJoined));
@@ -402,11 +423,12 @@ function validate(field, parsed, word, ipaInput, seedText) {
         errs.push(`ipa 拼合「${ipaJoined}」≠ phonetic_uk(候选:${cands.join(" / ")})——符号必须照搬库内音标,禁止变体改写${hint}`);
       }
     }
-    // 重音标记硬校验(100词审查发现的盲区):主重音段首必须 ˈ;ˌ 段必须在 secondary;孤立辅音不成音节
+    // 重音标记硬校验(100词审查发现的盲区):主重音段必须含 ˈ;ˌ 段必须在 secondary;孤立辅音不成音节
     // 单音节词(parts.length===1)豁免:库内 phonetic_uk 单音节普遍不带 ˈ(如 bid /bɪd/)
+    // 2026-09-08:段首 startsWith 放宽为段内 includes——词典 ˈ 位置可不落音节边界(经上方纠偏后 stress 段必含 ˈ)
     const singleSyl = (s.parts?.length ?? 0) === 1;
     const mainSeg = s.ipa?.[s.stress] ?? "";
-    if (mainSeg && !singleSyl && !String(mainSeg).startsWith("ˈ")) errs.push(`主重音段 ipa[${s.stress}]「${mainSeg}」缺 ˈ 前缀`);
+    if (mainSeg && !singleSyl && !String(mainSeg).includes("ˈ")) errs.push(`主重音段 ipa[${s.stress}]「${mainSeg}」缺 ˈ 标记`);
     (s.ipa ?? []).forEach((seg, i) => {
       if (i === s.stress) return;
       if (String(seg).includes("ˌ") && !(s.secondary ?? []).includes(i)) errs.push(`段${i}「${seg}」带 ˌ 但 secondary 未含`);
@@ -414,8 +436,8 @@ function validate(field, parsed, word, ipaInput, seedText) {
     (s.parts ?? []).forEach((p, i) => {
       if (/^[a-z]$/i.test(p) && !/[aeiouy]/i.test(p)) errs.push(`段${i}「${p}」为孤立辅音,不成音节`);
     });
-    if (!Array.isArray(s.phonemes) || !s.phonemes.length) errs.push("phonemes 空");
-    else {
+    // phonemes 可选(2026-09-08 定稿:音素层解析取消,prompt 不再要求输出;前端 phs.length 门控天然兼容旧数据)
+    if (Array.isArray(s.phonemes) && s.phonemes.length) {
       const joined = normIpa(s.phonemes.map((p) => p.p ?? "").join(""));
       const ipaJoined = normIpa(s.ipa?.join("") ?? "");
       if (joined !== ipaJoined) errs.push(`phonemes 拼合「${joined}」≠ ipa 拼合「${ipaJoined}」(去重音符比对)`);
