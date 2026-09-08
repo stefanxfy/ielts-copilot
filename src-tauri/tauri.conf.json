@@ -27,7 +27,7 @@
     "active": true,
     "targets": ["nsis"],
     "icon": ["icons/icon.ico", "icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png"],
-    "resources": ["server/", "runtime/node.exe", "../config.example.json"],
+    "resources": ["server/", "runtime/node.exe", "../config.example.json", "seed-data/app.db"],
     "windows": {
       "nsis": {
         "installMode": "currentUser",

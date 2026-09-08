@@ -121,6 +121,24 @@ fn bootstrap(app: tauri::AppHandle) {
         log_to(&data_dir, "[bootstrap] 已从 config.example.json 生成 config.json");
     }
 
+    // 2.5) 首启 app.db seed(若随包有,且用户数据目录无 db)
+    //     装包时 CI 把 src-tauri/seed-data/app.db 通过 tauri resources 拷到
+    //     install_root/resources/seed-data/app.db(NSIS 装 per-user 时 resource_dir
+    //     指向 install_root)。Rust 启动时若用户 %APPDATA%\ielts-copilot\data\app.db
+    //     缺失 → 拷贝过去,首启即有完整词库/真题/学习数据。
+    let db_path = data_dir.join("app.db");
+    let seed_db = resource_dir.join("seed-data").join("app.db");
+    if !db_path.exists() && seed_db.exists() {
+        if let Err(e) = std::fs::copy(&seed_db, &db_path) {
+            log_to(&data_dir, &format!("[bootstrap] 警告:app.db seed 拷贝失败:{e}"));
+        } else {
+            log_to(&data_dir, &format!(
+                "[bootstrap] 已从随包 seed 拷贝 app.db ({} 字节)",
+                std::fs::metadata(&db_path).map(|m| m.len()).unwrap_or(0)
+            ));
+        }
+    }
+
     // 3) 端口:读 JSONC → 占用 +1(上限 +20,不写回)
     let base_port = read_port(&config_path).unwrap_or(DEFAULT_PORT);
     let mut port = base_port;

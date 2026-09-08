@@ -91,7 +91,10 @@ next-env.d.ts
 # ---------- M1 工程产物(dev 与双击共存,见 docs/M1-实施计划.md) ----------
 next-server/
 /config.json
+# data/ 是运行时生成目录(用户的 SQLite 学习库 + 大量临时备份),
+# 全部不进 git。app.db seed 改放 src-tauri/seed-data/ 走 Tauri 资源流。
 /data
+/data/seed-data/
 
 # ---------- WorkBuddy 本地工作记忆 ----------
 .workbuddy/
