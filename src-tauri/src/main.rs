@@ -27,10 +27,12 @@ use std::time::{Duration, Instant};
 
 use tauri::Manager;
 
+mod sidecar;
+use crate::sidecar::{apply_no_window_flag, attach_job_object};
+
 const DEFAULT_PORT: u16 = 3177;
 const MAX_PORT_STEP: u16 = 20;
 const HEALTH_TIMEOUT_SECS: u64 = 60;
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// sidecar 句柄:正常退出由 Job Object 兜底,此处仅存引用供 RunEvent::Exit 显式 kill
 struct ServerProc(Mutex<Option<Child>>);
@@ -90,11 +92,16 @@ fn bootstrap(app: tauri::AppHandle) {
     // Node v22 无法处理该前缀,会报 EISDIR 'C:'。先剥掉。
     let resource_dir = strip_verbatim_prefix(&resource_dir_raw);
     let server_root = resource_dir.join("server");
-    let node_exe = resource_dir.join("runtime").join("node.exe");
+    let (node_label, node_path) = {
+        #[cfg(target_os = "windows")]
+        (resource_dir.join("runtime").join("node.exe"), "runtime/node.exe")
+        #[cfg(not(target_os = "windows"))]
+        (resource_dir.join("runtime").join("node"), "runtime/node")
+    };
     let entry = server_root.join("server.js");
     for (label, p) in [
         ("server/server.js", &entry),
-        ("runtime/node.exe", &node_exe),
+        (node_label, &node_path),
     ] {
         if !p.exists() {
             fail(&win, &format!("缺少 {label},安装包可能不完整"));
@@ -182,7 +189,7 @@ fn bootstrap(app: tauri::AppHandle) {
             return;
         }
     };
-    let mut command = Command::new(&node_exe);
+    let mut command = Command::new(&node_path);
     command
         .arg(&entry)
         .current_dir(&server_root)
@@ -194,11 +201,7 @@ fn bootstrap(app: tauri::AppHandle) {
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::from(stderr_file));
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        command.creation_flags(CREATE_NO_WINDOW);
-    }
+    apply_no_window_flag(&mut command);
 
     let mut child = match command.spawn() {
         Ok(c) => c,
@@ -367,39 +370,11 @@ fn read_port(path: &Path) -> Option<u16> {
     if p > 0 && p < 65536 { Some(p as u16) } else { None }
 }
 
-/* ---------- Job Object:退出回收进程树(§5.4) ---------- */
-
-#[cfg(windows)]
-fn attach_job_object(child: &Child) {
-    use std::os::windows::io::AsRawHandle;
-    use windows_sys::Win32::System::JobObjects::{
-        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
-        SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
-        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
-    };
-    unsafe {
-        let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
-        if job.is_null() {
-            return;
-        }
-        let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
-        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-        let ok = SetInformationJobObject(
-            job,
-            JobObjectExtendedLimitInformation,
-            &info as *const _ as *const core::ffi::c_void,
-            std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
-        );
-        if ok != 0 {
-            let h = child.as_raw_handle();
-            AssignProcessToJobObject(job, h);
-        }
-        // 故意不 CloseHandle:KILL_ON_JOB_CLOSE 保证主进程退出时杀整棵 node 进程树
-    }
-}
-
-#[cfg(not(windows))]
-fn attach_job_object(_child: &Child) {}
+/* ---------- Job Object 进程树回收 ----------
+   Windows: sidecar::windows::attach_job_object 用 Win32 Job Object (KILL_ON_JOB_CLOSE)
+   macOS/Linux: sidecar::unix::attach_job_object 占位(无 OS 等价物),
+                 主进程通过 cleanup 时给子进程 SIGKILL 兜底
+   实现见 src/sidecar/{windows,unix}.rs */
 
 /* ---------- 路径规范化 ----------
    Tauri v2 的 resource_dir() 在 Windows 上会返回带 \\?\ 前缀的 DOS device path
