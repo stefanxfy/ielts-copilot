@@ -21,6 +21,9 @@ export default async function MockPage({
   const db = getDb();
 
   const sets = db.select().from(examSets).all();
+  // 月份自然序:testPeriod 字符串升序(YYYY-MM,跨年跨月一并正确),同月 examSetId 升序
+  // 使 Test 1(a-2025feb)排在 Test 2(a-2025feb-test2)前。原 INSERT 顺序按批次排,与月份无关。
+  sets.sort((a, b) => a.testPeriod.localeCompare(b.testPeriod) || a.examSetId.localeCompare(b.examSetId));
   const allPapers = db.select().from(papers).all();
   // 各卷考试次数(>0 即"已完成"至少一次)
   const doneRows = db
