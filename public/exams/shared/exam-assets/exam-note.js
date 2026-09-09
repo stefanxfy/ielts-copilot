@@ -99,10 +99,9 @@
       return '<b>' + lead + '</b><br>本套听力卷源未附答案数据，本地原型暂不判分；' +
         '正式版（V2）将提供听力机考判分（音频只播一遍、不可回拖）。<br>重新练习请刷新页面。';
     }
-    return '<b>' + lead + '</b><br>' +
-      '写作没有客观标准答案，本地原型不做判分；' +
-      '正式版会把 Task 1 / Task 2 送 <b>AI 四维批改（TR · CC · LR · GRA）</b>并给出改写范文。<br>' +
-      '重新练习请刷新页面。';
+    // 写作：批改已接通（/api/exam-records → after(gradeWritingRecord)），交卷后跳转 /records/<id>
+    return '<b>' + lead + '</b><br>正在入库并启动批改，即将打开批改结果页…<br>' +
+      '页面会自动跳转；若未跳转请刷新本页。';
   }
 
   // 听力页：交卷/时间到即停真考音频（写作页无 #ielts-local-audio，自动 no-op）。
@@ -124,6 +123,47 @@
     removeHeaderButtons();
     notice(finishTitle(source), true);
     if (window.IELTS_EXAM_GUARD_OFF) window.IELTS_EXAM_GUARD_OFF(); // 考试结束,解除离开防护
+    /* 写作单科入库 + 跳转:复用连考 silentSubmit 的 payload 形态,
+       拿到 recordId 后整页跳 /records/<id>(跳出 iframe),让用户直接看到批改结果页。
+       examId 由顶层 ExamIframeExamIdInjector 通过 ielts-exam-id 消息注入(单科模式);
+       连考模式已在 submitExam 分支走 silentSubmit → 顶层转场,不进此处。 */
+    if (!IS_LISTENING) {
+      submitAndJump();
+    }
+  }
+
+  /* 写作单科:采集 T1/T2 → POST /api/exam-records → 整页跳转到批改结果页。
+     服务端在 POST 处理里通过 after() 异步启动 gradeWritingRecord,跳过去时
+     记录已入库、批改进行中,成绩页会渲染「AI 批改进行中」状态条并 4s 轮询。 */
+  function submitAndJump() {
+    var t1 = document.querySelector('#input1, [data-question-item="1"]');
+    var t2 = document.querySelector('#input2, [data-question-item="2"]');
+    var values = { T1: t1 ? t1.value : '', T2: t2 ? t2.value : '' };
+    var examId = window.IELTS_EXAM_ID;
+    if (!examId) {
+      console.warn('[exam-note] 单科写作无 examId(顶层未注入),保持本地提示');
+      return;
+    }
+    var payload = { examId: examId, usedSec: usedSeconds(), values: values };
+    try {
+      fetch('/api/exam-records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.ok && d.recordId) {
+          // 整页跳转(target=_top 同样可达,但 window.top.location 更明确跳出 iframe)
+          try { window.top.location.href = '/records/' + d.recordId; }
+          catch (e) { window.location.href = '/records/' + d.recordId; }
+        } else {
+          console.warn('[exam-note] 写作入库失败,recordId 未返回', d);
+        }
+      }).catch(function (e) {
+        console.warn('[exam-note] 写作入库请求失败(file:// 或后端未起)', e);
+      });
+    } catch (e) {
+      console.warn('[exam-note] fetch 抛错', e);
+    }
   }
 
   /* ---------- 交卷调度(连考丝滑转场) ----------

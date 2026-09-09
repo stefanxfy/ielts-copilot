@@ -23,6 +23,7 @@ import { ExamGuard } from "@/components/exam/exam-guard";
 import { ExamBackButton } from "@/components/exam/exam-back-button";
 import { ExamJump } from "@/components/exam/exam-jump";
 import { ExamSessionLink } from "@/components/exam/exam-session-link";
+import { ExamIframeExamIdInjector } from "@/components/exam/exam-iframe-exam-id-injector";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -95,6 +96,8 @@ export default async function ExamPage({
           subject={paper.subject}
         />
       )}
+      {/* 单科模式:顶层只注入 examId(连考模式由 ExamSessionLink 一并注入,跳过) */}
+      {!isSessionMode && <ExamIframeExamIdInjector examId={examId} />}
       <div className="flex items-center gap-3 border-b px-4 py-2">
         <ExamBackButton isReview={isReview} />
         <h1 className="text-sm font-medium">{paper.title}</h1>

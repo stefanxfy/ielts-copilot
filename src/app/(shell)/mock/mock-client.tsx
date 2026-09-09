@@ -431,7 +431,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       {tab === "writing" && (
         <div>
           <div className="mb-3.5 text-[13px] text-muted-foreground">
-            选择一套写作真题开始机考 · 60 分钟 · Task 1 + Task 2 议论文 · 交卷后 AI 四维批改（批改功能即将开放）
+            选择一套写作真题开始机考 · 60 分钟 · Task 1 + Task 2 议论文 · 交卷后 AI 四维批改（10–60 秒）
           </div>
           {singleList("writing")}
         </div>
