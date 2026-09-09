@@ -41,20 +41,43 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2025may",
-  setId: "a-2025may-test2",
-  title: "A类 · 2025年5月真题 Test 2",
-  category: "A",
-  testPeriod: "2025-05",
-  enLabel: "2025 May Test 2",
+  examSetId: "a-2025dec-test2",
+  setId: "a-2025dec-test2",
   testNo: 2,
+  title: "A类 · 2025年12月真题 Test 2",
+  category: "A",
+  testPeriod: "2025-12",
   papers: [
-    {"subject":"listening","dir":"questions/听力/2025/ielts-mock-test-2025-may-listening-practice-test-2","bandTableSrc":"answers-a-2025jan-listening-test1.js","audioDst":"listening-a-2025may-test2.mp3"},
-    {"subject":"reading","dir":"questions/阅读/2025/ielts-mock-test-2025-may-reading-practice-test-2","bandTableSrc":"answers-a-2025jan-test1.js"},
-    {"subject":"writing","dir":"questions/写作/2025/ielts-mock-test-2025-may-writing-practice-test-2"},
-    {"subject":"speaking","dir":"questions/口语/2025/ielts-mock-test-2025-may-speaking-practice-test-2"},
+    { subject: "listening", dir: "questions/听力/2025/ielts-mock-test-2025-december-listening-practise-test-1-0", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2025dec-test2-listening-test2.mp3" },
+    { subject: "reading", dir: "questions/阅读/2025/ielts-mock-test-2025-december-reading-practise-test-2", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "writing", dir: "questions/写作/2025/ielts-mock-test-2025-december-writting-practise-test-2", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "speaking", dir: "questions/口语/2025/ielts-mock-test-2025-december-speaking-practise-test-2", bandTableSrc: "answers-a-2025jan-test1.js" },
   ],
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const SUBJECT_TITLE = { reading: "阅读", listening: "听力", writing: "写作", speaking: "口语" };
 const examIdOf = (p) => `${SET.examSetId}-${p.subject}-test${SET.testNo ?? 1}`;
@@ -104,8 +127,9 @@ function classify(num, answers, qTypeByNum) {
 function transformPage(html, extraScripts) {
   let out = html
     .replace(/(\.\/|\.\.\/\.\.\/\.\.\/)exam-assets\//g, "../shared/exam-assets/")
-    // 装饰图(页脚二维码/封面缩略图等 inline-images/styles/themes)本地从未下载,还原原站外链
-    .replace(/(src)="img\/[^"]*"([^>]*)data-iot-orig="([^"]*(?:\/inline-images\/|\/styles\/|\/themes\/)[^"]*)"/gi, "$1=\"$3\"$2")
+    // 装饰图(页脚二维码/封面缩略图)本地从未下载,还原原站外链;styles/themes 全排,
+    // inline-images 仅排装饰命名(内容图如 Gemini 生成图/老书扫描件也住此目录,须保留本地引用)
+    .replace(/(src)="img\/[^"]*"([^>]*)data-iot-orig="([^"]*(?:\/styles\/|\/themes\/|\/inline-images\/[^"]*(?:qr[-_]?code|footer|logo|banner|share-|icon|thumb|avatar|landing)[^"]*))"/gi, "$1=\"$3\"$2")
     .replace(/ data-iot-orig="[^"]*"/g, "")
     // 旧内联补丁收编(2026-09-09):四块手工补丁统一为共享 quiz-patch.css,历史注入块一律剥离
     .replace(/<style id="(?:ieltshome-theme|native-scroll-patch|header-icons-patch|page-icons-fallback)">[\s\S]*?<\/style>/g, "")
@@ -501,8 +525,10 @@ const imgNameByURL = new Map(); // url → 本地文件名(跨卷复用,免重�
  *  下载失败(如 2017-2020 老书站方死链)保留外链,页面 onerror 兜底,警告汇总可见。 */
 /** 站方共享资产黑名单:logo 图/二维码脚本等装饰件,拷贝共享资源时跳过 */
 const DECORATIVE_ASSET_RE = /^(?:IOT_?[Ss]hortLogo|qr-code-styling|Logo-)/;
-/** 装饰图路径特征:站方 logo/二维码/主题资源/modal 徽标,一律不本地化 */
-const DECORATIVE_IMG_RE = /\/(?:inline-images|themes|styles)\/|logo|qr[-_]?code|landing-page/i;
+/** 装饰图路径特征:站方 logo/二维码/主题资源/modal 徽标,一律不本地化。
+ *  inline-images 不再整目录排除——内容图(Gemini 生成图/老书扫描件)也住此目录,
+ *  只按文件名装饰特征排除。 */
+const DECORATIVE_IMG_RE = /\/(?:styles|themes)\/|(?:qr[-_]?code|footer|logo|banner|share-|icon|thumb|avatar|landing)/i;
 
 async function localizePaperImages(html, imgDir, label) {
   const urls = [...new Set((html.match(IMG_URL_RE) ?? []).map((u) => u.replace(/[.,]+$/, "")))]
