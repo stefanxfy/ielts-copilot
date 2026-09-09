@@ -56,3 +56,18 @@ html[data-theme] .question-palette__item.is-selected{background:var(--ex-accent,
 .ioticon-send-v2{display:inline-block;width:14px;height:14px;vertical-align:middle;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='22' y1='2' x2='11' y2='13'/><polygon points='22 2 15 22 11 13 2 9 22 2'/></svg>") center/contain no-repeat}
 .ioticon-search{display:inline-block;width:16px;height:16px;vertical-align:middle;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23294563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") center/contain no-repeat}
 .ioticon-x{display:inline-block;width:20px;height:20px;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23294563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>") center/contain no-repeat}
+
+/* ===== 5. 左右切换按钮与底部面板激活态(2026-09-09 用户反馈) =====
+   站方 CSS 按科目给 nav 按钮杂色(听=青/写=橙),统一为主题 accent;
+   站方原无任何 hover/按下反馈,补齐;面板激活分部(写作 Task 1/2)补可见高亮 */
+.take-test .test-panel__nav-btn,
+.listening-test .test-panel__nav-btn,
+.reading-test .test-panel__nav-btn,
+.writing-test .test-panel__nav-btn{border-color:var(--ex-accent,#d97706)!important;color:var(--ex-accent,#d97706)!important}
+.test-panel__nav-btn.-disabled{border-color:var(--ex-accent,#d97706)!important;color:var(--ex-accent,#d97706)!important;opacity:.35}
+.take-test .test-panel__nav-btn:hover{background:var(--ex-surface-2,#f4f6f8)!important;transform:translateY(-1px)}
+.take-test .test-panel__nav-btn:active{transform:translateY(1px)}
+.question-palette__part.-active{border-color:var(--ex-accent,#d97706)!important}
+html[data-theme] .question-palette__part.-active{border-color:var(--ex-accent,#d97706)!important}
+.question-palette__part.-active .question-palette__part-title{color:var(--ex-accent,#d97706)!important;font-weight:700}
+html[data-theme] .question-palette__part.-active .question-palette__part-title{color:var(--ex-accent,#d97706)!important;font-weight:700}
