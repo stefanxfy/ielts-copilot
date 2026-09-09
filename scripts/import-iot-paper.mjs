@@ -121,7 +121,9 @@ function transformPage(html, extraScripts) {
     .replace(/<link[^>]*rel="(?:canonical|alternate|delete-[a-z-]*form|edit-form|add-form|version-history|devel-[a-z-]+|token-devel|drupal:[a-z-]+|to-[a-z-]+|revision[a-z-]*)"[^>]*>/g, "")
     .replace(/<link[^>]*href="https?:\/\/[^"]*ieltsonlinetests\.com[^"]*"[^>]*>/g, "")
     .replace(/<meta[^>]*property="og:[a-z:]+"[^>]*>/g, "")
-    .replace(/<meta[^>]*name="twitter:[a-z:]+"[^>]*>/g, "");
+    .replace(/<meta[^>]*name="twitter:[a-z:]+"[^>]*>/g, "")
+    .replace(/<meta[^>]*name="(?:[a-z0-9-]*-)?site-verification"|<meta[^>]*name="msvalidate\.01"|<meta[^>]*name="facebook-domain-verification"[^>]*>/g, "")
+    .replace(/<meta[^>]*name="(?:baidu|shenma|360|sogou)-site-verification"[^>]*>/g, "");
   if (extraScripts?.length) {
     const inject = extraScripts.map((s) => `<script src="../shared/exam-assets/${s}"></script>`).join("\n");
     out = out.replace(/<\/body>/i, `${inject}\n</body>`);
@@ -353,7 +355,7 @@ function buildSpeakingHtml(testHtml, examId) {
   const qList = (arr) => `<ol class="sp-qlist">${arr.map((q) => `<li>${esc(q)}</li>`).join("")}</ol>`;
   const p2 = parts.P2;
   return `<!DOCTYPE html>
-<html lang="zh-hans">
+<html lang="zh-hans" class="ex-selfmade">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

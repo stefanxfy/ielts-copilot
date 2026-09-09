@@ -21,7 +21,9 @@ html[data-theme="monet"] { --ex-bg:#f6f5f9; --ex-surface:#fdfcff; --ex-surface-2
 html[data-theme="night"] { --ex-bg:#171412; --ex-surface:#211d1a; --ex-surface-2:#2a2520; --ex-text:#efeae4; --ex-muted:#b8ab9c; --ex-border:#3a332b; --ex-accent:#b07312; --ex-on-accent:#171412; }
 
 /* ============ 通用表面(听/阅/写 IOT 页 + 口语自研页) ============ */
-html[data-theme] body { background: var(--ex-bg) !important; color: var(--ex-text) !important; }
+/* 页底跟随主题;body 不设 color——题面/题干内容区一律保留原站文字色(2026-09-09 用户决策:
+   中间内容不参与主题切换)。口语页各元素(sp-*)均有显式颜色规则,无需 body 级继承。 */
+html[data-theme] body { background: var(--ex-bg) !important; }
 
 /* 顶栏 */
 html[data-theme] .realtest-header,
@@ -43,38 +45,18 @@ html[data-theme] .realtest-header__bt-submit,
 html[data-theme] .iot-grbt.-main-color,
 html[data-theme] .modal-time-up__btn.iot-grbt { background: var(--ex-accent) !important; color: var(--ex-on-accent) !important; box-shadow: none !important; }
 
-/* 题面主区 */
-html[data-theme] .test-panel,
-html[data-theme] .panel-default,
-html[data-theme] .panel,
-html[data-theme] .modal-content,
-html[data-theme] .question-palette { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; color: var(--ex-text) !important; }
-html[data-theme] .test-panel__question,
-html[data-theme] .test-panel__question-title,
-html[data-theme] .test-panel__question-desc,
-html[data-theme] .test-contents,
-html[data-theme] .ckeditor-wrapper,
-html[data-theme] .panel-body,
-html[data-theme] .modal-body,
+/* 中间题面主区(.test-panel/.panel/.panel-body/.test-contents/.ckeditor-wrapper/
+   .form-control/textarea/input/.iot-radio/.listen-from-here 等)一律不做主题覆盖,
+   维持原站浅色样式 */
+
+/* 底部题号面板(框架层,跟随主题):盒子原为白底(浅色文字落上去会隐形),必须整盒覆盖 */
+html[data-theme] .modal-content { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; color: var(--ex-text) !important; }
+html[data-theme] .question-palette { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; }
+html[data-theme] .question-palette__part { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; box-shadow: none !important; }
 html[data-theme] .question-palette__part-title { color: var(--ex-text) !important; }
 html[data-theme] .question-palette__part-status { color: var(--ex-muted) !important; }
-html[data-theme] .test-panel__title,
-html[data-theme] .test-panel__title-caption,
-html[data-theme] .test-panel__question-sm-title { color: var(--ex-text) !important; }
-html[data-theme] .test-panel__question-num,
-html[data-theme] .iot-question-number { color: var(--ex-on-accent) !important; background: var(--ex-accent) !important; }
-
-/* 作答控件 */
-html[data-theme] .iot-radio { color: var(--ex-text) !important; }
-html[data-theme] .form-control,
-html[data-theme] textarea,
-html[data-theme] input[type="text"] { background: var(--ex-surface-2) !important; color: var(--ex-text) !important; border-color: var(--ex-border) !important; }
-html[data-theme] .test-panel__answer-item { color: var(--ex-text) !important; }
-/* 底部题号面板:盒子原为白底(浅色文字落上去会隐形),必须整盒覆盖 */
-html[data-theme] .question-palette__part { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; box-shadow: none !important; }
 html[data-theme] .question-palette__item { color: var(--ex-muted) !important; }
 html[data-theme] .question-palette__item.-checked { background: var(--ex-surface-2) !important; color: var(--ex-accent) !important; font-weight: 600; }
-html[data-theme] .listen-from-here { color: var(--ex-text) !important; border-color: var(--ex-accent) !important; }
 
 /* 口语自研页(sp-*) */
 html[data-theme] .sp-tab { background: var(--ex-surface-2) !important; color: var(--ex-muted) !important; border-color: var(--ex-border) !important; }
