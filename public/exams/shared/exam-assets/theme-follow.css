@@ -5,6 +5,8 @@
  * 变量口径:--ex-bg 页底 / --ex-surface 卡面 / --ex-surface-2 输入面 / --ex-text 主文字 /
  *          --ex-muted 次文字 / --ex-border 边线 / --ex-accent 品牌 / --ex-on-accent 品牌上文字 */
 
+/* ---- 麦田琥珀 · 默认(= globals.css :root,2026-09-09 起卷面框架也走项目琥珀系,弃原站蓝) ---- */
+html[data-theme="wheat"] { --ex-bg:#fafaf9; --ex-surface:#fffdf8; --ex-surface-2:#f1efec; --ex-text:#1c1917; --ex-muted:#57534e; --ex-border:#e7e5e4; --ex-accent:#d97706; --ex-on-accent:#fff; }
 /* ---- 水墨 · 砚池 ---- */
 html[data-theme="ink"] { --ex-bg:#f7f5f0; --ex-surface:#fcf9f2; --ex-surface-2:#f1ede4; --ex-text:#191917; --ex-muted:#615e56; --ex-border:#e4e1d8; --ex-accent:#a83d29; --ex-on-accent:#fff; }
 /* ---- 牛津 · 学院 ---- */

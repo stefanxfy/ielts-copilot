@@ -123,7 +123,9 @@ function transformPage(html, extraScripts) {
     .replace(/<meta[^>]*property="og:[a-z:]+"[^>]*>/g, "")
     .replace(/<meta[^>]*name="twitter:[a-z:]+"[^>]*>/g, "")
     .replace(/<meta[^>]*name="(?:[a-z0-9-]*-)?site-verification"|<meta[^>]*name="msvalidate\.01"|<meta[^>]*name="facebook-domain-verification"[^>]*>/g, "")
-    .replace(/<meta[^>]*name="(?:baidu|shenma|360|sogou)-site-verification"[^>]*>/g, "");
+    .replace(/<meta[^>]*name="(?:baidu|shenma|360|sogou)-site-verification"[^>]*>/g, "")
+    // 标签页图标:清洗后补注本站机考 SVG(favicon 链接被清洗,不补会回落站点根默认图)
+    .replace(/<\/head>/i, '<link rel="icon" type="image/svg+xml" href="../shared/exam-assets/app-logo.svg"></head>');
   if (extraScripts?.length) {
     const inject = extraScripts.map((s) => `<script src="../shared/exam-assets/${s}"></script>`).join("\n");
     out = out.replace(/<\/body>/i, `${inject}\n</body>`);
@@ -360,6 +362,7 @@ function buildSpeakingHtml(testHtml, examId) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
+<link rel="icon" type="image/svg+xml" href="../shared/exam-assets/app-logo.svg">
 <link rel="stylesheet" href="../shared/exam-assets/theme-follow.css">
 <script src="../shared/exam-assets/theme-follow.js" defer></script>
 <style>

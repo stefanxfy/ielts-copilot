@@ -8,8 +8,7 @@
   function apply(theme) {
     if (!VALID[theme]) return;
     var de = document.documentElement;
-    if (theme === "wheat") de.removeAttribute("data-theme");
-    else de.setAttribute("data-theme", theme);
+    de.setAttribute("data-theme", theme); // wheat 也设:默认皮肤同样走项目琥珀色系,不用原站蓝
   }
 
   /* 1) 初始皮肤:URL 参数(调试) > 应用 API */
