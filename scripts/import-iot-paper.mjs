@@ -41,36 +41,23 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2025may",
-  title: "A类 · 2025年5月真题 Test 1",
+  examSetId: "a-2025jul",
+  setId: "a-2025jul-test2",
+  title: "A类 · 2025年7月真题 Test 2",
   category: "A",
-  testPeriod: "2025-05",
-  enLabel: "2025 May Test 1",
+  testPeriod: "2025-07",
+  enLabel: "2025 July Test 2",
+  testNo: 2,
   papers: [
-    {
-      subject: "listening",
-      dir: "questions/听力/2025/ielts-mock-test-2025-may-listening-practice-test-1",
-      bandTableSrc: "answers-a-2025jan-listening-test1.js",
-      audioDst: "listening-a-2025may-test1.mp3",
-    },
-    {
-      subject: "reading",
-      dir: "questions/阅读/2025/ielts-mock-test-2025-may-reading-practice-test-1",
-      bandTableSrc: "answers-a-2025jan-test1.js",
-    },
-    {
-      subject: "writing",
-      dir: "questions/写作/2025/ielts-mock-test-2025-may-writing-practice-test-1",
-    },
-    {
-      subject: "speaking",
-      dir: "questions/口语/2025/ielts-mock-test-2025-may-speaking-practice-test-1",
-    },
+    {"subject":"listening","dir":"questions/听力/2025/ielts-mock-test-2025-july-listening-practice-test-2","bandTableSrc":"answers-a-2025jan-listening-test1.js","audioDst":"listening-a-2025jul-test2.mp3"},
+    {"subject":"reading","dir":"questions/阅读/2025/ielts-mock-test-2025-july-reading-practice-test-2","bandTableSrc":"answers-a-2025jan-test1.js"},
+    {"subject":"writing","dir":"questions/写作/2025/ielts-mock-test-2025-july-writing-practice-test-2"},
+    {"subject":"speaking","dir":"questions/口语/2025/ielts-mock-test-2025-july-speaking-practice-test-2"},
   ],
 };
 
 const SUBJECT_TITLE = { reading: "阅读", listening: "听力", writing: "写作", speaking: "口语" };
-const examIdOf = (p) => `${SET.examSetId}-${p.subject}-test1`;
+const examIdOf = (p) => `${SET.examSetId}-${p.subject}-test${SET.testNo ?? 1}`;
 
 /* ---------- 工具 ---------- */
 
@@ -96,7 +83,12 @@ function parsePaperHtml(testHtml) {
   partCounts.forEach((count, i) => {
     for (let k = 0; k < count; k++) partOf.set(n++, i + 1);
   });
-  return { qTypeByNum, partOf, totalQ: n - 1 };
+  // 块题:checkbox name="q-N-M"(data-num="N-M"),整块共一个答案集,按命中计分
+  const blocks = new Map();
+  for (const [, lo, hi] of testHtml.matchAll(/name="q-(\d+)-(\d+)"/g)) {
+    blocks.set(`q-${lo}-${hi}`, { lo: Number(lo), hi: Number(hi) });
+  }
+  return { qTypeByNum, partOf, totalQ: n - 1, blocks };
 }
 
 const LETTER_ANS = /^[A-D](\s*,\s*[A-D])?$/;
@@ -697,8 +689,9 @@ function importDb() {
       updated_at = unixepoch()
   `);
 
+  const setId = SET.setId ?? SET.examSetId;
   const tx = sqlite.transaction(() => {
-    upSet.run({ examSetId: SET.examSetId, title: SET.title, category: SET.category, testPeriod: SET.testPeriod });
+    upSet.run({ examSetId: setId, title: SET.title, category: SET.category, testPeriod: SET.testPeriod });
     for (const p of SET.papers) {
       const examId = examIdOf(p);
       const entryFile = p.subject === "listening" ? "test-sound.html" : `${p.subject}.html`;
@@ -725,13 +718,34 @@ function importDb() {
         durationSec = 14 * 60; // 口语全程 11–14 分钟,按上限记
       } else {
         const answers = JSON.parse(readFileSync(join(ROOT, p.dir, "answers.json"), "utf8"));
-        const { qTypeByNum, partOf, totalQ } = parsePaperHtml(testHtml);
-        const total = Object.keys(answers).length;
-        if (totalQ !== total) throw new Error(`${examId}: 页面题数 ${totalQ} ≠ answers.json ${total} 条`);
+        const { qTypeByNum, partOf, totalQ, blocks } = parsePaperHtml(testHtml);
+        // 块题(站方答案键把整块答案合并存于块首/块尾,两端同值):answers.json 条目数 = 普通题数 + 2×块数,
+        // 故不做条目数对等校验,改为覆盖校验(普通题逐题有答案;块题首/尾在下方循环校验)
+        const blockStart = new Map();
+        const blockCovered = new Map();
+        for (const [anchor, { lo, hi }] of blocks) {
+          blockStart.set(lo, anchor);
+          for (let x = lo; x <= hi; x++) blockCovered.set(x, anchor);
+        }
+        for (let n = 1; n <= totalQ; n++) {
+          if (!blockCovered.has(n) && answers[String(n)] == null) throw new Error(`${examId}: 题 ${n} 缺答案(answers.json 无条目)`);
+        }
         const proto = loadProtoExam(p.bandTableSrc);
         questionsJson = {};
         answersJson = {};
-        for (let n = 1; n <= total; n++) {
+        for (let n = 1; n <= totalQ; n++) {
+          const bAnchor = blockCovered.get(n);
+          if (bAnchor) {
+            if (blockStart.get(n) !== bAnchor) continue; // 块内非首题:不落独立条目
+            const { lo, hi } = blocks.get(bAnchor);
+            const head = String(answers[String(lo)] ?? "");
+            const tail = String(answers[String(hi)] ?? "");
+            if (!head) throw new Error(`${examId}: 块 ${bAnchor} 缺答案(块首 ${lo})`);
+            if (tail && tail.replace(/\s/g, "") !== head.replace(/\s/g, "")) throw new Error(`${examId}: 块 ${bAnchor} 首尾答案不一致(${head} / ${tail})`);
+            questionsJson[String(n)] = { part: partOf.get(n) ?? null, type: "BLOCK", anchor: bAnchor, max: hi - lo + 1 };
+            answersJson[bAnchor] = head.replace(/\s/g, "");
+            continue;
+          }
           const c = classify(n, answers, qTypeByNum);
           questionsJson[String(n)] = { part: partOf.get(n) ?? null, type: c.type, anchor: c.anchor, max: c.max };
           answersJson[c.anchor] = String(answers[String(n)]);
@@ -742,7 +756,7 @@ function importDb() {
 
       upPaper.run({
         examId,
-        examSetId: SET.examSetId,
+        examSetId: setId,
         subject: p.subject,
         title: `${SET.category}类 ${SUBJECT_TITLE[p.subject]} · ${SET.title.split("·")[1]?.trim() ?? SET.title}`,
         category: SET.category,
@@ -759,7 +773,7 @@ function importDb() {
 
   const rows = sqlite
     .prepare("select exam_id, subject, duration_sec, json_array_length(questions_json) qs from papers where exam_set_id = ?")
-    .all(SET.examSetId);
+    .all(setId);
   console.log(`[import] DB 导入完成:exam_sets +${1} · papers ${rows.length} 行`);
   for (const r of rows) console.log(`  - ${r.exam_id}(${r.subject})时长 ${r.duration_sec}s · 档案 ${r.qs} 条`);
   sqlite.close();
