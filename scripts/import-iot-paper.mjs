@@ -41,30 +41,30 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2025apr",
-  title: "A类 · 2025年4月真题 Test 1",
+  examSetId: "a-2025may",
+  title: "A类 · 2025年5月真题 Test 1",
   category: "A",
-  testPeriod: "2025-04",
-  enLabel: "2025 April Test 1",
+  testPeriod: "2025-05",
+  enLabel: "2025 May Test 1",
   papers: [
     {
       subject: "listening",
-      dir: "questions/听力/2025/ielts-mock-test-2025-april-listening-practice-test-1",
+      dir: "questions/听力/2025/ielts-mock-test-2025-may-listening-practice-test-1",
       bandTableSrc: "answers-a-2025jan-listening-test1.js",
-      audioDst: "listening-a-2025apr-test1.mp3",
+      audioDst: "listening-a-2025may-test1.mp3",
     },
     {
       subject: "reading",
-      dir: "questions/阅读/2025/ielts-mock-test-2025-april-reading-practice-test-1",
+      dir: "questions/阅读/2025/ielts-mock-test-2025-may-reading-practice-test-1",
       bandTableSrc: "answers-a-2025jan-test1.js",
     },
     {
       subject: "writing",
-      dir: "questions/写作/2025/ielts-mock-test-2025-april-writing-practice-test-1",
+      dir: "questions/写作/2025/ielts-mock-test-2025-may-writing-practice-test-1",
     },
     {
       subject: "speaking",
-      dir: "questions/口语/2025/ielts-mock-test-2025-april-speaking-practice-test-1",
+      dir: "questions/口语/2025/ielts-mock-test-2025-may-speaking-practice-test-1",
     },
   ],
 };
