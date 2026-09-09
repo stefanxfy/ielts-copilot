@@ -7,44 +7,45 @@
 <link rel="stylesheet" href="../shared/exam-assets/audio-ui.css">
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;height:100%;background:#e9eef5;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#1c2330}
+  html,body{margin:0;padding:0;height:100%;background:var(--ex-bg,#fafaf9);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ex-text,#1c1917)}
   body{display:flex;flex-direction:column;min-height:100vh}
-  /* 顶栏（仿 a-listening 的 realtest-header 主色） */
-  .ts-header{height:56px;background:linear-gradient(180deg,#1a6feb 0%,#0d4fa8 100%);color:#fff;display:flex;align-items:center;padding:0 22px;box-shadow:0 2px 6px rgba(13,52,96,.18)}
-  .ts-header .ts-logo{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-weight:700;margin-right:10px}
-  .ts-header .ts-title{font-size:15px;font-weight:600}
-  .ts-header .ts-sub{font-size:12px;opacity:.85;margin-left:10px}
+  /* 顶栏：对齐 quiz 卷面框架(浅色表面+品牌块,theme-follow 注入后随八套皮肤) */
+  .ts-header{height:56px;background:var(--ex-surface,#fffdf8);border-bottom:1px solid var(--ex-border,#e7e5e4);color:var(--ex-text,#1c1917);display:flex;align-items:center;padding:0 22px;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+  .ts-header .ts-logo{width:34px;height:34px;margin-right:10px;display:block}
+  .ts-brand{display:flex;flex-direction:column;justify-content:center;line-height:1.3}
+  .ts-brand-main{font-size:14px;font-weight:700;color:var(--ex-text,#1c1917)}
+  .ts-header .ts-sub{font-size:12px;color:var(--ex-muted,#57534e)}
 
-  /* 主区：浅蓝灰背景 + 居中卡片 */
-  .ts-main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:#dde5f0}
-  .ts-card{width:100%;max-width:720px;background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(13,52,96,.08);padding:36px 44px 32px}
+  /* 主区：页底跟随主题,居中卡片 */
+  .ts-main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+  .ts-card{width:100%;max-width:720px;background:var(--ex-surface,#fffdf8);border:1px solid var(--ex-border,#e7e5e4);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.06);padding:36px 44px 32px}
 
   /* 标题：耳机图标 + Test sound + 右侧音量块 */
   .ts-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
   .ts-head-left{display:flex;align-items:center;gap:12px}
-  .ts-head-icon{width:40px;height:40px;border-radius:8px;background:#f0f4fa;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .ts-head-icon svg{width:26px;height:26px;color:#5a6472}
-  .ts-head h1{margin:0;font-size:22px;font-weight:700;color:#1c2330}
+  .ts-head-icon{width:40px;height:40px;border-radius:8px;background:var(--ex-surface-2,#f1efec);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ts-head-icon svg{width:26px;height:26px;color:var(--ex-muted,#57534e)}
+  .ts-head h1{margin:0;font-size:22px;font-weight:700;color:var(--ex-text,#1c1917)}
 
-  /* 提示块（圆角浅蓝灰，跟参考图同款） */
-  .ts-notice{background:#eef3fa;border-radius:8px;padding:22px 26px;color:#1c2330;font-size:14px;line-height:1.7}
+  /* 提示块（圆角浅面，跟参考图同款） */
+  .ts-notice{background:var(--ex-surface-2,#f1efec);border-radius:8px;padding:22px 26px;color:var(--ex-text,#1c1917);font-size:14px;line-height:1.7}
   .ts-notice ul{margin:0;padding-left:22px}
   .ts-notice li{margin:6px 0}
-  .ts-notice b{color:#1c2330}
-  .ts-notice b.ts-accent{color:#0d4fa8}
+  .ts-notice b{color:var(--ex-text,#1c1917)}
+  .ts-notice b.ts-accent{color:var(--ex-accent,#d97706)}
 
   /* 警告行 */
-  .ts-warn{display:flex;align-items:center;gap:8px;margin-top:18px;color:#1c2330;font-size:14px}
+  .ts-warn{display:flex;align-items:center;gap:8px;margin-top:18px;color:var(--ex-text,#1c1917);font-size:14px}
   .ts-warn-dot{width:18px;height:18px;border-radius:50%;background:#d64545;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
 
   /* 按钮区：靠右，Play/Pause 与 Continue 上下两行 */
   .ts-actions{display:flex;flex-direction:column;align-items:flex-end;gap:14px;margin-top:24px}
-  .ts-btn{min-width:170px;height:42px;padding:0 24px;border-radius:6px;border:1px solid #c9d2df;background:#fff;color:#1c2330;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-  .ts-btn:hover{background:#f0f4fa;border-color:#a8b3c5}
+  .ts-btn{min-width:170px;height:42px;padding:0 24px;border-radius:6px;border:1px solid var(--ex-border,#e7e5e4);background:var(--ex-surface,#fff);color:var(--ex-text,#1c1917);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .ts-btn:hover{background:var(--ex-surface-2,#f1efec)}
   .ts-btn:active{transform:translateY(1px)}
-  .ts-btn-primary{background:linear-gradient(180deg,#1a6feb 0%,#0d4fa8 100%);color:#fff;border-color:#0d4fa8}
-  .ts-btn-primary:hover{background:linear-gradient(180deg,#2680ff 0%,#0d4fa8 100%);border-color:#0d4fa8}
-  .ts-btn-primary:disabled{background:#a8b3c5;border-color:#a8b3c5;color:#fff;cursor:not-allowed;opacity:.85}
+  .ts-btn-primary{background:var(--ex-accent,#d97706);color:var(--ex-on-accent,#fff);border-color:var(--ex-accent,#d97706)}
+  .ts-btn-primary:hover{filter:brightness(.94)}
+  .ts-btn-primary:disabled{background:var(--ex-border,#e7e5e4);border-color:var(--ex-border,#e7e5e4);color:var(--ex-muted,#57534e);filter:none;cursor:not-allowed}
   .ts-btn .ts-ic{width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center}
 
   /* Continue 行：图标（圆圈 → ） */
@@ -54,14 +55,17 @@
   #ts-audio{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0}
 
   /* 底部小字 */
-  .ts-foot{text-align:center;padding:14px 0 18px;color:#7a8597;font-size:12px}
+  .ts-foot{text-align:center;padding:14px 0 18px;color:var(--ex-muted,#57534e);font-size:12px}
 </style>
+<link rel="icon" type="image/svg+xml" href="../shared/exam-assets/app-logo.svg"><link rel="stylesheet" href="../shared/exam-assets/theme-follow.css">
 </head>
 <body>
   <header class="ts-header">
-    <div class="ts-logo">雅</div>
-    <div class="ts-title">IELTS 本地机考</div>
-    <div class="ts-sub">A类 听力 · 2025年1月真题 Test 1 · Test sound</div>
+    <img class="ts-logo" src="../shared/exam-assets/app-logo.svg" alt="IELTS 本地机考">
+    <div class="ts-brand">
+      <span class="ts-brand-main">IELTS 本地机考</span>
+      <div class="ts-sub">A类 听力 · 2025年1月真题 Test 1 · Test sound</div>
+    </div>
   </header>
 
   <main class="ts-main">
@@ -268,5 +272,6 @@
   setPlaying(false);
 })();
 </script>
+<script src="../shared/exam-assets/theme-follow.js"></script>
 </body>
 </html>

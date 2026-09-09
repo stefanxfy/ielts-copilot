@@ -535,12 +535,12 @@ function copyStatic() {
       const sub = `${SET.category}类 听力 · ${SET.title.split("·")[1]?.trim() ?? SET.title}`;
       let ts = transformPage(readFileSync(join(PROTO, "test-sound.html"), "utf8"));
       ts = ts
-        .replace(/(<div class="ts-sub">)[^<]*(<\/div>)/, `$1${sub} · Test sound$2`)
+        .replace(/(<div class="ts-sub"[^>]*>)[^<]*(<\/div>)/, `$1${sub} · Test sound$2`)
         .replace(/var target = 'instructions\.html\?clockdefer=1'[^;]*;/, "var target = 'instructions.html?clockdefer=1';");
       writeFileSync(join(dir, "test-sound.html"), ts);
       let ins = transformPage(readFileSync(join(PROTO, "instructions.html"), "utf8"));
       ins = ins
-        .replace(/(<div class="ts-sub">)[^<]*(<\/div>)/, `$1${sub} · Instructions$2`)
+        .replace(/(<div class="ts-sub"[^>]*>)[^<]*(<\/div>)/, `$1${sub} · Instructions$2`)
         .replace(/var targetTest = [^;]*;/, "var targetTest = 'listening.html';");
       writeFileSync(join(dir, "instructions.html"), ins);
     } else if (p.subject === "reading") {
