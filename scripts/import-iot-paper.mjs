@@ -41,19 +41,21 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2025dec-test2",
-  setId: "a-2025dec-test2",
-  testNo: 2,
-  title: "A类 · 2025年12月真题 Test 2",
+  examSetId: "a-2024apr-test4",
+  setId: "a-2024apr-test4",
+  testNo: 4,
+  title: "A类 · 2024年04月真题 Test 4",
   category: "A",
-  testPeriod: "2025-12",
+  testPeriod: "2024-04",
   papers: [
-    { subject: "listening", dir: "questions/听力/2025/ielts-mock-test-2025-december-listening-practise-test-1-0", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2025dec-test2-listening-test2.mp3" },
-    { subject: "reading", dir: "questions/阅读/2025/ielts-mock-test-2025-december-reading-practise-test-2", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "writing", dir: "questions/写作/2025/ielts-mock-test-2025-december-writting-practise-test-2", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "speaking", dir: "questions/口语/2025/ielts-mock-test-2025-december-speaking-practise-test-2", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "listening", dir: "questions/听力/2024/ielts-mock-test-2024-april-listening-practice-test-4", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2024apr-test4-listening-test4.mp3" },
+    { subject: "reading", dir: "questions/阅读/2024/ielts-mock-test-2024-april-reading-practice-test-4", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "writing", dir: "questions/写作/2024/ielts-mock-test-2024-april-writing-practice-test-4", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "speaking", dir: "questions/口语/2024/ielts-mock-test-2024-april-speaking-practice-test-4", bandTableSrc: "answers-a-2025jan-test1.js" },
   ],
 };
+
+
 
 
 
