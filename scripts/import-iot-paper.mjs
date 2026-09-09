@@ -496,8 +496,13 @@ const imgNameByURL = new Map(); // url → 本地文件名(跨卷复用,免重�
 
 /** 扫描 html 中站方 CDN 内容图 → 下载入源 img/(幂等,已存在即复用) → 改写为 img/ 相对引用。
  *  下载失败(如 2017-2020 老书站方死链)保留外链,页面 onerror 兜底,警告汇总可见。 */
+/** 装饰图路径特征:站方 logo/二维码/主题资源/modal 徽标,一律不本地化 */
+const DECORATIVE_IMG_RE = /\/(?:inline-images|themes|styles)\/|logo|qr[-_]?code|landing-page/i;
+
 async function localizePaperImages(html, imgDir, label) {
-  const urls = [...new Set((html.match(IMG_URL_RE) ?? []).map((u) => u.replace(/[.,]+$/, "")))];
+  const urls = [...new Set((html.match(IMG_URL_RE) ?? []).map((u) => u.replace(/[.,]+$/, "")))]
+    // 装饰图排除(导入铁律③:og:image/页脚二维码/站方 logo/modal 徽标不入库,引用本就会被 transformPage 清洗)
+    .filter((u) => !DECORATIVE_IMG_RE.test(u));
   if (!urls.length) return html;
   mkdirSync(imgDir, { recursive: true });
   const assigned = new Set(imgNameByURL.values());
