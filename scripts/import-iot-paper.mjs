@@ -689,6 +689,47 @@ function verifyImages() {
   console.log(`[images] 卷面图片完整性 OK(外链警告 ${external.length} · 小文件 0 · 缺失 0)`);
 }
 
+/* ---------- 步骤 1.6:共享站方库 nicescroll 禁用补丁(幂等,滚动卡顿铁律) ---------- */
+
+// 站方部分大库(如 jul 批次的 js_6Ya/js_Ce5tYa)在 runTestPanelNiceScroll 中对左右内容框
+// 挂 nicescroll:把两栏 overflow 改 hidden,用主线程 JS 步进模拟滚动 → 滚动一卡一卡。
+// 补丁复刻 jan 范本库手工改造:删掉 niceScroll 初始化,保持 initNiceScroll=false,
+// 回落站方 CSS overflow-y:scroll 原生滚动(合成器线程驱动)。作用于 SHARED_ASSETS
+// 全部 js_*.js,幂等(已含改造标记的跳过),未来新 hash 库自动免疫。
+function patchNiceScroll() {
+  const OLD = `      elements.niceScroll({
+        autohidemode: false,
+        cursorborderradius: 6,
+        cursorwidth: "8px",
+        cursorcolor: "#dfdfdf",
+        horizrailenabled: false,
+      });
+      initNiceScroll = true;`;
+  const NEW = `      // 本地机考改造：桌面端改用浏览器原生滚动。
+      // nicescroll 会把两栏 overflow 改成 hidden，再用主线程 JS 步进动画模拟滚动，
+      // 每个滚轮事件独立重启缓动，导致滚动一卡一卡；不初始化即可回落到
+      // 站点 CSS 的 overflow-y:scroll 原生滚动（合成器线程驱动，顺滑）。
+      // initNiceScroll 保持 false：切换 Part 时走 jQuery animate 回退分支，逻辑不变。
+      initNiceScroll = false;`;
+  let patched = 0;
+  for (const f of readdirSync(SHARED_ASSETS)) {
+    if (!/^js_.*\.js$/.test(f)) continue;
+    const fp = join(SHARED_ASSETS, f);
+    const src = readFileSync(fp, "utf8");
+    if (src.includes("本地机考改造")) continue; // 幂等
+    if (!src.includes(OLD)) continue; // 该库无此调用,不动
+    const n = src.split(OLD).length - 1;
+    if (n !== 1) {
+      console.error(`[nicescroll] ${f} 匹配 ${n} 处(期望 1),请人工核查`);
+      process.exit(1);
+    }
+    writeFileSync(fp, src.replace(OLD, NEW));
+    patched++;
+    console.log(`[nicescroll] 已禁用模拟滚动:${f}`);
+  }
+  console.log(`[nicescroll] 补丁扫描完成,本轮处理 ${patched} 个库`);
+}
+
 /* ---------- 步骤 2:answers-<examId>.js 生成(听/阅,scoring.js 依赖) ---------- */
 
 function writeAnswersJs() {
@@ -849,6 +890,7 @@ for (const p of SET.papers) {
 }
 
 await copyStatic();
+patchNiceScroll();
 verifyImages();
 writeAnswersJs();
 importDb();
