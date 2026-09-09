@@ -132,13 +132,15 @@ function transformPage(html, extraScripts) {
 /* ---------- 听/阅卷面框架对齐(范本:原库 a-2025jan 卷面,用户 2026-09-09 立规) ---------- */
 
 /** 本地品牌 logo(与原库卷面同款"雅"字 SVG) */
-/** 固定头部单一事实源:直接复用范本原型(prototype/exam/a-listening-test.html)的
- *  <header class="realtest-header"> 整块,不手抄。可变槽位仅 3 个:副标题/计时秒数/audio。
- *  范本头部日后改动(加按钮/调样式)只需改原型文件,导入自动跟随。 */
-function getProtoHeader() {
-  const tpl = readFileSync(join(PROTO, "a-listening-test.html"), "utf8");
+/** 固定头部单一事实源:按科目直接复用范本原型(prototype/exam/a-{listening,reading}-test.html)的
+ *  <header class="realtest-header"> 整块,不手抄。听/阅头部存在真实结构差异
+ *  (阅读版便签图标带 Notepad tooltip 属性),不可互相推导。可变槽位:副标题/计时秒数/audio(仅听力)。
+ *  范本头部日后改动只需改对应原型文件,导入自动跟随。 */
+function getProtoHeader(subject) {
+  const file = subject === "reading" ? "a-reading-test.html" : "a-listening-test.html";
+  const tpl = readFileSync(join(PROTO, file), "utf8");
   const m = tpl.match(/<header class="realtest-header[\s\S]*?<\/header>/);
-  if (!m) throw new Error("原型听力模板缺少 realtest-header 头部块");
+  if (!m) throw new Error(`原型模板 ${file} 缺少 realtest-header 头部块`);
   const hd = m[0];
   // 关键结构断言:范本被误改时快速失败,避免静默产出残缺头部
   for (const marker of [
@@ -146,7 +148,6 @@ function getProtoHeader() {
     "ieltshome-brand",
     'id="time-clock"',
     "realtest-header__btn-group",
-    'id="ielts-local-audio"',
     "js-bt-notepad",
     "js-full-screen",
     "realtest-header__bt-submit",
@@ -154,6 +155,10 @@ function getProtoHeader() {
   ]) {
     if (!hd.includes(marker)) throw new Error(`原型头部缺少关键元素: ${marker}`);
   }
+  if (subject === "listening" && !hd.includes('id="ielts-local-audio"'))
+    throw new Error("原型听力头部缺少 ielts-local-audio");
+  if (subject === "reading" && hd.includes('id="ielts-local-audio"'))
+    throw new Error("原型阅读头部不应含 ielts-local-audio");
   return hd;
 }
 
@@ -204,8 +209,8 @@ function alignQuizFrame(html, subject) {
     );
   }
   const sub = `${SET.category}类 · ${SUBJECT_TITLE[subject]} · ${SET.enLabel}`;
-  // 头部直接取自范本原型,仅替换 3 个可变槽位:副标题 / 计时秒数 / audio
-  let header = getProtoHeader();
+  // 头部直接取自本科目范本原型,仅替换可变槽位:副标题 / 计时秒数 / audio(仅听力)
+  let header = getProtoHeader(subject);
   header = header.replace(
     /(<span style="font-size:11px;color:#5a6472">)[^<]*(<\/span>)/,
     `$1${sub}$2`,
@@ -214,10 +219,12 @@ function alignQuizFrame(html, subject) {
     /data-time="\d+" data-duration-default="\d+"/,
     `data-time="${dataTime}" data-duration-default="${dataTime}"`,
   );
-  header = header.replace(
-    /<audio id="ielts-local-audio">[\s\S]*?<\/audio>|<audio id="ielts-local-audio"[\s\S]*?<\/audio>/,
-    audio,
-  );
+  if (subject === "listening") {
+    header = header.replace(
+      /<audio id="ielts-local-audio">[\s\S]*?<\/audio>|<audio id="ielts-local-audio"[\s\S]*?<\/audio>/,
+      audio,
+    );
+  }
   html = html.replace(headerMatch[0], header);
   for (const id of [
     "modal-exit-test",
