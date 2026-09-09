@@ -1,0 +1,102 @@
+/* theme-follow.css — 真题卷面皮肤跟随层
+ * html[data-theme] 由 theme-follow.js 设置(初始读 /api/ui-theme,实时收 postMessage/BroadcastChannel)。
+ * wheat(默认)不设属性 = 原站原生观感,零覆盖;其余 7 套皮肤按 glearn 语义色覆盖卷面主要表面。
+ * night 为暗色皮肤:表面全暗 + 文字提亮(success/destructive 按暗色铁律提亮,AA 对比)。
+ * 变量口径:--ex-bg 页底 / --ex-surface 卡面 / --ex-surface-2 输入面 / --ex-text 主文字 /
+ *          --ex-muted 次文字 / --ex-border 边线 / --ex-accent 品牌 / --ex-on-accent 品牌上文字 */
+
+/* ---- 水墨 · 砚池 ---- */
+html[data-theme="ink"] { --ex-bg:#f7f5f0; --ex-surface:#fcf9f2; --ex-surface-2:#f1ede4; --ex-text:#191917; --ex-muted:#615e56; --ex-border:#e4e1d8; --ex-accent:#a83d29; --ex-on-accent:#fff; }
+/* ---- 牛津 · 学院 ---- */
+html[data-theme="academia"] { --ex-bg:#f8f4ea; --ex-surface:#fdfaf2; --ex-surface-2:#efe9db; --ex-text:#221d14; --ex-muted:#665c4b; --ex-border:#e7dfcf; --ex-accent:#3a5f4b; --ex-on-accent:#fff; }
+/* ---- 海盐 · 地中海 ---- */
+html[data-theme="seasalt"] { --ex-bg:#f5f8f7; --ex-surface:#fff; --ex-surface-2:#e8efee; --ex-text:#1a2426; --ex-muted:#5b7071; --ex-border:#dce5e4; --ex-accent:#38708f; --ex-on-accent:#fff; }
+/* ---- 青花 · 瓷影 ---- */
+html[data-theme="porcelain"] { --ex-bg:#f6f8f9; --ex-surface:#fff; --ex-surface-2:#ebf0f2; --ex-text:#161b1e; --ex-muted:#5e707c; --ex-border:#dee6e9; --ex-accent:#315d84; --ex-on-accent:#fff; }
+/* ---- 竹里 · 空山 ---- */
+html[data-theme="bamboo"] { --ex-bg:#f6f8f2; --ex-surface:#fcfdf9; --ex-surface-2:#ebeee2; --ex-text:#181b16; --ex-muted:#616a58; --ex-border:#e0e5d7; --ex-accent:#467552; --ex-on-accent:#fff; }
+/* ---- 莫奈 · 雾紫 ---- */
+html[data-theme="monet"] { --ex-bg:#f6f5f9; --ex-surface:#fdfcff; --ex-surface-2:#eceaf2; --ex-text:#1b1922; --ex-muted:#696378; --ex-border:#e1deea; --ex-accent:#656195; --ex-on-accent:#fff; }
+/* ---- 夜读 · 灯下(暗色) ---- */
+html[data-theme="night"] { --ex-bg:#171412; --ex-surface:#211d1a; --ex-surface-2:#2a2520; --ex-text:#efeae4; --ex-muted:#b8ab9c; --ex-border:#3a332b; --ex-accent:#b07312; --ex-on-accent:#171412; }
+
+/* ============ 通用表面(听/阅/写 IOT 页 + 口语自研页) ============ */
+html[data-theme] body { background: var(--ex-bg) !important; color: var(--ex-text) !important; }
+
+/* 顶栏 */
+html[data-theme] .realtest-header,
+html[data-theme] .rt-header { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; box-shadow: 0 2px 16px rgba(0,0,0,.06) !important; }
+html[data-theme] .realtest-header__time-val,
+html[data-theme] .rt-timer__val { color: var(--ex-text) !important; }
+html[data-theme] .realtest-header__time-text,
+html[data-theme] .rt-timer__text { color: var(--ex-muted) !important; }
+/* 品牌块文字(页面上是内联 style,需 !important 压制) */
+html[data-theme] .ieltshome-brand span,
+html[data-theme] .rt-brand__main { color: var(--ex-text) !important; }
+html[data-theme] .ieltshome-brand span + span,
+html[data-theme] .rt-brand__sub { color: var(--ex-muted) !important; }
+/* 品牌按钮组:便签/全屏图标图形色烤在 SVG 背景图里(浅底深形),浅色主题不动底色;
+   night 只给深一点的底让浅色描边可见 */
+html[data-theme="night"] .realtest-header__icon,
+html[data-theme="night"] .realtest-header__btn-save { background-color: var(--ex-surface-2) !important; }
+html[data-theme] .realtest-header__bt-submit,
+html[data-theme] .iot-grbt.-main-color,
+html[data-theme] .modal-time-up__btn.iot-grbt { background: var(--ex-accent) !important; color: var(--ex-on-accent) !important; box-shadow: none !important; }
+
+/* 题面主区 */
+html[data-theme] .test-panel,
+html[data-theme] .panel-default,
+html[data-theme] .panel,
+html[data-theme] .modal-content,
+html[data-theme] .question-palette { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; color: var(--ex-text) !important; }
+html[data-theme] .test-panel__question,
+html[data-theme] .test-panel__question-title,
+html[data-theme] .test-panel__question-desc,
+html[data-theme] .test-contents,
+html[data-theme] .ckeditor-wrapper,
+html[data-theme] .panel-body,
+html[data-theme] .modal-body,
+html[data-theme] .question-palette__part-title { color: var(--ex-text) !important; }
+html[data-theme] .question-palette__part-status { color: var(--ex-muted) !important; }
+html[data-theme] .test-panel__title,
+html[data-theme] .test-panel__title-caption,
+html[data-theme] .test-panel__question-sm-title { color: var(--ex-text) !important; }
+html[data-theme] .test-panel__question-num,
+html[data-theme] .iot-question-number { color: var(--ex-on-accent) !important; background: var(--ex-accent) !important; }
+
+/* 作答控件 */
+html[data-theme] .iot-radio { color: var(--ex-text) !important; }
+html[data-theme] .form-control,
+html[data-theme] textarea,
+html[data-theme] input[type="text"] { background: var(--ex-surface-2) !important; color: var(--ex-text) !important; border-color: var(--ex-border) !important; }
+html[data-theme] .test-panel__answer-item { color: var(--ex-text) !important; }
+/* 底部题号面板:盒子原为白底(浅色文字落上去会隐形),必须整盒覆盖 */
+html[data-theme] .question-palette__part { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; box-shadow: none !important; }
+html[data-theme] .question-palette__item { color: var(--ex-muted) !important; }
+html[data-theme] .question-palette__item.-checked { background: var(--ex-surface-2) !important; color: var(--ex-accent) !important; font-weight: 600; }
+html[data-theme] .listen-from-here { color: var(--ex-text) !important; border-color: var(--ex-accent) !important; }
+
+/* 口语自研页(sp-*) */
+html[data-theme] .sp-tab { background: var(--ex-surface-2) !important; color: var(--ex-muted) !important; border-color: var(--ex-border) !important; }
+html[data-theme] .sp-tab.-active { background: var(--ex-surface) !important; color: var(--ex-accent) !important; }
+html[data-theme] .sp-panel { background: var(--ex-surface) !important; border-color: var(--ex-border) !important; color: var(--ex-text) !important; }
+html[data-theme] .sp-part-tag { background: var(--ex-accent) !important; color: var(--ex-on-accent) !important; }
+html[data-theme] .sp-part-name,
+html[data-theme] .sp-stage,
+html[data-theme] .sp-foot { color: var(--ex-muted) !important; }
+html[data-theme] .sp-cue { border-color: var(--ex-accent) !important; background: var(--ex-surface-2) !important; }
+html[data-theme] .sp-cue__topic { color: var(--ex-text) !important; }
+html[data-theme] .sp-cue__points { color: var(--ex-text) !important; }
+html[data-theme] .sp-clock { color: var(--ex-text) !important; }
+html[data-theme] .sp-clock.-run { color: var(--ex-accent) !important; }
+html[data-theme] .sp-qlist { color: var(--ex-text) !important; }
+html[data-theme] .sp-qlist li::marker { color: var(--ex-accent) !important; }
+html[data-theme] .sp-btn { background: var(--ex-accent) !important; color: var(--ex-on-accent) !important; }
+html[data-theme] .sp-btn.-ghost { background: var(--ex-surface) !important; color: var(--ex-text) !important; border-color: var(--ex-border) !important; }
+
+/* 写作自研模板(wt-*/take-test 系)常见输入面 */
+html[data-theme] .take-test__split,
+html[data-theme] .take-test { background: var(--ex-bg) !important; }
+
+/* night 补充:图片在暗底不加滤镜;滚动条/选中色微调 */
+html[data-theme="night"] ::selection { background: rgba(205,140,30,.35); }

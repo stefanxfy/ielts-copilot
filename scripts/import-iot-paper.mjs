@@ -126,6 +126,11 @@ function transformPage(html, extraScripts) {
     const inject = extraScripts.map((s) => `<script src="../shared/exam-assets/${s}"></script>`).join("\n");
     out = out.replace(/<\/body>/i, `${inject}\n</body>`);
   }
+  // 主题跟随:皮肤样式层 + 同步脚本(初始读 /api/ui-theme,实时收广播)
+  if (!out.includes("theme-follow.css")) {
+    out = out.replace(/<\/head>/i, `<link rel="stylesheet" href="../shared/exam-assets/theme-follow.css">\n</head>`);
+    out = out.replace(/<\/body>/i, `<script src="../shared/exam-assets/theme-follow.js"></script>\n</body>`);
+  }
   return out;
 }
 
@@ -353,6 +358,8 @@ function buildSpeakingHtml(testHtml, examId) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
+<link rel="stylesheet" href="../shared/exam-assets/theme-follow.css">
+<script src="../shared/exam-assets/theme-follow.js" defer></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #1c2330; background: #f4f6fa; }

@@ -84,5 +84,21 @@ export async function selectUiTheme(id: UiThemeId): Promise<void> {
   }
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent<UiThemeId>(UI_THEME_CHANGE_EVENT, { detail: id }));
+    // 真题卷面(静态文档)实时跟随:同文档树 iframe 走 postMessage,独立标签走 BroadcastChannel;
+    // 卷面侧接收方为 public/exams/shared/exam-assets/theme-follow.js
+    try {
+      const bc = new BroadcastChannel("ielts-ui-theme");
+      bc.postMessage({ type: "ielts-ui-theme", theme: id });
+      bc.close();
+    } catch {
+      // 无 BroadcastChannel 环境忽略(卷面下次载入会从 API 取最新)
+    }
+    document.querySelectorAll("iframe").forEach((f) => {
+      try {
+        f.contentWindow?.postMessage({ type: "ielts-ui-theme", theme: id }, "*");
+      } catch {
+        // 跨域/未就绪 iframe 忽略
+      }
+    });
   }
 }
