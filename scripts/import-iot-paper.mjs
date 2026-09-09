@@ -25,7 +25,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
@@ -245,6 +245,11 @@ function alignQuizFrame(html, subject) {
     html = removeDivById(html, id);
   }
   html = html.replace(/<select name="audioSource"[\s\S]*?<\/select>/g, "");
+  // 站方登录提示条(test-notice modal-test-notice,含 account/login 外链)违反"无原站元素"铁律,整块删除
+  html = html.replace(
+    /<div class="test-notice modal-test-notice">[\s\S]*?<\/div>/,
+    "",
+  );
   // 音频已收进头部,原播放器容器(audio+select 均已移出)若已为空壳则移除
   html = html.replace(
     /<div class="take-test__player-wrap"><div class="take-test__player-container">\s*<\/div><\/div>/g,
@@ -630,6 +635,57 @@ async function copyStatic() {
   }
 }
 
+/* ---------- 步骤 1.5:卷面图片完整性校验(缺失即失败,外部引用降级警告) ---------- */
+
+/** 扫本卷 public/exams/<examId>/ 全部 html 的图片引用。
+ *  本地路径必须存在且 >1KB(僵尸/占位按缺失论);外链视为警告
+ *  (localizePaperImages 设计上失败保留外链+onerror 兜底,不阻塞导入)。 */
+function verifyImages() {
+  const missing = [];
+  const tiny = [];
+  const external = [];
+  for (const p of SET.papers) {
+    const examId = examIdOf(p);
+    const dir = join(ROOT, "public", "exams", examId);
+    if (!existsSync(dir)) continue;
+    for (const f of readdirSync(dir)) {
+      if (!f.endsWith(".html")) continue;
+      const html = readFileSync(join(dir, f), "utf8");
+      const refs = new Set();
+      for (const m of html.matchAll(/\b(?:src|data-src|href)="([^"]+\.(?:png|jpe?g|gif|webp|svg))"/gi)) refs.add(m[1]);
+      for (const m of html.matchAll(/srcset="([^"]+)"/g))
+        for (const part of m[1].split(",")) {
+          const u = part.trim().split(/\s+/)[0];
+          if (u) refs.add(u);
+        }
+      for (const u of refs) {
+        if (u.startsWith("data:")) continue;
+        if (/^https?:\/\//.test(u)) {
+          external.push(`${examId}/${f} → ${u.slice(0, 100)}`);
+          continue;
+        }
+        const fp = u.startsWith("/") ? join(ROOT, "public", u) : resolve(dirname(join(dir, f)), u);
+        // SVG 矢量 logo 等合法小体积文件不受 <1KB 门禁约束,只查位图
+        const isSvg = /\.svg($|\?)/i.test(u);
+        if (!existsSync(fp)) missing.push(`${examId}/${f} → ${u}`);
+        else if (!isSvg && statSync(fp).size <= 1000) tiny.push(`${examId}/${f} → ${u}(${statSync(fp).size}B)`);
+      }
+    }
+  }
+  for (const x of external) console.warn(`[images][warn] 外链(已 onerror 兜底): ${x}`);
+  if (tiny.length) {
+    console.error(`[images] 可疑小文件(<1KB,疑似占位):`);
+    for (const x of tiny) console.error(`  ${x}`);
+    process.exit(1);
+  }
+  if (missing.length) {
+    console.error(`[images] 本地图片缺失:`);
+    for (const x of missing) console.error(`  ${x}`);
+    process.exit(1);
+  }
+  console.log(`[images] 卷面图片完整性 OK(外链警告 ${external.length} · 小文件 0 · 缺失 0)`);
+}
+
 /* ---------- 步骤 2:answers-<examId>.js 生成(听/阅,scoring.js 依赖) ---------- */
 
 function writeAnswersJs() {
@@ -790,5 +846,6 @@ for (const p of SET.papers) {
 }
 
 await copyStatic();
+verifyImages();
 writeAnswersJs();
 importDb();
