@@ -439,11 +439,9 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       {tab === "speaking" && (
         <div>
           <div className="mb-3.5 text-[13px] text-muted-foreground">
-            选择一套口语真题开始机考 · 11–14 分钟 · Part 1-3 · A/G 类同卷（V2 待开放）
+            选择一套口语真题开始机考 · 11–14 分钟 · Part 1-3 · 录音回放与 AI 点评（V2 待开放）
           </div>
-          {YEAR_LIST.map((y) => (
-            <YearEmpty key={y} year={y} />
-          ))}
+          {singleList("speaking")}
         </div>
       )}
     </>
