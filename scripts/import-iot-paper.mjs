@@ -41,31 +41,31 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2025mar",
-  title: "A类 · 2025年3月真题 Test 1",
+  examSetId: "a-2025apr",
+  title: "A类 · 2025年4月真题 Test 1",
   category: "A",
-  testPeriod: "2025-03",
+  testPeriod: "2025-04",
   /** 英文卷标(写作/口语页标题与页眉用,与原库 "A类写作 · 2025 January Test 1" 同构) */
-  enLabel: "2025 March Test 1",
+  enLabel: "2025 April Test 1",
   papers: [
     {
       subject: "listening",
-      dir: "questions/听力/2025/ielts-mock-test-2025-march-listening-practice-test-1",
+      dir: "questions/听力/2025/ielts-mock-test-2025-april-listening-practice-test-1",
       bandTableSrc: "answers-a-2025jan-listening-test1.js",
-      audioDst: "listening-a-2025mar-test1.mp3",
+      audioDst: "listening-a-2025apr-test1.mp3",
     },
     {
       subject: "reading",
-      dir: "questions/阅读/2025/ielts-mock-test-2025-march-reading-practice-test-1",
+      dir: "questions/阅读/2025/ielts-mock-test-2025-april-reading-practice-test-1",
       bandTableSrc: "answers-a-2025jan-test1.js",
     },
     {
       subject: "writing",
-      dir: "questions/写作/2025/ielts-mock-test-2025-march-writing-practice-test-1",
+      dir: "questions/写作/2025/ielts-mock-test-2025-april-writing-practice-test-1",
     },
     {
       subject: "speaking",
-      dir: "questions/口语/2025/ielts-mock-test-2025-march-speaking-practice-test-1",
+      dir: "questions/口语/2025/ielts-mock-test-2025-april-speaking-practice-test-1",
     },
   ],
 };
@@ -484,9 +484,62 @@ function buildSpeakingHtml(testHtml, examId) {
 </html>`;
 }
 
+/* ---------- 外链内容图自动本地化(四规矩③:产物禁原站外链) ---------- */
+
+const IMG_URL_RE = /https?:\/\/(?:[a-z0-9-]+\.)*ieltsonlinetests\.com\/[^\s"'<>()]+?\.(?:jpe?g|png|gif|webp|svg)(?:\?[^\s"'<>()]*)?/gi;
+const imgNameByURL = new Map(); // url → 本地文件名(跨卷复用,免重复下载)
+
+/** 扫描 html 中站方 CDN 内容图 → 下载入源 img/(幂等,已存在即复用) → 改写为 img/ 相对引用。
+ *  下载失败(如 2017-2020 老书站方死链)保留外链,页面 onerror 兜底,警告汇总可见。 */
+async function localizePaperImages(html, imgDir, label) {
+  const urls = [...new Set((html.match(IMG_URL_RE) ?? []).map((u) => u.replace(/[.,]+$/, "")))];
+  if (!urls.length) return html;
+  mkdirSync(imgDir, { recursive: true });
+  const assigned = new Set(imgNameByURL.values());
+  let ok = 0;
+  const fails = [];
+  for (const url of urls) {
+    let name = imgNameByURL.get(url);
+    if (!name) {
+      const base = decodeURIComponent(new URL(url).pathname.split("/").pop());
+      const dot = base.lastIndexOf(".");
+      const stem = dot > 0 ? base.slice(0, dot) : base;
+      const ext = dot > 0 ? base.slice(dot) : ".jpg";
+      name = assigned.has(base) ? stem + "-" + hash6(url) + ext : base;
+      const dst = join(imgDir, name);
+      try {
+        const r = await fetch(url, {
+          headers: { "User-Agent": "Mozilla/5.0 (Macintosh) IELTS-Copilot-import" },
+          signal: AbortSignal.timeout(20000),
+        });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const buf = Buffer.from(await r.arrayBuffer());
+        if (buf.length < 100) throw new Error("响应过小(" + buf.length + "B)");
+        writeFileSync(dst, buf);
+        imgNameByURL.set(url, name);
+        assigned.add(name);
+      } catch (e) {
+        fails.push(base + " (" + e.message + ")");
+        continue;
+      }
+    }
+    html = html.split(url).join("img/" + name);
+    ok++;
+  }
+  const fail = urls.length - ok;
+  console.log("[img-mop] " + label + ":外链图 " + urls.length + " 张 → 本地化 " + ok + ",失败 " + fail + (fails.length ? " → " + fails.join("; ") : ""));
+  return html;
+}
+
+function hash6(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
+  return h.toString(36).slice(0, 6);
+}
+
 /* ---------- 步骤 1:静态托管 ---------- */
 
-function copyStatic() {
+async function copyStatic() {
   // 共享资源只增不删(保护手工补丁:scoring/exam-guard/exam-note/audio-lock/clock-sec 等)
   mkdirSync(SHARED_ASSETS, { recursive: true });
   let added = 0;
@@ -503,7 +556,12 @@ function copyStatic() {
     const examId = examIdOf(p);
     const dir = join(EXAMS_OUT, examId);
     mkdirSync(dir, { recursive: true });
-    const testHtml = readFileSync(join(ROOT, p.dir, "test.html"), "utf8");
+    // 外链内容图先本地化(下载入源 img/,后续拷贝随卷带走)
+    const testHtml = await localizePaperImages(
+      readFileSync(join(ROOT, p.dir, "test.html"), "utf8"),
+      join(ROOT, p.dir, "img"),
+      examId,
+    );
     // 卷内题目图片目录(写作 T1 图/阅读配图/听力题卡图)
     const imgDir = join(ROOT, p.dir, "img");
     if (existsSync(imgDir)) {
@@ -704,6 +762,6 @@ for (const p of SET.papers) {
   }
 }
 
-copyStatic();
+await copyStatic();
 writeAnswersJs();
 importDb();
