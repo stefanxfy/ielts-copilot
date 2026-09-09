@@ -1,0 +1,58 @@
+/* 卷面框架补丁(单一事实源) —— 2026-09-09 由范本 a-2025jan 手工内联补丁收编入管线,
+   transformPage 对所有卷面页统一注入;原硬编码蓝一律改 var(--ex-accent,#d97706) 跟随八套皮肤 */
+
+/* ===== 1. 主题变量接管(原 ieltshome-theme,蓝色→琥珀主题色) ===== */
+:root{
+  --blue:var(--ex-accent,#d97706); --blue-d:#b45309;
+  --reading-gradient:linear-gradient(180deg,var(--ex-accent,#d97706) 0%,#b45309 100%)!important;
+  --listening-gradient:linear-gradient(180deg,var(--ex-accent,#d97706) 0%,#b45309 100%)!important;
+  --writing-gradient:linear-gradient(180deg,var(--ex-accent,#d97706) 0%,#b45309 100%)!important;
+  --speaking-gradient:linear-gradient(180deg,var(--ex-accent,#d97706) 0%,#b45309 100%)!important;
+  --bg-gradient:linear-gradient(180deg,var(--ex-accent,#d97706) 0%,#b45309 100%)!important;
+  --main-gradient:linear-gradient(180deg,var(--ex-accent,#d97706) 0%,#b45309 100%)!important;
+  --main-color:var(--ex-accent,#d97706)!important;
+}
+/* 【听力专项】开场门槛遮罩("Click here to start the test")强制隐藏:
+   原站 JS 初始化后会显示它、点击后才开考,静态页该点击无效 —— 隐藏即直接进入可用状态。
+   不删节点(防原站初始化空引用),!important 压过任何行内显示 */
+.take-test__click-play{display:none!important;pointer-events:none!important}
+.realtest-header__bt-submit,.realtest-header__bt-save{background:linear-gradient(180deg,var(--ex-accent,#d97706) 0%,#b45309 100%)!important}
+.realtest-header__time:before{color:var(--ex-accent,#d97706)!important}
+.realtest-header__time-val{color:var(--ex-text,#1c2330)!important;font-weight:600!important}
+.realtest-header__time-text{color:var(--ex-muted,#5a6472)!important}
+input:focus,select:focus,textarea:focus{outline-color:var(--ex-accent,#d97706)!important}
+input[type=radio]{accent-color:var(--ex-accent,#d97706)!important}
+input[type=checkbox]{accent-color:var(--ex-accent,#d97706)!important}
+/* 底部题号面板:当前题高亮(2026-09-09 用户要求:原蓝色改主题琥珀) */
+.question-palette__item.is-selected,
+html[data-theme] .question-palette__item.is-selected{background:var(--ex-accent,#d97706)!important;color:#fff!important;border-color:var(--ex-accent,#d97706)!important;font-weight:600}
+.iot-grbt.-main-color{background:linear-gradient(180deg,var(--ex-accent,#d97706) 0%,#b45309 100%)!important}
+*::-webkit-scrollbar-thumb{background:#c9d2df!important;border-radius:4px!important}
+
+/* ===== 2. 卷面滚动条细化(原 native-scroll-patch) ===== */
+.test-contents::-webkit-scrollbar,.test-panel::-webkit-scrollbar{width:8px;height:8px}
+.test-contents::-webkit-scrollbar-thumb,.test-panel::-webkit-scrollbar-thumb{background:#dfdfdf;border-radius:6px}
+.test-contents::-webkit-scrollbar-thumb:hover,.test-panel::-webkit-scrollbar-thumb:hover{background:#c9c9c9}
+.test-contents::-webkit-scrollbar-track,.test-panel::-webkit-scrollbar-track{background:transparent}
+.test-contents,.test-panel{scrollbar-width:thin;scrollbar-color:#dfdfdf transparent}
+.test-contents,.test-panel{scroll-behavior:smooth}
+
+/* ===== 3. 头部图标兜底(原 header-icons-patch) ===== */
+.realtest-header__icon.-note:after,.realtest-header__icon.-full-screen:after{content:none}
+.realtest-header__icon.-note{width:22px;height:22px;margin-left:16px;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23294563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/><path d='M18.4 2.6a2.1 2.1 0 1 1 3 3L12 15l-4 1 1-4Z'/></svg>") center/contain no-repeat}
+.realtest-header__icon.-full-screen{width:22px;height:22px;margin-left:16px;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23294563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 3H5a2 2 0 0 0-2 2v3'/><path d='M21 8V5a2 2 0 0 0-2-2h-3'/><path d='M3 16v3a2 2 0 0 0 2 2h3'/><path d='M16 21h3a2 2 0 0 0 2-2v-3'/></svg>") center/contain no-repeat}
+.realtest-header__icon.-full-screen.active{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23294563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 3v3a2 2 0 0 1-2 2H3'/><path d='M21 8h-3a2 2 0 0 1-2-2V3'/><path d='M3 16h3a2 2 0 0 1 2 2v3'/><path d='M16 21v-3a2 2 0 0 1 2-2h3'/></svg>")}
+.realtest-header__icon.-note:hover,.realtest-header__icon.-full-screen:hover{opacity:.7}
+
+/* ===== 4. 页面图标兜底(原 page-icons-fallback) ===== */
+/* 圆按钮内的 prev/next:父 .test-panel__nav-btn 是 40×40 圆,图标铺满 */
+.test-panel__nav-btn [class^="ioticon-"]:before,.test-panel__nav-btn [class*=" ioticon-"]:before{content:none}
+.test-panel__nav-btn .ioticon-prev-icon,.test-panel__nav-btn .ioticon-next-icon{display:inline-block;width:16px;height:16px;background-repeat:no-repeat;background-position:center;background-size:contain}
+.test-panel__nav-btn .ioticon-prev-icon{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='15 18 9 12 15 6'/></svg>")}
+.test-panel__nav-btn .ioticon-next-icon{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'/></svg>")}
+/* 其余页面级图标:尽量克制,不抢视觉,能不补就不补 —— 仅对用得到的三个兜底 */
+.ioticon-check-v2:before,.ioticon-send-v2:before,.ioticon-search:before,.ioticon-x:before{content:none}
+.ioticon-check-v2{display:inline-block;width:14px;height:14px;vertical-align:middle;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2337854D' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/contain no-repeat}
+.ioticon-send-v2{display:inline-block;width:14px;height:14px;vertical-align:middle;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='22' y1='2' x2='11' y2='13'/><polygon points='22 2 15 22 11 13 2 9 22 2'/></svg>") center/contain no-repeat}
+.ioticon-search{display:inline-block;width:16px;height:16px;vertical-align:middle;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23294563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") center/contain no-repeat}
+.ioticon-x{display:inline-block;width:20px;height:20px;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23294563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>") center/contain no-repeat}

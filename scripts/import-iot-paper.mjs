@@ -45,7 +45,6 @@ const SET = {
   title: "A类 · 2025年4月真题 Test 1",
   category: "A",
   testPeriod: "2025-04",
-  /** 英文卷标(写作/口语页标题与页眉用,与原库 "A类写作 · 2025 January Test 1" 同构) */
   enLabel: "2025 April Test 1",
   papers: [
     {
@@ -116,6 +115,8 @@ function transformPage(html, extraScripts) {
     // 装饰图(页脚二维码/封面缩略图等 inline-images/styles/themes)本地从未下载,还原原站外链
     .replace(/(src)="img\/[^"]*"([^>]*)data-iot-orig="([^"]*(?:\/inline-images\/|\/styles\/|\/themes\/)[^"]*)"/gi, "$1=\"$3\"$2")
     .replace(/ data-iot-orig="[^"]*"/g, "")
+    // 旧内联补丁收编(2026-09-09):四块手工补丁统一为共享 quiz-patch.css,历史注入块一律剥离
+    .replace(/<style id="(?:ieltshome-theme|native-scroll-patch|header-icons-patch|page-icons-fallback)">[\s\S]*?<\/style>/g, "")
     // 原站标识清洗(导入铁律③):favicon/canonical/hreflang/og/twitter 及 Drupal 管理链一律不留
     .replace(/<link[^>]*rel="(?:shortcut )?icon"[^>]*>/g, "")
     .replace(/<link[^>]*rel="(?:canonical|alternate|delete-[a-z-]*form|edit-form|add-form|version-history|devel-[a-z-]+|token-devel|drupal:[a-z-]+|to-[a-z-]+|revision[a-z-]*)"[^>]*>/g, "")
@@ -129,6 +130,10 @@ function transformPage(html, extraScripts) {
   if (extraScripts?.length) {
     const inject = extraScripts.map((s) => `<script src="../shared/exam-assets/${s}"></script>`).join("\n");
     out = out.replace(/<\/body>/i, `${inject}\n</body>`);
+  }
+  // 卷面框架补丁:题号面板高亮/滚动条/图标兜底(单一事实源 quiz-patch.css,先于 theme-follow 注入)
+  if (!out.includes("quiz-patch.css")) {
+    out = out.replace(/<\/head>/i, '<link rel="stylesheet" href="../shared/exam-assets/quiz-patch.css">\n</head>');
   }
   // 主题跟随:皮肤样式层 + 同步脚本(初始读 /api/ui-theme,实时收广播)
   if (!out.includes("theme-follow.css")) {
