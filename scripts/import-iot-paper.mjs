@@ -496,6 +496,8 @@ const imgNameByURL = new Map(); // url → 本地文件名(跨卷复用,免重�
 
 /** 扫描 html 中站方 CDN 内容图 → 下载入源 img/(幂等,已存在即复用) → 改写为 img/ 相对引用。
  *  下载失败(如 2017-2020 老书站方死链)保留外链,页面 onerror 兜底,警告汇总可见。 */
+/** 站方共享资产黑名单:logo 图/二维码脚本等装饰件,拷贝共享资源时跳过 */
+const DECORATIVE_ASSET_RE = /^(?:IOT_?[Ss]hortLogo|qr-code-styling|Logo-)/;
 /** 装饰图路径特征:站方 logo/二维码/主题资源/modal 徽标,一律不本地化 */
 const DECORATIVE_IMG_RE = /\/(?:inline-images|themes|styles)\/|logo|qr[-_]?code|landing-page/i;
 
@@ -554,6 +556,7 @@ async function copyStatic() {
   mkdirSync(SHARED_ASSETS, { recursive: true });
   let added = 0;
   for (const f of readdirSync(IOT_ASSETS)) {
+    if (DECORATIVE_ASSET_RE.test(f)) continue; // 站方 logo/二维码脚本不入库(铁律③)
     const dst = join(SHARED_ASSETS, f);
     if (!existsSync(dst)) {
       cpSync(join(IOT_ASSETS, f), dst);
