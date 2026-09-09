@@ -41,18 +41,18 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2025jul",
-  setId: "a-2025jul-test2",
-  title: "A类 · 2025年7月真题 Test 2",
+  examSetId: "a-2025may",
+  setId: "a-2025may-test2",
+  title: "A类 · 2025年5月真题 Test 2",
   category: "A",
-  testPeriod: "2025-07",
-  enLabel: "2025 July Test 2",
+  testPeriod: "2025-05",
+  enLabel: "2025 May Test 2",
   testNo: 2,
   papers: [
-    {"subject":"listening","dir":"questions/听力/2025/ielts-mock-test-2025-july-listening-practice-test-2","bandTableSrc":"answers-a-2025jan-listening-test1.js","audioDst":"listening-a-2025jul-test2.mp3"},
-    {"subject":"reading","dir":"questions/阅读/2025/ielts-mock-test-2025-july-reading-practice-test-2","bandTableSrc":"answers-a-2025jan-test1.js"},
-    {"subject":"writing","dir":"questions/写作/2025/ielts-mock-test-2025-july-writing-practice-test-2"},
-    {"subject":"speaking","dir":"questions/口语/2025/ielts-mock-test-2025-july-speaking-practice-test-2"},
+    {"subject":"listening","dir":"questions/听力/2025/ielts-mock-test-2025-may-listening-practice-test-2","bandTableSrc":"answers-a-2025jan-listening-test1.js","audioDst":"listening-a-2025may-test2.mp3"},
+    {"subject":"reading","dir":"questions/阅读/2025/ielts-mock-test-2025-may-reading-practice-test-2","bandTableSrc":"answers-a-2025jan-test1.js"},
+    {"subject":"writing","dir":"questions/写作/2025/ielts-mock-test-2025-may-writing-practice-test-2"},
+    {"subject":"speaking","dir":"questions/口语/2025/ielts-mock-test-2025-may-speaking-practice-test-2"},
   ],
 };
 
@@ -120,6 +120,9 @@ function transformPage(html, extraScripts) {
     // 匿名用户归一(2026-09-09):站方对 anonymous-user 有全局禁点 CSS(pointer-events:none !important),
     // 抓取未登录的卷会带此 body 类致全页不可交互;统一归一为 user-logged-in(与范本 jan 基线一致)
     .replace(/(<body[^>]*class="[^"]*)\banonymous-user\b([^"]*")/g, "$1user-logged-in$2")
+    // 抓取器另存注释(2026-09-09):源 html 首行 "<!-- saved from url=(0119)https://www.ieltsonlinetests.com/... -->"
+    // 属原站元素残留(铁律③),且可能指向串卷 URL 误导溯源,统一剥离
+    .replace(/<!--\s*saved from url=\(\d+\)[^>]*-->/gi, "")
     // 标签页图标:清洗后补注本站机考 SVG(favicon 链接被清洗,不补会回落站点根默认图)
     .replace(/<\/head>/i, '<link rel="icon" type="image/svg+xml" href="../shared/exam-assets/app-logo.svg"></head>');
   if (extraScripts?.length) {
