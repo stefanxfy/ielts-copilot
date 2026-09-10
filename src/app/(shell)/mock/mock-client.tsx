@@ -28,7 +28,7 @@ export type MockSet = {
   papers: MockPaper[];
 };
 
-const YEAR_LIST = [2026, 2025, 2024, 2023];
+const YEAR_LIST = [2026, 2025, 2024, 2023, 2022];
 const SUBJECT_LABEL: Record<string, string> = {
   reading: "阅读",
   listening: "听力",
