@@ -41,19 +41,21 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2022dec-test1",
-  setId: "a-2022dec-test1",
-  testNo: 1,
-  title: "A类 · 2022年12月真题 Test 1",
+  examSetId: "a-2022nov-test4",
+  setId: "a-2022nov-test4",
+  testNo: 4,
+  title: "A类 · 2022年11月真题 Test 4",
   category: "A",
-  testPeriod: "2022-12",
+  testPeriod: "2022-11",
   papers: [
-    { subject: "listening", dir: "questions/听力/2022/202212listen01", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2022dec-test1-listening-test1.mp3" },
-    { subject: "reading", dir: "questions/阅读/2022/雅思真题试卷-十二月-雅思阅读真题1", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "writing", dir: "questions/写作/2022/雅思真题试卷-十二月-雅思写作真题1", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "speaking", dir: "questions/口语/2022/雅思真题试卷-十二月-雅思口语真题1", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "listening", dir: "questions/听力/2022/雅思真题试卷-十一月-雅思听力真题-4", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2022nov-test4-listening-test4.mp3" },
+    { subject: "reading", dir: "questions/阅读/2022/雅思真题试卷-十一月-雅思阅读真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "writing", dir: "questions/写作/2022/雅思真题试卷-十一月-雅思写作真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "speaking", dir: "questions/口语/2022/雅思真题试卷-十一月-雅思口语真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
   ],
 };
+
+
 
 // enLabel 派生(2026-09-10):历史代码引用 SET.enLabel 但 SET 从未定义该字段,
 // 导致全库 206 卷页头/标题拼出 "undefined"(静默失败典型)。改为从 title 第二段自动派生,换卷不再漏写

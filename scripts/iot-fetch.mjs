@@ -36,12 +36,14 @@ const SKILL_DIR = { listening: "听力", reading: "阅读", writing: "写作", s
 /* ---------- args ---------- */
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
-    const m = a.match(/^--([a-z]+)=(.*)$/);
+    const m = a.match(/^--([a-z-]+)=(.*)$/);
     return m ? [m[1], m[2]] : [a.replace(/^--/, ""), true];
   }),
 );
 const SKILLS = args.skill ? args.skill.split(",") : ["listening", "reading", "writing", "speaking"];
 const LIMIT = args.limit ? parseInt(args.limit, 10) : Infinity;
+// 清单过滤:t.href 含指定子串才抓(如 --href-has=%E5%8D%81%E4%B8%80%E6%9C%88 只抓"十一月"中文 slug 系列)
+const HREF_HAS = args["href-has"] || null;
 
 /* ---------- helpers ---------- */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -218,9 +220,9 @@ for (const skill of SKILLS) {
   let list = JSON.parse(readFileSync(listFile, "utf8"));
   if (typeof list === "string") list = JSON.parse(list);
   const tests = (list.tests || []).filter((t) => t.href && t.nid).slice(0, LIMIT);
-  console.log(`\n== ${skill}: ${tests.length} 卷`);
-
-  for (const t of tests) {
+  const filtered = HREF_HAS ? tests.filter((t) => t.href.includes(HREF_HAS)) : tests;
+  console.log(`\n== ${skill}: ${tests.length} 卷${HREF_HAS ? `,过滤后 ${filtered.length} 卷(href 含 ${HREF_HAS})` : ""}`);
+  for (const t of filtered) {
     const slug = t.href.split("/").pop();
     const dir = join(OUT_ROOT, SKILL_DIR[skill], slugYear(slug), slugDirName(slug));
     mkdirSync(dir, { recursive: true });
