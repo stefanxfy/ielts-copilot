@@ -101,6 +101,10 @@ const SET = {
 
 
 
+
+
+
+
 const SUBJECT_TITLE = { reading: "阅读", listening: "听力", writing: "写作", speaking: "口语" };
 const examIdOf = (p) => `${SET.examSetId}-${p.subject}-test${SET.testNo ?? 1}`;
 
@@ -322,7 +326,7 @@ function alignQuizFrame(html, subject) {
  *  T1 图在 .test-question__img-writing 的 data-src(懒加载 div)。 */
 function loadWritingSections(testHtml, srcLabel) {
   const out = {};
-  for (const m of testHtml.matchAll(/Writing Task ([12])<\/span>[\s\S]*?<div class="test-question__question">([\s\S]*?)<div class="test-question__expand/gi)) {
+  for (const m of testHtml.matchAll(/Writing Task ([12])<\/span>[\s\S]*?<div class="test-question__question"[^>]*>([\s\S]*?)<div class="test-question__expand/gi)) {
     const key = m[1] === "1" ? "T1" : "T2";
     if (out[key]) continue;
     let body = m[2].replace(/<\/div>\s*$/, ""); // 去掉 question div 自身的闭合
