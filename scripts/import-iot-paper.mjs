@@ -41,23 +41,24 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2023dec-test4",
-  setId: "a-2023dec-test4",
-  testNo: 4,
-  title: "A类 · 2023年12月真题 Test 4",
+  examSetId: "a-2022dec-test1",
+  setId: "a-2022dec-test1",
+  testNo: 1,
+  title: "A类 · 2022年12月真题 Test 1",
   category: "A",
-  testPeriod: "2023-12",
+  testPeriod: "2022-12",
   papers: [
-    { subject: "listening", dir: "questions/听力/2023/ielts-mock-test-2023-december-listening-practice-test-2-0", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2023dec-test4-listening-test4.mp3" },
-    { subject: "reading", dir: "questions/阅读/2023/ielts-mock-test-2023-december-reading-practice-test-2-0", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "writing", dir: "questions/写作/2023/ielts-mock-test-2023-december-雅思写作真题-2", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "speaking", dir: "questions/口语/2023/ielts-mock-test-2023-december-speaking-practice-test-2-0", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "listening", dir: "questions/听力/2022/202212listen01", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2022dec-test1-listening-test1.mp3" },
+    { subject: "reading", dir: "questions/阅读/2022/雅思真题试卷-十二月-雅思阅读真题1", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "writing", dir: "questions/写作/2022/雅思真题试卷-十二月-雅思写作真题1", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "speaking", dir: "questions/口语/2022/雅思真题试卷-十二月-雅思口语真题1", bandTableSrc: "answers-a-2025jan-test1.js" },
   ],
 };
 
-
-
-
+// enLabel 派生(2026-09-10):历史代码引用 SET.enLabel 但 SET 从未定义该字段,
+// 导致全库 206 卷页头/标题拼出 "undefined"(静默失败典型)。改为从 title 第二段自动派生,换卷不再漏写
+SET.enLabel = SET.title.split("·")[1]?.trim() ?? SET.title;
+if (!SET.enLabel || SET.enLabel === "undefined") throw new Error("SET.enLabel 派生失败,检查 title 格式");
 
 
 
@@ -173,6 +174,9 @@ function transformPage(html, extraScripts) {
     // 抓取器另存注释(2026-09-09):源 html 首行 "<!-- saved from url=(0119)https://www.ieltsonlinetests.com/... -->"
     // 属原站元素残留(铁律③),且可能指向串卷 URL 误导溯源,统一剥离
     .replace(/<!--\s*saved from url=\(\d+\)[^>]*-->/gi, "")
+    // 预览注入噪音(2026-09-10):源卷/原型可能被 data-page-node-id 属性污染(1142 处实锤),
+    // 属预览工具残留非卷面内容,统一剥离
+    .replace(/ data-page-node-id="[^"]*"/g, "")
     // 标签页图标:清洗后补注本站机考 SVG(favicon 链接被清洗,不补会回落站点根默认图)
     .replace(/<\/head>/i, '<link rel="icon" type="image/svg+xml" href="../shared/exam-assets/app-logo.svg"></head>');
   if (extraScripts?.length) {
@@ -188,10 +192,47 @@ function transformPage(html, extraScripts) {
     out = out.replace(/<\/head>/i, `<link rel="stylesheet" href="../shared/exam-assets/theme-follow.css">\n</head>`);
     out = out.replace(/<\/body>/i, `<script src="../shared/exam-assets/theme-follow.js"></script>\n</body>`);
   }
+  // 2022 老 Drupal 模板(2022-12 阅读):题目 <select data-num> 散在 <p> 里、未包 test-panel__question,
+  // quiz-patch.css 选择器对裸 <select> 失效,顶部出现裸 "Please select answer!" 等 placeholder 文本。
+  // 注意:同卷可能混合结构(部分 select 已包/部分裸),旧版"全有全无"条件会漏包裸 select,
+  // 故逐个判断——select 前最近的 test-panel__question 开标签若未在其中间闭合,则视为已包裹,否则补最小 wrapper
+  if (/<select[^>]+data-num=/.test(out)) {
+    out = out.replace(/<select[^>]+data-num="\d+"[^>]*>[\s\S]*?<\/select>/g, (m, offset) => {
+      const before = out.slice(0, offset);
+      const openAt = before.lastIndexOf('<div class="test-panel__question"');
+      if (openAt !== -1 && !before.slice(openAt).includes("</div>")) return m; // 已在 wrapper 内
+      return `<div class="test-panel__question"><div class="test-panel__answer">${m}</div></div>`;
+    });
+  }
   return out;
 }
 
 /* ---------- 听/阅卷面框架对齐(范本:原库 a-2025jan 卷面,用户 2026-09-09 立规) ---------- */
+
+/** 产物渲染验收(2026-09-10 立):资源验收(verifyImages)之外补 DOM 层断言。
+ *  背景:2022-12 导入连环翻车(meta 孤儿文本/裸 select/标题残留)全靠人眼发现,
+ *  根因是正则静默失败——匹配不到就不改不报错。这里把"必须成立的产物形态"变成硬失败。 */
+function validateQuizProduct(html, subject, examId) {
+  const errs = [];
+  // ① 原型头部副标题槽位必须含本次 SET.enLabel(防原型被噪音属性污染致替换静默跳过)
+  const sub = html.match(/<span style="font-size:11px;color:#5a6472"[^>]*>([^<]*)<\/span>/);
+  if (!sub || !sub[1].includes(SET.enLabel)) {
+    errs.push(`头部副标题异常: 期望含 "${SET.enLabel}",实际 "${sub?.[1] ?? "(缺失)"}"`);
+  }
+  // ② 范本默认文案不得残留(防原型槽位/其他默认值未替换)
+  if (SET.enLabel !== "2025 January Test 1" && html.includes("2025 January Test 1")) {
+    errs.push('页面残留范本默认文案 "2025 January Test 1"');
+  }
+  // ③ 预览注入噪音不得进入产物
+  if (html.includes("data-page-node-id")) errs.push("产物含 data-page-node-id 噪音属性");
+  // ④ 有答题 select 就必须有 test-panel__question 包裹(2022 老模板裸 select 致 quiz-patch.css 失效)
+  const selCount = (html.match(/<select[^>]+data-num=/g) || []).length;
+  if (selCount > 0) {
+    const wrapCount = (html.match(/class="test-panel__question"/g) || []).length;
+    if (wrapCount < selCount) errs.push(`裸 select 未包 wrapper: select=${selCount} wrapper=${wrapCount}`);
+  }
+  if (errs.length) throw new Error(`${examId} ${subject} 产物验收失败:\n  - ${errs.join("\n  - ")}`);
+}
 
 /** 本地品牌 logo(与原库卷面同款"雅"字 SVG) */
 /** 固定头部单一事实源:按科目直接复用范本原型(prototype/exam/a-{listening,reading}-test.html)的
@@ -277,6 +318,10 @@ function alignQuizFrame(html, subject) {
     /(<span style="font-size:11px;color:#5a6472">)[^<]*(<\/span>)/,
     `$1${sub}$2`,
   );
+  // 渲染验收①:副标题槽位必须替换成功,否则原型被噪音属性污染/被误改时静默残留默认文案
+  if (!header.includes(`>${sub}<`)) {
+    throw new Error(`原型头部副标题替换失败(未找到槽位或替换未生效): ${sub}`);
+  }
   header = header.replace(
     /data-time="\d+" data-duration-default="\d+"/,
     `data-time="${dataTime}" data-duration-default="${dataTime}"`,
@@ -647,16 +692,15 @@ async function copyStatic() {
         `<audio id="ielts-local-audio" preload="auto" autoplay muted class="ielts-local-audio" style="display:none" title="IELTS 本地机考 · 听力音频（本地 · 真考模式：仅播一次）"><source src="../shared/exam-assets/${p.audioDst}" type="audio/mp3"></audio>`,
       );
       // 框架对齐范本(a-2025jan):头部/品牌/modal/标题统一,再注入判分链脚本
-      writeFileSync(
-        join(dir, "listening.html"),
-        transformPage(alignQuizFrame(html, "listening"), [
-          `answers-${examId}.js`,
-          "clock-sec.js",
-          "scoring.js",
-          "exam-guard.js",
-          "audio-lock.js",
-        ]).replace(/<script src="(\.\.\/shared\/exam-assets\/exam-guard\.js)"><\/script>/, '<script src="$1" defer></script>'),
-      );
+      const lisHtml = transformPage(alignQuizFrame(html, "listening"), [
+        `answers-${examId}.js`,
+        "clock-sec.js",
+        "scoring.js",
+        "exam-guard.js",
+        "audio-lock.js",
+      ]).replace(/<script src="(\.\.\/shared\/exam-assets\/exam-guard\.js)"><\/script>/, '<script src="$1" defer></script>');
+      validateQuizProduct(lisHtml, "listening", examId);
+      writeFileSync(join(dir, "listening.html"), lisHtml);
       // 进入链路:试音 → 须知(同 import-papers,副标题/跳转目标逐卷改写)
       const sub = `${SET.category}类 听力 · ${SET.title.split("·")[1]?.trim() ?? SET.title}`;
       let ts = transformPage(readFileSync(join(PROTO, "test-sound.html"), "utf8"));
@@ -670,18 +714,17 @@ async function copyStatic() {
         .replace(/var targetTest = [^;]*;/, "var targetTest = 'listening.html';");
       writeFileSync(join(dir, "instructions.html"), ins);
     } else if (p.subject === "reading") {
-      writeFileSync(
-        join(dir, "reading.html"),
-        transformPage(alignQuizFrame(transformPage(testHtml), "reading"), [
-          `answers-${examId}.js`,
-          "clock-sec.js",
-          "scoring.js",
-          "exam-guard.js",
-        ]).replace(
-          /<script src="(\.\.\/shared\/exam-assets\/exam-guard\.js)"><\/script>/,
-          '<script src="$1" defer></script>',
-        ),
+      const readHtml = transformPage(alignQuizFrame(transformPage(testHtml), "reading"), [
+        `answers-${examId}.js`,
+        "clock-sec.js",
+        "scoring.js",
+        "exam-guard.js",
+      ]).replace(
+        /<script src="(\.\.\/shared\/exam-assets\/exam-guard\.js)"><\/script>/,
+        '<script src="$1" defer></script>',
       );
+      validateQuizProduct(readHtml, "reading", examId);
+      writeFileSync(join(dir, "reading.html"), readHtml);
     } else if (p.subject === "writing") {
       // 写作:自研模拟页(原库 a-writing-test 模板 + 本卷题干插槽),无判分,exam-note 上报 + 离开防护
       writeFileSync(join(dir, "writing.html"), buildWritingSim(testHtml, examId));
