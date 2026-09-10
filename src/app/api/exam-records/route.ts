@@ -75,11 +75,11 @@ export async function POST(request: Request) {
   const now = new Date();
   const used = Math.max(0, Math.min(Math.round(usedSec ?? 0), paper.durationSec));
 
-  // 写作卷:仅连考模式(sessionId 存在)允许上报,占位 0 分;单科模式仍 400
+  // 写作卷:连考模式(sessionId 存在)走场次入口;单科模式(sessionId 空)也允许上报,
+  // 让用户交卷后能跳到 /records/<id> 看 AI 批改结果 — 这条路是 2026-09-09 接通 P0 时开的:
+  // exam-note.js finish() POST 后整页跳转,服务端必须回 recordId。
+  // 区别:连考模式 finalizeIfComplete + recordSubjectSubmission;单科模式跳过场次相关动作。
   if (paper.subject === "writing" || !paper.answersJson) {
-    if (!sessionId) {
-      return NextResponse.json({ error: "写作卷无客观判分,不支持单科上报" }, { status: 400 });
-    }
     // 写作答题卡:T1/T2 全文(值来自 values 的 T1/T2 键),不判分
     const sheet: AnswerSheetJson = Object.fromEntries(
       Object.entries(paper.questionsJson)
@@ -95,12 +95,23 @@ export async function POST(request: Request) {
           },
         ]),
     );
-    // 幂等:同场次同卷已有记录则覆盖(防重试产生重复行,污染完成判定)
-    const existing = db
-      .select({ id: examRecords.id })
-      .from(examRecords)
-      .where(and(eq(examRecords.sessionId, sessionId), eq(examRecords.examId, paper.examId)))
-      .get();
+    // 幂等:同场次同卷已有记录则覆盖;单科模式无 sessionId → 走 examId + 最近未提交
+    // 记录去重(同一卷单科重做也应只一条记录,避免历史污染)。
+    let existing: { id: number } | undefined;
+    if (sessionId) {
+      existing = db
+        .select({ id: examRecords.id })
+        .from(examRecords)
+        .where(and(eq(examRecords.sessionId, sessionId), eq(examRecords.examId, paper.examId)))
+        .get();
+    } else {
+      existing = db
+        .select({ id: examRecords.id })
+        .from(examRecords)
+        .where(and(eq(examRecords.examId, paper.examId), eq(examRecords.subject, "writing")))
+        .orderBy(desc(examRecords.id))
+        .get();
+    }
     if (existing) {
       db.update(examRecords)
         .set({
@@ -112,7 +123,7 @@ export async function POST(request: Request) {
         })
         .where(eq(examRecords.id, existing.id))
         .run();
-      const completed = finalizeIfComplete(sessionId);
+      const completed = sessionId ? finalizeIfComplete(sessionId) : false;
       triggerAutoGrading(existing.id, sheet);
       return NextResponse.json({
         ok: true,
@@ -128,7 +139,7 @@ export async function POST(request: Request) {
       .values({
         examId: paper.examId,
         subject: paper.subject,
-        sessionId,
+        sessionId: sessionId ?? null,
         status: "SUBMITTED",
         startedAt: new Date(now.getTime() - used * 1000),
         submittedAt: now,
@@ -139,8 +150,8 @@ export async function POST(request: Request) {
       })
       .returning({ id: examRecords.id })
       .all();
-    recordSubjectSubmission("writing"); // P7 活动埋点(新插入才计,覆盖分支不调)
-    const completed = finalizeIfComplete(sessionId);
+    if (sessionId) recordSubjectSubmission("writing"); // P7 活动埋点(连考才计,单科不计)
+    const completed = sessionId ? finalizeIfComplete(sessionId) : false;
     triggerAutoGrading(result[0].id, sheet);
     return NextResponse.json({
       ok: true,
@@ -206,7 +217,7 @@ export async function POST(request: Request) {
     })
     .returning({ id: examRecords.id })
     .all();
-  recordSubjectSubmission(paper.subject); // P7 活动埋点(新插入才计,覆盖分支不调)
+  if (sessionId) recordSubjectSubmission(paper.subject); // P7 活动埋点(连考才计,单科不计)
 
   // 连考模式:交卷后检查场次是否三科齐全,齐全则回写 overall 快照
   const completed = sessionId ? finalizeIfComplete(sessionId) : false;

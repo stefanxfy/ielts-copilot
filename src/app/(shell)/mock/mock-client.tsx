@@ -24,10 +24,11 @@ export type MockSet = {
   title: string;
   category: "A" | "G";
   year: number;
+  month: string; // YYYY-MM
   papers: MockPaper[];
 };
 
-const YEAR_LIST = [2026, 2025, 2024, 2023];
+const YEAR_LIST = [2026, 2025, 2024, 2023, 2022];
 const SUBJECT_LABEL: Record<string, string> = {
   reading: "阅读",
   listening: "听力",
@@ -136,10 +137,20 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
   }
 
   const banks = useMemo(() => sets.filter((s) => s.category === mod), [sets, mod]);
-  const byYear = useMemo(() => {
-    const m = new Map<number, MockSet[]>();
-    for (const y of YEAR_LIST) m.set(y, []);
-    for (const s of banks) if (m.has(s.year)) m.get(s.year)!.push(s);
+  // 年 → 月(YYYY-MM) → 套题列表(同月同套号天然成组,月内 1-4 套)
+  const byYearMonth = useMemo(() => {
+    const m = new Map<number, Map<string, MockSet[]>>();
+    for (const y of YEAR_LIST) m.set(y, new Map());
+    for (const s of banks) {
+      if (!m.has(s.year)) m.set(s.year, new Map());
+      const inner = m.get(s.year)!;
+      if (!inner.has(s.month)) inner.set(s.month, []);
+      inner.get(s.month)!.push(s);
+    }
+    // 月份内按 examSetId 升序( Test 1 在 Test 2 前, 与 pages 服务端排序同源)
+    for (const inner of m.values()) {
+      for (const [k, arr] of inner) arr.sort((a, b) => a.examSetId.localeCompare(b.examSetId));
+    }
     return m;
   }, [banks]);
 
@@ -156,51 +167,115 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
 
   const detailSet = banks.find((s) => s.examSetId === detailId) ?? null;
 
-  /* ---------- 单科年份列表(听/读/写;口语无卷 → 全占位) ---------- */
+  /** 把 YYYY-MM 转成 "1月" / "11月" 中文短标签 */
+  const monthLabel = (key: string) => {
+    const m = Number(key.slice(5, 7));
+    return Number.isFinite(m) ? `${m}月` : key;
+  };
+
+  /** 套题网格列数:1 套 = 1 列(独占);2 套 = 2 列;3 套 = 3 列;4 套 = 2 列(2 行) */
+  const gridCols = (n: number) => {
+    if (n === 1) return "grid-cols-1";
+    if (n === 2) return "grid-cols-2";
+    if (n === 3) return "grid-cols-3";
+    return "grid-cols-2"; // n===4 走 2x2
+  };
+
+  /* ---------- 单科列表(按月聚合 + 月内分列) ---------- */
   function singleList(subject: string) {
-    const papersOf = banks.flatMap((s) =>
-      s.papers.filter((p) => p.subject === subject).map((p) => ({ set: s, paper: p })),
-    );
-    return YEAR_LIST.map((year) => {
-      const list = papersOf.filter((x) => x.set.year === year);
-      if (list.length === 0) return <YearEmpty key={year} year={year} />;
-      const done = list.filter((x) => x.paper.recordCount > 0).length;
-      const key = `sub-${subject}-${year}`;
-      const open = openYears[key] ?? true;
-      return (
+    // 收集 (month, paper, set) 并按 year+month 归并
+    type Item = { set: MockSet; paper: MockPaper };
+    const byYM = new Map<number, Map<string, Item[]>>();
+    for (const y of YEAR_LIST) byYM.set(y, new Map());
+    for (const s of banks) {
+      if (!byYM.has(s.year)) byYM.set(s.year, new Map());
+      const inner = byYM.get(s.year)!;
+      for (const p of s.papers.filter((x) => x.subject === subject)) {
+        if (!inner.has(s.month)) inner.set(s.month, []);
+        inner.get(s.month)!.push({ set: s, paper: p });
+      }
+    }
+    // 过滤出有数据的年月
+    return YEAR_LIST.flatMap((year) => {
+      const inner = byYM.get(year);
+      if (!inner) return [];
+      // 月份按 YYYY-MM 升序
+      const months = [...inner.keys()].filter((k) => inner.get(k)!.length > 0).sort();
+      if (months.length === 0) return [<YearEmpty key={year} year={year} />];
+      const allPapers = months.flatMap((m) => inner.get(m)!);
+      const total = allPapers.length;
+      const done = allPapers.filter((x) => x.paper.recordCount > 0).length;
+      const yearKey = `sub-${subject}-yr-${year}`;
+      const yearOpen = openYears[yearKey] ?? true;
+      return [
         <div key={year} className="mb-3 overflow-hidden rounded-xl border border-border bg-card">
           <YearHead
             year={year}
             note={`${SUBJECT_LABEL[subject]}真题`}
             done={done}
-            total={list.length}
-            open={open}
-            onToggle={() => toggleYear(key)}
+            total={total}
+            open={yearOpen}
+            onToggle={() => toggleYear(yearKey)}
           />
-          {open && (
-            <div className="flex flex-col gap-2 px-[18px] pb-[18px]">
-              {list.map(({ set, paper }) => (
-                <div
-                  key={paper.examId}
-                  className="flex items-center gap-3.5 rounded-lg border border-border bg-card px-4 py-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold">{paper.title}</div>
-                    <div className="mt-0.5 text-xs text-muted-foreground">
-                      {SUBJECT_LABEL[subject]} · {STATUS_TEXT[paper.recordCount > 0 ? "done" : "todo"]} ·{" "}
-                      {paper.durationMin} 分钟
-                    </div>
+          {yearOpen && (
+            <div className="flex flex-col gap-3 px-[18px] pb-[18px]">
+              {months.map((mKey) => {
+                const items = inner.get(mKey)!;
+                const monthKey = `sub-${subject}-${mKey}`;
+                const monthOpen = openYears[monthKey] ?? true;
+                return (
+                  <div key={mKey} className="overflow-hidden rounded-lg border border-border/60">
+                    <button
+                      type="button"
+                      onClick={() => toggleYear(monthKey)}
+                      className="flex w-full cursor-pointer select-none items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-primary/10"
+                    >
+                      <span
+                        className={`text-[10px] text-muted-foreground transition-transform ${
+                          monthOpen ? "rotate-90" : ""
+                        }`}
+                      >
+                        ▶
+                      </span>
+                      <span className="font-semibold">{monthLabel(mKey)}</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        · {items.length} 套
+                      </span>
+                    </button>
+                    {monthOpen && (
+                      <div className={`grid gap-2.5 px-3 pb-3 ${gridCols(items.length)}`}>
+                        {items.map(({ set, paper }) => (
+                          <div
+                            key={paper.examId}
+                            className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2.5"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-[13px] font-semibold">
+                                {paper.title}
+                              </div>
+                              <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                {STATUS_TEXT[paper.recordCount > 0 ? "done" : "todo"]} ·{" "}
+                                {paper.durationMin} 分钟
+                              </div>
+                            </div>
+                            <Link
+                              href={`/exam/${paper.examId}`}
+                              className={`${BTN_PRIMARY} whitespace-nowrap`}
+                            >
+                              开始机考
+                            </Link>
+                            <span className="sr-only">{set.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <Link href={`/exam/${paper.examId}`} className={`${BTN_PRIMARY} whitespace-nowrap`}>
-                    开始机考
-                  </Link>
-                  <span className="sr-only">{set.title}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
-        </div>
-      );
+        </div>,
+      ];
     });
   }
 
@@ -358,45 +433,79 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
 
               <div>
                 {YEAR_LIST.map((year) => {
-                  const items = byYear.get(year) ?? [];
-                  if (items.length === 0) return <YearEmpty key={year} year={year} />;
-                  const done = items.filter((s) => setStatus(s) === "done").length;
-                  const key = `yr-${year}`;
-                  const open = openYears[key] ?? true;
+                  const inner = byYearMonth.get(year);
+                  if (!inner) return <YearEmpty key={year} year={year} />;
+                  // 过滤出有套题的月份
+                  const months = [...inner.keys()].filter((m) => inner.get(m)!.length > 0);
+                  if (months.length === 0) return <YearEmpty key={year} year={year} />;
+                  const yearSets = months.flatMap((m) => inner.get(m)!);
+                  const done = yearSets.filter((s) => setStatus(s) === "done").length;
+                  const yearKey = `yr-${year}`;
+                  const yearOpen = openYears[yearKey] ?? true;
                   return (
                     <div key={year} className="mb-3 overflow-hidden rounded-xl border border-border bg-card">
                       <YearHead
                         year={year}
                         note={MOD_INLINE[mod]}
                         done={done}
-                        total={items.length}
-                        open={open}
-                        onToggle={() => toggleYear(key)}
+                        total={yearSets.length}
+                        open={yearOpen}
+                        onToggle={() => toggleYear(yearKey)}
                       />
-                      {open && (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(118px,1fr))] gap-2.5 px-[18px] pb-[18px]">
-                          {items.map((s) => {
-                            const st = setStatus(s);
+                      {yearOpen && (
+                        <div className="flex flex-col gap-3 px-[18px] pb-[18px]">
+                          {months.map((mKey) => {
+                            const items = inner.get(mKey)!;
+                            const monthKey = `yr-${year}-${mKey}`;
+                            const monthOpen = openYears[monthKey] ?? true;
                             return (
-                              <button
-                                key={s.examSetId}
-                                type="button"
-                                onClick={() => setDetailId(s.examSetId)}
-                                className="cursor-pointer rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-all hover:border-primary hover:shadow-lg hover:shadow-primary/10"
-                              >
-                                <div className="text-[13px] font-semibold">{s.title}</div>
-                                <div
-                                  className={`mt-0.5 text-[11px] ${
-                                    st === "done"
-                                      ? "text-success"
-                                      : st === "part"
-                                        ? "text-warning"
-                                        : "text-muted-foreground"
-                                  }`}
+                              <div key={mKey} className="overflow-hidden rounded-lg border border-border/60">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleYear(monthKey)}
+                                  className="flex w-full cursor-pointer select-none items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-primary/10"
                                 >
-                                  {STATUS_TEXT[st]}
-                                </div>
-                              </button>
+                                  <span
+                                    className={`text-[10px] text-muted-foreground transition-transform ${
+                                      monthOpen ? "rotate-90" : ""
+                                    }`}
+                                  >
+                                    ▶
+                                  </span>
+                                  <span className="font-semibold">{monthLabel(mKey)}</span>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    · {items.length} 套
+                                  </span>
+                                </button>
+                                {monthOpen && (
+                                  <div className={`grid gap-2.5 px-3 pb-3 ${gridCols(items.length)}`}>
+                                    {items.map((s) => {
+                                      const st = setStatus(s);
+                                      return (
+                                        <button
+                                          key={s.examSetId}
+                                          type="button"
+                                          onClick={() => setDetailId(s.examSetId)}
+                                          className="cursor-pointer rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-all hover:border-primary hover:shadow-lg hover:shadow-primary/10"
+                                        >
+                                          <div className="text-[13px] font-semibold">{s.title}</div>
+                                          <div
+                                            className={`mt-0.5 text-[11px] ${
+                                              st === "done"
+                                                ? "text-success"
+                                                : st === "part"
+                                                  ? "text-warning"
+                                                  : "text-muted-foreground"
+                                            }`}
+                                          >
+                                            {STATUS_TEXT[st]}
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
@@ -431,7 +540,7 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       {tab === "writing" && (
         <div>
           <div className="mb-3.5 text-[13px] text-muted-foreground">
-            选择一套写作真题开始机考 · 60 分钟 · Task 1 + Task 2 议论文 · 交卷后 AI 四维批改（批改功能即将开放）
+            选择一套写作真题开始机考 · 60 分钟 · Task 1 + Task 2 议论文 · 交卷后 AI 四维批改（10–60 秒）
           </div>
           {singleList("writing")}
         </div>
@@ -439,11 +548,9 @@ export function MockClient({ initialMod, sets }: { initialMod: "A" | "G"; sets: 
       {tab === "speaking" && (
         <div>
           <div className="mb-3.5 text-[13px] text-muted-foreground">
-            选择一套口语真题开始机考 · 11–14 分钟 · Part 1-3 · A/G 类同卷（V2 待开放）
+            选择一套口语真题开始机考 · 11–14 分钟 · Part 1-3 · 录音回放与 AI 点评（V2 待开放）
           </div>
-          {YEAR_LIST.map((y) => (
-            <YearEmpty key={y} year={y} />
-          ))}
+          {singleList("speaking")}
         </div>
       )}
     </>
