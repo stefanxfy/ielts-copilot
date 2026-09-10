@@ -48,9 +48,13 @@ const SET = {
   category: "A",
   testPeriod: "2022-05",
   papers: [
-    { subject: "listening", dir: "questions/听力/2022/202205listen02", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2022may-test2-listening-test2.mp3" },
+    { subject: "reading", dir: "questions/阅读/2022/雅思真题试卷-五月-雅思阅读真题-2", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "writing", dir: "questions/写作/2022/雅思真题试卷-五月-雅思写作真题-2", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "speaking", dir: "questions/口语/2022/雅思真题试卷-五月-雅思口语真题-2", bandTableSrc: "answers-a-2025jan-test1.js" },
   ],
 };
+
+
 
 
 
