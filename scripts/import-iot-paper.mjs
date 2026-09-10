@@ -41,19 +41,33 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2024sep-test4",
-  setId: "a-2024sep-test4",
+  examSetId: "a-2023dec-test4",
+  setId: "a-2023dec-test4",
   testNo: 4,
-  title: "A类 · 2024年09月真题 Test 4",
+  title: "A类 · 2023年12月真题 Test 4",
   category: "A",
-  testPeriod: "2024-09",
+  testPeriod: "2023-12",
   papers: [
-    { subject: "listening", dir: "questions/听力/2024/ielts-mock-test-2024-september-listening-practice-test-4", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2024sep-test4-listening-test4.mp3" },
-    { subject: "reading", dir: "questions/阅读/2024/ielts-mock-test-2024-september-reading-practice-test-4", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "writing", dir: "questions/写作/2024/ielts-mock-test-2024-september-writing-practice-test-4", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "speaking", dir: "questions/口语/2024/ielts-mock-test-2024-september-speaking-practice-test-4", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "listening", dir: "questions/听力/2023/ielts-mock-test-2023-december-listening-practice-test-2-0", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2023dec-test4-listening-test4.mp3" },
+    { subject: "reading", dir: "questions/阅读/2023/ielts-mock-test-2023-december-reading-practice-test-2-0", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "writing", dir: "questions/写作/2023/ielts-mock-test-2023-december-雅思写作真题-2", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "speaking", dir: "questions/口语/2023/ielts-mock-test-2023-december-speaking-practice-test-2-0", bandTableSrc: "answers-a-2025jan-test1.js" },
   ],
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -308,7 +322,7 @@ function alignQuizFrame(html, subject) {
  *  T1 图在 .test-question__img-writing 的 data-src(懒加载 div)。 */
 function loadWritingSections(testHtml, srcLabel) {
   const out = {};
-  for (const m of testHtml.matchAll(/Writing Task ([12])<\/span>[\s\S]*?<div class="test-question__question">([\s\S]*?)<div class="test-question__expand/g)) {
+  for (const m of testHtml.matchAll(/Writing Task ([12])<\/span>[\s\S]*?<div class="test-question__question">([\s\S]*?)<div class="test-question__expand/gi)) {
     const key = m[1] === "1" ? "T1" : "T2";
     if (out[key]) continue;
     let body = m[2].replace(/<\/div>\s*$/, ""); // 去掉 question div 自身的闭合
@@ -864,13 +878,16 @@ function importDb() {
           blockStart.set(lo, anchor);
           for (let x = lo; x <= hi; x++) blockCovered.set(x, anchor);
         }
-        for (let n = 1; n <= totalQ; n++) {
+        // 卷面实际题号:data-num 单题 ∪ 块覆盖题。站方个别卷声明 data-questions=40 但卷面缺题
+        // (如 sep-T4 无 Q26/27、oct-T4 无 Q17-27),不存在的题不得要求答案(2026-09-10)
+        const presentQ = new Set([...qTypeByNum.keys(), ...blockCovered.keys()]);
+        for (const n of presentQ) {
           if (!blockCovered.has(n) && answers[String(n)] == null) throw new Error(`${examId}: 题 ${n} 缺答案(answers.json 无条目)`);
         }
         const proto = loadProtoExam(p.bandTableSrc);
         questionsJson = {};
         answersJson = {};
-        for (let n = 1; n <= totalQ; n++) {
+        for (const n of presentQ) {
           const bAnchor = blockCovered.get(n);
           if (bAnchor) {
             if (blockStart.get(n) !== bAnchor) continue; // 块内非首题:不落独立条目

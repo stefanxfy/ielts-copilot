@@ -38,6 +38,7 @@ export default async function MockPage({
     title: s.title,
     category: s.category === "G" ? "G" : "A",
     year: Number((s.testPeriod ?? "").slice(0, 4)) || 0,
+    month: (s.testPeriod ?? "").slice(0, 7) || "", // YYYY-MM
     papers: allPapers
       .filter((p) => p.examSetId === s.examSetId)
       .map((p) => ({
