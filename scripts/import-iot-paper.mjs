@@ -41,19 +41,18 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2022nov-test4",
-  setId: "a-2022nov-test4",
-  testNo: 4,
-  title: "A类 · 2022年11月真题 Test 4",
+  examSetId: "a-2022may-test2",
+  setId: "a-2022may-test2",
+  testNo: 2,
+  title: "A类 · 2022年5月真题 Test 2",
   category: "A",
-  testPeriod: "2022-11",
+  testPeriod: "2022-05",
   papers: [
-    { subject: "listening", dir: "questions/听力/2022/雅思真题试卷-十一月-雅思听力真题-4", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2022nov-test4-listening-test4.mp3" },
-    { subject: "reading", dir: "questions/阅读/2022/雅思真题试卷-十一月-雅思阅读真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "writing", dir: "questions/写作/2022/雅思真题试卷-十一月-雅思写作真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "speaking", dir: "questions/口语/2022/雅思真题试卷-十一月-雅思口语真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "listening", dir: "questions/听力/2022/202205listen02", bandTableSrc: "answers-a-2025jan-listening-test1.js", audioDst: "listening-a-2022may-test2-listening-test2.mp3" },
   ],
 };
+
+
 
 
 
