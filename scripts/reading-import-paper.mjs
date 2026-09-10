@@ -117,7 +117,7 @@ if (WITH_ZH) {
         { role: "system", content: "你只输出一个 JSON 对象——不要 markdown 围栏、不要解释文字。中文一律简体。" },
         { role: "user", content: prompt },
       ],
-      max_tokens: 4096,
+      max_tokens: 16384, // M3 的 <think> 推理也计入输出配额,4096 会被截断导致 JSON 解析失败
       temperature: 0.3,
       ...EXTRA_BODY,
     };
@@ -276,18 +276,28 @@ for (const paper of papers) {
       paragraphs = rawParas.map((en, idx) => ({ idx, en, zh: null, audio: null }));
     }
 
-    // LLM 逐段翻译(整篇一批;失败段落保持 zh=null 进失败清单)
+    // LLM 逐段翻译(分批:每批 CHUNK 段,防 M3 思考 token 挤爆输出;失败批次保持 zh=null 进失败清单)
     if (WITH_ZH && llm) {
       const needIdx = paragraphs.map((x, i) => (x.zh == null ? i : -1)).filter((i) => i >= 0);
-      if (needIdx.length) {
-        const enList = needIdx.map((i) => paragraphs[i].en);
-        const zhList = await llm.llmZh(enList);
+      const CHUNK = 4;
+      let done = 0;
+      const failedChunks = [];
+      for (let s = 0; s < needIdx.length; s += CHUNK) {
+        const idxChunk = needIdx.slice(s, s + CHUNK);
+        const zhList = await llm.llmZh(idxChunk.map((i) => paragraphs[i].en));
         if (zhList) {
-          needIdx.forEach((i, k) => (paragraphs[i].zh = zhList[k]));
-          console.log(`  [zh] ${articleId}: ${needIdx.length} 段翻译完成`);
+          idxChunk.forEach((i, k) => (paragraphs[i].zh = zhList[k]));
+          done += idxChunk.length;
+          console.log(`  [zh] ${articleId}: +${idxChunk.length} 段(累计 ${done}/${needIdx.length})`);
         } else {
-          report.failures.push({ articleId, reason: `LLM 整篇翻译失败(${needIdx.length} 段 zh=null)` });
+          failedChunks.push(idxChunk.length);
         }
+      }
+      if (failedChunks.length) {
+        report.failures.push({
+          articleId,
+          reason: `LLM 翻译失败批次 ${failedChunks.length} 个(${failedChunks.join("+")} 段 zh=null)`,
+        });
       }
     }
 
