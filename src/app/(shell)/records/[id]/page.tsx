@@ -94,6 +94,12 @@ export default async function RecordDetailPage({
   );
   writingTasks.sort((a, b) => (a.task === "T1" ? -1 : b.task === "T1" ? 1 : 0));
 
+  /* 服务端首帧拿批改进度(写作卷才有),用于决定是否显示明显的「批改中」banner。
+     客户端 <WritingGradingCard> 后续会通过 /api/grading 轮询自动刷新,
+     这条 banner 只在首帧告知用户「正在跑,不是页面卡了」。 */
+  const gradingStatus = isWriting ? getGradingStatus(row.id) : null;
+  const gradingRunning = Boolean(gradingStatus?.running);
+
   const jumpHref = (anchor: string) =>
     `/exam/${row.examId}?jump=${encodeURIComponent(anchor)}&record=${row.id}`;
 
@@ -109,6 +115,27 @@ export default async function RecordDetailPage({
       <p className="mb-5 text-[13px] text-muted-foreground">
         {SUBJECT_LABEL[row.subject] ?? row.subject} · 交卷于 {fmtTime(row.submittedAt)}
       </p>
+
+      {/* 写作批改进行中 — 明显 banner,避免用户以为页面卡了
+          (服务端首帧就判定,无需等 hydration;grading-card 内的 Spinner 进一步轮询)。 */}
+      {gradingRunning && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-5 flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-[13px]"
+        >
+          <span className="mt-0.5 inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-warning border-t-transparent" />
+          <div className="flex-1">
+            <div className="font-medium text-warning">
+              AI 批改进行中（通常 10–60 秒）
+            </div>
+            <div className="mt-0.5 text-[12px] text-muted-foreground">
+              四维评分（任务回应 / 连贯衔接 / 词汇 / 语法）正在中后台跑,完成后本页面会自动刷新。
+              请勿关闭此页。
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 成绩摘要 */}
       <div className="mb-6 grid gap-4 sm:grid-cols-4">

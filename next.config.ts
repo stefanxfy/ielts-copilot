@@ -12,6 +12,13 @@ const nextConfig: NextConfig = {
   /* better-sqlite3 是原生模块(.node),不进 bundle —— 否则 standalone 运行时加载失败
      (docs/M1-实施计划.md 风险 #1) */
   serverExternalPackages: ["better-sqlite3"],
+  /* 关闭 Next 16 dev 模式下右下角浮动按钮(next-devtools buildActivity):
+     该按钮默认位置在视口右下,鼠标 hover 展开成全屏 dev panel(带 backdrop-blur 白雾),
+     在机考页正下方会盖住卷面 iframe,体感就是「白板」。关闭不影响 build 错误显示与生产环境 */
+  devIndicators: {
+    buildActivity: false,
+    appIsrStatus: false,
+  },
   async rewrites() {
     return [
       /* 静态卷页是从 Drupal 站抓取的原样页面,卷页 JS 会向原站后端发访问统计:

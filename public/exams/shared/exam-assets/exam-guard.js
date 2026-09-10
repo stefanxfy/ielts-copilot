@@ -85,7 +85,15 @@
          供写作静默上报 /api/exam-records 时使用。 */
     window.addEventListener('message', function (ev) {
       var d = ev.data;
-      if (!d || d.type !== 'ielts-session' || !d.sessionId) return;
+      if (!d) return;
+      /* 单科模式:顶层 ExamIframeExamIdInjector 发来 {type:'ielts-exam-id', examId},
+         让写作单科交卷时能拿到 examId 上报 /api/exam-records。 */
+      if (d.type === 'ielts-exam-id' && d.examId) {
+        window.IELTS_EXAM_ID = d.examId;
+        console.log('[exam-guard][iframe] 已注入 examId(单科):', d.examId);
+        return;
+      }
+      if (d.type !== 'ielts-session' || !d.sessionId) return;
       window.IELTS_SESSION_ID = d.sessionId;
       if (d.examId) window.IELTS_EXAM_ID = d.examId;
       console.log('[exam-guard][iframe] 已注入场次:', d.sessionId, d.examId ? '· 卷 ' + d.examId : '');

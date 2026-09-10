@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-hans" class="ex-selfmade">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IELTS 本地机考 · A类口语 · 2025 June Test 2</title>
+<link rel="icon" type="image/svg+xml" href="../shared/exam-assets/app-logo.svg">
+<link rel="stylesheet" href="../shared/exam-assets/theme-follow.css">
+<script src="../shared/exam-assets/theme-follow.js" defer></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; color: var(--ex-text,#1c1917); background: var(--ex-bg,#fafaf9); }
+  .rt-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; background: var(--ex-surface,#fffdf8); border-bottom: 1px solid var(--ex-border,#e7e5e4); position: sticky; top: 0; z-index: 10; }
+  .rt-brand { display: flex; align-items: center; gap: 10px; }
+  .rt-brand__logo { height: 38px; width: 38px; display: block; }
+  .rt-brand__main { font-size: 17px; font-weight: 700; color: var(--ex-text,#1c1917); display: block; }
+  .rt-brand__sub { font-size: 11px; color: var(--ex-muted,#57534e); }
+  .rt-timer { text-align: right; }
+  .rt-timer__val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ex-text,#1c1917); }
+  .rt-timer__text { font-size: 11px; color: var(--ex-muted,#57534e); margin-left: 6px; }
+  .sp-tabs { display: flex; gap: 8px; max-width: 960px; margin: 20px auto 0; padding: 0 24px; }
+  .sp-tab { flex: 1; padding: 10px 12px; border: 1px solid var(--ex-border,#e7e5e4); border-radius: 8px 8px 0 0; background: var(--ex-surface-2,#f1efec); color: var(--ex-muted,#57534e); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: none; }
+  .sp-tab.-active { background: var(--ex-surface,#fffdf8); color: var(--ex-accent,#d97706); border-color: #dfe4ec; }
+  .sp-panel { display: none; max-width: 960px; margin: 0 auto; padding: 24px; background: var(--ex-surface,#fffdf8); border: 1px solid var(--ex-border,#e7e5e4); border-top: none; border-radius: 0 0 8px 8px; min-height: 420px; }
+  .sp-panel.-active { display: block; }
+  .sp-part-tag { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: var(--ex-accent,#d97706); border-radius: 4px; padding: 3px 10px; margin-bottom: 6px; letter-spacing: .5px; }
+  .sp-part-name { display: block; font-size: 15px; color: var(--ex-muted,#57534e); margin-bottom: 16px; }
+  .sp-qlist { padding-left: 22px; line-height: 2.1; font-size: 15.5px; }
+  .sp-qlist li::marker { color: var(--ex-accent,#d97706); font-weight: 700; }
+  .sp-cue { border: 1.5px solid var(--ex-accent,#d97706); border-radius: 10px; padding: 22px 26px; background: var(--ex-surface-2,#f1efec); }
+  .sp-cue__topic { font-size: 16.5px; line-height: 1.7; font-weight: 600; }
+  .sp-cue__points { margin-top: 14px; padding-left: 20px; line-height: 2; font-size: 15px; color: var(--ex-text,#1c1917); }
+  .sp-cue__hint { margin-top: 14px; font-size: 12.5px; color: var(--ex-muted,#57534e); }
+  .sp-timerbox { margin-top: 22px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .sp-clock { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ex-text,#1c1917); min-width: 120px; }
+  .sp-clock.-run { color: var(--ex-accent,#d97706); }
+  .sp-clock.-warn { color: #d64545; }
+  .sp-btn { padding: 9px 18px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; background: var(--ex-accent,#d97706); color: #fff; }
+  .sp-btn.-ghost { background: var(--ex-surface,#fffdf8); color: var(--ex-text,#1c1917); border: 1px solid var(--ex-border,#e7e5e4); }
+  .sp-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .sp-stage { font-size: 13px; color: var(--ex-muted,#57534e); }
+  .sp-foot { max-width: 960px; margin: 14px auto 40px; padding: 0 24px; font-size: 12px; color: var(--ex-muted,#57534e); }
+</style>
+</head>
+<body>
+<header class="rt-header">
+  <div class="rt-brand"><img class="rt-brand__logo" src="../shared/exam-assets/app-logo.svg" alt="IELTS 本地机考"><div class="rt-brand__text"><span class="rt-brand__main">IELTS 本地机考</span><span class="rt-brand__sub">A类 · 口语 · 2025 June Test 2</span></div></div>
+  <div class="rt-timer"><span class="rt-timer__val" id="sp-elapsed">00:00</span><span class="rt-timer__text">已用时 · 口语全程 11–14 分钟</span></div>
+</header>
+<nav class="sp-tabs">
+  <button class="sp-tab -active" data-part="1">PART 1 · Introduction &amp; Interview</button>
+  <button class="sp-tab" data-part="2">PART 2 · Topic Card</button>
+  <button class="sp-tab" data-part="3">PART 3 · Discussion</button>
+</nav>
+<main>
+  <section class="sp-panel -active" id="sp-part1">
+    <span class="sp-part-tag">PART 1</span><span class="sp-part-name">Introduction and Interview(考官提问,每题 2–4 句作答)</span>
+    <ol class="sp-qlist"><li>What kind of house or flat do you want to live in in the future?</li><li>Are the transport facilities to your home very good?</li><li>Do you prefer living in a house or a flat?</li><li>Do you mind noises?</li><li>Do any noises bother you?</li><li>Where is there louder noise, in cities or in the countryside?</li><li>What type of noise do you come across in your daily life?</li><li>Are there any sounds that you like?</li><li>What magazines are popular now?</li><li>What are the differences between men and women in reading magazines?</li><li>What are different kinds of magazines?</li><li>Do people in your country like reading magazines or books more?</li><li>Do people in countryside read the same kinds of magazines as people in the city?</li><li>Do you think magazines one day can disappear?</li><li>What are the differences between newspaper and magazine?</li></ol>
+  </section>
+  <section class="sp-panel" id="sp-part2">
+    <span class="sp-part-tag">PART 2</span><span class="sp-part-name">Topic Card(准备 1 分钟,连续作答 1–2 分钟)</span>
+    <div class="sp-cue">
+      <div class="sp-cue__topic">Describe an interesting journey you have been on.</div>
+      <ul class="sp-cue__points"><li>where you went</li><li>how you travelled there</li><li>who you went with</li><li>and explain what was so memorable about the journey.</li></ul>
+      <div class="sp-cue__hint">You should say: 要点已列于卡片 · 可在准备阶段做笔记</div>
+    </div>
+    <div class="sp-timerbox">
+      <div class="sp-clock" id="sp-p2clock">01:00</div>
+      <button class="sp-btn" id="sp-prep">1 分钟准备</button>
+      <button class="sp-btn" id="sp-speak" disabled>开始作答(2 分钟)</button>
+      <button class="sp-btn -ghost" id="sp-reset">重置</button>
+      <span class="sp-stage" id="sp-stage">待开始</span>
+    </div>
+  </section>
+  <section class="sp-panel" id="sp-part3">
+    <span class="sp-part-tag">PART 3</span><span class="sp-part-name">Two-way Discussion(双向讨论,围绕 Part 2 话题展开)</span>
+    <ol class="sp-qlist"><li>How important is it to have adventure in our lives?</li><li>What do people learn about themselves from having adventures?</li><li>How do you think people will travel in the future?</li><li>How easy is it to travel around your country?</li><li>Which method of travel do you consider safest?</li><li>Has travel become safer in recent years?</li><li>What are the pros and cons of low-cost air travel?</li><li>How do you think people will travel in the future?</li></ol>
+  </section>
+</main>
+<div class="sp-foot">IELTS 本地机考 · 自研口语模拟页(题目取自 IOT 2025 June Test 2) · 答题请自行录音存档</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  // 全程计时
+  var t0 = Date.now(), el = $("sp-elapsed");
+  setInterval(function () {
+    var s = Math.floor((Date.now() - t0) / 1000);
+    el.textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  }, 500);
+  // Part 切换
+  document.querySelectorAll(".sp-tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".sp-tab").forEach(function (t) { t.classList.remove("-active"); });
+      document.querySelectorAll(".sp-panel").forEach(function (p) { p.classList.remove("-active"); });
+      tab.classList.add("-active");
+      $("sp-part" + tab.dataset.part).classList.add("-active");
+    });
+  });
+  // P2 计时:准备 60s → 作答 120s
+  var clock = $("sp-clock") || $("sp-p2clock"), stage = $("sp-stage");
+  var handle = null, mode = null;
+  var btnPrep = $("sp-prep"), btnSpeak = $("sp-speak"), btnReset = $("sp-reset");
+  function fmt(sec) { return String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(sec % 60).padStart(2, "0"); }
+  function run(total, label, done) {
+    stop(); mode = label; var left = total;
+    clock.textContent = fmt(left); clock.className = "sp-clock -run"; stage.textContent = label;
+    handle = setInterval(function () {
+      left--;
+      clock.textContent = fmt(Math.max(left, 0));
+      if (left <= 10) clock.className = "sp-clock -warn";
+      if (left <= 0) { stop(); stage.textContent = label + "结束"; if (done) done(); }
+    }, 1000);
+  }
+  function stop() { if (handle) clearInterval(handle); handle = null; }
+  btnPrep.addEventListener("click", function () { run(60, "准备中", function () { btnSpeak.disabled = false; }); });
+  btnSpeak.addEventListener("click", function () { run(120, "作答中"); });
+  btnReset.addEventListener("click", function () {
+    stop(); mode = null; clock.textContent = "01:00"; clock.className = "sp-clock";
+    stage.textContent = "待开始"; btnSpeak.disabled = true;
+  });
+  // 离开防护(与听/阅 exam-guard 同口径)
+  window.addEventListener("beforeunload", function (e) { e.preventDefault(); e.returnValue = ""; });
+})();
+</script>
+</body>
+</html>

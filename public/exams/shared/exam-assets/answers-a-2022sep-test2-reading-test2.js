@@ -1,0 +1,48 @@
+/* A类 · 2022年9月真题 Test 2 · 阅读 · 判分数据(由 scripts/import-iot-paper.mjs 生成)
+ * 来源:questions/阅读/2022/雅思真题试卷-九月-雅思阅读真题-2/answers.json(IOT /solution 页 sys-answer 解析)
+ * bandTable/duration 沿用 prototype 同科目口径(answers-a-2025jan-test1.js)
+ */
+window.IELTS_EXAM = {
+  id: 'a-2022sep-test2-reading-test2',
+  total: 35,
+  duration: 60,
+  bandTable: [[39,9],[37,8.5],[35,8],[33,7.5],[30,7],[27,6.5],[23,6],[19,5.5],[15,5],[13,4.5],[10,4],[8,3.5],[6,3],[4,2.5],[3,2],[2,1.5],[1,1]],
+  blocks: [],
+  answers: {
+  "1": "YES",
+  "2": "NO",
+  "3": "NO",
+  "4": "YES",
+  "5": "NOT GIVEN",
+  "6": "F",
+  "7": "G",
+  "8": "C",
+  "9": "A",
+  "10": "B",
+  "11": "D",
+  "12": "A",
+  "13": "C",
+  "14": "B",
+  "15": "D",
+  "16": "A",
+  "17": "B",
+  "18": "G",
+  "19": "water resources",
+  "20": "global warming",
+  "21": "developing",
+  "22": "iron",
+  "28": "D",
+  "29": "D",
+  "30": "A",
+  "31": "D",
+  "32": "TRUE",
+  "33": "TRUE",
+  "34": "NOT GIVEN",
+  "35": "clay loam soil",
+  "36": "pests",
+  "37": "good economic yield",
+  "38": "paste",
+  "39": "hydraulic press",
+  "40": "centrifuge"
+},
+};

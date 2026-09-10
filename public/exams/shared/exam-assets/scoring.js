@@ -3,10 +3,10 @@
  * 适配换皮机考页（原 ieltsonlinetests 结构）：
  *  - 采集作答：input[data-num]（填空）、radio input[name=q-N]（单选）、select[data-num]（下拉）
  *  - 点右上「交卷」→ 阻止原站确认弹窗 → 当前页直接批改：
- *      · 顶部成绩汇总条（Band / 答对 / 答错 / 未答 / 用时 + 答案速查 + 重做）
+ *      · 顶部成绩汇总条（Band / 答对 / 答错 / 未答 / 用时 + 成绩详情 + 重做）
  *      · 每题旁 ✓/✗/未答 标注（错题显示应填答案），输入框染色并锁定
  *      · 底部题号板按对错染色
- *      · header「交卷」按钮移除（重做/答案速查入口在成绩条上）
+ *  - header「交卷」按钮移除（重做/成绩详情入口在成绩条上）
  *  - 时间到自动交卷同样触发 inline 批改
  *  - 听力页（含 #ielts-local-audio）交卷/时间到同时停掉真考音频并锁音量 UI
  * 依赖：先加载 answers-<exam-id>.js 定义 window.IELTS_EXAM
@@ -171,7 +171,7 @@
     showBar(j, band, auto);
     removeSubmitButton();
     freezeTimer();
-    reportResult(res);
+    reportResult(res, function (ok, d) { fillDetailLink(ok, d); });
     if (window.IELTS_EXAM_GUARD_OFF) window.IELTS_EXAM_GUARD_OFF(); // 交卷完成,解除离开防护
     console.log('[scoring] 批改完成：', j.raw + '/' + EXAM.total, '· band', band);
   }
@@ -363,7 +363,6 @@
 
   /* 顶部成绩汇总条 */
   function showBar(j, band, auto) {
-    var answersHref = EXAM.answersUrl || 'gt-reading-answers.html';
     var bar = document.createElement('div');
     bar.id = 'ieltshome-grade-bar';
     bar.innerHTML =
@@ -375,13 +374,27 @@
       '<span class="gb-item">共 ' + EXAM.total + ' 题 · 用时 ' + usedTime() + (auto ? '（时间到自动交卷）' : '') + '</span>' +
       '</div>' +
       '<div class="gb-ops">' +
-      '<a class="gb-link" href="' + answersHref + '" target="_blank">答案速查</a>' +
+      '<a class="gb-link" id="gb-detail" data-pending="1" href="javascript:void(0)">成绩详情</a>' +
       '<button class="gb-retake" type="button">↻ 重做本卷</button>' +
       '</div>';
     document.body.appendChild(bar);
     var page = $('.page');
     if (page) page.style.paddingTop = '132px';
     bar.querySelector('.gb-retake').addEventListener('click', function () { location.reload(); });
+  }
+
+  /* 成绩详情入口：recordId 由 POST /api/exam-records 异步返回，返回前按钮待定；
+     无后端(file:// 直开原型)时移除该入口，避免死链。*/
+  function fillDetailLink(ok, d) {
+    var link = document.getElementById('gb-detail');
+    if (!link) return;
+    if (ok && d && d.recordId) {
+      link.href = '/records/' + d.recordId;
+      link.target = '_top'; /* 跳出 iframe，整页跳成绩详情页 */
+      link.removeAttribute('data-pending');
+    } else if (link.parentNode) {
+      link.parentNode.removeChild(link);
+    }
   }
 
   /* 听力页：交卷/时间到即停真考音频（阅读页无 #ielts-local-audio，自动 no-op）。
@@ -394,7 +407,7 @@
     document.body.classList.add('audio_locked');
   }
 
-  /* 交卷后移除 header 的交卷按钮（重做/答案速查入口都在顶部成绩条，避免两处重复） */
+  /* 交卷后移除 header 的交卷按钮（重做/成绩详情入口都在顶部成绩条，避免两处重复） */
   function removeSubmitButton() {
     var btn = $('.realtest-header__bt-submit');
     if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
@@ -418,33 +431,34 @@
   var css = document.createElement('style');
   css.textContent = [
     /* 顶部汇总条 */
-    '#ieltshome-grade-bar{position:fixed;top:60px;left:0;right:0;z-index:998;height:56px;background:#fff;border-bottom:1px solid #dfe4ec;box-shadow:0 6px 24px rgba(28,35,48,.08);display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",Roboto,sans-serif;animation:gbIn .3s ease}',
+    '#ieltshome-grade-bar{position:fixed;top:60px;left:0;right:0;z-index:998;height:56px;background:var(--ex-surface,#fff);border-bottom:1px solid var(--ex-border,#dfe4ec);box-shadow:0 6px 24px rgba(28,35,48,.08);display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",Roboto,sans-serif;animation:gbIn .3s ease}',
     '@keyframes gbIn{from{transform:translateY(-100%);opacity:0}}',
     '#ieltshome-grade-bar .gb-main{display:flex;align-items:center;gap:16px;flex-wrap:wrap}',
-    '#ieltshome-grade-bar .gb-band{font-size:14px;color:#5a6472;background:#e8f0fe;border-radius:8px;padding:5px 12px}',
-    '#ieltshome-grade-bar .gb-band b{font-size:21px;color:#1a6feb;margin-left:4px}',
-    '#ieltshome-grade-bar .gb-item{font-size:13px;color:#5a6472}',
+    '#ieltshome-grade-bar .gb-band{font-size:14px;color:var(--ex-muted,#5a6472);background:var(--ex-surface-2,#e8f0fe);border-radius:8px;padding:5px 12px}',
+    '#ieltshome-grade-bar .gb-band b{font-size:21px;color:var(--ex-accent,#1a6feb);margin-left:4px}',
+    '#ieltshome-grade-bar .gb-item{font-size:13px;color:var(--ex-muted,#5a6472)}',
     '#ieltshome-grade-bar .gb-item.ok{color:#18925c;font-weight:600}',
     '#ieltshome-grade-bar .gb-item.no{color:#d33c3c;font-weight:600}',
-    '#ieltshome-grade-bar .gb-item.blank{color:#8a93a3;font-weight:600}',
+    '#ieltshome-grade-bar .gb-item.blank{color:var(--ex-muted,#8a93a3);font-weight:600}',
     '#ieltshome-grade-bar .gb-ops{display:flex;align-items:center;gap:10px}',
-    '#ieltshome-grade-bar .gb-link{font-size:13px;color:#1a6feb;text-decoration:none;border:1px solid #bcd4fb;border-radius:8px;padding:7px 14px}',
-    '#ieltshome-grade-bar .gb-link:hover{background:#e8f0fe}',
-    '#ieltshome-grade-bar .gb-retake{font-size:13px;font-weight:600;color:#fff;background:linear-gradient(180deg,#1a6feb,#0d4fa8);border:none;border-radius:8px;padding:8px 16px;cursor:pointer}',
+    '#ieltshome-grade-bar .gb-link{font-size:13px;color:var(--ex-accent,#1a6feb);text-decoration:none;border:1px solid var(--ex-border,#bcd4fb);border-radius:8px;padding:7px 14px}',
+    '#ieltshome-grade-bar .gb-link[data-pending]{opacity:.45;pointer-events:none}',
+    '#ieltshome-grade-bar .gb-link:hover{background:var(--ex-surface-2,#e8f0fe)}',
+    '#ieltshome-grade-bar .gb-retake{font-size:13px;font-weight:600;color:var(--ex-on-accent,#fff);background:var(--ex-accent,#1a6feb);border:none;border-radius:8px;padding:8px 16px;cursor:pointer}',
     '#ieltshome-grade-bar .gb-retake:hover{opacity:.92}',
     /* 逐题标注 */
     '.sc-mark{display:inline-block;margin:0 8px;font-size:12px;font-weight:600;border-radius:12px;padding:2px 10px;vertical-align:middle;white-space:nowrap}',
     '.sc-mark.ok{background:#e6f7ef;color:#18925c;border:1px solid #bfe5d2}',
     '.sc-mark.no{background:#fdf1f1;color:#d33c3c;border:1px solid #f3c6c6}',
-    '.sc-mark.blank{background:#f2f4f8;color:#8a93a3;border:1px dashed #dfe4ec}',
+    '.sc-mark.blank{background:var(--ex-surface-2,#f2f4f8);color:var(--ex-muted,#8a93a3);border:1px dashed var(--ex-border,#dfe4ec)}',
     /* 背景染色只用于填空/下拉；radio 的选中圆点是 background 画的，染色会抹掉选中态 */
     '.sc-input-ok:not([type=radio]){border-color:#18925c!important;background:#f2fbf6!important}',
     '.sc-input-no:not([type=radio]){border-color:#d33c3c!important;background:#fdf6f6!important}',
-    '.sc-input-blank:not([type=radio]){border-color:#c9d2df!important;background:#f6f8fb!important}',
+    '.sc-input-blank:not([type=radio]){border-color:var(--ex-border,#c9d2df)!important;background:var(--ex-surface-2,#f6f8fb)!important}',
     /* 单选题：选中项画实心圆点（答对绿 / 答错红），未选项只染边框 */
     'input[type=radio].sc-input-ok{border-color:#18925c!important}',
     'input[type=radio].sc-input-no{border-color:#d33c3c!important}',
-    'input[type=radio].sc-input-blank{border-color:#c9d2df!important}',
+    'input[type=radio].sc-input-blank{border-color:var(--ex-border,#c9d2df)!important}',
     'input[type=radio].sc-input-ok:checked{background:#18925c!important;background-clip:content-box!important;padding:2px!important}',
     'input[type=radio].sc-input-no:checked{background:#d33c3c!important;background-clip:content-box!important;padding:2px!important}',
     /* 正确选项提示圆环（答错/未答时） */
@@ -459,7 +473,7 @@
     /* 题号板染色 */
     '.question-palette__item.sc-p-ok{background:#18925c!important;color:#fff!important;border-color:#18925c!important}',
     '.question-palette__item.sc-p-no{background:#d33c3c!important;color:#fff!important;border-color:#d33c3c!important}',
-    '.question-palette__item.sc-p-blank{background:#eef1f6!important;color:#8a93a3!important}'
+    '.question-palette__item.sc-p-blank{background:var(--ex-surface-2,#eef1f6)!important;color:var(--ex-muted,#8a93a3)!important}'
   ].join('');
   document.head.appendChild(css);
 
