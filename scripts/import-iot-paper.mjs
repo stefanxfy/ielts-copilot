@@ -41,18 +41,20 @@ const MIGRATIONS = join(ROOT, "src", "db", "migrations");
 /* ---------- 本次导入的卷(换卷改这里) ---------- */
 
 const SET = {
-  examSetId: "a-2022may-test2",
-  setId: "a-2022may-test2",
-  testNo: 2,
-  title: "A类 · 2022年5月真题 Test 2",
+  examSetId: "a-2022jan-test6",
+  setId: "a-2022jan-test6",
+  testNo: 6,
+  title: "A类 · 2022年1月真题 Test 6",
   category: "A",
-  testPeriod: "2022-05",
+  testPeriod: "2022-01",
   papers: [
-    { subject: "reading", dir: "questions/阅读/2022/雅思真题试卷-五月-雅思阅读真题-2", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "writing", dir: "questions/写作/2022/雅思真题试卷-五月-雅思写作真题-2", bandTableSrc: "answers-a-2025jan-test1.js" },
-    { subject: "speaking", dir: "questions/口语/2022/雅思真题试卷-五月-雅思口语真题-2", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "reading", dir: "questions/阅读/2022/雅思真题试卷-一月-雅思阅读真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "writing", dir: "questions/写作/2022/雅思真题试卷-一月-雅思写作真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
+    { subject: "speaking", dir: "questions/口语/2022/雅思真题试卷-一月-雅思口语真题-4", bandTableSrc: "answers-a-2025jan-test1.js" },
   ],
 };
+
+
 
 
 
