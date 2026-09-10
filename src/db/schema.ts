@@ -1,11 +1,15 @@
 /**
- * src/db/schema.ts — 全量表定义(v3.1 · 5 表,推倒旧 12 表重写;P8 增 · 背单词 3 表)
+ * src/db/schema.ts — 全量表定义(v3.2 · 8+3 表;P9 增 · 阅读库 3 表)
  *
  * 对齐:docs/数据模型设计.md v3.1 + docs/背单词数据模型设计.md v0.7.1
+ *      + docs/阅读库数据模型与交互设计.md v1.4
  * 原则:内容不入库(真题 HTML 留文件系统)/ 锚点即题目(题号三方对齐)/
  *       静态与动态一刀切开(exam_sets+papers=卷的定义,exam_sessions+exam_records=考的历史;
  *       word_books+words+book_word_relation=词书与词条的定义,
- *       word_progress+word_review_log=学习进度与答题流水)
+ *       word_progress+word_review_log=学习进度与答题流水;
+ *       reading_libraries+reading_articles=阅读库与文章的定义,reading_progress=阅读进度)
+ *       —— 例外:阅读库正文(纯文本段落)入 paragraphsJson,支撑段落级随机存取与点词定位;
+ *       原始真题 HTML 仍留文件系统(sourceRefJson 记血缘)。
  *
  * 删除语义:删 exam_sets 级联删 papers 与其下 sessions/records(删卷重录是合法操作);
  *       exam_records.exam_id 显式 RESTRICT(有作答记录的单科卷不许删,防误删)。
@@ -821,4 +825,150 @@ export const wordReviewLog = sqliteTable(
     index("idx_word_review_log_progress").on(t.progressId),
     index("idx_word_review_log_reviewed").on(t.reviewedAt),
   ],
+);
+
+/* ================================================================
+ * P9 阅读库(docs/阅读库数据模型与交互设计.md v1.4)
+ *
+ * 本期限制(2026-09-10 用户明确):暂不生成文章音频 —— paragraphsJson[].audio
+ * 恒 null、audioVoice 不写入;reading-tts 后置期补合成零迁移。
+ * 对齐粒度=段落:译文/音频/播放/对照/打字练习全按段落(一段一 mp3,后置期)。
+ * ================================================================ */
+
+/* ---------- P9 阅读库:枚举 + JSON 契约 ---------- */
+
+/** reading_libraries.source:builtin(导入管线按 source 自动归属的预置库)/ custom(用户新建) */
+export const READING_LIB_SOURCES = ["builtin", "custom"] as const;
+export type ReadingLibSource = (typeof READING_LIB_SOURCES)[number];
+
+/** reading_articles.source:素材渠道(与「库」是两层语义:source=从哪来,library=归属哪) */
+export const READING_SOURCES = ["past_paper", "web", "manual"] as const;
+export type ReadingSource = (typeof READING_SOURCES)[number];
+
+/** 难度四档(真题源默认 L3,可手动改级) */
+export const READING_LEVELS = ["L1", "L2", "L3", "L4"] as const;
+export type ReadingLevel = (typeof READING_LEVELS)[number];
+
+/** reading_progress.status(读完即从「继续学习」区消失) */
+export const READING_STATUSES = ["IN_PROGRESS", "COMPLETED"] as const;
+export type ReadingStatus = (typeof READING_STATUSES)[number];
+
+/** reading_articles.source_ref_json — 出处快照(past_paper 必填,其余可空;
+ *  FK 语义但不设外键:删真题卷不影响阅读库存文,出处标注用快照展示) */
+export interface ReadingSourceRef {
+  /** 套卷短标识,如 "a-2025jan" */
+  examSetId?: string;
+  /** 单科卷 examId,如 "a-2025jan-reading-test1" */
+  examId?: string;
+  /** 展示用快照,如 "A类 阅读 · 2025 January Test 1" */
+  paperTitle?: string;
+  /** 该卷第几篇 passage(1 起) */
+  passageNo?: number;
+}
+
+/** paragraphs_json 单条 —— 段落(翻译/音频/播放/对照/打字练习的公共对齐单元) */
+export interface ReadingParagraph {
+  /** 段序号,0 起,全局稳定(重导入保持不变) */
+  idx: number;
+  en: string;
+  /** 段落中文翻译;null = 未生成/生成失败(可重翻补齐) */
+  zh: string | null;
+  /** 段落音频 web 路径 /audio/reading/<articleId>/p03.mp3;null = 未合成(本期恒 null) */
+  audio: string | null;
+}
+
+/* ---------- reading_libraries:阅读库(1 行 = 一个库,对齐 word_books 的「库」层) ---------- */
+
+export const readingLibraries = sqliteTable(
+  "reading_libraries",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** 库英文短标识,幂等键("past-paper" / "aeon" / "custom-20260910");同 word_books.bookId 模式 */
+    libraryId: text("library_id").notNull(),
+    /** 展示名「剑桥雅思真题库」 */
+    name: text("name").notNull(),
+    /** 库说明(来源/定位,可空) */
+    description: text("description"),
+    /** builtin(管线导入自动归属)/ custom(用户新建) */
+    source: text("source", { enum: READING_LIB_SOURCES }).notNull(),
+    /** 库封面图 web 路径;NULL=回落默认色池 */
+    coverImage: text("cover_image"),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex("uq_reading_libraries_library_id").on(t.libraryId)],
+);
+
+/* ---------- reading_articles:文章静态定义(1 行 = 一篇文章,正文段落平铺入库) ---------- */
+
+export const readingArticles = sqliteTable(
+  "reading_articles",
+  {
+    /** 幂等导入键:真题源 "a-2025jan-r-t1-p2",web 源 "<source>-<slug>" */
+    articleId: text("article_id").primaryKey(),
+    /** FK → reading_libraries.id ON DELETE RESTRICT:库非空不许删(防误删整库文章) */
+    libraryId: int("library_id")
+      .notNull()
+      .references(() => readingLibraries.id, { onDelete: "restrict" }),
+    title: text("title").notNull(),
+    source: text("source", { enum: READING_SOURCES }).notNull(),
+    /** 出自哪套真题(past_paper 必填;其余可空)——列表徽标与详情页出处标注的数据源 */
+    sourceRefJson: text("source_ref_json", { mode: "json" }).$type<ReadingSourceRef>(),
+    level: text("level", { enum: READING_LEVELS }).notNull().default("L3"),
+    wordCount: int("word_count").notNull().default(0),
+    /** 话题标签 ["environment","education"],列表筛选用 */
+    topicTagsJson: text("topic_tags_json", { mode: "json" })
+      .$type<string[]>()
+      .notNull()
+      .default(sql`(json_array())`),
+    /** 正文本体:段落平铺数组(整存整取免 join);zh 为 null=未翻译,audio 为 null=未合成(本期恒 null) */
+    paragraphsJson: text("paragraphs_json", { mode: "json" })
+      .$type<ReadingParagraph[]>()
+      .notNull(),
+    /** TTS 音色快照(重合成时幂等判据);本期不写入 */
+    audioVoice: text("audio_voice"),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [
+    index("idx_articles_source").on(t.source),
+    index("idx_articles_library").on(t.libraryId),
+  ],
+);
+
+/* ---------- reading_progress:阅读进度(1 行 = 一人一篇文章一条进度) ---------- */
+
+export const readingProgress = sqliteTable(
+  "reading_progress",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** FK → reading_articles.article_id ON DELETE CASCADE:删文章级联清进度 */
+    articleId: text("article_id")
+      .notNull()
+      .references(() => readingArticles.articleId, { onDelete: "cascade" }),
+    status: text("status", { enum: READING_STATUSES })
+      .notNull()
+      .default("IN_PROGRESS"),
+    /** 读到第几段(0 起)——续读定位 */
+    lastParagraph: int("last_paragraph").notNull().default(0),
+    /** 累计阅读秒数(打卡与统计用) */
+    readSec: int("read_sec").notNull().default(0),
+    /** 最后一次打开时间——「继续学习」区排序依据 */
+    lastReadAt: int("last_read_at", { mode: "timestamp" }),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex("uq_reading_progress_article").on(t.articleId)],
 );
