@@ -183,12 +183,25 @@ function passageContainers(html) {
 }
 
 function subtitle(html, beforePos) {
+  // 结构一: field--name-field-subtitle-section 区块,标题文本紧跟开标签 ">" 之后
   const i = html.lastIndexOf("field--name-field-subtitle-section", beforePos);
-  if (i < 0) return null;
-  const seg = html.slice(i, i + 400);
-  const m = />([^<>]+)</.exec(seg.slice(seg.indexOf(">") + 1));
-  const t = m?.[1]?.trim();
-  return t || null;
+  if (i >= 0) {
+    const seg = html.slice(i, i + 400);
+    // 旧写法先切掉开标签再要求 ">x<" 导致永远匹配不到标题,反而命中
+    // 正文里的段落字母标记 <strong>A</strong>,产生大量标题为 "A" 的文章。
+    const m = /field--item">([^<]*)</.exec(seg);
+    const t = m?.[1]?.trim();
+    if (t) return t;
+  }
+  // 结构二(变体): <h2 class="subtitle">…嵌套 div…标题…</h2>,取 passage 之前最后一个非空者
+  const h2re = /<h2 class="subtitle"[^>]*>([\s\S]{0,200}?)<\/h2>/g;
+  let m, best = null;
+  while ((m = h2re.exec(html)) !== null) {
+    if (m.index > beforePos) break;
+    const t = m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (t) best = t;
+  }
+  return best;
 }
 
 /** 段落纯文本化:剔空/字母标记 strong → 剥全部标签 → 实体解码 → 空白规整 */
@@ -250,7 +263,10 @@ for (const paper of papers) {
   for (let p = 1; p <= 3; p++) {
     const { start, end } = containers[p - 1];
     const c = html.slice(start, end);
-    const rawParas = [...c.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].map((m) => cleanPara(m[1])).filter(Boolean);
+    // 纯符号噪声段(如省略号、分隔符)无字母数字内容,直接剔除
+    const rawParas = [...c.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)]
+      .map((m) => cleanPara(m[1]))
+      .filter((x) => x && /[A-Za-z0-9]/.test(x));
     if (rawParas.length < 3) {
       report.failures.push({ examId: paper.exam_id, passage: p, reason: `有效段落数 ${rawParas.length} < 3` });
       continue;
