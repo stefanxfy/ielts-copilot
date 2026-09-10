@@ -161,6 +161,9 @@ function transformPage(html, extraScripts) {
     // inline-images 仅排装饰命名(内容图如 Gemini 生成图/老书扫描件也住此目录,须保留本地引用)
     .replace(/(src)="img\/[^"]*"([^>]*)data-iot-orig="([^"]*(?:\/styles\/|\/themes\/|\/inline-images\/[^"]*(?:qr[-_]?code|footer|logo|banner|share-|icon|thumb|avatar|landing)[^"]*))"/gi, "$1=\"$3\"$2")
     .replace(/ data-iot-orig="[^"]*"/g, "")
+    // onerror 原站兜底剥离(2026-09-10):内容图抓取侧已全量本地化(img/ 存在即兜底永不触发),
+    // 兜底链指向 /sites/default/files/ 属铁律③残留;本地图缺失场景由 mopup+verifyImages 前置把关
+    .replace(/ onerror="[^"]*this\.src='\/sites\/default\/files\/[^']*'"/gi, "")
     // 旧内联补丁收编(2026-09-09):四块手工补丁统一为共享 quiz-patch.css,历史注入块一律剥离
     .replace(/<style id="(?:ieltshome-theme|native-scroll-patch|header-icons-patch|page-icons-fallback)">[\s\S]*?<\/style>/g, "")
     // 原站标识清洗(导入铁律③):favicon/canonical/hreflang/og/twitter 及 Drupal 管理链一律不留
