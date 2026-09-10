@@ -154,6 +154,9 @@ function classify(num, answers, qTypeByNum) {
 function transformPage(html, extraScripts) {
   let out = html
     .replace(/(\.\/|\.\.\/\.\.\/\.\.\/)exam-assets\//g, "../shared/exam-assets/")
+    // 站方聚合 CSS/JS 绝对路径(2022-12 ~ 2023 部分卷源页用 /sites/default/files/{css,js}/):
+    // 共享目录已收编全部同名聚合文件,统一改写相对引用;漏改会 404 丢失基础样式致卷面布局散架
+    .replace(/\/sites\/default\/files\/(?:css|js)\//g, "../shared/exam-assets/")
     // 装饰图(页脚二维码/封面缩略图)本地从未下载,还原原站外链;styles/themes 全排,
     // inline-images 仅排装饰命名(内容图如 Gemini 生成图/老书扫描件也住此目录,须保留本地引用)
     .replace(/(src)="img\/[^"]*"([^>]*)data-iot-orig="([^"]*(?:\/styles\/|\/themes\/|\/inline-images\/[^"]*(?:qr[-_]?code|footer|logo|banner|share-|icon|thumb|avatar|landing)[^"]*))"/gi, "$1=\"$3\"$2")
