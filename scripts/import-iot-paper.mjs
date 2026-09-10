@@ -165,7 +165,7 @@ function transformPage(html, extraScripts) {
     .replace(/<link[^>]*href="https?:\/\/[^"]*ieltsonlinetests\.com[^"]*"[^>]*>/g, "")
     .replace(/<meta[^>]*property="og:[a-z:]+"[^>]*>/g, "")
     .replace(/<meta[^>]*name="twitter:[a-z:]+"[^>]*>/g, "")
-    .replace(/<meta[^>]*name="(?:[a-z0-9-]*-)?site-verification"|<meta[^>]*name="msvalidate\.01"|<meta[^>]*name="facebook-domain-verification"[^>]*>/g, "")
+    .replace(/<meta[^>]*name="(?:[a-z0-9-]*-)?site-verification"[^>]*>|<meta[^>]*name="msvalidate\.01"[^>]*>|<meta[^>]*name="facebook-domain-verification"[^>]*>/g, "")
     .replace(/<meta[^>]*name="(?:baidu|shenma|360|sogou)-site-verification"[^>]*>/g, "")
     // 匿名用户归一(2026-09-09):站方对 anonymous-user 有全局禁点 CSS(pointer-events:none !important),
     // 抓取未登录的卷会带此 body 类致全页不可交互;统一归一为 user-logged-in(与范本 jan 基线一致)
