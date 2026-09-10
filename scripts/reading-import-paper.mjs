@@ -97,7 +97,9 @@ if (WITH_ZH) {
     BASE_URL = (L.baseUrl || "https://api.minimaxi.com/v1").replace(/\/+$/, "");
     API_KEY = L.apiKey;
     TIMEOUT_MS = (L.timeoutSec || 120) * 1000;
-    EXTRA_BODY = {};
+    // M3 仅支持 adaptive/disabled(2026-09-10 实测:enabled 直接 HTTP 400);
+    // disabled 思考后 completion 仅 ~100 tokens、数秒即回,且不再有 JSON 截断问题
+    EXTRA_BODY = { thinking: { type: "disabled" } };
   }
   console.log(`[llm] provider=${PROVIDER} model=${MODEL}`);
 
@@ -264,6 +266,11 @@ for (const paper of papers) {
     if (wordCount < 350 || wordCount > 1100) report.warnings.push({ articleId, reason: `词数 ${wordCount} 越出 350–1100` });
 
     const existing = getArticle.get(articleId);
+    if (FILL_ONLY && !existing) {
+      // fill 模式只补漏:无现成文章一律跳过,禁止顺带导入(2026-09-10:误导入 25 篇的教训)
+      report.skipped.push(articleId);
+      continue;
+    }
     if (existing && !FORCE && !FILL_ONLY) {
       report.skipped.push(articleId);
       continue;
@@ -279,11 +286,15 @@ for (const paper of papers) {
     // LLM 逐段翻译(分批:每批 CHUNK 段,防 M3 思考 token 挤爆输出;失败批次保持 zh=null 进失败清单)
     if (WITH_ZH && llm) {
       const needIdx = paragraphs.map((x, i) => (x.zh == null ? i : -1)).filter((i) => i >= 0);
+      // 噪声段(≤1 字符,如广告体残留标记)跳过 LLM:译文必为空会卡死非空校验,原样保留即可
+      const noiseIdx = needIdx.filter((i) => (paragraphs[i].en || "").trim().length <= 1);
+      const llmIdx = needIdx.filter((i) => (paragraphs[i].en || "").trim().length > 1);
+      noiseIdx.forEach((i) => (paragraphs[i].zh = paragraphs[i].en));
+      let done = noiseIdx.length;
       const CHUNK = 4;
-      let done = 0;
       const failedChunks = [];
-      for (let s = 0; s < needIdx.length; s += CHUNK) {
-        const idxChunk = needIdx.slice(s, s + CHUNK);
+      for (let s = 0; s < llmIdx.length; s += CHUNK) {
+        const idxChunk = llmIdx.slice(s, s + CHUNK);
         const zhList = await llm.llmZh(idxChunk.map((i) => paragraphs[i].en));
         if (zhList) {
           idxChunk.forEach((i, k) => (paragraphs[i].zh = zhList[k]));
