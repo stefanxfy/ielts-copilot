@@ -15,10 +15,8 @@ const nextConfig: NextConfig = {
   /* 关闭 Next 16 dev 模式下右下角浮动按钮(next-devtools buildActivity):
      该按钮默认位置在视口右下,鼠标 hover 展开成全屏 dev panel(带 backdrop-blur 白雾),
      在机考页正下方会盖住卷面 iframe,体感就是「白板」。关闭不影响 build 错误显示与生产环境 */
-  devIndicators: {
-    buildActivity: false,
-    appIsrStatus: false,
-  },
+  /* Next 16 移除了 devIndicators 的 buildActivity/appIsrStatus 开关(仅剩 position),
+     如再出现浮动按钮遮挡卷面,改用 position 调离视口右下 */
   async rewrites() {
     return [
       /* 静态卷页是从 Drupal 站抓取的原样页面,卷页 JS 会向原站后端发访问统计:
