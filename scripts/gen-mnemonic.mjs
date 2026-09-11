@@ -378,8 +378,8 @@ const PROMPTS = {
 };
 
 // ===== 单路校验(不过=拒收该路,计入重试) =====
-// syl 规范化:去斜杠/重音符号/分隔点/空格(重音符号归 ipa 段,phonemes 只存纯音素)
-const normIpa = (x) => x.replace(/[/ˈˌ.\s]/g, "");
+// syl 规范化:去斜杠/重音符号/分隔点/空格/次重音逗号(词典次重音 ˌ 与 , 两写,同性质统一剥)/重音符号归 ipa 段,phonemes 只存纯音素
+const normIpa = (x) => x.replace(/[/ˈˌ,.\s]/g, "");
 // 词素串解析:morphSeed "ac(=to) + celer(快速的) + ate(使…) → 加速" → ["ac","celer","ate"];
 // ECDICT root "tend, tent, tens = stretch (Latin)" → ["tend","tent","tens"]
 // 判别:morphSeed 含 "→"(箭头)——注意 "ac(=to)" 括号内的 = 不能当 ECDICT 判据(实测踩坑)
@@ -481,20 +481,25 @@ function validate(field, parsed, word, ipaInput, seedText) {
     }
     if (typeof s.stress !== "number" || s.stress < 0 || s.stress >= (s.parts?.length ?? 0)) errs.push(`stress=${s.stress} 越界`);
     if (ipaInput) {
-      const ipaJoined = normIpa(s.ipa?.join("") ?? "");
-      const inputJoined = normIpa(ipaInput);
       // ɛ/e 同音异符(词典混用)+ 尾缀成音节鼻音 ʃən/ʃn 两写并存(assimilation 实测踩坑),归一后比对
       const mapE = (x) => x.replace(/ɛ/g, "e").replace(/ʃən$/, "ʃn");
-      const variantsIn = (s) => String(s ?? "").replace(/^\/|\/$/g, "").split(/[,;、]/).map((x) => mapE(normIpa(x))).filter(Boolean);
+      // 括号归一(tear/counterbalance 实测踩坑):(ə) 可选括号去括号保内容;(for v.) 语境标注整剥占位;
+      // 两侧(LLM 输出与库内候选)统一走同一条归一链,防止单侧归一假不等
+      const stripAnnot = (x) => x.replace(/\([^)]*\)/g, (m) => /^[a-zə]{1,3}$/i.test(m.slice(1, -1)) ? m.slice(1, -1) : " ");
+      const canon = (x) => mapE(normIpa(stripAnnot(x)));
+      // 变体分隔:分号/顿号/全角逗号(词典两写并存;半角逗号是次重音 ˌ 的替身,必须留给 IPA 不拆,
+      // 全角 ， 不在 IPA 符号集,via /ˈvaɪə，ˈviːə/ 实测踩坑);尾连字符 ,ekwɪ- 剥掉
+      const variantsIn = (s) => String(s ?? "").replace(/^\/|\/$/g, "").split(/[;、，]/).map((x) => canon(x.replace(/-+$/g, ""))).filter(Boolean);
       const cands = variantsIn(ipaInput);
-      const ok = cands.includes(mapE(ipaJoined));
-      if (ipaInput.includes(",") && ok) console.log(`  ✓ 多变体音标命中其中一项(${ipaJoined})`);
+      const ok = cands.includes(canon(s.ipa?.join("") ?? ""));
+      if (ipaInput.includes(",") && ok) console.log(`  ✓ 多变体音标命中其中一项(${canon(s.ipa?.join("") ?? "")})`);
       if (!ok) {
         let hint = "";
         const target = cands[0] ?? "";
-        const fd = [...ipaJoined].findIndex((ch, i) => ch !== target[i]);
-        if (fd >= 0) hint = `；首个分歧@${fd}: 你输出「${ipaJoined.slice(fd, fd + 3)}」候选是「${target.slice(fd, fd + 3)}」——逐字符对齐候选,常见错: 弱音节多写 ə、aʊ/au 与 əʊ/ou 互换、ə 与 ər 混用`;
-        errs.push(`ipa 拼合「${ipaJoined}」≠ phonetic_uk(候选:${cands.join(" / ")})——符号必须照搬库内音标,禁止变体改写${hint}`);
+        const joined = canon(s.ipa?.join("") ?? "");
+        const fd = [...joined].findIndex((ch, i) => ch !== target[i]);
+        if (fd >= 0) hint = `；首个分歧@${fd}: 你输出「${joined.slice(fd, fd + 3)}」候选是「${target.slice(fd, fd + 3)}」——逐字符对齐候选,常见错: 弱音节多写 ə、aʊ/au 与 əʊ/ou 互换、ə 与 ər 混用`;
+        errs.push(`ipa 拼合「${joined}」≠ phonetic_uk(候选:${cands.join(" / ")})——符号必须照搬库内音标,禁止变体改写${hint}`);
       }
     }
     // 重音标记硬校验(100词审查发现的盲区):主重音段必须含 ˈ;ˌ 段必须在 secondary;孤立辅音不成音节
@@ -508,7 +513,13 @@ function validate(field, parsed, word, ipaInput, seedText) {
       if (String(seg).includes("ˌ") && !(s.secondary ?? []).includes(i)) errs.push(`段${i}「${seg}」带 ˌ 但 secondary 未含`);
     });
     (s.parts ?? []).forEach((p, i) => {
-      if (/^[a-z]$/i.test(p) && !/[aeiouy]/i.test(p)) errs.push(`段${i}「${p}」为孤立辅音,不成音节`);
+      if (/^[a-z]$/i.test(p) && !/[aeiouy]/i.test(p)) {
+        // 成音节辅音豁免:m/n/l 单字母段可作弱音节核心(prompt 已允许,little /l̩/、chasm /m̩/),
+        // 前提是邻段含元音(真凑数段如 prɪ|z|m 的 z 仍拒)
+        const sonority = /^[mnl]$/i.test(p);
+        const neighborHasVowel = [s.parts?.[i - 1], s.parts?.[i + 1]].some((nb) => /[aeiouy]/i.test(String(nb ?? "")));
+        if (!sonority || !neighborHasVowel) errs.push(`段${i}「${p}」为孤立辅音,不成音节`);
+      }
     });
     // phonemes 可选(2026-09-08 定稿:音素层解析取消,prompt 不再要求输出;前端 phs.length 门控天然兼容旧数据)
     if (Array.isArray(s.phonemes) && s.phonemes.length) {
