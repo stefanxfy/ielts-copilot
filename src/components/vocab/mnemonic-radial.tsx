@@ -134,9 +134,60 @@ function escRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** 词头映射表:不规则变形 / 英美拼写差异 / 连字符变体(前端 hiColl 与 audit-vocab-content 复刻共用口径,两处必须同步改)
+ *  映射形式走整词精确匹配(两侧 \b):短形(is/am/are)若加 \w* 会误吞 island/issue/area */
+const HEADWORD_ALTS: Record<string, string[]> = {
+  // 不规则动词变形(过去式/过去分词)
+  be: ["am", "is", "are", "was", "were", "been", "being"],
+  undertake: ["undertook", "undertaken"],
+  dwell: ["dwelt"],
+  swing: ["swung"],
+  spit: ["spat"],
+  grind: ["ground"],
+  slide: ["slid"],
+  kneel: ["knelt"],
+  overcome: ["overcame"],
+  lead: ["led"],
+  flee: ["fled"],
+  weave: ["wove", "woven"],
+  withhold: ["withheld"],
+  sting: ["stung"],
+  cling: ["clung"],
+  undo: ["undid"],
+  fling: ["flung"],
+  shear: ["sheared", "shorn"],
+  hold: ["held"],
+  catch: ["caught"],
+  make: ["made"],
+  give: ["gave", "given"],
+  stand: ["stood"],
+  fall: ["fell", "fallen"],
+  get: ["got", "gotten"],
+  leave: ["left"],
+  feed: ["fed"],
+  strike: ["struck"],
+  // 不规则名词复数
+  criterion: ["criteria"],
+  millennium: ["millennia"],
+  // 反向单复数:词头为复数义(pains),例句用单数(pain)
+  pains: ["pain"],
+  // 英美拼写:词头英式,词典例句常为美式
+  favourite: ["favorite"],
+  favour: ["favor"],
+  humour: ["humor"],
+  aesthetic: ["esthetic"],
+  catalogue: ["catalog"],
+  licence: ["license"],
+  // 缩写: versus ↔ vs.
+  versus: ["vs"],
+  // 连字符变体:词头无连字符,例句带连字符
+  cooperate: ["co-operate"],
+};
+
 /** 词头屈折变体模式:覆盖规则屈折(s/es/ed/ing)+ 词干变化两类易错形
  *  - y 结尾: fantasy→fantasies/ied、horrify→horrified(stem+i…)
  *  - e 结尾: tickle→tickling/ed(掉 e,含双写 huddle→huddling —— 后缀 \w* 吃掉)
+ *  - 映射表 + 连字符词头(post-mortem→postmortem)走整词精确分支
  *  例: fantasy 句中 fantasies、imply 句中 implies(审查 2026-09-11:226 条高亮失败中 166 条为规则屈折) */
 function headwordInflectionPattern(headword: string): string {
   const w = headword.toLowerCase();
@@ -155,7 +206,12 @@ function headwordInflectionPattern(headword: string): string {
     escRe(esc(w)) + "ing",
     escRe(esc(w)) + "es",
   );
-  return "(?:" + alts.join("|") + ")\\w*";
+  let pat = "(?:" + alts.join("|") + ")\\w*";
+  // 映射变形 + 连字符剥离变体:整词精确(两侧 \b),不能并入上面的 \w* 组
+  const exacts: string[] = (HEADWORD_ALTS[w] ?? []).map((a) => escRe(esc(a)));
+  if (w.includes("-")) exacts.push(escRe(esc(w.replace(/-/g, ""))));
+  if (exacts.length) pat += "|\\b(?:" + exacts.join("|") + ")\\b";
+  return pat;
 }
 
 /** 词组在例句中高亮:大小写不敏感 + 词形屈折(isolate→isolates) + coll 中 " ... " 通配 + headword 兜底(原型 hiColl 移植;兜底升级为屈折感知,见 headwordInflectionPattern) */

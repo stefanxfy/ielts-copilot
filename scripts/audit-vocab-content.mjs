@@ -28,6 +28,75 @@ function esc(s) {
 function escRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+/** 词头映射表:与 src/components/vocab/mnemonic-radial.tsx HEADWORD_ALTS 同步维护(2026-09-11 P2) */
+const HEADWORD_ALTS = {
+  be: ["am", "is", "are", "was", "were", "been", "being"],
+  undertake: ["undertook", "undertaken"],
+  dwell: ["dwelt"],
+  swing: ["swung"],
+  spit: ["spat"],
+  grind: ["ground"],
+  slide: ["slid"],
+  kneel: ["knelt"],
+  overcome: ["overcame"],
+  lead: ["led"],
+  flee: ["fled"],
+  weave: ["wove", "woven"],
+  withhold: ["withheld"],
+  sting: ["stung"],
+  cling: ["clung"],
+  undo: ["undid"],
+  fling: ["flung"],
+  shear: ["sheared", "shorn"],
+  hold: ["held"],
+  catch: ["caught"],
+  make: ["made"],
+  give: ["gave", "given"],
+  stand: ["stood"],
+  fall: ["fell", "fallen"],
+  get: ["got", "gotten"],
+  leave: ["left"],
+  feed: ["fed"],
+  strike: ["struck"],
+  criterion: ["criteria"],
+  millennium: ["millennia"],
+  pains: ["pain"],
+  favourite: ["favorite"],
+  favour: ["favor"],
+  humour: ["humor"],
+  aesthetic: ["esthetic"],
+  catalogue: ["catalog"],
+  licence: ["license"],
+  versus: ["vs"],
+  cooperate: ["co-operate"],
+};
+
+/** 词头屈折变体模式:与 mnemonic-radial.tsx headwordInflectionPattern 逐行同步(2026-09-11 P2 扩展:
+ *  规则屈折 + HEADWORD_ALTS 映射(整词精确) + 连字符剥离变体) */
+function headwordInflectionPattern(headword) {
+  const w = headword.toLowerCase();
+  const alts = [escRe(esc(w))];
+  if (w.endsWith("y") && w.length > 1) {
+    const stem = escRe(esc(w.slice(0, -1)));
+    alts.push(`${stem}ies`, `${stem}ied`, `${stem}ier`, `${stem}iest`, `${stem}i`);
+  }
+  if (w.endsWith("e") && w.length > 1) {
+    const stem = escRe(esc(w.slice(0, -1)));
+    alts.push(`${stem}ing`, `${stem}ed`);
+  }
+  alts.push(
+    escRe(esc(w)) + "s",
+    escRe(esc(w)) + "ed",
+    escRe(esc(w)) + "ing",
+    escRe(esc(w)) + "es",
+  );
+  let pat = "(?:" + alts.join("|") + ")\\w*";
+  const exacts = (HEADWORD_ALTS[w] ?? []).map((a) => escRe(esc(a)));
+  if (w.includes("-")) exacts.push(escRe(esc(w.replace(/-/g, ""))));
+  if (exacts.length) pat += "|\\b(?:" + exacts.join("|") + ")\\b";
+  return pat;
+}
+
 /** 与 src/components/vocab/mnemonic-radial.tsx hiColl 逐行一致;返回是否可高亮。
  *  注意前端真实语义: coll 路径 out!==s 才 return,匹配失败会继续落 headword 兜底 */
 function hiCollMatch(sentence, coll, headword) {
@@ -44,7 +113,7 @@ function hiCollMatch(sentence, coll, headword) {
   }
   // coll 匹配失败(或无 coll)继续走 headword 兜底——与前端一致
   if (headword) {
-    if (s.match(new RegExp("\\b" + escRe(esc(headword)) + "\\w*", "gi"))) return true;
+    if (s.match(new RegExp("\\b" + headwordInflectionPattern(headword), "gi"))) return true;
   }
   return false;
 }
