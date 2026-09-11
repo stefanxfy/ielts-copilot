@@ -34,6 +34,8 @@ const argVal = (name) => {
   return i >= 0 ? argv[i + 1] : null;
 };
 const WORDS_ARG = argVal("--words");
+// --list=<文件>: P1 全库补图用,从词表文件读词清单(一行一词),绕开 book/core 筛选
+const LIST_ARG = argVal("--list");
 const BOOK_ID = argVal("--book") ? parseInt(argVal("--book"), 10) : null;
 const TARGET = argVal("--target") || "core"; // core=仅核心词(无图)
 const ALL = argv.includes("--all");
@@ -122,6 +124,25 @@ function pickTargets(wordFilter) {
   const db = new Database(DB_PATH, { readonly: true });
   const where = [];
   const params = [];
+  // --list 模式:词表驱动,不设 book/core 条件(词表本身就是筛选结果)
+  if (LIST_ARG) {
+    const list = readFileSync(LIST_ARG, "utf8").split("\n").map((s) => s.trim()).filter(Boolean);
+    const chunks = [];
+    for (let i = 0; i < list.length; i += 400) {
+      chunks.push(list.slice(i, i + 400));
+    }
+    const rows = [];
+    for (const chunk of chunks) {
+      const r = db.prepare(
+        `SELECT w.id, w.word, w.content_json FROM words w WHERE w.word IN (${chunk.map(() => "?").join(",")})`,
+      ).all(...chunk);
+      rows.push(...r);
+    }
+    db.close();
+    // 词表顺序优先(前缀稳定,便于分批与断点续跑)
+    const order = new Map(list.map((w, i) => [w, i]));
+    return rows.sort((a, b) => (order.get(a.word) ?? 1e9) - (order.get(b.word) ?? 1e9));
+  }
   if (wordFilter) {
     where.push("w.word IN (" + wordFilter.map(() => "?").join(",") + ")");
     params.push(...wordFilter);
@@ -166,6 +187,7 @@ async function main() {
       break;
     }
     const out = join(OUT_DIR, `${row.word}.txt`);
+    // 幂等跳过:已有场景文件且非 ERROR/SKIP 即跳过(--all 强制重写,--words 单词模式也重写)
     if (existsSync(out) && !ALL && !WORDS_ARG) {
       skip++;
       continue;

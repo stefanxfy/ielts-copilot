@@ -42,6 +42,8 @@ const argVal = (name) => {
 };
 const LIMIT = argVal("--limit") ? parseInt(argVal("--limit"), 10) : Infinity;
 const WORDS_ARG = argVal("--words");
+// --list=<文件>: P1 全库补图用,从词表文件读词清单(一行一词),绕开 book17 核心词筛选
+const LIST_ARG = argVal("--list");
 const PREFIX = argv.includes("--prefix") ? argVal("--prefix") : ""; // 子目录前缀, 避免覆盖主图
 const NO_WRITE_DB = argv.includes("--no-write-db"); // 只落盘不写库(对照实验用)
 const IMG_DIR = PREFIX
@@ -66,9 +68,28 @@ const STYLE_S8 =
 const STYLE_S1 =
   "Warm flat illustration, soft pastel colors, clean minimal composition, single central scene, no text, no letters, children's picture-book style";
 
-/* ---------- 词条查询(核心词筛选 + 已无图) ---------- */
+/* ---------- 词条查询 ---------- */
 function pickTargets(wordFilter) {
   const db = new Database(DB_PATH, { readonly: true });
+  // --list 模式:词表驱动(audit missEligible 清单),无图即目标,不管核心词与否
+  if (LIST_ARG) {
+    const list = readFileSync(LIST_ARG, "utf8").split("\n").map((s) => s.trim()).filter(Boolean);
+    const chunks = [];
+    for (let i = 0; i < list.length; i += 400) chunks.push(list.slice(i, i + 400));
+    const rows = [];
+    for (const chunk of chunks) {
+      const r = db.prepare(
+        `SELECT w.id, w.word, w.content_json FROM words w WHERE w.word IN (${chunk.map(() => "?").join(",")})`,
+      ).all(...chunk);
+      rows.push(...r);
+    }
+    db.close();
+    const order = new Map(list.map((w, i) => [w, i]));
+    const sorted = rows.sort((a, b) => (order.get(a.word) ?? 1e9) - (order.get(b.word) ?? 1e9));
+    // 幂等由 doOne 的磁盘检查兜底(文件已存在且 >1KB 即 skip);contentJson.image 不再看——
+    // 词表本就是 image IS NULL 的词,若用户单独回写过 DB,磁盘有图也会被 doOne 跳过
+    return { core: sorted, need: sorted };
+  }
   const rows = db
     .prepare(
       `SELECT w.id, w.word, w.content_json, json_extract(w.content_json,'$.collins') AS collins,
@@ -169,8 +190,10 @@ async function processAll(key, targets) {
 
   const updStmt = () => {
     const db = new Database(DB_PATH);
+    // 裸 ?: SQLite 会把字符串参数包成 JSON string;不能用 json(?)——那会把参数当 JSON 文档解析,
+    // 路径字符串直接报 malformed JSON(2026-09-11 P1 冒烟实测,9 张图全没回写就是这个根因)
     const stmt = db.prepare(
-      "UPDATE words SET content_json = json_set(COALESCE(content_json,'{}'), '$.image', json(?)), updated_at = unixepoch() WHERE id = ?",
+      "UPDATE words SET content_json = json_set(COALESCE(content_json,'{}'), '$.image', ?), updated_at = unixepoch() WHERE id = ?",
     );
     return { db, stmt, close: () => db.close() };
   };
@@ -179,6 +202,20 @@ async function processAll(key, targets) {
     const outFile = join(IMG_DIR, `${row.word}.png`);
     if (existsSync(outFile) && statSync(outFile).size > 1000) {
       skipped++;
+      // 幂等补写:文件在而 contentJson.image 为空 → 补回写(修复历史 json(?) bug 造成的盘有图库无路径)
+      if (!NO_WRITE_DB) {
+        const cj = JSON.parse(row.content_json || "{}");
+        const imagePath = `/images/words/${PREFIX ? PREFIX + "/" : ""}${row.word}.png`;
+        if (cj.image !== imagePath) {
+          const u = updStmt();
+          try {
+            u.stmt.run(imagePath, row.id);
+          } finally {
+            u.close();
+          }
+          console.log(`  ↻ ${row.word} 补回写 image 字段`);
+        }
+      }
       return { skipped: true };
     }
     const cj = JSON.parse(row.content_json || "{}");
@@ -265,7 +302,8 @@ function maybeBackup() {
 async function main() {
   const wordFilter = WORDS_ARG ? WORDS_ARG.split(",") : null;
   const { core, need } = pickTargets(wordFilter);
-  console.log(`[img] book17 核心词: ${core.length} | 待生图: ${need.length}${LIMIT ? `(限 ${LIMIT})` : ""}`);
+  const coreDesc = LIST_ARG ? "list 模式(词表驱动)" : `book17 核心词: ${core.length}`;
+  console.log(`[img] ${coreDesc} | 待生图: ${need.length}${LIMIT ? `(限 ${LIMIT})` : ""}`);
 
   const targets = LIMIT ? need.slice(0, LIMIT) : need;
   if (!targets.length) {
