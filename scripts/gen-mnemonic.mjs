@@ -96,8 +96,13 @@ async function buildBatchList(bookId) {
     )
     .all(bookId);
   db.close();
-  const tasks = { morph: [], syl: [] };
-  const stats = { morph: { seed: 0, root: 0, judge: 0, drop: 0 }, syl: { run: 0, skipNoIpa: 0, skipPhrase: 0, have: 0 } };
+  const tasks = { morph: [], syl: [], derives: [], context: [] };
+  const stats = {
+    morph: { seed: 0, root: 0, judge: 0, drop: 0 },
+    syl: { run: 0, skipNoIpa: 0, skipPhrase: 0, have: 0 },
+    derives: { run: 0, have: 0 },
+    context: { run: 0, skipNoExample: 0, have: 0 },
+  };
   for (const r of rows) {
     let c;
     try { c = JSON.parse(r.content_json ?? "{}"); } catch { c = {}; }
@@ -115,8 +120,21 @@ async function buildBatchList(bookId) {
       else if (!r.phonetic_uk) stats.syl.skipNoIpa++;
       else { tasks.syl.push({ word, tier: "syl", c }); stats.syl.run++; }
     }
+    // derives(2026-09-11 加批量): 非短语即可跑,无准入门槛
+    if (FIELDS.includes("derives") && !(Array.isArray(c.derives) && c.derives.length)) {
+      if (isPhrase(word)) stats.derives.skipPhrase = (stats.derives.skipPhrase ?? 0) + 1;
+      else { tasks.derives.push({ word, tier: "derives", c }); stats.derives.run++; }
+    }
     if (c.morph) stats.morph.have = (stats.morph.have ?? 0) + 1;
     if (c.syl) stats.syl.have = (stats.syl.have ?? 0) + 1;
+    if (Array.isArray(c.derives) && c.derives.length) stats.derives.have++;
+    // context(2026-09-11 加批量): 底料门槛——examples 非空(prompt 不喂 examples,但空例句词多为生僻,生成质量差)
+    if (FIELDS.includes("context") && !(Array.isArray(c.contexts) && c.contexts.length)) {
+      if (isPhrase(word)) stats.context.skipPhrase = (stats.context.skipPhrase ?? 0) + 1;
+      else if (!Array.isArray(c.examples) || !c.examples.length) stats.context.skipNoExample++;
+      else { tasks.context.push({ word, tier: "context", c }); stats.context.run++; }
+    }
+    if (Array.isArray(c.contexts) && c.contexts.length) stats.context.have++;
   }
   // 试点抽样:morph 三档分层(45/10/20=75)+ syl 抽 25,合计 pilot
   if (PILOT) {
@@ -132,7 +150,7 @@ async function buildBatchList(bookId) {
 }
 
 if (!WORDS.length && !BOOK) {
-  console.error("用法: node scripts/gen-mnemonic.mjs --word=literature[,abandon] [--fields=...] [--rebuild] [--dry-run]\n      node scripts/gen-mnemonic.mjs --book=17 [--fields=morph,syl] [--pilot=100] [--limit=200]");
+  console.error("用法: node scripts/gen-mnemonic.mjs --word=literature[,abandon] [--fields=...] [--rebuild] [--dry-run]\n      node scripts/gen-mnemonic.mjs --book=17 [--fields=morph,syl,derives,context] [--pilot=100] [--limit=200]");
   process.exit(1);
 }
 
@@ -249,11 +267,45 @@ function stemHits(sentence, phrase) {
   const norm = (s) => s.toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/).filter(Boolean);
   const sent = norm(sentence);
   const reflexive = (w) => /(?:self|selves)$/.test(w);
+  // 常见不规则动词变形(原形→过去式/过去分词),coll 动词与例句变形对齐(2026-09-11 修复批量误杀:
+  // pay→paid / have→has / make→made / seek→sought 等,前缀匹配天然覆盖不了)
+  const IRREGULAR = {
+    make: ["made", "made"], pay: ["paid", "paid"], have: ["has", "had", "having"],
+    seek: ["sought", "sought"], find: ["found", "found"], give: ["gave", "given"],
+    take: ["took", "taken"], get: ["got", "gotten", "got"], go: ["went", "gone"],
+    come: ["came", "come"], keep: ["kept", "kept"], hold: ["held", "held"],
+    leave: ["left", "left"], lend: ["lent", "lent"], send: ["sent", "sent"],
+    spend: ["spent", "spent"], build: ["built", "built"], bring: ["brought", "brought"],
+    buy: ["bought", "bought"], catch: ["caught", "caught"], teach: ["taught", "taught"],
+    think: ["thought", "thought"], fight: ["fought", "fought"], tell: ["told", "told"],
+    sell: ["sold", "sold"], say: ["said", "said"], see: ["saw", "seen"],
+    do: ["did", "done"], put: ["put", "put"], set: ["set", "set"],
+    let: ["let", "let"], cut: ["cut", "cut"], run: ["ran", "run"],
+    rise: ["rose", "risen"], fall: ["fell", "fallen"], feel: ["felt", "felt"],
+    mean: ["meant", "meant"], meet: ["met", "met"], lose: ["lost", "lost"],
+    win: ["won", "won"], stand: ["stood", "stood"], understand: ["understood", "understood"],
+    draw: ["drew", "drawn"], grow: ["grew", "grown"], know: ["knew", "known"],
+    throw: ["threw", "thrown"], show: ["showed", "shown"], write: ["wrote", "written"],
+    speak: ["spoke", "spoken"], break: ["broke", "broken"], choose: ["chose", "chosen"],
+    drive: ["drove", "driven"], eat: ["ate", "eaten"], forget: ["forgot", "forgotten"],
+  };
   const hit = (w, n) => sent.some((s) => s.startsWith(w.slice(0, n)));
   return norm(phrase)
     .filter((w) => !COLL_PLACEHOLDERS.has(w))
     .every((w) => {
       if (reflexive(w)) return sent.some(reflexive);
+      // 不规则变形表双向对齐:coll 写 make、例句写 made(或反之)均命中
+      const alts = [w, ...(IRREGULAR[w] ?? [])];
+      // 反向:句中词若是 w 的变形(句词是词元表中某词的变形形式)
+      for (const [base, forms] of Object.entries(IRREGULAR)) {
+        if (forms.includes(w)) alts.push(base);
+      }
+      if (alts.length > 1) {
+        if (alts.some((a) => sent.includes(a))) return true;
+        // 变形词仍允许前缀兜底(made vs making 类)
+        if (alts.some((a) => hit(a, 4) || (a.length > 3 && hit(a, 3)))) return true;
+        return false;
+      }
       // 两级前缀:先 4 字符,未中回退 3 字符(兼容 make→making / become→became 等屈折)
       return hit(w, 4) || (w.length > 3 && hit(w, 3));
     });
@@ -470,13 +522,18 @@ function validate(field, parsed, word, ipaInput, seedText) {
       }
     }
   } else if (field === "derives") {
-    const d = parsed.derives;
+    let d = parsed.derives;
     if (!Array.isArray(d)) return ["derives 缺失或非数组"];
+    // 同形条目先剔除(privilege n.→privilege v. 是词典合法的零转性派生,保留价值;
+    // 但纯回声——剔除后一条不剩——仍触发重试)。2026-09-11 修复批量跑 10 词误杀
+    const echo = d.filter((it) => it.word?.toLowerCase() === word.toLowerCase());
+    if (echo.length) d = d.filter((it) => it.word?.toLowerCase() !== word.toLowerCase());
+    parsed.derives = d;
+    if (!d.length) errs.push(`派生词全部与主词相同(纯回声)`);
     if (d.length > 5) errs.push(`条数 ${d.length} > 5`);
-    const posOk = /^(n|v|adj|adv|phr)\.((\/|\s*)(n|v|adj|adv|phr)\.)*$/;
+    const posOk = /^(n|v|adj|adv|phr|prep|conj)\.((\/|\s*)(n|v|adj|adv|phr|prep|conj)\.)*$/;
     for (const it of d) {
       if (!it.word || !it.pos || !it.meaningZh) errs.push(`derives 缺字段: ${JSON.stringify(it).slice(0, 80)}`);
-      if (it.word?.toLowerCase() === word.toLowerCase()) errs.push(`派生词与主词相同: ${it.word}`);
       if (it.pos && !posOk.test(it.pos)) errs.push(`pos 非标准缩写: ${it.pos}`);
     }
   } else if (field === "context") {
@@ -508,8 +565,15 @@ async function synth(text, outPath, retries = 3) {
     const ok = await new Promise((resolve) => {
       const child = spawn(PY, ["-m", "edge_tts", "--voice", VOICE_SENT, SENT_RATE, "--text", text, "--write-media", outPath], { stdio: ["ignore", "pipe", "pipe"] });
       let stderr = "";
+      // 看门狗:单句 TTS 3min 超时强杀(edge_tts 网络挂死会永远不触发 exit,
+      // --conc 下占死一个 worker 让整批停摆,2026-09-11 stable_1 实锤挂 6h)
+      const watchdog = setTimeout(() => {
+        stderr += "\n watchdog: 180s timeout, killed";
+        try { child.kill("SIGKILL"); } catch { /* 已退出 */ }
+      }, 180_000);
       child.stderr.on("data", (d) => (stderr += d.toString()));
       child.on("exit", async (code) => {
+        clearTimeout(watchdog);
         const size = existsSync(outPath) ? (await stat(outPath).catch(() => null))?.size ?? 0 : 0;
         resolve(code === 0 && size > 1000 ? true : stderr || `exit=${code} size=${size}`);
       });
@@ -693,9 +757,13 @@ if (BOOK) {
   console.log(`[D7 选词] book=${BOOK} fields=${FIELDS.join(",")}`);
   console.log(`  morph 任务: ${tasks.morph.length}(seed ${stats.morph.seed} / root ${stats.morph.root} / judge ${stats.morph.judge}), D7 放弃 ${stats.morph.drop}, 已有 ${stats.morph.have ?? 0}`);
   console.log(`  syl 任务: ${tasks.syl.length}(可生成 ${stats.syl.run}, 缺音标跳过 ${stats.syl.skipNoIpa}, 短语跳过 ${stats.syl.skipPhrase}), 已有 ${stats.syl.have ?? 0}`);
+  console.log(`  derives 任务: ${tasks.derives.length}(可生成 ${stats.derives.run}, 短语跳过 ${stats.derives.skipPhrase ?? 0}), 已有 ${stats.derives.have ?? 0}`);
+  console.log(`  context 任务: ${tasks.context.length}(可生成 ${stats.context.run}, 无底料跳过 ${stats.context.skipNoExample ?? 0}, 短语跳过 ${stats.context.skipPhrase ?? 0}), 已有 ${stats.context.have ?? 0}`);
   const all = [
     ...tasks.morph.map((t) => ({ word: t.word, fields: ["morph"] })),
     ...tasks.syl.map((t) => ({ word: t.word, fields: ["syl"] })),
+    ...tasks.derives.map((t) => ({ word: t.word, fields: ["derives"] })),
+    ...tasks.context.map((t) => ({ word: t.word, fields: ["context"] })),
   ];
   let idx = 0;
   let done = 0;
