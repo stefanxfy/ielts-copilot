@@ -28,7 +28,8 @@ function esc(s) {
 function escRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-/** 与 src/components/vocab/mnemonic-radial.tsx hiColl 逐行一致;返回是否可高亮 */
+/** 与 src/components/vocab/mnemonic-radial.tsx hiColl 逐行一致;返回是否可高亮。
+ *  注意前端真实语义: coll 路径 out!==s 才 return,匹配失败会继续落 headword 兜底 */
 function hiCollMatch(sentence, coll, headword) {
   const s = esc(sentence);
   const c = (coll || "").trim();
@@ -41,6 +42,7 @@ function hiCollMatch(sentence, coll, headword) {
       if (s.match(new RegExp(pat, "gi"))) return true;
     } catch { /* fallthrough */ }
   }
+  // coll 匹配失败(或无 coll)继续走 headword 兜底——与前端一致
   if (headword) {
     if (s.match(new RegExp("\\b" + escRe(esc(headword)) + "\\w*", "gi"))) return true;
   }

@@ -134,7 +134,31 @@ function escRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** 词组在例句中高亮:大小写不敏感 + 词形屈折(isolate→isolates) + coll 中 " ... " 通配 + headword 兜底(原型 hiColl 原样移植) */
+/** 词头屈折变体模式:覆盖规则屈折(s/es/ed/ing)+ 词干变化两类易错形
+ *  - y 结尾: fantasy→fantasies/ied、horrify→horrified(stem+i…)
+ *  - e 结尾: tickle→tickling/ed(掉 e,含双写 huddle→huddling —— 后缀 \w* 吃掉)
+ *  例: fantasy 句中 fantasies、imply 句中 implies(审查 2026-09-11:226 条高亮失败中 166 条为规则屈折) */
+function headwordInflectionPattern(headword: string): string {
+  const w = headword.toLowerCase();
+  const alts = [escRe(esc(w))];
+  if (w.endsWith("y") && w.length > 1) {
+    const stem = escRe(esc(w.slice(0, -1)));
+    alts.push(`${stem}ies`, `${stem}ied`, `${stem}ier`, `${stem}iest`, `${stem}i`);
+  }
+  if (w.endsWith("e") && w.length > 1) {
+    const stem = escRe(esc(w.slice(0, -1)));
+    alts.push(`${stem}ing`, `${stem}ed`);
+  }
+  alts.push(
+    escRe(esc(w)) + "s",
+    escRe(esc(w)) + "ed",
+    escRe(esc(w)) + "ing",
+    escRe(esc(w)) + "es",
+  );
+  return "(?:" + alts.join("|") + ")\\w*";
+}
+
+/** 词组在例句中高亮:大小写不敏感 + 词形屈折(isolate→isolates) + coll 中 " ... " 通配 + headword 兜底(原型 hiColl 移植;兜底升级为屈折感知,见 headwordInflectionPattern) */
 function hiColl(sentence: string, coll: string, headword: string): string {
   const s = esc(sentence);
   const c = (coll || "").trim();
@@ -154,7 +178,7 @@ function hiColl(sentence: string, coll: string, headword: string): string {
     }
   }
   if (headword) {
-    const re = new RegExp("\\b" + escRe(esc(headword)) + "\\w*", "gi");
+    const re = new RegExp("\\b" + headwordInflectionPattern(headword), "gi");
     return s.replace(re, (m) => `<mark class="mn-ctx-coll">${m}</mark>`);
   }
   return s;
