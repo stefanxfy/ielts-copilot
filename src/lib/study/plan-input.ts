@@ -28,11 +28,11 @@ export function parseWizardInput(body: unknown): { ok: true; value: WizardInput 
   if (!body || typeof body !== "object") return { ok: false, error: "请求体不是对象" };
   const b = body as Record<string, unknown>;
 
-  // 考试日期:格式 + 晚于今天
+  // 考试日期:格式 + 距今至少 30 天(备考计划需要最短准备期)
   const examDate = typeof b.examDate === "string" ? b.examDate : "";
   if (!YYYYMMDD.test(examDate)) return { ok: false, error: "考试日期格式应为 YYYY-MM-DD" };
-  if (daysBetween(examDate, todayStr()) <= 0) {
-    return { ok: false, error: "考试日期必须晚于今天" };
+  if (daysBetween(examDate, todayStr()) < 30) {
+    return { ok: false, error: "考试日期距今须不少于 30 天" };
   }
 
   // 目标总分:0–9,0.5 步进

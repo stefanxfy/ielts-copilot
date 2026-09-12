@@ -24,7 +24,7 @@ import type {
   TaskType,
 } from "@/db/schema";
 import { TASK_TYPES, TASK_UNIT } from "@/db/schema";
-import { todayStr } from "@/lib/study/date";
+import { addDays, daysBetween, todayStr } from "@/lib/study/date";
 import {
   Dialog,
   DialogContent,
@@ -141,7 +141,10 @@ function formatWeeks(weeks: number[]): string {
   return runs.join("、");
 }
 
-/* ---------- 日历(向导 STEP1;过去日禁用) ---------- */
+/* ---------- 日历(向导 STEP1;过去日与距今不足 30 天的日子禁用) ---------- */
+
+/** 考试日期下限:距今至少 30 天(备考计划需要最短准备期) */
+const MIN_EXAM_DAYS_AHEAD = 30;
 
 function ExamCalendar({
   value,
@@ -153,6 +156,7 @@ function ExamCalendar({
   const now = new Date();
   const [view, setView] = useState({ y: now.getFullYear(), m: now.getMonth() + 1 });
   const today = todayStr();
+  const minDate = addDays(today, MIN_EXAM_DAYS_AHEAD);
 
   const nav = (delta: number) =>
     setView(({ y, m }) => {
@@ -206,17 +210,17 @@ function ExamCalendar({
         {Array.from({ length: lastDay }).map((_, i) => {
           const day = i + 1;
           const date = `${view.y}-${pad(view.m)}-${pad(day)}`;
-          const past = date < today;
+          const disabled = date < minDate; // 过去日 + 距今不足 30 天
           const selected = date === value;
           return (
             <div key={date} className="flex justify-center">
               <button
                 type="button"
-                disabled={past}
+                disabled={disabled}
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] transition-colors ${
                   selected
                     ? "bg-primary text-primary-foreground"
-                    : past
+                    : disabled
                       ? "cursor-not-allowed text-muted-foreground/50"
                       : "text-muted-foreground hover:bg-primary/10"
                 } ${date === today && !selected ? "ring-1 ring-primary ring-offset-1" : ""}`}
@@ -422,6 +426,10 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
   async function next() {
     if (step === 1 && !examDate) {
       toast.error("请先选择考试日期");
+      return;
+    }
+    if (step === 1 && examDate && daysBetween(examDate, todayStr()) < MIN_EXAM_DAYS_AHEAD) {
+      toast.error(`考试日期距今须不少于 ${MIN_EXAM_DAYS_AHEAD} 天,请重新选择`);
       return;
     }
     if (step === 4) {
@@ -735,7 +743,7 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
         <div>
           <h3 className="mb-1 text-[15px]">你的考试日期</h3>
           <p className={`${HINT} mb-3`}>
-            机考每日可考,选一个目标日;过去日期不可选。
+            机考每日可考,选一个目标日;过去日期与距今不足 30 天的日子不可选。
             <button
               type="button"
               className="ml-1 text-primary hover:underline"
