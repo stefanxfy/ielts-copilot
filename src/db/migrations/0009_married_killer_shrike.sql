@@ -1,0 +1,1 @@
+ALTER TABLE `writing_sessions` ADD `ai_json` text;

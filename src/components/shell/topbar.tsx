@@ -26,6 +26,8 @@ const NAV = [
       p === "/learn" || p.startsWith("/learn/books") || p.startsWith("/learn/today"),
   },
   { href: "/learn/reading", label: "阅读学习" },
+  { href: "/typing", label: "打字练习" },
+  { href: "/writing", label: "写作练习" },
 ] as const;
 
 /** 资料库下拉项:enabled=false 为占位(置灰,点击无反应),后续实现时补 href 即可 */

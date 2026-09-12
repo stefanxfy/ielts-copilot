@@ -1,0 +1,734 @@
+/* /writing 写作仿真页 —— 纸感风,作用域 .writing-root(对齐 docs/写作仿真原型.html) */
+
+.writing-root {
+  --wbg: #f6f5f1;
+  --wcard: #ffffff;
+  --wink: #26261f;
+  --wink2: #6b6a62;
+  --wink3: #9a988d;
+  --wline: #e5e3da;
+  --waccent: #0f6e56;
+  --waccent-bg: #e7f2ee;
+  --wamber: #b97d10;
+  --wamber-bg: #fbf3e2;
+  --wred: #c2413d;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 28px 16px 60px;
+  color: var(--wink);
+}
+.writing-root .phead {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.writing-root .phead h1 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.writing-root .meta {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--wink3);
+}
+
+/* 题目卡 */
+.writing-root .pcard {
+  margin-top: 14px;
+  background: var(--wcard);
+  border: 1px solid var(--wline);
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+.writing-root .row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.writing-root .badge {
+  font-size: 11.5px;
+  background: var(--waccent-bg);
+  color: var(--waccent);
+  border-radius: 999px;
+  padding: 2px 12px;
+  font-weight: 600;
+}
+.writing-root .badge.plain {
+  background: #f1efe8;
+  color: var(--wink2);
+  font-weight: 400;
+}
+.writing-root .badge.done {
+  background: var(--wamber-bg);
+  color: var(--wamber);
+}
+.writing-root .swap {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.writing-root select {
+  background: var(--wcard);
+  border: 1px solid var(--wline);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12.5px;
+  color: var(--wink);
+  outline: none;
+  cursor: pointer;
+  max-width: 300px;
+}
+.writing-root .btn {
+  border: 1px solid var(--wline);
+  background: var(--wcard);
+  border-radius: 999px;
+  padding: 5px 16px;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: var(--wink);
+}
+.writing-root .btn:hover {
+  border-color: var(--waccent);
+  color: var(--waccent);
+}
+.writing-root .btn.main {
+  background: var(--waccent);
+  border-color: var(--waccent);
+  color: #fff;
+}
+.writing-root .btn.main:hover {
+  opacity: 0.92;
+  color: #fff;
+}
+.writing-root .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.writing-root .ptext {
+  margin-top: 12px;
+  font-size: 15.5px;
+  line-height: 1.85;
+  white-space: pre-line;
+}
+.writing-root .pimg {
+  margin-top: 12px;
+  max-width: 100%;
+  border: 1px solid var(--wline);
+  border-radius: 10px;
+}
+.writing-root .psrc {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--wink3);
+}
+
+/* 实时条 */
+.writing-root .hud {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr 0.8fr;
+  gap: 10px;
+}
+.writing-root .hcard {
+  background: var(--wcard);
+  border: 1px solid var(--wline);
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+.writing-root .hcard .lab {
+  font-size: 11.5px;
+  color: var(--wink3);
+  display: block;
+}
+.writing-root .hcard b {
+  font-size: 22px;
+  font-weight: 600;
+}
+.writing-root .hcard .sub {
+  font-size: 11px;
+  color: var(--wink3);
+  margin-left: 4px;
+}
+.writing-root .hcard .state {
+  font-size: 11px;
+  margin-left: 4px;
+}
+.writing-root .pbar {
+  margin-top: 4px;
+  height: 5px;
+  background: #f1efe8;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.writing-root .pbar i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s, background 0.3s;
+}
+
+/* 编辑器 */
+.writing-root .ewrap {
+  margin-top: 14px;
+}
+.writing-root .editor {
+  width: 100%;
+  min-height: 420px;
+  background: var(--wcard);
+  border: 2px solid var(--wline);
+  border-radius: 14px;
+  padding: 22px 26px;
+  font-size: 15.5px;
+  line-height: 1.9;
+  color: var(--wink);
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  display: block;
+}
+.writing-root .editor:focus {
+  border-color: var(--waccent);
+}
+.writing-root .editor:disabled {
+  background: #faf9f5;
+  color: var(--wink2);
+}
+.writing-root .foot {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.writing-root .tip {
+  font-size: 12px;
+  color: var(--wink3);
+}
+.writing-root .foot .btns {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+.writing-root .donetag {
+  display: none;
+  font-size: 12px;
+  color: var(--waccent);
+  background: var(--waccent-bg);
+  border-radius: 999px;
+  padding: 2px 12px;
+}
+.writing-root .donetag.show {
+  display: inline;
+}
+
+/* 统计卡(内联展开) */
+.writing-root .rvsec {
+  display: none;
+  margin-top: 14px;
+}
+.writing-root .rvsec.show {
+  display: block;
+}
+.writing-root .panel {
+  background: var(--wcard);
+  border: 1px solid var(--wline);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.writing-root .rvhead h3 {
+  font-size: 15.5px;
+  font-weight: 600;
+}
+.writing-root .cards {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.writing-root .rcard {
+  background: var(--wbg);
+  border: 1px solid var(--wline);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.writing-root .rcard b {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+}
+.writing-root .rcard span {
+  font-size: 11.5px;
+  color: var(--wink3);
+}
+.writing-root .rcard.ok b {
+  color: var(--waccent);
+}
+.writing-root .rcard.warn b {
+  color: var(--wamber);
+}
+.writing-root .note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--wink2);
+  background: var(--wbg);
+  border-radius: 10px;
+  padding: 10px 14px;
+  line-height: 1.8;
+}
+.writing-root .rvbtns {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* W2 练习历史:趋势 + 流水 + 回看 */
+.writing-root .histsec {
+  margin-top: 14px;
+}
+.writing-root .hhead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.writing-root .hsum {
+  font-size: 12px;
+  color: var(--wink2);
+}
+.writing-root .hempty {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--wink3);
+  background: var(--wbg);
+  border-radius: 10px;
+  padding: 18px 16px;
+  text-align: center;
+}
+.writing-root .trendwrap {
+  margin-top: 12px;
+  background: var(--wbg);
+  border: 1px solid var(--wline);
+  border-radius: 10px;
+  padding: 12px 14px 6px;
+}
+.writing-root .tlab {
+  font-size: 11.5px;
+  color: var(--wink2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.writing-root .tlegend {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--wink3);
+}
+.writing-root .tlegend .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.writing-root .tlegend .dot.ok {
+  background: var(--waccent);
+}
+.writing-root .tlegend .dot.warn {
+  background: var(--wamber);
+}
+.writing-root .tlegend .dash {
+  width: 16px;
+  height: 0;
+  border-top: 1.5px dashed var(--wamber);
+  display: inline-block;
+  margin-left: 4px;
+}
+.writing-root .trend {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-top: 6px;
+}
+.writing-root .hlist {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.writing-root .hrow {
+  border: 1px solid var(--wline);
+  border-radius: 10px;
+  background: var(--wbg);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.writing-root .hrow:hover {
+  border-color: var(--waccent);
+}
+.writing-root .hrow.open {
+  border-color: var(--waccent);
+  background: var(--wcard);
+}
+.writing-root .hrow-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  min-width: 0;
+}
+.writing-root .htime {
+  font-size: 11.5px;
+  color: var(--wink3);
+  flex-shrink: 0;
+  width: 74px;
+}
+.writing-root .htitle {
+  font-size: 13px;
+  color: var(--wink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+.writing-root .htag {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  border-radius: 999px;
+  padding: 1px 9px;
+}
+.writing-root .htag.ok {
+  background: var(--waccent-bg);
+  color: var(--waccent);
+}
+.writing-root .htag.warn {
+  background: var(--wamber-bg);
+  color: var(--wamber);
+}
+.writing-root .hstat {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--wink2);
+  width: 62px;
+  text-align: right;
+}
+.writing-root .hstat.strong {
+  color: var(--waccent);
+  font-weight: 600;
+}
+.writing-root .chev {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--wink3);
+  width: 12px;
+}
+.writing-root .hreview {
+  border-top: 1px dashed var(--wline);
+  padding: 14px 18px;
+  cursor: default;
+}
+.writing-root .hprompt {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--wink2);
+  background: var(--wbg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  white-space: pre-line;
+}
+.writing-root .hcontent {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--wink);
+  white-space: pre-wrap;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.writing-root .hmeta {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--wink3);
+}
+.writing-root .hloading {
+  font-size: 12.5px;
+  color: var(--wink3);
+  padding: 6px 2px;
+}
+
+/* W3 任务类型切换 */
+.writing-root .seg {
+  display: inline-flex;
+  border: 1px solid var(--wline);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.writing-root .seg button {
+  border: none;
+  background: var(--wcard);
+  padding: 5px 14px;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: var(--wink2);
+}
+.writing-root .seg button + button {
+  border-left: 1px solid var(--wline);
+}
+.writing-root .seg button.on {
+  background: var(--waccent);
+  color: #fff;
+  font-weight: 600;
+}
+.writing-root .htag.band {
+  background: var(--waccent-bg);
+  color: var(--waccent);
+  font-weight: 600;
+}
+
+/* W4 AI 批改 */
+.writing-root .aisec {
+  margin-top: 12px;
+}
+.writing-root .airow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--wbg);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.writing-root .aihint {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--wink2);
+  line-height: 1.6;
+}
+.writing-root .airev-loading,
+.writing-root .airev-err {
+  font-size: 13px;
+  color: var(--wink2);
+  background: var(--wbg);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.writing-root .airev-err {
+  color: var(--wred);
+}
+.writing-root .airev-err .btn {
+  margin-left: 10px;
+}
+.writing-root .ahead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.writing-root .aband {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--waccent);
+  background: var(--waccent-bg);
+  border-radius: 8px;
+  padding: 3px 12px;
+}
+.writing-root .ameta {
+  font-size: 11.5px;
+  color: var(--wink3);
+}
+.writing-root .adims {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.writing-root .adim {
+  background: var(--wbg);
+  border: 1px solid var(--wline);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.writing-root .adim-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.writing-root .adim-h b {
+  font-size: 13px;
+}
+.writing-root .adim-h b span {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--wink3);
+  margin-left: 2px;
+}
+.writing-root .adim-h em {
+  font-style: normal;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--waccent);
+}
+.writing-root .adim p {
+  margin-top: 5px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--wink2);
+}
+.writing-root .adim ul {
+  margin-top: 6px;
+  padding-left: 14px;
+}
+.writing-root .adim li {
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--wink3);
+  line-height: 1.6;
+}
+.writing-root .aimp {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--wamber);
+  background: var(--wamber-bg);
+  border-radius: 8px;
+  padding: 5px 10px;
+  line-height: 1.6;
+}
+.writing-root .asw {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.writing-root .asw-col {
+  background: var(--wbg);
+  border: 1px solid var(--wline);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.writing-root .asw-col b {
+  font-size: 12px;
+}
+.writing-root .asw-col b.ok {
+  color: var(--waccent);
+}
+.writing-root .asw-col b.warn {
+  color: var(--wamber);
+}
+.writing-root .asw-col ul {
+  margin-top: 5px;
+  padding-left: 16px;
+}
+.writing-root .asw-col li {
+  font-size: 12.5px;
+  color: var(--wink2);
+  line-height: 1.7;
+}
+.writing-root .aflags {
+  margin-top: 10px;
+  background: var(--wbg);
+  border: 1px solid var(--wline);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.writing-root .aflags > b {
+  font-size: 12px;
+  color: var(--wink2);
+}
+.writing-root .afitem {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.writing-root .aftag {
+  display: inline-block;
+  font-size: 10.5px;
+  background: #faeaea;
+  color: var(--wred);
+  border-radius: 4px;
+  padding: 0 7px;
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+.writing-root .afitem s {
+  color: var(--wred);
+}
+.writing-root .afarr {
+  margin: 0 6px;
+  color: var(--wink3);
+}
+.writing-root .afix {
+  color: var(--waccent);
+}
+.writing-root .asample {
+  margin-top: 10px;
+  border: 1px solid var(--wline);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.writing-root .asample summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--waccent);
+  padding: 9px 14px;
+  background: var(--waccent-bg);
+}
+.writing-root .asample pre {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.8;
+  font-family: inherit;
+  white-space: pre-wrap;
+  color: var(--wink);
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+/* toast */
+.writing-root .ttoast {
+  position: fixed;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--wink);
+  color: #fff;
+  font-size: 13px;
+  border-radius: 999px;
+  padding: 8px 22px;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.25s;
+  z-index: 60;
+}
+.writing-root .ttoast.show {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 720px) {
+  .writing-root .hud {
+    grid-template-columns: 1fr 1fr;
+  }
+  .writing-root .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .writing-root .hrow-main {
+    flex-wrap: wrap;
+  }
+  .writing-root .htitle {
+    flex-basis: 100%;
+    order: 5;
+    white-space: normal;
+  }
+  .writing-root .adims,
+  .writing-root .asw {
+    grid-template-columns: 1fr;
+  }
+  .writing-root .airow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

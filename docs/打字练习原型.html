@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="UttYpkocmhSXo0HW7TL9fk">
+<head data-page-node-id="4HrYGm83zeO26MW8zlV1Zy">
+<meta charset="UTF-8" data-page-node-id="INo15nTujuJhxVy4HdoIEA">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="BO9bqnBWMs0eD0KdpgcRUE">
+<title>打字练习 · 原型</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --card:#ffffff; --ink:#26261f; --ink2:#6b6a62; --ink3:#9a988d;
+    --line:#e3e1d8; --accent:#0f6e56; --accent-bg:#e1f5ee; --amber:#ba7517; --amber-bg:#faeeda;
+    --red:#a32d2d; --red1:#f7c1c1; --red2:#f09595; --red3:#e24b4a;
+    --mono:ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.7;}
+  .appnav{position:sticky;top:0;z-index:30;background:rgba(246,245,241,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);}
+  .appnav .in{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:6px;padding:10px 16px;}
+  .navitem{font-size:14px;color:var(--ink3);border:1px solid transparent;background:none;border-radius:999px;padding:5px 16px;cursor:pointer;}
+  .navitem.active{color:var(--accent);background:var(--accent-bg);font-weight:600;}
+  .navright{margin-left:auto;font-size:12px;color:var(--ink3);}
+  .wrap{max-width:960px;margin:0 auto;padding:18px 16px 60px;}
+
+  .phead{display:flex;align-items:center;}
+  h1{font-size:19px;font-weight:600;}
+  .combo{margin-left:auto;font-size:13px;color:var(--ink2);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px 14px;}
+  .combo b{font-family:var(--mono);color:var(--accent);font-size:15px;}
+  .combo.hot{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
+
+  .hudrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;}
+  .hcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 16px;}
+  .hcard .lab{font-size:11.5px;color:var(--ink3);}
+  .hcard b{display:block;font-size:24px;font-weight:700;color:var(--accent);font-family:var(--mono);line-height:1.3;letter-spacing:-.5px;}
+  .hcard b.state{font-family:inherit;font-size:20px;letter-spacing:0;}
+  .hcard .sub{font-size:11.5px;color:var(--ink3);}
+  .hcard b i{font-style:normal;font-size:15px;color:var(--ink3);}
+  .pbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:5px;}
+  .pbar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s;}
+
+  .tools{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .tabs2{display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px;}
+  .tt{font-size:13px;border:none;background:none;border-radius:999px;padding:5px 18px;cursor:pointer;color:var(--ink3);}
+  .tt.on{background:var(--accent);color:#fff;font-weight:600;}
+  .artsel{flex:1;min-width:220px;max-width:460px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 16px;font-size:13px;color:var(--ink);outline:none;cursor:pointer;}
+  .artsel:focus{border-color:var(--accent);}
+  .sndsel{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--ink);outline:none;cursor:pointer;}
+  .dwords{display:none;align-items:center;gap:6px;flex-wrap:wrap;flex:1;}
+  .dwords .lab{font-size:12px;color:var(--ink3);}
+  .dchip{font-size:12px;font-family:var(--mono);background:var(--amber-bg);color:var(--amber);border-radius:6px;padding:1px 8px;}
+
+  .hintbar{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 14px;font-size:12.5px;color:var(--ink2);display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+  .hintbar b{color:var(--accent);}
+  .hintbar .k{font-family:var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:0 6px;font-size:11.5px;}
+  .imewarn{color:var(--red3);display:none;font-weight:600;}
+  .imewarn.show{display:inline;}
+
+  .tboxwrap{position:relative;}
+  .tbox{margin-top:12px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:24px 28px;font-family:var(--mono);font-size:16.5px;line-height:2.05;letter-spacing:.2px;max-height:46vh;overflow-y:auto;cursor:text;outline:none;transition:border-color .2s;position:relative;}
+  .tbox.focus{border-color:var(--accent);}
+  .tbox .ch{border-radius:3px;padding:0 1px;}
+  .tbox .pending{color:#a5a396;background:#f1efe8;}
+  .tbox .ok{color:#1c5c48;background:var(--accent-bg);}
+  .tbox .err{color:#fff;background:var(--red3);}
+  .tbox .cur{background:var(--ink);color:#fff;box-shadow:0 0 0 2px var(--amber-bg);}
+  .tbox .enter{color:#cfcdc2;font-size:12px;margin:0 1px;}
+  .tpara{display:block;}
+  .tpara + .tpara{margin-top:10px;}
+
+  .foot{display:flex;align-items:center;margin-top:12px;gap:12px;}
+  .foot .tip{font-size:12px;color:var(--ink3);}
+  .foot .btns{margin-left:auto;display:flex;gap:8px;}
+  .btn{font-size:13.5px;border-radius:999px;padding:7px 22px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink2);}
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.main{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+  .btn.main:hover{background:#0c5c49;color:#fff;}
+  .donetag{display:none;font-size:13px;color:var(--accent);font-weight:600;}
+  .donetag.show{display:inline;}
+
+  .rvsec{display:none;margin-top:16px;}
+  .rvsec.show{display:block;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px 24px;}
+  .rvhead{display:flex;align-items:center;gap:10px;}
+  .rvhead h3{font-size:17px;font-weight:600;}
+  .tabs{margin-left:auto;display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px;}
+  .tab{font-size:13px;border:none;background:none;border-radius:999px;padding:4px 18px;cursor:pointer;color:var(--ink3);}
+  .tab.on{background:var(--accent);color:#fff;font-weight:600;}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
+  .rcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+  .rcard b{font-size:30px;font-weight:700;color:var(--accent);font-family:var(--mono);letter-spacing:-1px;}
+  .rcard span{display:block;font-size:12px;color:var(--ink3);margin-top:2px;}
+  .rvgrid{display:grid;grid-template-columns:1fr 1.2fr;gap:14px;margin-top:14px;}
+  .rbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+  .rbox h4{font-size:13px;font-weight:600;color:var(--ink);}
+  .rtable{width:100%;margin-top:8px;border-collapse:collapse;}
+  .rtable th{font-size:11.5px;color:var(--ink3);font-weight:400;text-align:left;padding:4px 0;border-bottom:1px solid var(--line);}
+  .rtable td{font-size:13px;padding:6px 0;border-bottom:1px dashed #efede6;}
+  .rtable tr:last-child td{border-bottom:none;}
+  .lblock{display:inline-block;min-width:24px;text-align:center;font-family:var(--mono);font-weight:600;font-size:13px;color:var(--red);background:#fdeeee;border-radius:6px;padding:1px 6px;}
+  .rtable td.num{font-family:var(--mono);}
+  .rtable td.pct{color:var(--ink2);}
+  .kb{margin-top:10px;background:#f4f3ee;border-radius:12px;padding:12px;}
+  .krow{display:flex;gap:5px;margin-bottom:5px;}
+  .krow.r2{margin-left:19px;}
+  .krow.r3{margin-left:38px;}
+  .key{width:33px;height:33px;border-radius:9px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;color:var(--ink2);}
+  .key.k1{background:var(--red1);border-color:var(--red1);color:var(--red);}
+  .key.k2{background:var(--red2);border-color:var(--red2);color:#fff;}
+  .key.k3{background:var(--red3);border-color:var(--red3);color:#fff;}
+  .kleg{display:flex;gap:14px;margin-top:8px;font-size:11.5px;color:var(--ink2);}
+  .kleg i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px;}
+  .wrow{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+  .wchip{font-size:13px;font-family:var(--mono);background:#fdeeee;color:var(--red);border:1px solid var(--red1);border-radius:8px;padding:3px 10px;cursor:pointer;}
+  .wchip.voc{background:var(--accent-bg);color:var(--accent);border-color:#bfded2;text-decoration:underline dotted;text-underline-offset:3px;}
+  .rvbtns{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
+  .toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:8px 18px;border-radius:999px;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none;max-width:70vw;}
+  .toast.show{opacity:1;}
+  .wc-pop{position:fixed;z-index:70;width:280px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);padding:12px 14px;display:none;}
+  .wc-pop.show{display:block;}
+  .wc-pop .w{display:flex;align-items:baseline;gap:8px;}
+  .wc-pop .w b{font-size:17px;}
+  .wc-pop .ph{font-size:12px;color:var(--ink3);}
+  .wc-pop .zh{margin-top:6px;font-size:13px;color:var(--ink2);}
+  .wc-pop .miss{margin-top:4px;font-size:12px;color:var(--ink3);}
+  @media (max-width:720px){.hudrow,.cards{grid-template-columns:repeat(2,1fr);}.rvgrid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body data-page-node-id="ObfbCcGsGEubQnpQ5akgJz">
+<div class="appnav" data-page-node-id="EIXroH2PoheVzUT9OC5Dd4"><div class="in" data-page-node-id="iySXqNsnboSegnbryK06Sb">
+  <button class="navitem" onclick="toast('原型仅演示「打字练习」')" data-page-node-id="R3G8ZkMku1mV3NCxRXc7eA">背单词</button>
+  <button class="navitem" onclick="toast('原型仅演示「打字练习」')" data-page-node-id="7YdH8RUWWnYdj0Hpc78fZA">阅读学习</button>
+  <button class="navitem active" data-page-node-id="2R9Oe5nUtqsq8J9OsKUmu6">打字练习</button>
+  <button class="navitem" onclick="toast('原型仅演示「打字练习」')" data-page-node-id="MfOFKPa8UrCm4WznnIZtlL">资料库</button>
+  <span class="navright" data-page-node-id="X0CpzswW7ohjnM0XHYzdDz">IELTS Copilot · 原型</span>
+</div></div>
+
+<div class="wrap" id="view-typing" data-page-node-id="WwbDDVXQNBwsSdMAeOryuE">
+  <div class="phead" data-page-node-id="6e1W4C9lAJBPq3FjaNV7PJ">
+    <h1 data-page-node-id="dhb09vMQ8b9eJgo7kYVDtD">打字练习</h1>
+    <div class="combo" id="combo-pill" data-page-node-id="sZVKhNJ7oRj5qGKfvmwFfZ">连击 ×<b id="c-combo" data-page-node-id="esw54f3GaP2Y7DWzaRh6Re">0</b></div>
+  </div>
+
+  <div class="hudrow" data-page-node-id="KgN5BARPCDnRXgGAQncMYA">
+    <div class="hcard" data-page-node-id="0Au3yHBuuii0NH79eULL6W"><span class="lab" data-page-node-id="ZYj5rDUPWb9ogPysmkOcVa">当前节奏</span><b class="state" id="h-state" data-page-node-id="HXyDQVZhaGY0NYc1f9OPG6">热身中</b><span class="sub" id="h-wpm" data-page-node-id="YzIHKnXMJq4sxI71M5Wi5u">0 WPM · 实时</span></div>
+    <div class="hcard" data-page-node-id="pZuD5BJV6hAwZhfqEtxISf"><span class="lab" data-page-node-id="ZHgHX1YC5GRybz95Aj6fdi">已完成 / 总字符</span><b data-page-node-id="k6gxX4ccdkw7V3kWm9xBO7"><span id="h-done" data-page-node-id="7XMv8XvnUUl7m4Twx3uMXV">0</span><i data-page-node-id="82OUsM3cegkfddF2ni2mSd"> / <span id="h-total" data-page-node-id="4vDvX8W8edOjpXStPR9xBF">0</span></i></b><div class="pbar" data-page-node-id="jLjBtgGsiQt5r0gESw1rYy"><i id="h-bar" data-page-node-id="wyshzkSbooCpFvFER8dEOt"></i></div></div>
+    <div class="hcard" data-page-node-id="DW5McjBFYVb4idPa3sMcDm"><span class="lab" data-page-node-id="6L6N06YGftQIjjS9mMzXrS">准确率</span><b id="h-acc" data-page-node-id="Q1XqI3uGLJQ1dbBBZHE3mt">100%</b><span class="sub" data-page-node-id="FcFa9FLf0bVxGE4ZagIeRx">实时 · 已完成部分</span></div>
+    <div class="hcard" data-page-node-id="iuRnXbqORP9mcFqdUKi0A1"><span class="lab" data-page-node-id="EYfvqMqTQZiOSug37aZDZm">时间</span><b id="h-time" data-page-node-id="0SGfjZXxj1QL6pkjUgnDLy">00:00</b><span class="sub" id="h-modetag" data-page-node-id="w7mSw7Ll8ZEPmZUJmf7k4L">文章跟打 · 整篇</span></div>
+  </div>
+
+  <div class="tools" data-page-node-id="1iapiinbsCBQjAE9ufpmaS">
+    <div class="tabs2" data-page-node-id="TbFJeNSLY6rb13Iw2MdQ2D">
+      <button class="tt on" id="mt-article" onclick="switchMode('article')" data-page-node-id="4LoRsWD9zBZbAfxoYmV1bY">文章跟打</button>
+      <button class="tt" id="mt-drill" onclick="switchMode('drill')" data-page-node-id="9FBK6nJWGeRWBFEeaFSbFq">错词重练</button>
+    </div>
+    <select class="artsel" id="art-select" onchange="onSelectArt()" data-page-node-id="anqo3gTGzkDIcDjsafpV7J"></select>
+    <div class="dwords" id="d-words" data-page-node-id="axdhCN3PTf7FJrdW1aErmZ"><span class="lab" data-page-node-id="PDmGePXFtdnVeJivJYm6HJ">本期目标词</span></div>
+    <select class="sndsel" id="snd-select" onchange="setSnd(this.value)" title="键音方案">
+      <option value="mech">🔊 机械键盘</option>
+      <option value="thock">🔊 静电容「碎碎」</option>
+      <option value="tick">🔊 轻快滴答</option>
+      <option value="type">🔊 打字机</option>
+      <option value="piano">🔊 钢琴音阶</option>
+      <option value="jelly">🔊 果冻泡泡</option>
+      <option value="off">🔇 静音</option>
+    </select>
+  </div>
+
+  <div class="hintbar" data-page-node-id="dmzFLRZVa6t5246ppBkCCP">
+    <span data-page-node-id="VIyywOBCbMIThvpHnVlvab">继续打字，按正确字母前进（<span class="k" data-page-node-id="H3XqObBGbpFcpI2HCTjgvu">Backspace</span> 支持回退）</span>
+    <span data-page-node-id="ngnuPEEGHED16exutRTWq0"><span class="k" data-page-node-id="DHdD6HaBkalmGo0KpPH7Ve">ESC</span> 放弃本篇（不入库）</span>
+    <span data-page-node-id="pGyxawUvI1kGYkE8iYFMJA">段尾 <b data-page-node-id="5pfbhz00bD2v11a1Cb9AaP">↵</b> 自动衔接，无需回车</span>
+    <span class="imewarn" id="ime-warn" data-page-node-id="rwMvmD0gD9V1V6F7z56HFB">检测到中文输入法 · 请切换为英文键盘</span>
+  </div>
+
+  <div class="tboxwrap" data-page-node-id="98O3BRzrHVbPdwaWSyoymO">
+    <div class="tbox" id="tbox" tabindex="0" data-page-node-id="grarHwFNvx00ksTq06H730"></div>
+  </div>
+
+  <div class="foot" data-page-node-id="YFDEnC7sQMF11IwiDhgCFT">
+    <span class="tip" id="src-tip" data-page-node-id="ZmBE11FtzU0GDILIBoSswZ">素材 · 阅读库真题文章 | <span class="donetag" id="done-tag" data-page-node-id="6HpwdaZ45K1ImLUT5Lb6QZ">本篇已完成 ✓</span></span>
+    <div class="btns" data-page-node-id="q9CJgatf977OkCVGlVZvVK">
+      <button class="btn" onclick="openReview()" data-page-node-id="slBv1noZpI5kdDOJyOam4C">复盘</button>
+      <button class="btn main" onclick="resetTyping()" data-page-node-id="awIBlxF59DLstjHAS9FP9r">重置</button>
+    </div>
+  </div>
+
+  <div class="rvsec" id="review-panel">
+  <div class="panel" data-page-node-id="QKTuosYSuLwN68ZqrUCFTW">
+    <div class="rvhead" data-page-node-id="naainc8EatDSL5xOXHoKhc">
+      <h3 data-page-node-id="zjxw9ue1EIPmX2iDJ8J4l8">错误复盘分析</h3>
+      <div class="tabs" data-page-node-id="PiGfIrnsmnyZFG3ELlUcjI">
+        <button class="tab on" id="tab-session" onclick="showReview('session')" data-page-node-id="orUen4nESRePuv4ig7Bcr3">当次</button>
+        <button class="tab" id="tab-cum" onclick="showReview('cum')" data-page-node-id="TcWSYRGSnxLfwsFC22ZAry">累计</button>
+      </div>
+    </div>
+    <div class="cards" id="rv-cards" data-page-node-id="brCQZQdRjTIeECtwaQhWoK"></div>
+    <div class="rvgrid" data-page-node-id="ca0hqLHC2AnsqwaQm0Ghto">
+      <div class="rbox" data-page-node-id="CGIgulx1wWYo3t5LZ6qnXV">
+        <h4 data-page-node-id="XDQX1BHaKbe7fKWiLcPN13">最易出错字符 TOP 8</h4>
+        <table class="rtable" data-page-node-id="9AAwhphytmACIB32U79vnu"><thead data-page-node-id="ONdOaB2SX1Ow2apmskBIHF"><tr data-page-node-id="xBDBUn81K6N3fTvMapeHVs"><th data-page-node-id="FUMGR48aG4WSfwKg2Y366q">字符</th><th data-page-node-id="EAFux8RTWYEe55F9s5zEgm">打错次数</th><th data-page-node-id="9BDKCJoGGgsDyPIimG0YBY">占错误比</th></tr></thead><tbody id="rv-top" data-page-node-id="ZRp4ngZTATyPFOhx5Ix0s1"></tbody></table>
+        <div id="rv-words-wrap" style="margin-top:10px;" data-page-node-id="mpvWgp9M5aZdQxfy56NZec">
+          <h4 style="margin-bottom:2px;" data-page-node-id="56y0azeggHvNh5L7oovZQ1">本篇错词 <span style="font-size:11px;color:var(--ink3);font-weight:400;" data-page-node-id="P3bLLQsunikB9ggyZgyTN8">（下划线 = 词库命中，点看释义）</span></h4>
+          <div class="wrow" id="rv-words" data-page-node-id="NqzaOqtzr9d8fn75L2FXEH"></div>
+        </div>
+      </div>
+      <div class="rbox" data-page-node-id="W5h5yysvBGxFTU9FCGfLFo">
+        <h4 data-page-node-id="CaDJgsaOr5pkP1Fng8XvGU">键盘错误热力图</h4>
+        <div class="kb" id="rv-kb" data-page-node-id="d8TbUxYcXt4bOnrrs9viTR"></div>
+        <div class="kleg" data-page-node-id="yKfqMFrpdG71VqrHS2VDkl">
+          <span data-page-node-id="5YrbDgYfLZdwNWJ1Iz9nDA"><i style="background:#fff;border:1px solid var(--line);" data-page-node-id="IPrLa7lhzoul7GDDgOCC4L"></i>无错误</span>
+          <span data-page-node-id="o0syBakVSiyDVEiQzNHEmL"><i style="background:var(--red1);" data-page-node-id="Vv8ODlxoEo1VdimI9AQkDK"></i>少量</span>
+          <span data-page-node-id="RD5PBke9Gjs7KODhfKE1Pi"><i style="background:var(--red2);" data-page-node-id="68oK223LgGHVROEfcL1Ct7"></i>中等</span>
+          <span data-page-node-id="WbBWz9M2qxrrEyFZGlkBBg"><i style="background:var(--red3);" data-page-node-id="N4OYkh0OUNnAehBqByBPAY"></i>高频</span>
+        </div>
+      </div>
+    </div>
+    <div class="rvbtns" data-page-node-id="n2TKuPLklqYnxxfzWd1iW4">
+      <button class="btn" onclick="closeReview()" data-page-node-id="l2I2gE49bhaoUT2p4FeXNE">收起</button>
+      <button class="btn main" onclick="retype()" data-page-node-id="HGtzshbCDClH9dMhiRiGMu">再打一遍</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<div class="wc-pop" id="wc-pop" data-page-node-id="XBBEP77ZebhmRtikpdRDOH"></div>
+<div class="toast" id="toast" data-page-node-id="glKUPG341J4vV7usdUAKTA"></div>
+
+<script>
+const DATA=[{"id":"a-2022apr-test1-r-t1-p2","title":"ILLEGAL DOWNLOADS","wc":812,"src":"2022年4月真题 Test 1 · P2","lv":"L3","paras":[{"idx":0,"en":"Downloading music from the internet has become a simple, fast and easy thing to do. The correct or legal way of going about it seems to be ignored by those who find it too costly. Illegal music downloads have reached an all time high, and a recent survey of high school students revealed an estimated 3.6 billion songs being downloaded per month. There are now endless possibilities available to the public where music can be downloaded for free and people are choosing to take this route even though it is illegal. iTunes is one of the most well known sites where music can be bought legally for just over 51 per track. So when it is this cheap why are people still going to alternative unauthorized sites? Or is the legal route still considered a costly way to go about it?"},{"idx":1,"en":"If you think that copying music results in simply a slap on the wrist, think twice. Under government law, record companies are entitled to $750 to $30,000 per infringement but the law allows the jury to increase that to as much as $150,000 per song if it finds the infringements were deliberate. The music industry has threatened about 35,000 people with charges of copyright Infringement over the past decade. In recent months there have been more cases of music piracy heading to the courts. The industry estimates that more than a hundred of these cases remain unsettled in court, with fewer than 10 offenders actively arguing the case against them. The penalties for breaching the copyright act differ slightly depending upon whether the infringing is for commercial or private financial gain, with the latter punishment being far milder."},{"idx":2,"en":"Nonetheless, the potential gain from illegal downloading versus the punitive measures that can be taken are, in many cases, poles apart. Recently, an American woman shared 27 illegally downloaded songs with her friends and was ordered to pay $1.92 million to the record company for deliberate infringement of the companies’ copyrights. More recently in America a 12 year old girl was sued for downloading music illegally and could face a penalty of $1150per song. The order of payment from the courts to the American woman who shared the 27 tracks with her friends has spurred controversy as the public disagree with the ordered Infringement. The woman shared 27 songs at $1.99 per song, so should she be liable to pay such a large and impossible amount?"},{"idx":3,"en":"It has also been noted that of all measures that can be taken, fining is actually the least likely method of preventing further abuse. With driving, for example, statistics have shown that those that repeatedly drive over the speed limit are not discouraged by the loss of a sum of money, but this attitude quickly changed when the penalty was possibly losing their driving licence or even spending time in prison."},{"idx":4,"en":"Being a difficult thing to police, the music industry has decided that it would be much easier to go after the internet service provider than to try and track down each individual case. The music industry feels internet piracy has decreased their artists’ sales dramatically and is a danger to their business, although on the other hand, online music sales promote individual tracks to be sold rather than albums, therefore increasing the amount spent by the purchaser."},{"idx":5,"en":"If there are so many issues around the downloading of music, you might wonder why sales of MP3 players and CD burners are increasing rapidly The answer is simple – these devices do have a legitimate purpose defined as ‘fair use’. You can choose to make your personal back-up copy to use in a MP3 player, or you may visit one of many web sites, like iTunes, which offers music that you pay for as you download. While some may wonder why you would pay for something that can be had for free, those who do prefer to obey the copyright protection laws have purchased over 150 million songs from the iTunes site alone."},{"idx":6,"en":"Online music sales are a business just like any other and music companies are fighting to salvage their industry. Cary Sherman, the President of RIAA (Recording Industry Association of America), stated that when your product is being regularly stolen, there comes a time when you have to take appropriate action. At the same time, the RIAA has offered amnesty to the illegal downloader who decide to come forward and agree to stop illegally downloading music over the Internet. People who have already been sued are obviously not eligible for amnesty."},{"idx":7,"en":"When high school students were asked how they felt about the business of downloading illegally from the net, they appeared to be divided on the issue. Some seemed to think there was absolutely nothing wrong with it, others felt that it should be thought of as a serious crime like any other form of theft."}]},{"id":"a-2022aug-test1-r-t1-p1","title":"Mammoth kill","wc":983,"src":"2022年8月真题 Test 1 · P1","lv":"L3","paras":[{"idx":0,"en":"A mammoth is any species of the extinct genus Mammuthus, proboscideans commonly equipped with long, curved tusks and, in northern species, a covering of long hair. They lived from the Pliocene epoch (from around 5 million years ago) into the Holocene at about 4,500 years ago, and were members of the family Elephantidae, which contains, along with mammoths, the two genera of modern elephants and their ancestors."},{"idx":1,"en":"Like their modern relatives, mammoths were quite large. The largest known species reached heights in the region of 4 m at the shoulder and weights of up to 8 tonnes, while exceptionally large males may have exceeded 12 tonnes. However, most species of mammoth were only about as large as a modern Asian elephant. Both sexes bore tusks. A first, small set appeared at about the age of six months, and these were replaced at about 18 months by the permanent set. Growth of the permanent set was at a rate of about 2.5 to 15.2 cm per year. Based on studies of their close relatives, the modern elephants, mammoths probably had a gestation period of 22 months, resulting in a single calf being born. Their social structure was probably the same as that of African and Asian elephants, with females living in herds headed by a matriarch, whilst bulls lived solitary lives or formed loose groups after sexual maturity."},{"idx":2,"en":"MEXICO CITY – Although it’s hard to imagine in this age of urban sprawl and automobiles, North America once belonged to mammoths, camels, ground sloths as large as cows, bear-size beavers and other formidable beasts. Some 11,000 years ago, however, these large-bodied mammals and others – about 70 species in all – disappeared. Their demise coincided roughly with the arrival of humans in the New World and dramatic climatic change – factors that have inspired several theories about the die-off. Yet despite decades of scientific investigation, the exact cause remains a mystery. Now new findings offer support to one of these controversial hypotheses: that human hunting drove this megafaunal menagerie to extinction. The overkill model emerged in the 1960s, when it was put forth by Paul S. Martin of the University of Arizona. Since then, critics have charged that no evidence exists to support the idea that the first Americans hunted to the extent necessary to cause these extinctions. But at the annual meeting of the Society of Vertebrate Paleontology in Mexico City last October, paleoecologist John Alroy of the University of California at Santa Barbara argued that, in fact, hunting-driven extinction is not only plausible, it was unavoidable. He has determined, using a computer simulation, that even a very modest amount of hunting would have wiped these animals out."},{"idx":3,"en":"Assuming an initial human population of 100 people that grew no more than 2 percent annually, Alroy determined that if each band of, say, 50 people killed 15 to 20 large mammals a year, humans could have eliminated the animal populations within 1,000 years. Large mammals in particular would have been vulnerable to the pressure because they have longer gestation periods than smaller mammals and their young require extended care."},{"idx":4,"en":"Not everyone agrees with Alroy’s assessment. For one, the results depend in part on population-size estimates for the extinct animals – figures that are not necessarily reliable. But a more specific criticism comes from mammalogist Ross D. E. MacPhee of the American Museum of Natural History in New York City, who points out that the relevant archaeological record contains barely a dozen examples of stone points embedded in mammoth bones (and none, it should be noted, are known from other megafaunal remains) – hardly what one might expect if hunting drove these animals to extinction. Furthermore, some of these species had huge ranges – the giant Jefferson’s ground sloth, for example, lived as far north as the Yukon and as far south as Mexico – which would have made slaughtering them in numbers sufficient to cause their extinction rather implausible, he says."},{"idx":5,"en":"MacPhee agrees that humans most likely brought about these extinctions (as well as others around the world that coincided with human arrival), but not directly. Rather he suggests that people may have introduced hyperlethal disease, perhaps through their dogs or hitchhiking vermin, which then spread wildly among the immunologically naive species of the New World. As in the overkill model, populations of large mammals would have a harder time recovering. Repeated outbreaks of a hyperdisease could thus quickly drive them to the point of no return. So far MacPhee does not have empirical evidence for the hyperdisease hypothesis, and it won’t be easy to come by: hyperlethal disease would kill far too quickly to leave its signature on the bones themselves. But he hopes that analyses of tissue and DNA from the last mammoths to perish will eventually reveal murderous microbes."},{"idx":6,"en":"The third explanation for what brought on this North American extinction does not involve human beings. Instead its proponents blame the loss on the weather. The Pleistocene epoch witnessed considerable climatic instability, explains paleontologist Russell W. Graham of the Denver Museum of Nature and Science. As a result, certain habitats disappeared, and species that had once formed communities split apart. For some animals, this change brought opportunity. For much of the megafauna, however, the increasingly homogeneous environment left them with shrinking geographical ranges – a death sentence for large animals, which need large ranges. Although these creatures managed to maintain viable populations through most of the Pleistocene, the final major fluctuation – the so-called Younger Dryas event – pushed them over the edge, Graham says. For his part, Alroy is convinced that human hunters demolished the titans of the Ice Age. The overkill model explains everything the disease and climate scenarios explain, he asserts, and makes accurate predictions about which species would eventually go extinct. “Personally, I’m a vegetarian,” he remarks, “and I find all of this kind of gross – but believable.”"}]},{"id":"a-2022apr-test3-r-t3-p1","title":"Intelligence and Giftedness","wc":770,"src":"2022年4月真题 Test 3 · P1","lv":"L3","paras":[{"idx":0,"en":"In 1904 the French minister of education, facing limited resources for schooling, sought a way to separate the unable from the merely lazy. Alfred Binet got the job of devising selection principles and his brilliant solution put a stamp on the study of intelligence and was the forerunner of intelligence tests still used today, he developed a thirty-problem test in 1905, which tapped several abilities related to intellect, such as judgment and reasoning, the test determined a given child’s mental age’. The test previously established a norm for children of a given physical age. (for example, five-year-old on average get ten items correct), therefore, a child with a mental age of five should score 10, which would mean that he or she was functioning pretty much as others of that age. The child’s mental age was then compared to his physical age."},{"idx":1,"en":"A large disparity in the wrong direction (e.g., a child of nine with a mental age of four) might suggest inability rather than laziness and mean he or she was earmarked for special schooling, Binet, however, denied that the test was measuring intelligence, its purpose was simply diagnostic, for selection only. This message was however lost and caused many problems and misunderstanding later."},{"idx":2,"en":"Although Binet’s test was popular, it was a bit inconvenient to deal with a variety of physical and mental ages. So in 1912, Wilhelm Stern suggested simplifying this by reducing the two to a single number, he divided the mental age by the physical age and multiplied the result by 100. An average child, irrespective of age, would score 100. A number much lower than 100 would suggest the need for help, and one much higher would suggest a child well ahead of his peer."},{"idx":3,"en":"This measurement is what is now termed the IQ (for intelligence quotient) score and it has evolved to be used to show how a person, adult or child, performed in relation to others. (the term IQ was coined by Lewis M. Terman, professor of psychology and education of Stanford University, in 1916. He had constructed an enormously influential revision of Binet’s test, called the Stanford-Binet test, versions of which are still given extensively.)"},{"idx":4,"en":"The field studying intelligence and developing tests eventually coalesced into a sub-field of psychology called psychometrics (psycho for ‘mind’ and metrics for ‘measurements’). The practical side of psychometrics (the development and use of tests) became widespread quite early, by 1917, when Einstein published his grand theory of relativity, mass-scale testing was already in use. Germany’s unrestricted submarine warfare (which led to the sinking of the Lusitania in 1915) provoked the United States to finally enter the First World War in the same year. The military had to build up an army very quickly; it had two million inductees to sort out. Who would become officers and who enlisted men? Psychometricians developed two intelligence tests that help sort all these people out, at least to some extent, this was the first major use of testing to decide who lived and who died, as officers were a lot safer on the battlefield, the tests themselves were given under horrendously bad conditions, and the examiners seemed to lack commonsense, a lot of recruits simply had no idea what to do and in several sessions most inductees scored zero! The examiners also came up with the quite astounding conclusion from the testing that the average American adult’s intelligence was equal to that of a thirteen-year-old!"},{"idx":5,"en":"Intelligence testing enforced political and social prejudice, their results were used to argue that Jews ought to be kept out of the united states because they were so intelligently inferior that they would pollute the racial mix, and blacks ought not to be allowed to breed at all. And so abuse and test bias controversies continued to plaque psychometrics."},{"idx":6,"en":"Measurement is fundamental to science and technology, science often advances in leaps and bounds when measurement devices improve, psychometrics has long tried to develop ways to gauge psychological qualities such as intelligence and more specific abilities, anxiety, extroversion, emotional stability, compatibility, with a marriage partner, and so on. Their scores are often given enormous weight, a single IQ measurement can take on a life of its own if teachers and parents see it as definitive, it became a major issue in the 70s, when court cases were launched to stop anyone from making important decisions based on IQ test scores, the main criticism was and still is that current tests don’t really measure intelligence, whether intelligence can be measured at all is still controversial, some say it cannot others say that IQ tests are psychology’s greatest accomplishments."}]},{"id":"a-2022apr-test2-r-t2-p1","title":"MOBILE PHONES AND DRIVING","wc":706,"src":"2022年4月真题 Test 2 · P1","lv":"L3","paras":[{"idx":0,"en":"Though once perceived a luxury cell phones have become a common possession over the last ten years or so. Due to modern day technology and public demand cell phones have been made affordable to most. However, one of the most controversial topics of today is whether or not we should be using our cell phones whilst driving, Does it pose a danger to ourselves and other drivers? Or doesn’t it make any difference to the likelihood of an accident."},{"idx":1,"en":"Several countries around the world have already imposed a national Jaw with heavy infringements. More recently the UK, Australia and Finland have joined the ranks of countries opposing this very hazardous act, with Ireland imposing the harshest penalties on the continent (a third offence can mean 3 months imprisonment). Also in Europe, the Netherlands is fining offenders 2000 Euros and 2 weeks in jail."},{"idx":2,"en":"C. This dangerous distraction contributes largely to motor vehicle accidents and the statistics are Increasing daily as we continue to take our eyes off the road to call or even more dangerously text. Research by road safety groups suggests speaking on a phone whilst driving increases your chances of an accident, increasing to nine times more likely when texting. Time and again, in study after study replicated across the world, the use of a cell phone by the driver has been proven, beyond any sense of reasonable doubt, to dramatically increase the probability of a motor vehicle crash."},{"idx":3,"en":"D. In New Zealand, a proposal made by a previous Labour led Government suggests a $50 fine and 27 demerit points for any person using a cell phone whilst driving, although the Ministry of Transport is still preparing a report based on public consultation. Although this is only a pending idea, the government knows this will be a difficult infringement to police but a start needs to be made and people need to understand the consequences of what potentially could happen. It is a common misconception that hands free kits are safe to use, but research conducted by Waikato University has proven that these can be equally as dangerous as hand held phones."},{"idx":4,"en":"E. On one hand, using a cell phone whilst driving has become an integral part of our lives and is going to be a hard habit to kick. But it has been proven that our reaction time is never fast enough when confronted with a road hazard, but if you are having a conversation at the same time it will slow your reaction time by even more. Most people find it takes 2 and a half seconds to react in a dangerous situation but if you are on the phone you can add another 2 seconds onto that. Your attention is divided; part of you concentrates on your conversation, the other on driving. The demands of die conversation and the road are competing, therefore making it a cognitive distraction as well as physical as you are removing one hand from the steering wheel to hold the phone. On the other hand, an American radio host suggested that banning cell phones whist driving was taking it a step too far, “if we ban cell phones, what’s next? No billboards, coffee drinking, or CD players?” The host agreed that texting whilst driving was a danger but phoning was not."},{"idx":5,"en":"F. Many people agreed with him in saying that texting was a definite hazard as the act of looking down would lead your eyes off the road. However, doesn’t holding a conversation while driving seems just as distracting as eating food or reaching for a CD? Accidents were happening decades before the cell phone was introduced so should we be taking this matter so seriously?"},{"idx":6,"en":"G. Obviously opinions will differ on this matter, and it will always remain a debatable issue. A long list of countries seems to be following the trend and imposing a law against cell phones on the road, but there is still and even longer list yet to follow. Lack of data leaves uncertain results but it seems research is ongoing and surveys and tests are being carried out on a regular basis to reach some kind of conclusion as to just how dangerous and potentially fatal this habit may be."}]},{"id":"a-2022apr-test1-r-t1-p3","title":"The natural world","wc":1013,"src":"2022年4月真题 Test 1 · P3","lv":"L3","paras":[{"idx":0,"en":"The natural world is dominated by cycles that are constant and repeated – the moon’s rotation around the earth, the changing of the seasons, the changes between night and day. It is these cycles or rhythms that in part control changes in our metabolism, mood and behaviour, and even the patterns of our sleep."},{"idx":1,"en":"The circadian rhythm is the cycle that indicates when to be awake and when to be asleep. This is a daily cycle that is controlled by changes in amplitude (highs and lows) of light and temperature. As day turns to night, the sun sets and it becomes cooler. The triggers of less light and lower temperatures signal to the body that it is time to slow and begin the pattern of sleep. Of course, there may be many hours between sunset and the time people actually go to bed, but it is from this time that we generally become increasingly less alert and reaction times can be noticeably slower."},{"idx":2,"en":"There are a number of factors that can affect our circadian rhythm. Working night shifts, which requires people to act in contradiction to the body’s natural rhythm, is perhaps the most damaging. Despite getting a good 8 hours sleep during the day, night shift workers still tend to feel drowsy for at least some of the night. This is the main factor for the increase in workplace accidents on this shift when compared to the day shift. The seasons can also affect our natural rhythm, with people having less energy during winter months when there is less sunlight and warmth to stimulate the brain. International travel, notably when travelling in excess of 4 hours, can also have a significant effect; in extreme cases, it can take up to 7 days for your rhythm to reset due to this, a phenomenon referred to as jet lag. A similar, although milder, effect can be felt in countries with daylight savings time, when the clocks are moved forward and backward depending on the season."},{"idx":3,"en":"There are some tips for helping your body work with your circadian rhythm. First thing in the morning take a short walk outside or open all the curtains to get as much light as possible through the eyes and into the brain. Lighting levels that affect circadian rhythm in humans are higher than the levels usually used in artificial lighting in homes. In addition to the strength of the light, wavelength (or colour) of light is a factor, the best being that present in sunlight. Plan your work and other activities around the highs and lows of your temperature rhythm. For example, plan easier activities for first thing in the morning when you’re not operating at your physical best. Late morning is better for challenging tasks. After lunch you may feel like nodding off. Take scheduled breaks. The best time to exercise is in the late afternoon – your body temperature reaches its daily high, it is warmed up and stretched from spending your day at work. Avoid driving during sleep times. Sleepy drivers should stop for a nap – playing loud music or leaving windows open is an overrated misconception. At night, close the blinds and curtains and sleep in a dark room. If you work the night shift, use bright lights and music in the workplace to keep your brain alert. Wear an eye mask to block out the light when you want to go to sleep."},{"idx":4,"en":"Every human – in fact, most non-nocturnal animals – follow the basic rules of the circadian rhythm. However, we also have our own unique body clocks which control the daily changes in how we think and feel, and oversee a number of our personal characteristics such as sleep patterns. Your body clock dictates whether you are a night owl, happy to work late into the night, an early bird who prefers the morning or a humming bird, happy to work both ends of the day. Your body clock determines not only your personal sleep patterns, but also whether or not you are grumpy before you have your morning coffee, when and what you need to eat throughout the day, whether you work better In the morning or the afternoon and the best time for you to do exercise. It also affects physical performance, such as temperature, blood pressure, digestion, hormone levels and brain activity (such as mood, behaviour, and alertness). Your body clock is what causes you to gain a few kilograms in autumn and winter time and to make it easier to lose weight in spring and summer."},{"idx":5,"en":"Being aware of a few issues can help us maintain the best rhythms for our body docks, but there are some tips and tools for that can help. Keeping to the same bedtime routine and wake-up schedule, even on your days off, is particularly important – there should be no more than a few hours difference in the time you go to bed. Avoiding interruptions to your sleep is also very important. If there is intermittent, irregular noise, use a fan or any white noise device that generates calming sounds. This is particularly important for night shift workers, for whom daytime noises are generally louder; soft, background noise can help drown out daytime activity noises. Eat small frequent meals to help stoke your metabolism. This is not only helpful in weight maintenance, but reinforces the “day” phase of your circadian clock. Eat most of your energy foods earlier in the day and avoid eating a heavy meal near bedtime. Avoid all-nighters, like studying all night before an assessment. Cutting back on sleep the night before may mean that you perform less well. Reduce changes to your work shift, such as changing from night shift to day shift. Avoid alcohol and cigarettes before sleep time. If you feel sleepy during the day, take a short nap. Set an alarm so you sleep for no more than about 20 minutes. Anything more than just a ‘catnap’ and you will enter into Stage 3 (deep sleep) and find it harder to wake up from."}]},{"id":"a-2022apr-test3-r-t3-p2","title":"Museum Blockbuster","wc":1146,"src":"2022年4月真题 Test 3 · P2","lv":"L3","paras":[{"idx":0,"en":"Since the 1980s, the term “blockbuster” has become the fashionable word for the special spectacular museum, art gallery or science centre exhibitions. These exhibitions have the ability to attract large crowds and often large corporate sponsors. Here is one of some existing definitions of a blockbuster: Put by Elsen (1984), a blockbuster is a “… large scale loan exhibition that people who normally don’t go to museums will stand in line for hours to see …” James Rosenfield, writing in Direct Marketing in 1993, has described a successful blockbuster exhibition as a “… triumph of both curatorial and marketing skills …” My own definition for a blockbuster is “a popular, high profile exhibition on display for a limited period, that attracts the general public, who are prepared to both stand in line and pay a fee in order to partake in the exhibition.” What both Elsen and Rosenfield omit in their descriptions of a blockbuster, is that people are prepared to pay a fee to see a blockbuster and that the term blockbuster can just as easily apply to a movie or a museum exhibition."},{"idx":1,"en":"Merely naming an exhibition or movie a blockbuster, however, does not make it a blockbuster. The term can only apply when the item in question has had an overwhelmingly successful response from the public. However, in literature from both the UK and USA the other words that also start to appear in descriptions of a blockbuster are “less scholarly”, “non-elitist” and “popularist”. Detractors argue that blockbusters are designed to appeal to the lowest common denominator, while others extol the virtues of encouraging scholars to cooperate on projects and to provide exhibitions that cater for a broad selection of the community rather than an elite sector."},{"idx":2,"en":"Maintaining and increasing visitor levels is paramount in the new museology. This requires continued product development. Not only the creation or hiring of blockbuster exhibitions but regular exhibition changes and innovations. In addition, the visiting public has become customers rather than visitors, and the skills that are valued in museums, science centres and galleries to keep the new customers coming through the door have changed. High on the list of requirements are commercial, business, marketing and entrepreneurial skills. Curators are now administrators. Being a director of an art gallery no longer requires an Arts Degree. As succinctly summarised in the Economist in 1994 “business nous and public relation skills” were essential requirements for a director, and the ability to compete with other museums to stage travelling exhibitions which draw huge crowds."},{"idx":3,"en":"The new museology has resulted in the convergence of museums, the heritage industry, and tourism, profit-making and pleasure-giving. This has given rise to much debate about the appropriateness of adopting the activities of institutions so that they more closely reflect the priorities of the market place and whether it is appropriate to see museums primarily as tourist attractions. At many institutions, you can now hold office functions in the display areas, or have dinner with the dinosaurs. Whatever commentators may think, managers of museums, art galleries and science centres worldwide are looking for artful ways to blend culture and commerce, and blockbuster exhibitions are at the top of the list. But while blockbusters are all part of the new museology, there is proof that you don’t need a museum, science centre or art gallery to benefit from the drawing power of a blockbuster or to stage a blockbuster."},{"idx":4,"en":"But do blockbusters held in public institutions really create a surplus to fund other activities? If the bottom line is profit, then according to the accounting records of many major museums and galleries, blockbusters do make money. For some museums overseas, it may be the money that they need to update parts of their collections or to repair buildings that are in need of attention. For others in Australia, it may be the opportunity to illustrate that they are attempting to pay their way, by recovering part of their operating costs or funding other operating activities with off-budget revenue. This makes the economic rationalists cheerful. However, not all exhibitions that are hailed to be blockbusters will be blockbusters, and some will not make money. It is also unlikely that the accounting systems of most institutions will recognise the real cost of either creating or hiring a blockbuster."},{"idx":5,"en":"Blockbusters require large capital expenditure, and draw on resources across all branches of an organisation; however, the costs don’t end there. There is a Human Resource Management cost in addition to a measurable ‘real’ dollar cost. Receiving a touring exhibition involves large expenditure as well, and draws resources from across functional management structures in project management style. everyone from a general labourer to a building servicing unit, the front of the house, technical, promotion, education and administration staff, are required to perform additional tasks. Furthermore, as an increasing number of institutions in Australia try their hand at increasing visitor numbers, memberships (and therefore revenue), by staging blockbuster exhibitions, it may be less likely that blockbusters will continue to provide a surplus to subsidise other activities due to the competitive nature of the market. There are only so many consumer dollars to go around, and visitors will need to choose between blockbuster products."},{"idx":6,"en":"Unfortunately, when the bottom-line is the most important objective to the mounting of blockbuster exhibitions, this same objective can be hard to maintain. Creating, mounting or hiring blockbusters is exhausting for staff, with the real costs throughout an institution difficult to calculate. Although the direct aims may be financial, creating or hiring a blockbuster has many positive spin-offs; by raising their profile through a popular blockbuster exhibition, a museum will be seen in a more favorable light at budget time. Blockbusters mean crowds, and crowds are good for the local economy, providing increased employment for shops, hotels, restaurants, the transport industry and retailers. Blockbusters expose staff to the vagaries and pressures of the market place and may lead to creative excellence. Either the success or failure of a blockbuster may highlight the need for managers and policymakers to rethink their strategies. However, the new museology and the apparent trend towards blockbusters make it likely that museums, art galleries and particularly science centres will be seen as part of the entertainment and tourism industry, rather than as cultural icons deserving of government and philanthropic support."},{"idx":7,"en":"Perhaps the best pathway to take is one that balances both blockbusters and regular exhibitions. However, this easy middle ground may only work if you have enough space, and have alternate sources of funding to continue to support the regular less exciting fare. Perhaps the advice should be to make sure that your regular activities and exhibitions are more enticing, and find out what your local community wants from you. The question (trend) now at most museums and science centres, is “What blockbusters can we tour to overseas venues and will it be cost-effective?”"}]}];
+
+/* ---------- 模拟历史（累计视角） ---------- */
+const HIST_KEYFREQ={e:14,t:9,n:7," ":19,o:6,r:5,a:5,i:4,h:3,w:2,s:2,l:2,c:2,d:2,u:1,p:1};
+const HIST_SESSIONS=[
+  {d:"09-07",wpm:38,acc:.931,err:9,dur:212},{d:"09-07",wpm:41,acc:.945,err:7,dur:198},
+  {d:"09-08",wpm:44,acc:.952,err:6,dur:187},{d:"09-08",wpm:43,acc:.948,err:7,dur:203},
+  {d:"09-08",wpm:47,acc:.958,err:5,dur:176},{d:"09-09",wpm:46,acc:.955,err:5,dur:181},
+  {d:"09-09",wpm:49,acc:.961,err:4,dur:170},{d:"09-09",wpm:48,acc:.957,err:5,dur:175},
+  {d:"09-10",wpm:51,acc:.966,err:4,dur:164},{d:"09-10",wpm:50,acc:.962,err:4,dur:169},
+  {d:"09-10",wpm:53,acc:.970,err:3,dur:158},{d:"09-11",wpm:52,acc:.968,err:3,dur:161},
+  {d:"09-11",wpm:55,acc:.973,err:3,dur:152},{d:"09-11",wpm:54,acc:.971,err:3,dur:155},
+  {d:"09-11",wpm:57,acc:.976,err:2,dur:147}
+];
+const BEST={}; // artId -> 文章最佳 wpm
+DATA.forEach((a,i)=>BEST[a.id]=[52,58,49,63,55,60][i]||55);
+
+const VOCAB={
+  government:{ph:"/ˈɡʌvənmənt/",zh:"n. 政府；治理"},
+  environment:{ph:"/ɪnˈvaɪrənmənt/",zh:"n. 环境"},
+  particularly:{ph:"/pərˈtɪkjələrli/",zh:"adv. 尤其；特别"},
+  which:{ph:"/wɪtʃ/",zh:"pron. 哪一个"},
+  because:{ph:"/bɪˈkɔːz/",zh:"conj. 因为"},
+  download:{ph:"/ˌdaʊnˈloʊd/",zh:"v./n. 下载"},
+  illegal:{ph:"/ɪˈliːɡl/",zh:"adj. 非法的"},
+  mammoth:{ph:"/ˈmæməθ/",zh:"n. 猛犸象 adj. 巨大的"},
+  intelligence:{ph:"/ɪnˈtelɪdʒəns/",zh:"n. 智力；情报"}
+};
+const DRILL_WORDS=["government","environment","particularly","which","because"];
+const DRILL_TEXT="The government must protect the environment, particularly because many people ask which policies matter most. Which government is responsible for the environment? Because of that, the environment and government policies have changed, particularly in which areas matter because of the government and the environment.";
+
+/* ---------- 聚合态 ---------- */
+let cum={n:HIST_SESSIONS.length,keyFreq:{...HIST_KEYFREQ},
+  wpmSum:HIST_SESSIONS.reduce((s,x)=>s+x.wpm,0),
+  accSum:HIST_SESSIONS.reduce((s,x)=>s+x.acc,0),
+  errSum:HIST_SESSIONS.reduce((s,x)=>s+x.err,0),
+  durSum:HIST_SESSIONS.reduce((s,x)=>s+x.dur,0),maxCombo:112};
+let lastReview=null, curArt=null, drillMode=false, mode='article';
+
+/* ---------- 工具 ---------- */
+function $(id){return document.getElementById(id);}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800);}
+const norm=s=>s.replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,'-').replace(/\u00A0/g,' ');
+function esc(ch){return ch==='&'?'&amp;':ch==='<'?'&lt;':ch==='>'?'&gt;':ch;}
+function fmt(ms){const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function paceWord(w){return w>=75?'盲打自由':w>=60?'考场节奏':w>=45?'稳定输出':w>=30?'进入状态':'热身中';}
+
+/* ---------- 键音（Web Audio 合成，零素材） ---------- */
+let AC=null;
+function ac(){
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}}
+  if(AC.state==='suspended')AC.resume();
+  return AC;
+}
+function envGain(ctx,t0,peak,dur){const g=ctx.createGain();g.gain.setValueAtTime(peak,t0);g.gain.exponentialRampToValueAtTime(0.001,t0+dur);return g;}
+function playNoise(ctx,dur,freq,q,peak){
+  const t=ctx.currentTime,len=Math.max(1,(dur*ctx.sampleRate)|0);
+  const b=ctx.createBuffer(1,len,ctx.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+  const n=ctx.createBufferSource();n.buffer=b;
+  const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;
+  const g=envGain(ctx,t,peak,dur);
+  n.connect(f);f.connect(g);g.connect(ctx.destination);
+  n.start(t);n.stop(t+dur);
+}
+function playTone(ctx,type,f0,f1,dur,peak,delay){
+  const t=ctx.currentTime+(delay||0);
+  const o=ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(f0,t);
+  if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  const g=envGain(ctx,t,peak,dur);
+  o.connect(g);g.connect(ctx.destination);
+  o.start(t);o.stop(t+dur);
+}
+const SND={
+  mech:{ok(){const c=ac();if(c)playNoise(c,.03,2800+Math.random()*800,1.2,.45);},
+        err(){const c=ac();if(c)playTone(c,'square',150,90,.14,.1);}},
+  tick:{ok(){const c=ac();if(c)playTone(c,'sine',1250,900,.03,.2);},
+        err(){const c=ac();if(!c)return;playTone(c,'sine',330,300,.09,.18);playTone(c,'sine',280,250,.09,.18,.11);}},
+  type:{ok(){const c=ac();if(!c)return;playNoise(c,.045,1400,.8,.55);playTone(c,'sine',2000,1500,.02,.07);},
+        err(){const c=ac();if(c)playTone(c,'triangle',1560,1150,.35,.14);}},
+  thock:{ok(){const c=ac();if(!c)return;playNoise(c,.05,500+Math.random()*150,.7,.7);playTone(c,'sine',180,120,.04,.15);},
+         err(){const c=ac();if(c)playTone(c,'sawtooth',110,70,.18,.1);}},
+  piano:{ok(){const c=ac();if(!c)return;
+          const scale=[523.25,587.33,659.25,783.99,880];
+          const f=scale[(Math.random()*scale.length)|0];
+          playTone(c,'triangle',f,null,.18,.16);playTone(c,'sine',f*2,null,.12,.05);},
+         err(){const c=ac();if(!c)return;playTone(c,'triangle',196,185,.25,.15);playTone(c,'triangle',207,198,.25,.12);}},
+  jelly:{ok(){const c=ac();if(c)playTone(c,'sine',420,760,.07,.2);},
+         err(){const c=ac();if(!c)return;playTone(c,'sine',180,120,.12,.28);playTone(c,'sine',150,100,.1,.2,.06);}},
+  off:{ok(){},err(){}}
+};
+let sndMode='mech';
+function setSnd(v){
+  sndMode=v;
+  if(v!=='off'){const c=ac();if(!c)return;
+    SND[v].ok();setTimeout(()=>SND[v].err(),320);}  /* 切换即试听：正确音 + 错误音 */
+}
+
+/* ---------- 模式与文章切换 ---------- */
+function renderSelect(){
+  $('art-select').innerHTML=DATA.map(a=>`<option value="${a.id}">${a.title} · ${a.wc} 词 · 最佳 ${BEST[a.id]} wpm</option>`).join('');
+}
+function switchMode(m){
+  mode=m;T=null;clearInterval(timer);
+  $('mt-article').classList.toggle('on',m==='article');
+  $('mt-drill').classList.toggle('on',m==='drill');
+  $('art-select').style.display=m==='article'?'':'none';
+  $('d-words').style.display=m==='drill'?'flex':'none';
+  $('h-modetag').textContent=m==='article'?'文章跟打 · 整篇':'错词重练 · drill';
+  if(m==='article')loadArticle($('art-select').value);
+  else startDrill();
+}
+function onSelectArt(){loadArticle($('art-select').value);}
+function loadArticle(id){
+  curArt=DATA.find(a=>a.id===id);drillMode=false;
+  initTyping(curArt.paras.map(p=>norm(p.en)));
+}
+function startDrill(){
+  drillMode=true;
+  initTyping([norm(DRILL_TEXT)]);
+}
+function resetTyping(){mode==='drill'?startDrill():loadArticle(curArt.id);toast('已重置');}
+
+/* ---------- 跟打器 ---------- */
+let T=null, timer=null;
+function initTyping(paras){
+  T={text:paras.join(''),pos:0,marks:{},t0:null,ms:0,combo:0,maxCombo:0,done:false,_cur:undefined};
+  const box=$('tbox');
+  $('review-panel').classList.remove('show');
+  let idx=0;
+  box.innerHTML=paras.map(tx=>{
+    let h='<span class="tpara">';
+    for(const ch of tx){h+=`<span class="ch pending" id="c${idx}">${ch===' '?' ':esc(ch)}</span>`;idx++;}
+    return h+'<span class="enter"> ↵</span></span>';
+  }).join('');
+  $('h-total').textContent=T.text.length;
+  $('done-tag').classList.remove('show');
+  updateHud();
+  box.classList.remove('focus');
+  setCur(0);
+}
+function setCur(i){
+  if(T._cur!==undefined){const p=$('c'+T._cur);if(p)p.className='ch '+(T.marks[T._cur]===undefined?'pending':(T.marks[T._cur]?'ok':'err'));}
+  const s=$('c'+i);
+  if(!s){T._cur=undefined;return;}
+  s.className='ch cur';T._cur=i;
+  s.scrollIntoView({block:'nearest'});
+}
+function tick(){
+  if(!T||T.done||!T.t0)return;
+  T.ms=Date.now()-T.t0;
+  $('h-time').textContent=fmt(T.ms);
+}
+function statNow(){
+  let err=0;for(const k in T.marks)if(!T.marks[k])err++;
+  const done=T.pos, cor=done-err;
+  const sec=Math.max(1,(T.ms||0)/1000);
+  return {done,cor,err,wpm:done>8?Math.round((cor/5)/(sec/60)):0,acc:done?cor/done:1};
+}
+function updateHud(){
+  const s=statNow();
+  $('h-done').textContent=s.done;
+  $('h-bar').style.width=(T.text.length?s.done/T.text.length*100:0)+'%';
+  $('h-acc').textContent=Math.round(s.acc*100)+'%';
+  $('h-wpm').textContent=s.wpm+' WPM · 实时';
+  $('h-state').textContent=paceWord(s.wpm);
+  $('c-combo').textContent=T.combo;
+  $('combo-pill').classList.toggle('hot',T.combo>=30);
+}
+$('tbox').addEventListener('focus',function(){this.classList.add('focus');});
+$('tbox').addEventListener('blur',function(){this.classList.remove('focus');});
+document.addEventListener('keydown',e=>{
+  if(!T||T.done)return;
+  if(document.activeElement!==$('tbox')&&e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){$('tbox').focus();}
+  if(e.key==='Escape'){toast('本篇未完成，成绩未入库');resetTyping();return;}
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    if(T.pos>0){
+      T.pos--; delete T.marks[T.pos];
+      const s=$('c'+T.pos);
+      s.className='ch pending';
+      setCur(T.pos);
+      T.combo=0;updateHud();
+    } return;
+  }
+  if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    e.preventDefault();
+    if(!T.t0){T.t0=Date.now();timer=setInterval(tick,500);}
+    const ok=e.key===T.text[T.pos];
+    SND[sndMode][ok?'ok':'err']();
+    T.marks[T.pos]=ok;
+    $('c'+T.pos).className='ch '+(ok?'ok':'err');
+    if(ok){T.combo++;T.maxCombo=Math.max(T.maxCombo,T.combo);}else T.combo=0;
+    T.pos++;
+    updateHud();
+    if(T.pos>=T.text.length){tick();finish();}else{setCur(T.pos);}
+  }
+});
+document.addEventListener('compositionstart',()=>$('ime-warn').classList.add('show'));
+document.addEventListener('compositionend',()=>$('ime-warn').classList.remove('show'));
+
+/* ---------- 完成 / 复盘 ---------- */
+function wordsFromErrs(errPos,text){
+  const words={};let st=0;
+  for(const w of text.split(' ')){
+    const end=st+w.length;
+    for(const p of errPos){if(p>=st&&p<=end){const key=w.replace(/[^a-zA-Z]/g,'').toLowerCase();if(key)words[key]=(words[key]||0)+1;}}
+    st=end+1;
+  }
+  return Object.entries(words).sort((a,b)=>b[1]-a[1]);
+}
+function keyFreqOf(errPos,text){
+  const f={};for(const p of errPos){const ch=text[p].toLowerCase();f[ch]=(f[ch]||0)+1;}
+  return f;
+}
+function finish(){
+  T.done=true;clearInterval(timer);
+  const sec=Math.max(1,T.ms/1000), len=T.text.length;
+  const errPos=Object.keys(T.marks).filter(k=>!T.marks[k]).map(Number);
+  const cor=len-errPos.length;
+  const wpm=Math.round((cor/5)/(sec/60)), acc=cor/len;
+  const keyFreq=keyFreqOf(errPos,T.text);
+  lastReview={mode:drillMode?'drill':'article',wpm,acc,err:errPos.length,dur:sec,combo:T.maxCombo,errPos,keyFreq,
+    words:wordsFromErrs(errPos,T.text),art:curArt.id};
+  cum.n++;cum.wpmSum+=wpm;cum.accSum+=acc;cum.errSum+=errPos.length;cum.durSum+=sec;
+  cum.maxCombo=Math.max(cum.maxCombo,T.maxCombo);
+  for(const k in keyFreq)cum.keyFreq[k]=(cum.keyFreq[k]||0)+keyFreq[k];
+  if(!drillMode&&wpm>(BEST[curArt.id]||0)){BEST[curArt.id]=wpm;renderSelect();}
+  $('done-tag').classList.add('show');
+  toast('本篇完成！WPM '+wpm+' · 准确率 '+Math.round(acc*100)+'%');
+  setTimeout(()=>{showReview('session');$('review-panel').scrollIntoView({block:'nearest',behavior:'smooth'});},500);
+}
+/* 打完前点复盘：用当前中间态构造「当次」（实时复盘） */
+function liveReview(){
+  const sec=Math.max(1,(T.ms||0)/1000);
+  const errPos=Object.keys(T.marks).filter(k=>!T.marks[k]).map(Number);
+  const s=statNow();
+  return {mode:drillMode?'drill':'article',wpm:s.wpm,acc:s.acc,err:errPos.length,dur:sec,combo:T.maxCombo,errPos,
+    keyFreq:keyFreqOf(errPos,T.text),words:wordsFromErrs(errPos,T.text),art:curArt.id,live:true};
+}
+function heatClass(n){return n>=4?'k3':n>=2?'k2':n>=1?'k1':'';}
+function renderKB(freq){
+  const rows=['qwertyuiop','asdfghjkl','zxcvbnm'];
+  return rows.map((r,ri)=>`<div class="krow r${ri+1}">${[...r].map(ch=>{
+    const n=freq[ch]||0;return `<div class="key ${heatClass(n)}">${ch}</div>`;}).join('')}</div>`).join('');
+}
+function chName(ch){return ch===' '?'空格':ch;}
+function showReview(which){
+  $('review-panel').classList.add('show');
+  $('tab-session').classList.toggle('on',which==='session');
+  $('tab-cum').classList.toggle('on',which!=='session');
+  let cards,top,freq,wordsHtml='';
+  if(which==='session'){
+    const r=lastReview?lastReview:(T&&T.pos>0?liveReview():null);
+    if(!r){$('rv-cards').innerHTML='';$('rv-top').innerHTML='<tr><td colspan="3" style="color:var(--ink3);">还没有练习记录，先打一篇吧</td></tr>';$('rv-kb').innerHTML=renderKB({});$('rv-words-wrap').style.display='none';return;}
+    $('rv-words-wrap').style.display='';
+    cards=[[r.wpm,'最终 WPM'+(r.live?' · 实时':'')],[Math.round(r.acc*100)+'%','准确率'],[r.err,'总错误数'],[r.combo,'最高连击']];
+    freq=r.keyFreq;
+    const tot=r.err||1;
+    top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8)
+      .map(([ch,n])=>`<tr><td><span class="lblock">${chName(ch)}</span></td><td class="num">${n}</td><td class="pct">${Math.round(n/tot*100)}%</td></tr>`).join('');
+    if(r.words.length){
+      wordsHtml=r.words.slice(0,6).map(([w,n])=>`<span class="wchip ${VOCAB[w]?'voc':''}" onclick="wordPop(event,'${w}')">${w}${n>1?' ×'+n:''}</span>`).join('');
+    }else wordsHtml='<span style="font-size:12px;color:var(--ink3);">本篇全对，无错词</span>';
+  }else{
+    $('rv-words-wrap').style.display='none';
+    cards=[[Math.round(cum.wpmSum/cum.n),'平均 WPM（累计）'],[Math.round(cum.accSum/cum.n*100)+'%','平均准确率'],[cum.errSum,'累计错误数'],[cum.maxCombo,'最高连击']];
+    freq=cum.keyFreq;
+    const tot=Object.values(freq).reduce((s,n)=>s+n,0)||1;
+    top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8)
+      .map(([ch,n])=>`<tr><td><span class="lblock">${chName(ch)}</span></td><td class="num">${n}</td><td class="pct">${Math.round(n/tot*100)}%</td></tr>`).join('');
+  }
+  $('rv-cards').innerHTML=cards.map(([v,l])=>`<div class="rcard"><b>${v}</b><span>${l}</span></div>`).join('');
+  $('rv-top').innerHTML=top||'<tr><td colspan="3" style="color:var(--ink3);">无错误记录</td></tr>';
+  $('rv-kb').innerHTML=renderKB(freq);
+  $('rv-words').innerHTML=wordsHtml;
+}
+/* 复盘按钮：展开/收起切换 */
+function openReview(){
+  const p=$('review-panel');
+  if(p.classList.contains('show')){p.classList.remove('show');return;}
+  showReview(lastReview?'session':'cum');
+  setTimeout(()=>p.scrollIntoView({block:'nearest',behavior:'smooth'}),60);
+}
+function closeReview(){$('review-panel').classList.remove('show');}
+function retype(){closeReview();resetTyping();}
+
+/* ---------- 词卡 ---------- */
+function wordPop(ev,w){
+  ev.stopPropagation();
+  const pop=$('wc-pop');
+  const v=VOCAB[w];
+  pop.innerHTML=`<div class="w"><b>${w}</b>${v?`<span class="ph">${v.ph}</span>`:''}</div>
+    ${v?`<div class="zh">${v.zh}</div>`:'<div class="miss">未收录词库 · 可加入生词本（原型略）</div>'}`;
+  pop.classList.add('show');
+  const r=ev.target.getBoundingClientRect();
+  pop.style.left=Math.min(r.left,window.innerWidth-300)+'px';
+  pop.style.top=(r.bottom+8)+'px';
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.wc-pop'))$('wc-pop').classList.remove('show');});
+
+/* ---------- 启动：进入页面即装稿，直接可打 ---------- */
+renderSelect();
+DRILL_WORDS.forEach(w=>{const s=document.createElement('span');s.className='dchip';s.textContent=w;$('d-words').appendChild(s);});
+loadArticle(DATA[0].id);
+</script>
+</body>
+</html>

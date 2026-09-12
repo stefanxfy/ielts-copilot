@@ -1,9 +1,11 @@
 /**
- * src/components/reading/word-card.tsx — 点词弹卡(P4)
+ * src/components/reading/word-card.tsx — 点词弹卡(P4 + 按钮态扩展)
  *
- * 词卡四要素(全出自 words.contentJson):音标(英/美) / 释义 / 构词 / 🔊读音;
- * 底部「加入生词本」→ POST /api/reading/[articleId]/vocab(幂等),成功后转已加态。
- * 词库未收录(404)时降级:仅显示词条 + 仍可加入生词本(建 manual 词条)。
+ * 词卡四要素(全出自 words.contentJson):音标(英/美) / 释义 / 构词 / 🔊读音。
+ * 底部按钮口径(2026-09-12 用户定):
+ *   词库收录(任何词书,lookup 命中)→ 「加入背词计划」POST /api/vocab-study-plan(幂等),
+ *     已在计划 → 静态「已在背词计划」;
+ *   词库未收录(404)→ 「加入生词本」POST /api/reading/[articleId]/vocab(manual 词条),成功转已加态。
  * 播放:优先 contentJson.audio.word 存量 mp3,缺文件回退 speechSynthesis。
  */
 "use client";
@@ -24,6 +26,7 @@ function SpeakerIcon({ className = "size-4" }: { className?: string }) {
 
 interface LookupResult {
   word: string;
+  wordId: number;
   phoneticUk: string | null;
   phoneticUs: string | null;
   content: {
@@ -35,6 +38,7 @@ interface LookupResult {
     audio?: { word?: string };
   } | null;
   inVocab: boolean;
+  inPlan: boolean;
 }
 
 function speak(word: string, audioPath?: string) {
@@ -69,6 +73,7 @@ export function WordCard({
   const [data, setData] = useState<LookupResult | null>(null);
   const [missing, setMissing] = useState(false);
   const [inVocab, setInVocab] = useState(false);
+  const [inPlan, setInPlan] = useState(false);
   const [adding, setAdding] = useState(false);
 
   // 父组件以 key=word 重挂载本组件;promise 链式取数(setState 在回调内,过 react-hooks lint)
@@ -86,6 +91,7 @@ export function WordCard({
         else {
           setData(res.data);
           setInVocab(res.data.inVocab);
+          setInPlan(res.data.inPlan);
         }
       })
       .catch(() => {
@@ -104,6 +110,30 @@ export function WordCard({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  /** 词库收录 → 加入背词计划(POST 幂等,新词 stage=recognize 立即开始背诵) */
+  const addPlan = async () => {
+    if (!data?.wordId) return;
+    setAdding(true);
+    try {
+      const resp = await fetch("/api/vocab-study-plan", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ wordIds: [data.wordId] }),
+      });
+      if (!resp.ok) {
+        const d = (await resp.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(d?.error ?? `HTTP ${resp.status}`);
+      }
+      setInPlan(true);
+      toast.success(`「${word}」已加入背词计划,开始背诵`);
+    } catch (e) {
+      toast.error(e instanceof Error && e.message !== "" && !e.message.startsWith("HTTP") ? e.message : "加入背词计划失败,请重试");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  /** 词库未收录 → 加入生词本(manual 词条) */
   const add = async () => {
     setAdding(true);
     try {
@@ -187,19 +217,35 @@ export function WordCard({
           </div>
         )}
 
-        <div className="mt-4 flex justify-end">
-          {inVocab ? (
+        <div className="mt-4 flex items-center justify-end gap-2">
+          {missing ? (
+            // 词库未收录:走生词本 manual 建词路径
+            inVocab ? (
+              <span className="rounded-full bg-primary/10 px-3 py-1.5 text-[13px] font-medium text-primary">
+                已在生词本
+              </span>
+            ) : (
+              <button
+                type="button"
+                disabled={adding}
+                onClick={add}
+                className="press-bubble rounded-full bg-primary px-4 py-1.5 text-[13px] font-medium text-primary-foreground transition-opacity disabled:opacity-60"
+              >
+                {adding ? "加入中…" : "加入生词本"}
+              </button>
+            )
+          ) : inPlan ? (
             <span className="rounded-full bg-primary/10 px-3 py-1.5 text-[13px] font-medium text-primary">
-              已在生词本
+              已在背词计划
             </span>
           ) : (
             <button
               type="button"
-              disabled={adding}
-              onClick={add}
+              disabled={adding || !data?.wordId}
+              onClick={addPlan}
               className="press-bubble rounded-full bg-primary px-4 py-1.5 text-[13px] font-medium text-primary-foreground transition-opacity disabled:opacity-60"
             >
-              {adding ? "加入中…" : "加入生词本"}
+              {adding ? "加入中…" : "加入背词计划"}
             </button>
           )}
         </div>

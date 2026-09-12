@@ -1,0 +1,1 @@
+ALTER TABLE `typing_sessions` ADD `typos_json` text;

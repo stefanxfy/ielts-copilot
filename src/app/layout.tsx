@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { Heartbeat } from "@/components/heartbeat";
+import { RouteMemory } from "@/components/route-memory";
 /* 中文正文:思源黑体本地包(Fontsource 可变字重 100-900)。
    不用 next/font/google —— Turbopack 在部分网络环境下拉 Google Fonts 会
    Module not found / 字体 404(vercel/next.js#91653),本地单机应用必须零外网依赖。 */
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-full flex flex-col">
         {children}
         <Heartbeat />
+        <RouteMemory />
         <Toaster position="top-center" />
       </body>
     </html>

@@ -20,6 +20,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExamConfirmDialog } from "@/components/exam/exam-confirm-dialog";
+import { getExamReturnPath } from "@/components/route-memory";
 
 const PLAYED_KEY = "ielts_audio_played";
 
@@ -218,14 +219,15 @@ export function ExamGuard() {
        exam-back-button 弹窗确认后派发 ielts-exit-exam,由本组件统一处理:
        解除防护 + 清听力已播标记 + 跳回仪表盘(与后退/刷新拦截共用退出路径)。 */
     const onExitExam = () => {
-      console.log("[exam-guard][top] 收到页面内退出确认,解除防护并返回仪表盘");
+      console.log("[exam-guard][top] 收到页面内退出确认,解除防护并返回进入前页面");
       armedRef.current = false;
       setArmed(false);
       try {
         sessionStorage.removeItem(PLAYED_KEY);
       } catch {}
       // SPA 内跳转:解除防护后 router.push 不会触发 beforeunload
-      routerRef.current.push("/");
+      // 回跳目标=进入机考前的页面(RouteMemory 记录),无记录回退仪表盘
+      routerRef.current.push(getExamReturnPath("/"));
     };
     w.addEventListener("ielts-exit-exam", onExitExam);
 

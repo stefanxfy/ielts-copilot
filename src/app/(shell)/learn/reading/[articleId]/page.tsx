@@ -12,7 +12,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import type { ReadingParagraph, ReadingSourceRef } from "@/db/schema";
 import { normalizeWord, WORD_TOKEN_RE } from "@/lib/reading/text";
 import { WordCard } from "@/components/reading/word-card";
@@ -50,6 +50,7 @@ function segmentize(en: string): Segment[] {
 
 export default function ReadingArticlePage() {
   const params = useParams<{ articleId: string }>();
+  const router = useRouter();
   const articleId = params.articleId;
 
   const [article, setArticle] = useState<ArticleDetail | null>(null);
@@ -58,6 +59,8 @@ export default function ReadingArticlePage() {
   const [zhOpen, setZhOpen] = useState<Set<number>>(new Set());
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [done, setDone] = useState(false); // 服务端已确认 COMPLETED
+  const [mockConfirm, setMockConfirm] = useState(false); // 机考模拟确认弹窗
+  const [entering, setEntering] = useState(false); // 已点进入机考,跳转中
 
   const currentParaRef = useRef(0);
   const readSecRef = useRef(0);
@@ -227,7 +230,41 @@ export default function ReadingArticlePage() {
         <Link href="/learn/reading" className="text-[13px] text-muted-foreground hover:text-foreground">
           ← 阅读学习
         </Link>
-        <h1 className="mt-2 text-xl font-bold leading-snug">{title}</h1>
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <h1 className="text-xl font-bold leading-snug">{title}</h1>
+          <div className="flex shrink-0 items-center gap-2">
+            {/* 机考模拟入口:本文出自的阅读真题卷直接开考(需确认,防误触离开阅读进度) */}
+            {sourceRef?.examId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEntering(false);
+                  setMockConfirm(true);
+                }}
+                className="press-bubble flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-[13px] font-medium text-primary transition-colors hover:bg-primary/20"
+                title="这套文章出自的阅读真题卷,直接进机考模拟"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <path d="M8 21h8M12 17v4" />
+                </svg>
+                机考模拟
+              </button>
+            )}
+            {/* 打字练习入口:当前文章送入 /typing(P10,进度自动记忆) */}
+            <Link
+              href={`/typing?articleId=${articleId}`}
+              className="press-bubble flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-[13px] font-medium text-primary transition-colors hover:bg-primary/20"
+              title="整篇跟打,进度自动保存"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M10 13h.01M14 13h.01M18 13h.01M8 17h8" />
+              </svg>
+              打字练习
+            </Link>
+          </div>
+        </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
           {sourceRef?.paperTitle && <span>{sourceRef.paperTitle}</span>}
           <span className="rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">{level}</span>
@@ -316,6 +353,53 @@ export default function ReadingArticlePage() {
 
       {selectedWord && (
         <WordCard key={selectedWord} word={selectedWord} articleId={articleId} onClose={() => setSelectedWord(null)} />
+      )}
+
+      {/* 机考模拟确认弹窗 */}
+      {mockConfirm && sourceRef?.examId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={() => !entering && setMockConfirm(false)}
+        >
+          <div
+            role="dialog"
+            aria-label="进入机考模拟"
+            className="w-full max-w-sm rounded-2xl border border-border bg-popover p-5 text-popover-foreground shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-[15px] font-bold">进入机考模拟?</h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+              本文出自〈{sourceRef.paperTitle ?? sourceRef.examId}〉。
+              确认后将离开阅读页,直接以机考模式完成这套阅读真题(限时,交卷自动评分)。
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={entering}
+                onClick={() => setMockConfirm(false)}
+                className="press-bubble rounded-full border border-border px-4 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                disabled={entering}
+                onClick={() => {
+                  // 立即给视觉反馈 + 预取目标路由,消除跳转等待窗口期的白屏/纯文本闪烁
+                  setEntering(true);
+                  router.prefetch(`/exam/${sourceRef.examId}`);
+                  router.push(`/exam/${sourceRef.examId}`);
+                }}
+                className="press-bubble inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-70"
+              >
+                {entering && (
+                  <span className="size-3.5 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                )}
+                {entering ? "正在进入…" : "进入机考"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

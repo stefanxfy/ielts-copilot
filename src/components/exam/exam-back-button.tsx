@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExamConfirmDialog } from "@/components/exam/exam-confirm-dialog";
+import { getExamReturnPath } from "@/components/route-memory";
 
 export function ExamBackButton({ isReview = false }: { isReview?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -24,14 +25,14 @@ export function ExamBackButton({ isReview = false }: { isReview?: boolean }) {
     setOpen(false);
     window.dispatchEvent(new CustomEvent("ielts-exit-exam"));
     // 兜底:若 guard 未挂载(理论不会),直接跳转
-    window.setTimeout(() => router.push("/"), 150);
+    window.setTimeout(() => router.push(getExamReturnPath("/")), 150);
   };
 
   return (
     <>
       <button
         type="button"
-        onClick={() => (isReview ? router.push("/") : setOpen(true))}
+        onClick={() => (isReview ? router.push(getExamReturnPath("/")) : setOpen(true))}
         className="cursor-pointer text-sm text-muted-foreground hover:text-foreground"
       >
         ← Back
