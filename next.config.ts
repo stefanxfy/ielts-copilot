@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
     buildActivity: false,
     appIsrStatus: false,
   },
+  /* Next 16 dev 跨源保护:dev 资源(/_next/static/*)默认只允许「服务启动时的 hostname」访问
+     (localhost)。浏览器用 127.0.0.1 打开时被判跨源 → 所有 chunk 返回 403,页面无 JS。
+     两个 host 都放行,避免 dev 启动方式/访问方式不一致再踩(仅 dev 生效,不影响 build)。 */
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   async rewrites() {
     return [
       /* 静态卷页是从 Drupal 站抓取的原样页面,卷页 JS 会向原站后端发访问统计:
