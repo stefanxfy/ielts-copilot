@@ -392,7 +392,7 @@ export interface PlanPhase {
 }
 
 /** 任务量词(v2.10 起可选):words 只能 个/天;set 只能 套/周;
- *  listening/reading/writing/speaking 可在 篇/天|篇/周|套/周|次/周 中选;
+ *  listening/reading/writing/speaking 可在 篇/天|篇/周 中选;
  *  typing 可在 篇/天|小时/天 中选 */
 export type TaskUnit = "个/天" | "篇/天" | "小时/天" | "篇/周" | "套/周" | "次/周";
 
@@ -400,10 +400,10 @@ export type TaskUnit = "个/天" | "篇/天" | "小时/天" | "篇/周" | "套/�
  *  服务端校验/覆写同用此表(TASK_UNIT 保留为默认值查表) */
 export const TASK_UNIT_OPTIONS: Record<TaskType, TaskUnit[]> = {
   words: ["个/天"],
-  listening: ["篇/天", "篇/周", "套/周"],
-  reading: ["篇/天", "篇/周", "套/周"],
-  writing: ["篇/天", "篇/周", "套/周"],
-  speaking: ["次/周", "篇/天", "篇/周"],
+  listening: ["篇/天", "篇/周"],
+  reading: ["篇/天", "篇/周"],
+  writing: ["篇/天", "篇/周"],
+  speaking: ["篇/天", "篇/周"],
   typing: ["篇/天", "小时/天"],
   set: ["套/周"],
 };
@@ -411,7 +411,7 @@ export const TASK_UNIT_OPTIONS: Record<TaskType, TaskUnit[]> = {
 /** 周任务模板单行 */
 export interface PlanTask {
   type: TaskType;
-  /** 量(words=个/天,其余可选 篇/天|篇/周|套/周|次/周,见 TASK_UNIT_OPTIONS) */
+  /** 量(words=个/天,听读写口=篇/天|篇/周,typing=篇/天|小时/天,见 TASK_UNIT_OPTIONS) */
   count: number;
   /** 量词(可选值受 type 约束;写入路径以 TASK_UNIT_OPTIONS 校验/覆写) */
   unit: TaskUnit;
@@ -426,7 +426,7 @@ export const TASK_UNIT: Record<TaskType, TaskUnit> = {
   listening: "篇/周",
   reading: "篇/周",
   writing: "篇/周",
-  speaking: "次/周",
+  speaking: "篇/周",
   typing: "篇/天",
   set: "套/周",
 };

@@ -295,7 +295,7 @@ export function TemplateRulesCard() {
             </table>
           </div>
           <p className={`${HINT} mt-1`}>
-            words=个/天,listening/reading/writing=篇(套)/周,speaking=次/周,typing=篇/天,套卷=套/周;量词可在确认页按任务改选(受类型约束)
+            words=个/天,listening/reading/writing/speaking=篇/天|篇/周,typing=篇/天|小时/天,套卷=套/周;量词可在确认页按任务改选(受类型约束)
           </p>
 
           {/* 上限与阈值 */}

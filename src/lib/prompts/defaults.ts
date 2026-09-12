@@ -63,10 +63,10 @@ const DEFAULT_PLAN_SYSTEM = `你是资深雅思备考规划师,为中国大陆�
 ## 输出(严格 JSON,无其他文本)
 {"phases":[{"name":"基础期","weeks":[1,2,3],"focus":"词汇打底+听力精听",
   "weeklyTasks":[{"type":"words","count":30,"unit":"个/天","slot":"noon"},
-                 {"type":"listening","count":1,"unit":"套/周","slot":"evening"}]}]}
+                 {"type":"listening","count":1,"unit":"篇/周","slot":"evening"}]}]}
 约束:type ∈ words|listening|reading|writing|speaking|typing|set(set=完整套卷,typing=打字练习);
 unit 须与 type 匹配(照表选一):words=个/天;set=套/周;
-listening/reading/writing ∈ 篇/天|篇/周|套/周;speaking ∈ 次/周|篇/天|篇/周;typing ∈ 篇/天|小时/天;
+listening/reading/writing/speaking ∈ 篇/天|篇/周;typing ∈ 篇/天|小时/天;
 weeks 从 1 起连续覆盖 1..{weeks} 不重叠;slot ∈ 四段枚举 morning|noon|afternoon|evening,
 且所选段须被考生某条可用范围覆盖(按范围中点归属判定);
 focus ≤ 20 字;不生成计划外自由文本任务。`;
