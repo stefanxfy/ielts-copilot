@@ -4,8 +4,8 @@
  * GET:未配置返回默认值;PUT:逐字段校验(比例和合理/数值上下限),非法字段拒绝保存。
  */
 import { NextResponse } from "next/server";
-import { TASK_TYPES } from "@/db/schema";
-import type { TaskType, TemplateRules } from "@/db/schema";
+import { TASK_TYPES, TASK_UNIT_OPTIONS } from "@/db/schema";
+import type { TaskType, TaskUnit, TemplateRules } from "@/db/schema";
 import {
   DEFAULT_TEMPLATE_RULES,
 } from "@/lib/prompts/defaults";
@@ -74,6 +74,32 @@ export async function PUT(request: Request) {
         );
       }
       nextRules.baseWeekly[phase][t as TaskType] = v;
+    }
+  }
+
+  // 基准表量词覆盖(可选字段):未传保留默认;传了但值不在该 type 允许列表 → 拒绝
+  const units = b.baseWeeklyUnits;
+  if (units != null) {
+    if (typeof units !== "object") {
+      return NextResponse.json({ error: "baseWeeklyUnits 应为对象" }, { status: 400 });
+    }
+    for (const phase of PHASE_KEYS) {
+      const src = units[phase];
+      if (src == null) continue;
+      if (typeof src !== "object") {
+        return NextResponse.json({ error: `baseWeeklyUnits.${phase} 应为对象` }, { status: 400 });
+      }
+      for (const t of TASK_TYPES) {
+        const v = src[t as TaskType];
+        if (v == null) continue;
+        if (typeof v !== "string" || !(TASK_UNIT_OPTIONS[t as TaskType] as string[]).includes(v)) {
+          return NextResponse.json(
+            { error: `baseWeeklyUnits.${phase}.${t} 量词非法(允许:${TASK_UNIT_OPTIONS[t as TaskType].join("|")})` },
+            { status: 400 },
+          );
+        }
+        nextRules.baseWeeklyUnits![phase][t as TaskType] = v as TaskUnit;
+      }
     }
   }
 

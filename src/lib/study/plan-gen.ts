@@ -10,7 +10,7 @@
  * v2.8:availability.slots 为 {start,end} 精确范围;范围→四段按中点归属,
  *      段边界由 wake/bed 推导;「整块」= 范围时长 ≥ blockMinMinutes。
  */
-import { TASK_TYPES, TASK_UNIT, TIME_SLOTS } from "@/db/schema";
+import { TASK_TYPES, TASK_UNIT, TASK_UNIT_OPTIONS, TIME_SLOTS } from "@/db/schema";
 import type {
   AvailableRange,
   PlanAvailability,
@@ -18,6 +18,7 @@ import type {
   StudyPreferences,
   TargetScores,
   TaskType,
+  TaskUnit as PlanTaskUnit,
   TemplateRules,
   TimeSlot,
 } from "@/db/schema";
@@ -236,6 +237,7 @@ export function buildTemplatePhases(input: TemplateInput): PlanPhase[] {
 
   const buildTasks = (phase: PhaseKey): PlanPhase["weeklyTasks"] => {
     const base = rules.baseWeekly[phase];
+    const baseUnits = rules.baseWeeklyUnits?.[phase];
     const tasks: PlanPhase["weeklyTasks"] = [];
     for (const type of TASK_TYPES) {
       const baseCount = base[type];
@@ -261,10 +263,18 @@ export function buildTemplatePhases(input: TemplateInput): PlanPhase[] {
         count = clamp(ROUND_05(baseCount * factor), 1, rules.perSubjectCeil);
       }
 
+      // 量词:规则表配置了 baseWeeklyUnits 则尊重之(须在该 type 允许列表内),否则默认
+      const allowed = TASK_UNIT_OPTIONS[type];
+      const configured = baseUnits?.[type];
+      const unit =
+        configured && (allowed as string[]).includes(configured)
+          ? configured
+          : TASK_UNIT[type];
+
       tasks.push({
         type,
         count,
-        unit: TASK_UNIT[type],
+        unit,
         slot: assignSlot(type, blocks, prefs, rules),
       });
     }
@@ -353,12 +363,17 @@ export function validatePhasesOutput(raw: unknown, weeks: number): ValidateResul
       if (task.slot != null && !TIME_SLOTS.includes(task.slot as TimeSlot)) {
         return { ok: false, reason: `任务 ${type} slot 非法:${String(task.slot)}` };
       }
-      // unit 是纯展示字段、由 type 唯一决定:无论 LLM 写什么(如 writing 写成「次/周」)
-      // 一律覆写为规范值,不为它拒整份输出——提示词无法约束死量词,曾致生成稳定失败
+      // unit 由 type 约束(v2.10):不在 TASK_UNIT_OPTIONS[type] 内的一律覆写为默认值,
+      // 不为它拒整份输出——提示词无法约束死量词,曾致生成稳定失败
+      const allowed = TASK_UNIT_OPTIONS[type];
+      const unit =
+        typeof task.unit === "string" && (allowed as string[]).includes(task.unit)
+          ? (task.unit as PlanTaskUnit)
+          : TASK_UNIT[type];
       tasks.push({
         type,
         count: task.count,
-        unit: TASK_UNIT[type],
+        unit,
         ...(task.slot != null ? { slot: task.slot as TimeSlot } : {}),
       });
     }
@@ -444,6 +459,7 @@ export function buildPlanMessages(input: PlanPromptInput): {
   const user = `## 考生信息
 - 考试日期 ${input.examDate},距今 ${input.days} 天 ≈ ${input.weeks} 周
 - 目标:总分 ${input.overall}(听力 ${t.listening ?? "—"} / 阅读 ${t.reading ?? "—"} / 写作 ${t.writing ?? "—"} / 口语 ${t.speaking ?? "—"})${weakest}
+- 任务量词:每条任务自选量词但受类型约束(见 system 约束表);typing=打字练习(机考输入适应),可少量安排在冲刺期前
 - 当前水平:${input.levelBlock}
 - 考生自述(原样引用,可能为空):${selfStatement}
 - 备考身份:${MODE_LABEL[input.availability.mode]};每天可投入 ${input.availability.dailyHours} 小时;可用时段:${renderSlotsText(input.availability)}

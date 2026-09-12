@@ -41,6 +41,7 @@ const TASK_LABEL: Record<TaskType, string> = {
   reading: "阅读",
   writing: "写作",
   speaking: "口语",
+  typing: "打字",
   set: "套卷",
 };
 const RATIO_LABEL: Record<"long" | "mid" | "short", string> = {
@@ -63,9 +64,9 @@ type NumText = Record<string, string>;
 const DEFAULT: TemplateRules = {
   phaseRatios: { long: [40, 40, 20], mid: [2, 3, 1], short: [1, 2, 1] },
   baseWeekly: {
-    basic: { words: 40, listening: 1, reading: 1, writing: 1, speaking: 0, set: 0 },
-    strengthen: { words: 30, listening: 2, reading: 2, writing: 2, speaking: 1, set: 0 },
-    sprint: { words: 20, listening: 2, reading: 2, writing: 1, speaking: 1, set: 1 },
+    basic: { words: 40, listening: 1, reading: 1, writing: 1, speaking: 0, typing: 0, set: 0 },
+    strengthen: { words: 30, listening: 2, reading: 2, writing: 2, speaking: 1, typing: 0, set: 0 },
+    sprint: { words: 20, listening: 2, reading: 2, writing: 1, speaking: 1, typing: 0, set: 1 },
   },
   scaleBaseHours: 2,
   wordsCeil: 80,
@@ -294,7 +295,7 @@ export function TemplateRulesCard() {
             </table>
           </div>
           <p className={`${HINT} mt-1`}>
-            words=个/天,listening/reading/writing/set=套(次)/周,speaking=次/周
+            words=个/天,listening/reading/writing=篇(套)/周,speaking=次/周,typing=篇/天,套卷=套/周;量词可在确认页按任务改选(受类型约束)
           </p>
 
           {/* 上限与阈值 */}

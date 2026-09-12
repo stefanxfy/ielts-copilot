@@ -17,9 +17,10 @@ import type {
   PlanPhase,
   StudyPreferences,
   TaskType,
+  TaskUnit,
   TemplateRules,
 } from "@/db/schema";
-import { TASK_TYPES } from "@/db/schema";
+import { TASK_TYPES, TASK_UNIT_OPTIONS } from "@/db/schema";
 import { getSetting } from "@/lib/study/settings";
 
 /* ======================================================================
@@ -63,8 +64,9 @@ const DEFAULT_PLAN_SYSTEM = `你是资深雅思备考规划师,为中国大陆�
 {"phases":[{"name":"基础期","weeks":[1,2,3],"focus":"词汇打底+听力精听",
   "weeklyTasks":[{"type":"words","count":30,"unit":"个/天","slot":"noon"},
                  {"type":"listening","count":1,"unit":"套/周","slot":"evening"}]}]}
-约束:type ∈ words|listening|reading|writing|speaking|set(set=完整套卷);
-unit 固定按 type 查表:words=个/天,listening/reading/writing/set=套/周,speaking=次/周(原样照抄);
+约束:type ∈ words|listening|reading|writing|speaking|typing|set(set=完整套卷,typing=打字练习);
+unit 须与 type 匹配(照表选一):words=个/天;set=套/周;
+listening/reading/writing ∈ 篇/天|篇/周|套/周;speaking ∈ 次/周|篇/天|篇/周;typing ∈ 篇/天|小时/天;
 weeks 从 1 起连续覆盖 1..{weeks} 不重叠;slot ∈ 四段枚举 morning|noon|afternoon|evening,
 且所选段须被考生某条可用范围覆盖(按范围中点归属判定);
 focus ≤ 20 字;不生成计划外自由文本任务。`;
@@ -182,6 +184,7 @@ const ZERO_TASKS: Record<TaskType, number> = {
   reading: 0,
   writing: 0,
   speaking: 0,
+  typing: 0,
   set: 0,
 };
 
@@ -194,6 +197,12 @@ export const DEFAULT_TEMPLATE_RULES: TemplateRules = {
     strengthen: { ...ZERO_TASKS, words: 30, listening: 2, reading: 2, writing: 2, speaking: 1 },
     sprint: { ...ZERO_TASKS, words: 20, listening: 2, reading: 2, writing: 1, speaking: 1, set: 1 },
   },
+  // 基准表量词覆盖(可选;缺省按 TASK_UNIT 默认;typing 默认 0 不参与)
+  baseWeeklyUnits: {
+    basic: {},
+    strengthen: {},
+    sprint: {},
+  },
   scaleBaseHours: 2,
   wordsCeil: 80,
   perSubjectCeil: 7,
@@ -203,6 +212,30 @@ export const DEFAULT_TEMPLATE_RULES: TemplateRules = {
 
 const PHASE_KEYS = ["basic", "strengthen", "sprint"] as const;
 type PhaseKey = (typeof PHASE_KEYS)[number];
+
+/** baseWeeklyUnits 逐字段清洗:量词不在该 type 允许列表 → 丢弃该字段(回退默认) */
+function sanitizeUnits(
+  raw: TemplateRules["baseWeeklyUnits"],
+): TemplateRules["baseWeeklyUnits"] {
+  const out: TemplateRules["baseWeeklyUnits"] = { basic: {}, strengthen: {}, sprint: {} };
+  if (!raw || typeof raw !== "object") return out;
+  for (const phase of PHASE_KEYS) {
+    const src = raw[phase];
+    if (!src || typeof src !== "object") continue;
+    const row: Partial<Record<TaskType, TaskUnit>> = {};
+    for (const t of TASK_TYPES) {
+      const v = src[t];
+      if (
+        typeof v === "string" &&
+        (TASK_UNIT_OPTIONS[t] as string[]).includes(v)
+      ) {
+        row[t] = v as TaskUnit;
+      }
+    }
+    out[phase] = row;
+  }
+  return out;
+}
 
 function numOr(v: unknown, fallback: number, min: number, max: number): number {
   return typeof v === "number" && Number.isFinite(v) && v >= min && v <= max ? v : fallback;
@@ -247,6 +280,8 @@ export function getTemplateRules(): TemplateRules {
       short: pickRatio("short", d.phaseRatios.short, 52),
     },
     baseWeekly,
+    // 量词覆盖逐字段合并:非法值(不在该 type 允许列表)直接丢弃 → 回退默认
+    baseWeeklyUnits: sanitizeUnits((raw as TemplateRules).baseWeeklyUnits),
     scaleBaseHours: numOr((raw as TemplateRules).scaleBaseHours, d.scaleBaseHours, 1, 12),
     wordsCeil: numOr((raw as TemplateRules).wordsCeil, d.wordsCeil, 10, 500),
     perSubjectCeil: numOr((raw as TemplateRules).perSubjectCeil, d.perSubjectCeil, 1, 21),

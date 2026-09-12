@@ -20,6 +20,8 @@ export interface DayActivity {
   writingSubmissionCount: number;
   speakingSubmissionCount: number;
   memorizedWordCount: number;
+  /** 打字练习篇数(追踪功能上线前恒 0) */
+  typingSubmissionCount?: number;
 }
 
 type ActivityColumn = Record<TaskType, keyof DayActivity | null>;
@@ -31,6 +33,7 @@ const COLUMN: ActivityColumn = {
   reading: "readingSubmissionCount",
   writing: "writingSubmissionCount",
   speaking: "speakingSubmissionCount",
+  typing: "typingSubmissionCount",
   set: "examSetCompletionCount",
 };
 
@@ -52,7 +55,7 @@ export interface TaskCheck {
   /** 勾选条件值(当日背词数 / 本周累计交卷数) */
   progress: number;
   done: boolean;
-  /** P8 前口语豁免:数据恒 0,渲染灰色「暂无追踪」 */
+  /** 无追踪数据时豁免:口语(P8 前)与打字(追踪上线前)恒豁免,渲染灰色「暂无追踪」 */
   exempt: boolean;
 }
 
@@ -84,15 +87,15 @@ export function buildTodayChecklist(
     for (const t of TASK_TYPES) {
       const col = COLUMN[t];
       if (t === "words" || !col) continue;
-      weekSum.set(t, (weekSum.get(t) ?? 0) + (a[col] as number));
+      weekSum.set(t, (weekSum.get(t) ?? 0) + Number(a[col] ?? 0));
     }
   }
 
   const todayRow = byDate.get(today);
   const tasks: TaskCheck[] = phase.weeklyTasks.map((t) => {
-    // P8 前口语豁免(版本级):speaking_submission_count 尚无写入方,
-    // 不参与勾选判定,渲染灰色「暂无追踪」;P8 上线后移除此豁免即自动转正常
-    const exempt = t.type === "speaking";
+    // 豁免(版本级):speaking P8 前无写入方;typing 打字追踪上线前无写入方。
+    // 不勾不红,渲染灰色「暂无追踪」;对应功能上线后移除豁免即自动转正常判定
+    const exempt = t.type === "speaking" || t.type === "typing";
     if (t.type === "words") {
       const progress = todayRow?.memorizedWordCount ?? 0;
       return { type: t.type, count: t.count, unit: t.unit, slot: t.slot, progress, done: progress >= t.count, exempt };
@@ -129,7 +132,8 @@ function daySubmissions(a: DayActivity): number {
     a.readingSubmissionCount +
     a.writingSubmissionCount +
     a.speakingSubmissionCount +
-    a.examSetCompletionCount
+    a.examSetCompletionCount +
+    (a.typingSubmissionCount ?? 0)
   );
 }
 

@@ -23,7 +23,7 @@ import type {
   TimeSlot,
   TaskType,
 } from "@/db/schema";
-import { TASK_TYPES, TASK_UNIT } from "@/db/schema";
+import { TASK_TYPES, TASK_UNIT, TASK_UNIT_OPTIONS } from "@/db/schema";
 import { addDays, daysBetween, todayStr } from "@/lib/study/date";
 import {
   SubjectSlotPicker,
@@ -61,6 +61,7 @@ const TASK_LABEL: Record<TaskType, string> = {
   reading: "阅读",
   writing: "写作",
   speaking: "口语",
+  typing: "打字练习",
   set: "完整套卷",
 };
 const SLOT_LABEL: Record<TimeSlot, string> = {
@@ -496,15 +497,20 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
       ),
     );
 
-  /** 换 type:同阶段内不允许重复 type(打卡判定按 type 汇总,重复行语义含糊) */
+  /** 换 type:同阶段内不允许重复 type(打卡判定按 type 汇总,重复行语义含糊);
+   *  unit 同步重置为新 type 的默认量词(旧 unit 可能不被新 type 允许) */
   const onTaskTypeChange = (pi: number, ti: number, type: TaskType) => {
     const phase = draftPhases[pi];
     if (phase?.weeklyTasks.some((t, j) => j !== ti && t.type === type)) {
       toast.error("该阶段已有此任务类型");
       return;
     }
-    setTask(pi, ti, { type });
+    setTask(pi, ti, { type, unit: TASK_UNIT[type] });
   };
+
+  /** 换量词:候选由 TASK_UNIT_OPTIONS[type] 决定(words 只有 个/天,set 只有 套/周) */
+  const onTaskUnitChange = (pi: number, ti: number, unit: PlanTask["unit"]) =>
+    setTask(pi, ti, { unit });
 
   const removeTask = (pi: number, ti: number) =>
     setDraftPhases((phases) =>
@@ -621,7 +627,21 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                               });
                             }}
                           />
-                          <span className="text-[12px] text-muted-foreground">{t.unit}</span>
+                          <span className="text-[12px] text-muted-foreground">×</span>
+                          <select
+                            aria-label="量词"
+                            className="h-7 rounded-md border border-border bg-card px-1 text-[12px] text-foreground outline-none focus:border-primary"
+                            value={TASK_UNIT_OPTIONS[t.type].includes(t.unit) ? t.unit : TASK_UNIT[t.type]}
+                            onChange={(e) =>
+                              onTaskUnitChange(i, j, e.target.value as PlanTask["unit"])
+                            }
+                          >
+                            {TASK_UNIT_OPTIONS[t.type].map((u) => (
+                              <option key={u} value={u}>
+                                {u}
+                              </option>
+                            ))}
+                          </select>
                           <select
                             aria-label="建议时段"
                             className="h-7 rounded-md border border-border bg-card px-1.5 text-[12px] text-foreground outline-none focus:border-primary"

@@ -30,6 +30,7 @@ const TASK_LABEL: Record<TaskType, string> = {
   reading: "阅读",
   writing: "写作",
   speaking: "口语",
+  typing: "打字练习",
   set: "完整套卷",
 };
 

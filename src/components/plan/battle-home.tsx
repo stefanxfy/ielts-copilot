@@ -41,6 +41,7 @@ const TASK_LABEL: Record<string, string> = {
   reading: "阅读",
   writing: "写作",
   speaking: "口语",
+  typing: "打字练习",
   set: "完整套卷",
 };
 const SLOT_LABEL: Record<string, string> = {
@@ -514,7 +515,7 @@ function TaskList({ tasks, emptyHint }: { tasks: TaskCheck[]; emptyHint: string 
               {t.slot ? <span className="ml-1.5 text-muted-foreground">· {SLOT_LABEL[t.slot] ?? t.slot}</span> : null}
             </div>
             <div className="mt-0.5 text-[11px] text-muted-foreground">
-              {t.exempt ? "暂无追踪(P8 口语上线后开启)" : `进度 ${t.progress}/${t.count}`}
+              {t.exempt ? "暂无追踪(追踪功能上线后开启)" : `进度 ${t.progress}/${t.count}`}
             </div>
           </div>
           {!t.exempt && (

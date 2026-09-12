@@ -16,7 +16,7 @@ import {
   validatePhasesOutput,
 } from "@/lib/study/plan-gen";
 import { DEFAULT_TEMPLATE_RULES } from "@/lib/prompts/defaults";
-import type { PlanAvailability, TemplateRules } from "@/db/schema";
+import type { PlanAvailability, PlanTask, TemplateRules } from "@/db/schema";
 
 const R: TemplateRules = structuredClone(DEFAULT_TEMPLATE_RULES);
 
@@ -203,14 +203,24 @@ test("validatePhasesOutput:合法输出通过且周升序归一", () => {
   ]);
 });
 
-test("validatePhasesOutput:unit 由 type 查表覆写(LLM 量词写错不拒整份)", () => {
+test("validatePhasesOutput:unit 由 type 约束覆写(LLM 量词写错不拒整份)", () => {
   const fixed = structuredClone(GOOD);
-  fixed[0].weeklyTasks[0].unit = "个/日"; // words 写成别的量词
-  fixed[0].weeklyTasks[1].unit = "次/周"; // listening 写成口语量词(曾致生成稳定失败)
+  fixed[0].weeklyTasks[0].unit = "个/日" as PlanTask["unit"]; // words 写成别的量词 → 回默认 个/天
+  fixed[0].weeklyTasks[1].unit = "次/周" as PlanTask["unit"]; // listening 不允许 次/周 → 回默认 篇/周
+  fixed[1].weeklyTasks[0].unit = "篇/天" as PlanTask["unit"]; // set 写成篇/天 → 回默认 套/周
   const r = validatePhasesOutput(fixed, 3);
   assert.ok(r.ok);
   assert.equal(r.phases![0].weeklyTasks[0].unit, "个/天");
-  assert.equal(r.phases![0].weeklyTasks[1].unit, "套/周");
+  assert.equal(r.phases![0].weeklyTasks[1].unit, "篇/周");
+  assert.equal(r.phases![1].weeklyTasks[0].unit, "套/周");
+});
+
+test("validatePhasesOutput:合法量词保留(listening=篇/天)", () => {
+  const custom = structuredClone(GOOD);
+  custom[0].weeklyTasks[1].unit = "篇/天" as PlanTask["unit"]; // listening 允许 篇/天
+  const r = validatePhasesOutput(custom, 3);
+  assert.ok(r.ok);
+  assert.equal(r.phases![0].weeklyTasks[1].unit, "篇/天");
 });
 
 test("validatePhasesOutput:同阶段 type 重复拒绝(打卡清单按 type 汇总,重复行语义不自洽)", () => {

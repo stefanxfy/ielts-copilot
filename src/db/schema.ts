@@ -344,13 +344,15 @@ export interface AvailableRange {
   end: string;
 }
 
-/** 周任务类型 —— 与 study_activities 统计列一一对应 */
+/** 周任务类型 —— 与 study_activities 统计列一一对应
+ *  (typing 暂无统计列:计划里可声明,清单豁免灰显,打字追踪功能上线后接列) */
 export const TASK_TYPES = [
   "words",
   "listening",
   "reading",
   "writing",
   "speaking",
+  "typing",
   "set",
 ] as const;
 export type TaskType = (typeof TASK_TYPES)[number];
@@ -389,24 +391,43 @@ export interface PlanPhase {
   weeklyTasks: PlanTask[];
 }
 
-/** 周任务模板单行(type 决定 unit 的纯展示量词,查表 TASK_UNIT) */
+/** 任务量词(v2.10 起可选):words 只能 个/天;set 只能 套/周;
+ *  listening/reading/writing/speaking 可在 篇/天|篇/周|套/周|次/周 中选;
+ *  typing 可在 篇/天|小时/天 中选 */
+export type TaskUnit = "个/天" | "篇/天" | "小时/天" | "篇/周" | "套/周" | "次/周";
+
+/** 各科可选量词表:unit 不再由 type 唯一写死,UI 下拉按此表渲染,
+ *  服务端校验/覆写同用此表(TASK_UNIT 保留为默认值查表) */
+export const TASK_UNIT_OPTIONS: Record<TaskType, TaskUnit[]> = {
+  words: ["个/天"],
+  listening: ["篇/天", "篇/周", "套/周"],
+  reading: ["篇/天", "篇/周", "套/周"],
+  writing: ["篇/天", "篇/周", "套/周"],
+  speaking: ["次/周", "篇/天", "篇/周"],
+  typing: ["篇/天", "小时/天"],
+  set: ["套/周"],
+};
+
+/** 周任务模板单行 */
 export interface PlanTask {
   type: TaskType;
-  /** 量:words=个/天,其余=套(次)/周 */
+  /** 量(words=个/天,其余可选 篇/天|篇/周|套/周|次/周,见 TASK_UNIT_OPTIONS) */
   count: number;
-  unit: "个/天" | "套/周" | "次/周";
+  /** 量词(可选值受 type 约束;写入路径以 TASK_UNIT_OPTIONS 校验/覆写) */
+  unit: TaskUnit;
   /** 建议时段;无偏好且无可时段时缺省 */
   slot?: TimeSlot;
 }
 
-/** 任务 type → 展示量词(unit 是纯展示字段、由 type 唯一决定,任何写入路径都以本表覆写为准)。
+/** 任务 type → 默认量词(向后兼容的展示查表;新写入走 TASK_UNIT_OPTIONS)。
  *  放 schema 而非 plan-gen:客户端组件(向导确认页)也要查表,避免把 Node 侧依赖拉进浏览器 bundle */
-export const TASK_UNIT: Record<TaskType, PlanTask["unit"]> = {
+export const TASK_UNIT: Record<TaskType, TaskUnit> = {
   words: "个/天",
-  listening: "套/周",
-  reading: "套/周",
-  writing: "套/周",
+  listening: "篇/周",
+  reading: "篇/周",
+  writing: "篇/周",
   speaking: "次/周",
+  typing: "篇/天",
   set: "套/周",
 };
 
@@ -443,6 +464,8 @@ export interface TemplateRules {
     "basic" | "strengthen" | "sprint",
     Record<TaskType, number>
   >;
+  /** 基准任务表默认量词(与 baseWeekly 同形;新增 typing 默认 0 不参与) */
+  baseWeeklyUnits?: Record<"basic" | "strengthen" | "sprint", Partial<Record<TaskType, TaskUnit>>>;
   /** 缩放基准小时数(默认 2) */
   scaleBaseHours: number;
   /** words 每日上限(默认 80) */
@@ -514,6 +537,8 @@ export const studyActivities = sqliteTable(
     examSetCompletionCount: int("exam_set_completion_count")
       .notNull()
       .default(0),
+    /** 打字练习篇数(打字追踪上线前恒 0,列先建好) */
+    typingSubmissionCount: int("typing_submission_count").notNull().default(0),
     listeningSubmissionCount: int("listening_submission_count")
       .notNull()
       .default(0),
