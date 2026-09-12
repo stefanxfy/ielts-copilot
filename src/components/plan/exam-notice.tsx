@@ -14,14 +14,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-/** 考前须知文案(机考常识集合,单条一问) */
-export const EXAM_NOTICE_ITEMS: string[] = [
-  "考试当天携带报名时使用的同一证件原件(身份证/护照),证件过期或信息不符将无法入场。",
-  "提前 30 分钟到达考点并规划好出行路线;机考入场截止后不得补入场。",
-  "考场提供一次性耳机、铅笔与橡皮;个人物品须存放于指定储物柜,手机等电子设备关机。",
-  "听力放音前有试音环节,注意调节音量;音频只播放一遍,不安排重听。",
-  "听力、阅读与写作之间不设休息,建议考前按考试时段调整作息,保持长时间专注。",
-  "写作留意字数下限:Task 1 不少于 150 词、Task 2 不少于 250 词,字数不足会被扣分。",
+/** 考前须知文案(换题季/费用/报名/考位/出分,单条一个主题) */
+export const EXAM_NOTICE_ITEMS: { title: string; text: string }[] = [
+  {
+    title: "换题季说明",
+    text: "每年 1 月、5 月、9 月为雅思口语换题季,新题在该月首场考试启用。想降低口语碰新题的风险,建议避开换题季首场;本应用覆盖的写作与听读不受换题季影响。",
+  },
+  {
+    title: "费用说明",
+    text: "普通雅思与 UKVI 报名费统一为 1990 元/次(以官方最新公布为准)。",
+  },
+  {
+    title: "官方报名",
+    text: "请前往教育部教育考试院雅思报名官网 ielts.neea.cn 完成报名与考位查询。",
+  },
+  {
+    title: "考位建议",
+    text: "机考虽每日可考,但热门城市周末考位紧张,建议提前 1–2 个月关注考位释放情况并尽早报名(机考报名在考前 3 个工作日截止)。",
+  },
+  {
+    title: "出分时间",
+    text: "机考考后 1–5 天出分,最快 48 小时。",
+  },
 ];
 
 export function ExamNoticeDialog({
@@ -36,10 +50,10 @@ export function ExamNoticeDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>考前须知</DialogTitle>
-          <DialogDescription>机考当天注意事项,建议考前一天再过一遍</DialogDescription>
+          <DialogDescription>报名与出分等关键事项,建议报名前先过一遍</DialogDescription>
         </DialogHeader>
-        <ol className="grid gap-2.5">
-          {EXAM_NOTICE_ITEMS.map((t, i) => (
+        <ol className="grid gap-3">
+          {EXAM_NOTICE_ITEMS.map((item, i) => (
             <li
               key={i}
               className="flex gap-2.5 text-[13px] leading-relaxed text-muted-foreground"
@@ -47,7 +61,11 @@ export function ExamNoticeDialog({
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">
                 {i + 1}
               </span>
-              <span>{t}</span>
+              <span>
+                <span className="font-medium text-foreground">{item.title}</span>
+                <span className="mx-1.5 text-border">|</span>
+                {item.text}
+              </span>
             </li>
           ))}
         </ol>
