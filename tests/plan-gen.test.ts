@@ -160,7 +160,7 @@ test("科目偏好时段优先于回退规则(用户偏好即真理)", () => {
   const phases = buildTemplatePhases({
     weeks: 6,
     availability: avail({ slots: [{ start: "19:30", end: "22:00" }] }),
-    prefs: { wakeTime: "07:00", bedTime: "23:00", subjectSlots: { words: "morning" } },
+    prefs: { wakeTime: "07:00", bedTime: "23:00", subjectSlots: { words: ["morning"] } },
     rules: R,
   });
   const strengthen = Object.fromEntries(phases[1].weeklyTasks.map((t) => [t.type, t]));

@@ -90,9 +90,15 @@ export function readStudyPreferences(): StudyPreferences {
   if (p.subjectSlots && typeof p.subjectSlots === "object") {
     const slots: StudyPreferences["subjectSlots"] = {};
     for (const [k, v] of Object.entries(p.subjectSlots)) {
-      if (TIME_SLOTS_SET.has(v as string)) {
-        slots[k as keyof NonNullable<StudyPreferences["subjectSlots"]>] =
-          v as NonNullable<StudyPreferences["subjectSlots"]>[keyof NonNullable<StudyPreferences["subjectSlots"]>];
+      // v2 起为 TimeSlot[];兼容 v1 单值(字符串)归一化为单元素数组
+      const raw: unknown = v;
+      const arr = (
+        Array.isArray(raw) ? raw : [raw]
+      ).filter((x) => TIME_SLOTS_SET.has(x as string)) as NonNullable<
+        StudyPreferences["subjectSlots"]
+      >[keyof NonNullable<StudyPreferences["subjectSlots"]>];
+      if (arr && arr.length) {
+        slots[k as keyof NonNullable<StudyPreferences["subjectSlots"]>] = arr;
       }
     }
     if (Object.keys(slots).length) out.subjectSlots = slots;

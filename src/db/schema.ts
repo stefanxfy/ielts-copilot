@@ -415,8 +415,8 @@ export interface StudyPreferences {
   /** 作息 "HH:MM";缺省 07:00 / 23:00 */
   wakeTime?: string;
   bedTime?: string;
-  /** 各科偏好时段,键 ∈ TASK_TYPES,值 ∈ TIME_SLOTS;未声明的不出现 */
-  subjectSlots?: Partial<Record<TaskType, TimeSlot>>;
+  /** 各科偏好时段(可多选),键 ∈ TASK_TYPES,值为 TimeSlot 数组(有序、非空才存);未声明的不出现 */
+  subjectSlots?: Partial<Record<TaskType, TimeSlot[]>>;
 }
 
 /** app_settings.punch_rules —— 打卡规则(可配置;默认值兜底,设置页可改) */

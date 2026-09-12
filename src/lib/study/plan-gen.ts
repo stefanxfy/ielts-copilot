@@ -124,8 +124,15 @@ export function assignSlot(
   rules?: TemplateRules,
 ): TimeSlot | undefined {
   const r = rules ?? DEFAULT_TEMPLATE_RULES;
-  const pref = prefs?.subjectSlots?.[type];
-  if (pref && TIME_SLOTS.includes(pref)) return pref;
+  const prefsArr = prefs?.subjectSlots?.[type];
+  // 多选偏好:按声明顺序取第一个与可用块匹配的段;都不匹配则取第一个(仍算用户意愿)
+  if (Array.isArray(prefsArr) && prefsArr.length) {
+    const valid = prefsArr.filter((s) => TIME_SLOTS.includes(s));
+    if (valid.length) {
+      const covered = new Set(blocks.map((b) => b.segment));
+      return valid.find((s) => covered.has(s)) ?? valid[0];
+    }
+  }
   if (!blocks.length) return undefined;
 
   const covered = [...new Set(blocks.map((b) => b.segment))];
@@ -407,7 +414,12 @@ function renderPrefsText(prefs?: StudyPreferences): string {
     evening: "晚上",
   };
   const prefText = lines.length
-    ? lines.map(([k, v]) => `${k}→${segLabel[v as TimeSlot]}`).join("、")
+    ? lines
+        .map(([k, v]) => {
+          const arr = Array.isArray(v) ? v : [v as TimeSlot]; // 兼容 v1 单值
+          return `${k}→${arr.map((s) => segLabel[s] ?? s).join("/")}`;
+        })
+        .join("、")
     : "无";
   return `起床 ${wake} / 睡觉 ${bed};科目偏好时段:${prefText}`;
 }

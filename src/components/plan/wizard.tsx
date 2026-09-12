@@ -26,6 +26,10 @@ import type {
 import { TASK_TYPES, TASK_UNIT } from "@/db/schema";
 import { addDays, daysBetween, todayStr } from "@/lib/study/date";
 import {
+  SubjectSlotPicker,
+  normalizeSubjectSlots,
+} from "@/components/plan/subject-slot-picker";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -72,11 +76,6 @@ const SEGMENTS: { key: TimeSlot; label: string; range: AvailableRange }[] = [
   { key: "noon", label: "中午", range: { start: "12:00", end: "14:00" } },
   { key: "afternoon", label: "下午", range: { start: "14:00", end: "18:00" } },
   { key: "evening", label: "晚上", range: { start: "18:00", end: "23:00" } },
-];
-
-const SUBJECT_SLOT_OPTIONS: { value: string; label: string }[] = [
-  ...Object.entries(SLOT_LABEL).map(([value, label]) => ({ value, label })),
-  { value: "", label: "不指定" },
 ];
 
 /** 调整模式回填(现有 ACTIVE 计划的关键输入) */
@@ -286,10 +285,10 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
       >),
   );
 
-  // STEP4 个人习惯(进入时回填)
+  // STEP4 个人习惯(进入时回填;subjectSlots v2 为 TimeSlot[])
   const [wakeTime, setWakeTime] = useState("07:00");
   const [bedTime, setBedTime] = useState("23:00");
-  const [subjectSlots, setSubjectSlots] = useState<Record<string, string>>({});
+  const [subjectSlots, setSubjectSlots] = useState<Partial<Record<TaskType, TimeSlot[]>>>({});
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [prefsSaving, setPrefsSaving] = useState(false);
 
@@ -315,8 +314,11 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
           setBedTime(data.preferences.bedTime ?? "23:00");
           setSubjectSlots(
             Object.fromEntries(
-              Object.entries(data.preferences.subjectSlots ?? {}).map(([k, v]) => [k, v]),
-            ),
+              Object.entries(data.preferences.subjectSlots ?? {}).map(([k, v]) => [
+                k,
+                Array.isArray(v) ? v : [v], // v1 单值兼容
+              ]),
+            ) as Partial<Record<TaskType, TimeSlot[]>>,
           );
         }
       } finally {
@@ -396,17 +398,13 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
   async function savePrefs(): Promise<boolean> {
     setPrefsSaving(true);
     try {
-      const subjectSlotsOut: Record<string, string> = {};
-      for (const [k, v] of Object.entries(subjectSlots)) {
-        if (v && TASK_TYPES.includes(k as TaskType)) subjectSlotsOut[k] = v;
-      }
       const resp = await fetch("/api/study-preferences", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wakeTime,
           bedTime,
-          subjectSlots: subjectSlotsOut,
+          subjectSlots: normalizeSubjectSlots(subjectSlots),
         }),
       });
       if (!resp.ok) {
@@ -633,11 +631,14 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
                               setTask(i, j, v ? { slot: v as TimeSlot } : { slot: undefined });
                             }}
                           >
-                            {SUBJECT_SLOT_OPTIONS.map((o) => (
-                              <option key={o.value} value={o.value}>
-                                {o.label === "不指定" ? "不指定时段" : o.label}
-                              </option>
-                            ))}
+                            {Object.entries(SLOT_LABEL)
+                              .map(([value, label]) => ({ value, label }))
+                              .concat({ value: "", label: "不指定时段" })
+                              .map((o) => (
+                                <option key={o.value} value={o.value}>
+                                  {o.label}
+                                </option>
+                              ))}
                           </select>
                           <button
                             type="button"
@@ -922,23 +923,19 @@ export function PlanWizard({ variant = "create", planId, initial }: PlanWizardPr
               onChange={(e) => setBedTime(e.target.value)}
             />
           </div>
-          <div className="mb-1.5 text-[13px] text-muted-foreground">各科偏好时段(选填)</div>
+          <div className="mb-1.5 text-[13px] text-muted-foreground">各科偏好时段(选填,可多选)</div>
           {TASK_TYPES.map((t) => (
             <div key={t} className="mb-2 flex items-center gap-2.5">
               <span className="w-[110px] shrink-0 text-[13px] text-muted-foreground">{TASK_LABEL[t]}</span>
-              <select
-                className={INPUT}
-                value={subjectSlots[t] ?? ""}
-                onChange={(e) =>
-                  setSubjectSlots((s) => ({ ...s, [t]: e.target.value }))
+              <SubjectSlotPicker
+                value={subjectSlots[t]}
+                onChange={(next) =>
+                  setSubjectSlots((s) => {
+                    const { [t]: _, ...rest } = s;
+                    return next.length ? { ...s, [t]: next } : rest;
+                  })
                 }
-              >
-                {SUBJECT_SLOT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           ))}
           {prefsSaving && <p className={HINT}>保存中…</p>}

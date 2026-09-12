@@ -51,16 +51,22 @@ export async function PUT(request: Request) {
     if (typeof b.subjectSlots !== "object") {
       return NextResponse.json({ error: "subjectSlots 应为对象" }, { status: 400 });
     }
-    const slots: Partial<Record<TaskType, TimeSlot>> = {};
+    const slots: Partial<Record<TaskType, TimeSlot[]>> = {};
     for (const [k, v] of Object.entries(b.subjectSlots as Record<string, unknown>)) {
       if (!TASK_TYPES.includes(k as TaskType)) {
         return NextResponse.json({ error: `未知科目:${k}` }, { status: 400 });
       }
-      if (v == null) continue; // null = 清除该科偏好
-      if (!TIME_SLOTS.includes(v as TimeSlot)) {
-        return NextResponse.json({ error: `科目 ${k} 时段非法` }, { status: 400 });
+      if (v == null || (Array.isArray(v) && v.length === 0)) continue; // 空 = 清除该科偏好
+      // v2 起为 TimeSlot[];兼容 v1 单值(字符串)归一化为数组
+      const raw = Array.isArray(v) ? v : [v];
+      for (const item of raw) {
+        if (!TIME_SLOTS.includes(item as TimeSlot)) {
+          return NextResponse.json({ error: `科目 ${k} 时段非法` }, { status: 400 });
+        }
       }
-      slots[k as TaskType] = v as TimeSlot;
+      // 去重并按 TIME_SLOTS 固定顺序归一化
+      const ordered = TIME_SLOTS.filter((s) => raw.includes(s));
+      if (ordered.length) slots[k as TaskType] = [...ordered];
     }
     out.subjectSlots = slots;
   }

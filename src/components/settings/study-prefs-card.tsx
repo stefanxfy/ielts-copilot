@@ -8,16 +8,18 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { StudyPreferences, TaskType } from "@/db/schema";
+import type { StudyPreferences, TaskType, TimeSlot } from "@/db/schema";
 import { TASK_TYPES } from "@/db/schema";
+import {
+  SubjectSlotPicker,
+  normalizeSubjectSlots,
+} from "@/components/plan/subject-slot-picker";
 
 const CARD = "mb-4 max-w-[680px] rounded-xl border border-border bg-card p-5";
 const ROW = "mb-3 flex items-center gap-2.5";
 const LABEL = "w-[150px] shrink-0 text-[13px] text-muted-foreground";
 const INPUT =
   "h-9 w-[110px] rounded-md border border-border bg-card px-2.5 text-[13px] outline-none focus:border-primary";
-const SELECT =
-  "h-9 w-[180px] rounded-md border border-border bg-card px-2.5 text-[13px] outline-none focus:border-primary";
 const BTN_PRIMARY =
   "rounded-md bg-primary px-3.5 py-1.5 text-[13px] text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50";
 const HINT = "text-xs text-muted-foreground";
@@ -31,19 +33,11 @@ const TASK_LABEL: Record<TaskType, string> = {
   set: "完整套卷",
 };
 
-const SLOT_OPTIONS: { value: string; label: string }[] = [
-  { value: "morning", label: "上午" },
-  { value: "noon", label: "中午" },
-  { value: "afternoon", label: "下午" },
-  { value: "evening", label: "晚上" },
-  { value: "", label: "不指定" },
-];
-
 export function StudyPrefsCard() {
   const [loaded, setLoaded] = useState(false);
   const [wakeTime, setWakeTime] = useState("07:00");
   const [bedTime, setBedTime] = useState("23:00");
-  const [subjectSlots, setSubjectSlots] = useState<Record<string, string>>({});
+  const [subjectSlots, setSubjectSlots] = useState<Partial<Record<TaskType, TimeSlot[]>>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,8 +50,11 @@ export function StudyPrefsCard() {
         setBedTime(data.preferences.bedTime ?? "23:00");
         setSubjectSlots(
           Object.fromEntries(
-            Object.entries(data.preferences.subjectSlots ?? {}).map(([k, v]) => [k, v]),
-          ),
+            Object.entries(data.preferences.subjectSlots ?? {}).map(([k, v]) => [
+              k,
+              Array.isArray(v) ? v : [v], // v1 单值兼容
+            ]),
+          ) as Partial<Record<TaskType, TimeSlot[]>>,
         );
       }
       setLoaded(true);
@@ -73,14 +70,14 @@ export function StudyPrefsCard() {
     setError(null);
     setSaving(true);
     try {
-      const subjectSlotsOut: Record<string, string> = {};
-      for (const [k, v] of Object.entries(subjectSlots)) {
-        if (v && TASK_TYPES.includes(k as TaskType)) subjectSlotsOut[k] = v;
-      }
       const resp = await fetch("/api/study-preferences", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wakeTime, bedTime, subjectSlots: subjectSlotsOut }),
+        body: JSON.stringify({
+          wakeTime,
+          bedTime,
+          subjectSlots: normalizeSubjectSlots(subjectSlots),
+        }),
       });
       const data = (await resp.json()) as { ok?: boolean; error?: string };
       if (!resp.ok || !data.ok) {
@@ -124,21 +121,19 @@ export function StudyPrefsCard() {
               onChange={(e) => setBedTime(e.target.value)}
             />
           </div>
-          <div className="mb-1.5 text-[13px] text-muted-foreground">各科偏好时段(选填)</div>
+          <div className="mb-1.5 text-[13px] text-muted-foreground">各科偏好时段(选填,可多选)</div>
           {TASK_TYPES.map((t) => (
             <div key={t} className={ROW}>
               <label className={LABEL}>{TASK_LABEL[t]}</label>
-              <select
-                className={SELECT}
-                value={subjectSlots[t] ?? ""}
-                onChange={(e) => setSubjectSlots((s) => ({ ...s, [t]: e.target.value }))}
-              >
-                {SLOT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              <SubjectSlotPicker
+                value={subjectSlots[t]}
+                onChange={(next) =>
+                  setSubjectSlots((s) => {
+                    const { [t]: _, ...rest } = s;
+                    return next.length ? { ...s, [t]: next } : rest;
+                  })
+                }
+              />
             </div>
           ))}
 
