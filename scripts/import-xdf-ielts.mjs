@@ -24,9 +24,10 @@
  *   默认 dry-run 只打印报告;--apply 写库前自动备份 data/app.db
  */
 import { createRequire } from "node:module";
-import { copyFileSync, readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { walkEnPunct } from "./lib/normalize-en-punct.mjs";
+import { snapshotDb } from "./lib/prune-db-backups.mjs";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
@@ -338,9 +339,10 @@ const db = new Database(join(process.cwd(), "data", "app.db"));
 db.pragma("foreign_keys = ON");
 let backupPath = null;
 if (APPLY) {
-  backupPath = join(process.cwd(), "data", `app.db.bak-xdf-p0-${Date.now()}`);
-  copyFileSync(join(process.cwd(), "data", "app.db"), backupPath);
+  const snap = snapshotDb(join(process.cwd(), "data", "app.db"), "xdf-p0");
+  backupPath = snap.path;
   log(`已备份 → ${backupPath}`);
+  for (const f of snap.removed) log(`已清理旧备份 → ${f}`);
 }
 
 const dbRows = db.prepare("SELECT id, word, content_json FROM words").all();

@@ -18,10 +18,11 @@
  *   - 每 50 词增量回写 DB
  *   - style S8 prompt 与 debug-image-prompt.mjs 的 STYLE_CANDIDATES.s8 一致
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, copyFileSync, readdirSync, unlinkSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
+import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { snapshotDb } from "./lib/prune-db-backups.mjs";
 
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
@@ -326,36 +327,12 @@ async function processAll(key, targets) {
 }
 
 /* ---------- 备份(首次跑) ---------- */
-// 整库快照 ≈21MB/份，跑一次存一份会无限堆积（曾堆到 17 份/342MB），故只留最近 N 份
-const KEEP_BAKS = 3;
-
-/** 清理历史 .bak-imgxdf-* 快照，只保留最近 KEEP_BAKS 份 */
-function pruneBackups() {
-  const prefix = "app.db.bak-imgxdf-";
-  let olds;
-  try {
-    olds = readdirSync(dirname(DB_PATH)).filter(
-      (f) => f.startsWith(prefix) && /^\d+$/.test(f.slice(prefix.length)),
-    );
-  } catch {
-    return;
-  }
-  // Date.now() 定长 13 位 → 字典序 == 时间序
-  olds.sort();
-  for (const f of olds.slice(0, Math.max(0, olds.length - KEEP_BAKS))) {
-    try {
-      unlinkSync(join(dirname(DB_PATH), f));
-      console.log(`[img] 清理旧备份 → ${f}`);
-    } catch {}
-  }
-}
-
+// 整库快照 ≈21MB/份，清理逻辑统一在 lib/prune-db-backups.mjs（只留最近 3 份）
 function maybeBackup() {
-  const bak = `${DB_PATH}.bak-imgxdf-${Date.now()}`;
-  copyFileSync(DB_PATH, bak);
-  console.log(`[img] 备份 → ${bak}`);
-  pruneBackups();
-  return bak;
+  const { path, removed } = snapshotDb(DB_PATH, "imgxdf");
+  console.log(`[img] 备份 → ${path}`);
+  for (const f of removed) console.log(`[img] 清理旧备份 → ${basename(f)}`);
+  return path;
 }
 
 /* ---------- 主流程 ---------- */

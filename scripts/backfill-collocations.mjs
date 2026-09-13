@@ -13,9 +13,10 @@
  *   默认 dry-run 只打印报告;--apply 写库前自动备份 data/app.db
  */
 import { createRequire } from "node:module";
-import { copyFileSync, readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { walkEnPunct } from "./lib/normalize-en-punct.mjs";
+import { snapshotDb } from "./lib/prune-db-backups.mjs";
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
 
@@ -49,9 +50,9 @@ console.log(`词书 JSON: ${jsonArg} → ${book.size} 词带词组数据`);
 /* ---------- 扫描 DB ---------- */
 const db = new Database(join(process.cwd(), "data", "app.db"));
 if (APPLY) {
-  const backup = join(process.cwd(), "data", `app.db.bak-collocations-${Date.now()}`);
-  copyFileSync(join(process.cwd(), "data", "app.db"), backup);
-  console.log(`已备份 → ${backup}`);
+  const snap = snapshotDb(join(process.cwd(), "data", "app.db"), "collocations");
+  console.log(`已备份 → ${snap.path}`);
+  for (const f of snap.removed) console.log(`已清理旧备份 → ${f}`);
 }
 const rows = db.prepare("SELECT id, word, content_json FROM words").all();
 

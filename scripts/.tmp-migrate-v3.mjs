@@ -7,6 +7,7 @@
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
+import { snapshotDb } from "./lib/prune-db-backups.mjs";
 
 const ROOT = process.cwd();
 const V3 = path.join(ROOT, "public/images/words/v3");
@@ -14,9 +15,9 @@ const MAIN = path.join(ROOT, "public/images/words");
 const DB = path.join(ROOT, "data/app.db");
 
 // ---------- 0. 备份 DB ----------
-const bak = `${DB}.bak-migrate-${Date.now()}`;
-fs.copyFileSync(DB, bak);
-console.log(`[备份] ${bak}`);
+const snap = snapshotDb(DB, "migrate");
+console.log(`[备份] ${snap.path}`);
+for (const f of snap.removed) console.log(`[清理] ${f}`);
 
 const db = new Database(DB);
 // json_replace 的第三参要求合法 JSON 文本,路径字符串须 JSON.stringify

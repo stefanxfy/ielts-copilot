@@ -18,8 +18,8 @@
  *   node scripts/normalize-en-punct.mjs --apply    # 备份 app.db 后写库
  */
 import { createRequire } from "node:module";
-import { copyFileSync } from "node:fs";
 import { walkEnPunct, normEnPunct, EN_KEYS, EN_PUNCT_MAP } from "./lib/normalize-en-punct.mjs";
+import { snapshotDb } from "./lib/prune-db-backups.mjs";
 
 const require = createRequire(import.meta.url);
 const Database = require("better-sqlite3");
@@ -53,9 +53,9 @@ function collectHits(node, key = null, hits = []) {
 
 function main() {
   if (APPLY) {
-    const bak = `${DB_PATH}.bak-normen-${Date.now()}`;
-    copyFileSync(DB_PATH, bak);
-    console.log(`[norm] 已备份 → ${bak}`);
+    const snap = snapshotDb(DB_PATH, "normen");
+    console.log(`[norm] 已备份 → ${snap.path}`);
+    for (const f of snap.removed) console.log(`[norm] 已清理旧备份 → ${f}`);
   }
 
   const db = new Database(DB_PATH, { readonly: !APPLY });
