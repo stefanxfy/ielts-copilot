@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   // 写作卷:连考模式(sessionId 存在)走场次入口;单科模式(sessionId 空)也允许上报,
   // 让用户交卷后能跳到 /records/<id> 看 AI 批改结果 — 这条路是 2026-09-09 接通 P0 时开的:
   // exam-note.js finish() POST 后整页跳转,服务端必须回 recordId。
-  // 区别:连考模式 finalizeIfComplete + recordSubjectSubmission;单科模式跳过场次相关动作。
+  // 区别:连考模式 finalizeIfComplete;recordSubjectSubmission 两种模式都计(2026-09-13 口径)。
   if (paper.subject === "writing" || !paper.answersJson) {
     // 写作答题卡:T1/T2 全文(值来自 values 的 T1/T2 键),不判分
     const sheet: AnswerSheetJson = Object.fromEntries(
@@ -150,7 +150,9 @@ export async function POST(request: Request) {
       })
       .returning({ id: examRecords.id })
       .all();
-    if (sessionId) recordSubjectSubmission("writing"); // P7 活动埋点(连考才计,单科不计)
+    // P7 活动埋点(2026-09-13 用户定口径:写作篇数 = /writing 仿真交卷 或 考试写作交卷,
+    // 连考/单科都计;覆盖更新路径不计,与阅读同口径)
+    recordSubjectSubmission("writing");
     const completed = sessionId ? finalizeIfComplete(sessionId) : false;
     triggerAutoGrading(result[0].id, sheet);
     return NextResponse.json({
@@ -217,8 +219,8 @@ export async function POST(request: Request) {
     })
     .returning({ id: examRecords.id })
     .all();
-  // P7 活动埋点:连考各科都计;单科模式只计阅读(篇数口径 = 阅读考试交卷或阅读库读完一篇,
-  // 2026-09-13 用户定的口径),听力/写作单科仍不计(避免练习式刷数)
+  // P7 活动埋点:连考各科都计;单科模式只计阅读(口径 = 阅读考试交卷或阅读库读完一篇,
+  // 2026-09-13 用户定)。写作卷全走上方专支(连考/单科都计),听力单科仍不计(避免练习式刷数)
   if (sessionId || paper.subject === "reading") recordSubjectSubmission(paper.subject);
 
   // 连考模式:交卷后检查场次是否三科齐全,齐全则回写 overall 快照

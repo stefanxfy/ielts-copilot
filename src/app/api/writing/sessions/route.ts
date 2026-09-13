@@ -15,6 +15,7 @@ import { getDb } from "@/db";
 import { writingPrompts, writingSessions } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { countWords } from "@/lib/writing/text";
+import { recordSubjectSubmission } from "@/lib/study/activities";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -151,6 +152,9 @@ export async function POST(req: NextRequest) {
     })
     .returning({ id: writingSessions.id })
     .get();
+
+  // P7 活动埋点(2026-09-13 用户定口径:写作篇数 = /writing 仿真交卷 或 考试写作交卷)
+  recordSubjectSubmission("writing");
 
   return NextResponse.json({
     sessionId: inserted.id,
