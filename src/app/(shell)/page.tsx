@@ -10,9 +10,10 @@
  */
 
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
+  examRecords,
   examSessions,
   examSets,
   papers,
@@ -21,6 +22,7 @@ import {
 import { getDashboardData, SUBJECT_LABEL } from "@/lib/dashboard";
 import ScoreCurveChart from "@/components/dashboard/score-curve";
 import AbilityRadar from "@/components/dashboard/ability-radar";
+import { RecentSessionsList, type RecentExamRow } from "@/components/dashboard/recent-sessions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +42,64 @@ export default function DashboardPage() {
   const db = getDb();
   const paperCount = db.select({ n: papers.id }).from(papers).all().length;
   const setCount = db.select({ n: examSets.examSetId }).from(examSets).all().length;
+
+  // 最近模考:整套场次 + 单科独立交卷合并(2026-09-13 用户要求支持整套/单科切换检索)
+  const setRows = db
+    .select({
+      sessionId: examSessions.sessionId,
+      status: examSessions.status,
+      overallBand: examSessions.overallBand,
+      totalUsedSec: examSessions.totalUsedSec,
+      startedAt: examSessions.startedAt,
+      setTitle: examSets.title,
+    })
+    .from(examSessions)
+    .leftJoin(examSets, eq(examSets.examSetId, examSessions.examSetId))
+    .orderBy(desc(examSessions.startedAt))
+    .limit(50)
+    .all();
+  // 单科独立考试 = exam_records 无场次(单科随缘练习)且已交卷;连考行共享场次,不算独立
+  const singleRows = db
+    .select({
+      id: examRecords.id,
+      subject: examRecords.subject,
+      bandScore: examRecords.bandScore,
+      usedSec: examRecords.usedSec,
+      submittedAt: examRecords.submittedAt,
+      startedAt: examRecords.startedAt,
+      paperTitle: papers.title,
+    })
+    .from(examRecords)
+    .innerJoin(papers, eq(papers.examId, examRecords.examId))
+    .where(and(isNull(examRecords.sessionId), eq(examRecords.status, "SUBMITTED")))
+    .orderBy(desc(examRecords.startedAt))
+    .limit(50)
+    .all();
+
+  const recentRows: RecentExamRow[] = [
+    ...setRows.map<RecentExamRow>((s) => ({
+      kind: "set",
+      key: s.sessionId,
+      title: s.setTitle ?? s.sessionId,
+      subject: null,
+      status: s.status,
+      band: s.overallBand,
+      usedSec: s.totalUsedSec,
+      timeMs: s.startedAt ? new Date(s.startedAt).getTime() : 0,
+      href: `/session/${s.sessionId}`,
+    })),
+    ...singleRows.map<RecentExamRow>((r) => ({
+      kind: "single",
+      key: `rec-${r.id}`,
+      title: r.paperTitle,
+      subject: r.subject,
+      status: "SUBMITTED",
+      band: r.bandScore,
+      usedSec: r.usedSec,
+      timeMs: (r.submittedAt ?? r.startedAt) ? new Date(r.submittedAt ?? r.startedAt).getTime() : 0,
+      href: `/records/${r.id}`,
+    })),
+  ].sort((a, b) => b.timeMs - a.timeMs);
 
   return (
     <>
@@ -189,8 +249,8 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* 最近模考(场次成绩单入口) */}
-      <RecentSessions />
+      {/* 最近模考(整套场次 + 单科独立考试,可切换/按科目多选筛选) */}
+      <RecentSessionsList rows={recentRows} />
 
       <p className="mt-4 text-center text-[11px] text-muted-foreground/60">
         本地题库 {paperCount} 份单科卷 · {setCount} 套真题 · 前往「机考模拟」开始练习
@@ -272,90 +332,5 @@ function EmptyGuide() {
         去机考模拟 →
       </Link>
     </div>
-  );
-}
-
-/** 精简版最近模考(场次成绩单入口) */
-function RecentSessions() {
-  const db = getDb();
-  const sessions = db
-    .select({
-      sessionId: examSessions.sessionId,
-      status: examSessions.status,
-      overallBand: examSessions.overallBand,
-      totalUsedSec: examSessions.totalUsedSec,
-      startedAt: examSessions.startedAt,
-      setTitle: examSets.title,
-    })
-    .from(examSessions)
-    .leftJoin(examSets, eq(examSets.examSetId, examSessions.examSetId))
-    .orderBy(desc(examSessions.startedAt))
-    .limit(5)
-    .all();
-
-  const fmtDuration = (sec: number) => `${Math.round(sec / 60)} 分钟`;
-  const fmtTime = (d: Date | null) =>
-    d ? new Date(d).toLocaleString("zh-CN", { hour12: false }) : "—";
-
-  return (
-    <>
-      <h3 className="mb-3 text-[15px]">最近模考</h3>
-      <div className="rounded-xl border border-border bg-card px-4 py-2">
-        {sessions.length === 0 ? (
-          <div className="py-4 text-center text-xs text-muted-foreground">
-            暂无模考场次 · 从「机考模拟」选一套真题开始
-          </div>
-        ) : (
-          <table className="w-full border-collapse text-[13px]">
-            <thead>
-              <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                <th className="px-2.5 py-2 font-medium">套卷</th>
-                <th className="px-2.5 py-2 font-medium">状态</th>
-                <th className="px-2.5 py-2 font-medium">总分</th>
-                <th className="px-2.5 py-2 font-medium">总用时</th>
-                <th className="px-2.5 py-2 font-medium">开始时间</th>
-                <th className="px-2.5 py-2 font-medium">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.map((s) => (
-                <tr key={s.sessionId} className="border-b border-border last:border-0">
-                  <td className="px-2.5 py-2.5">{s.setTitle ?? s.sessionId}</td>
-                  <td className="px-2.5 py-2.5">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] ${
-                        s.status === "COMPLETED"
-                          ? "bg-success/10 text-success"
-                          : s.status === "ABANDONED"
-                            ? "bg-destructive/10 text-destructive"
-                            : "bg-warning/15 text-warning"
-                      }`}
-                    >
-                      {s.status === "COMPLETED"
-                        ? "已完成"
-                        : s.status === "ABANDONED"
-                          ? "已放弃"
-                          : "进行中"}
-                    </span>
-                  </td>
-                  <td className="px-2.5 py-2.5 font-semibold text-primary">
-                    {s.overallBand != null ? s.overallBand.toFixed(1) : "—"}
-                  </td>
-                  <td className="px-2.5 py-2.5">
-                    {s.totalUsedSec != null ? fmtDuration(s.totalUsedSec) : "—"}
-                  </td>
-                  <td className="px-2.5 py-2.5 text-muted-foreground">{fmtTime(s.startedAt)}</td>
-                  <td className="px-2.5 py-2.5">
-                    <Link href={`/session/${s.sessionId}`} className="text-primary hover:underline">
-                      场次成绩单 →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </>
   );
 }
