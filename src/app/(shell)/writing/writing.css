@@ -1,17 +1,19 @@
-/* /writing 写作仿真页 —— 纸感风,作用域 .writing-root(对齐 docs/写作仿真原型.html) */
+/* /writing 写作仿真页 —— 作用域 .writing-root(对齐 docs/写作仿真原型.html)
+ * 局部 --w* 调色板映射到全局语义 token(--card/--foreground/--primary 等),
+ * 八套皮肤(含夜读暗色)随 html[data-theme] 实时跟随,与其他页面一致。 */
 
 .writing-root {
-  --wbg: #f6f5f1;
-  --wcard: #ffffff;
-  --wink: #26261f;
-  --wink2: #6b6a62;
-  --wink3: #9a988d;
-  --wline: #e5e3da;
-  --waccent: #0f6e56;
-  --waccent-bg: #e7f2ee;
-  --wamber: #b97d10;
-  --wamber-bg: #fbf3e2;
-  --wred: #c2413d;
+  --wbg: var(--muted);
+  --wcard: var(--card);
+  --wink: var(--foreground);
+  --wink2: var(--muted-foreground);
+  --wink3: color-mix(in oklab, var(--muted-foreground) 72%, var(--background));
+  --wline: var(--border);
+  --waccent: var(--primary);
+  --waccent-bg: color-mix(in oklab, var(--primary) 13%, var(--card));
+  --wamber: color-mix(in oklab, var(--warning) 62%, var(--foreground));
+  --wamber-bg: color-mix(in oklab, var(--warning) 18%, var(--card));
+  --wred: var(--destructive);
   max-width: 880px;
   margin: 0 auto;
   padding: 28px 16px 60px;
@@ -55,7 +57,7 @@
   font-weight: 600;
 }
 .writing-root .badge.plain {
-  background: #f1efe8;
+  background: var(--muted);
   color: var(--wink2);
   font-weight: 400;
 }
@@ -96,11 +98,11 @@
 .writing-root .btn.main {
   background: var(--waccent);
   border-color: var(--waccent);
-  color: #fff;
+  color: var(--primary-foreground);
 }
 .writing-root .btn.main:hover {
   opacity: 0.92;
-  color: #fff;
+  color: var(--primary-foreground);
 }
 .writing-root .btn:disabled {
   opacity: 0.5;
@@ -158,7 +160,7 @@
 .writing-root .pbar {
   margin-top: 4px;
   height: 5px;
-  background: #f1efe8;
+  background: var(--muted);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -192,7 +194,7 @@
   border-color: var(--waccent);
 }
 .writing-root .editor:disabled {
-  background: #faf9f5;
+  background: var(--muted);
   color: var(--wink2);
 }
 .writing-root .foot {
@@ -479,7 +481,7 @@
 }
 .writing-root .seg button.on {
   background: var(--waccent);
-  color: #fff;
+  color: var(--primary-foreground);
   font-weight: 600;
 }
 .writing-root .htag.band {
@@ -644,7 +646,7 @@
 .writing-root .aftag {
   display: inline-block;
   font-size: 10.5px;
-  background: #faeaea;
+  background: color-mix(in oklab, var(--wred) 8%, var(--card));
   color: var(--wred);
   border-radius: 4px;
   padding: 0 7px;
@@ -693,8 +695,8 @@
   left: 50%;
   bottom: 30px;
   transform: translateX(-50%) translateY(20px);
-  background: var(--wink);
-  color: #fff;
+  background: var(--foreground);
+  color: var(--background);
   font-size: 13px;
   border-radius: 999px;
   padding: 8px 22px;

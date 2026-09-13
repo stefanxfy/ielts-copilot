@@ -1142,7 +1142,7 @@ export default function TypingPage() {
                     />
                     <div className="kleg">
                       <span>
-                        <i style={{ background: "#fff", border: "1px solid var(--tline)" }} />
+                        <i style={{ background: "var(--card)", border: "1px solid var(--tline)" }} />
                         无错误
                       </span>
                       <span>
