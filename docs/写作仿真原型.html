@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="TGryzK7tsUUMrJ73iIn6kj">
+<head data-page-node-id="KiYyTHYica9Xq2isJbMu5a">
+<meta charset="UTF-8" data-page-node-id="qM4FB9GJgFCfR76hWNsprk">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="U3NoUXI7RHEcr0pDJ9RObR">
+<title>写作仿真原型 · IELTS Copilot</title>
+<style>
+  :root{--bg:#f6f5f1;--card:#ffffff;--ink:#26261f;--ink2:#6b6a62;--ink3:#9a988d;--line:#e5e3da;--accent:#0f6e56;--accent-bg:#e7f2ee;--amber:#b97d10;--amber-bg:#fbf3e2;--red:#c2413d;--red-bg:#fbeeee;--mono:'Cascadia Code','Consolas',monospace;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;line-height:1.7;padding:28px 20px 60px;}
+  .wrap{max-width:880px;margin:0 auto;}
+  .phead{display:flex;align-items:center;gap:14px;}
+  .phead h1{font-size:20px;font-weight:600;}
+  .meta{margin-left:auto;font-size:12.5px;color:var(--ink3);}
+  /* 题目卡 */
+  .pcard{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 24px;}
+  .pcard .row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .badge{font-size:11.5px;background:var(--accent-bg);color:var(--accent);border-radius:999px;padding:2px 12px;font-weight:600;}
+  .badge.plain{background:#f1efe8;color:var(--ink2);font-weight:400;}
+  .badge.done{background:var(--amber-bg);color:var(--amber);}
+  .swap{margin-left:auto;display:flex;gap:8px;align-items:center;}
+  select{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 14px;font-size:12.5px;color:var(--ink);outline:none;cursor:pointer;max-width:300px;}
+  .btn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 16px;font-size:12.5px;cursor:pointer;color:var(--ink);}
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.main{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn.main:hover{opacity:.92;color:#fff;}
+  .ptext{margin-top:12px;font-size:15.5px;line-height:1.85;}
+  .psrc{margin-top:10px;font-size:12px;color:var(--ink3);}
+  /* 实时条 */
+  .hud{margin-top:14px;display:grid;grid-template-columns:1.3fr 1fr 1fr .8fr;gap:10px;}
+  .hcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;}
+  .hcard .lab{font-size:11.5px;color:var(--ink3);display:block;}
+  .hcard b{font-size:22px;font-weight:600;}
+  .hcard .pbar{margin-top:4px;height:5px;background:#f1efe8;border-radius:99px;overflow:hidden;}
+  .hcard .pbar i{display:block;height:100%;width:0;background:var(--ink3);border-radius:99px;transition:width .3s,background .3s;}
+  .hcard .sub{font-size:11px;color:var(--ink3);margin-left:4px;}
+  /* 编辑器 */
+  .ewrap{margin-top:14px;}
+  .editor{width:100%;min-height:420px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:22px 26px;font-size:15.5px;line-height:1.9;color:var(--ink);outline:none;resize:vertical;font-family:inherit;}
+  .editor:focus{border-color:var(--accent);}
+  .foot{margin-top:12px;display:flex;align-items:center;gap:10px;}
+  .tip{font-size:12px;color:var(--ink3);}
+  .foot .btns{margin-left:auto;display:flex;gap:10px;}
+  .donetag{display:none;margin-left:10px;font-size:12px;color:var(--accent);background:var(--accent-bg);border-radius:999px;padding:2px 12px;}
+  .donetag.show{display:inline;}
+  /* 统计卡(内联展开) */
+  .rvsec{display:none;margin-top:14px;}
+  .rvsec.show{display:block;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;}
+  .rvhead{display:flex;align-items:center;}
+  .rvhead h3{font-size:15.5px;font-weight:600;}
+  .cards{margin-top:12px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+  .rcard{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
+  .rcard b{display:block;font-size:20px;font-weight:600;}
+  .rcard span{font-size:11.5px;color:var(--ink3);}
+  .rcard.ok b{color:var(--accent);}
+  .rcard.warn b{color:var(--amber);}
+  .note{margin-top:12px;font-size:13px;color:var(--ink2);background:var(--bg);border-radius:10px;padding:10px 14px;}
+  .rvbtns{margin-top:14px;display:flex;gap:10px;justify-content:flex-end;}
+  /* toast */
+  .ttoast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13px;border-radius:999px;padding:8px 22px;opacity:0;pointer-events:none;transition:.25s;}
+  .ttoast.show{opacity:1;transform:translateX(-50%);}
+</style>
+</head>
+<body data-page-node-id="NEYkRyNUgFpacDD5Rd2oo4">
+<div class="wrap" data-page-node-id="zsdevYGF8qAJbWeeWSebOQ">
+  <div class="phead" data-page-node-id="UDcAHoQbWhgYjukDfR6wiT">
+    <h1 data-page-node-id="O7nouK3glSZltAlGFWBfex">写作仿真</h1>
+    <span class="meta" data-page-node-id="MobDkzRfObTditV9bOemBJ">机考同款环境 · 无拼写检查 · 无自动纠正</span>
+  </div>
+
+  <!-- 题目卡 -->
+  <div class="pcard" data-page-node-id="46WtCQyLf4wBOFesX1N7rF">
+    <div class="row1" data-page-node-id="kQ9NWMIu0BG0dpeJsoMx0t">
+      <span class="badge" id="b-cat" data-page-node-id="uFjryEHOAMjBRmPbqguq9A">A 类</span>
+      <span class="badge plain" id="b-task" data-page-node-id="aU0aF9dJrxdQVHddLYviDW">Task 2 · 议论文</span>
+      <span class="badge plain" id="b-min" data-page-node-id="oiM24Ii2QrZdJlBidWton8">≥ 250 词</span>
+      <span class="badge plain" id="b-time" data-page-node-id="ifTYUIQiFpEzEiKoQXWmdW">建议 40 分钟</span>
+      <span class="badge done" id="b-done" style="display:none" data-page-node-id="hjvJH4yVRBbSbsY3Cr8z8R"></span>
+      <div class="swap" data-page-node-id="nQKHmHPaeLSOiuHPEZRlwB">
+        <select id="sel" onchange="onPick()" data-page-node-id="Hp7HsVPKKx4zZhwxHmdC3k"></select>
+        <button class="btn main" onclick="randomPick()" data-page-node-id="zB6Q13X4Al2XSzFp34k6tC">🎲 换一题</button>
+      </div>
+    </div>
+    <div class="ptext" id="ptext" data-page-node-id="qPmimOKKynyiDgUxwHM5rW"></div>
+    <div class="psrc" id="psrc" data-page-node-id="OBOFLB9jQRXLrhHcEaidXj"></div>
+  </div>
+
+  <!-- 实时条 -->
+  <div class="hud" data-page-node-id="19urlweReaxBWTloFzTA4B">
+    <div class="hcard" data-page-node-id="hwkQQDHHB0jXqJokAmHpO5">
+      <span class="lab" data-page-node-id="EfH9aV5N8JUVlilxJZtRNz">字数 <span class="sub" id="w-state" data-page-node-id="x483AV50dbha17Akq4sSnc">未开始</span></span>
+      <b data-page-node-id="Z7X21rNHB7blOdeh9tdGuJ"><span id="w-count" data-page-node-id="X1dgecFpdFimhAA3Mj5ODH">0</span><span style="font-size:13px;color:var(--ink3)" data-page-node-id="nzFkKZc6CBHdJpp2YwAZA1"> / <span id="w-min" data-page-node-id="1sHNggwQLezhn1dC9YTPoI">250</span> 词</span></b>
+      <div class="pbar" data-page-node-id="bHFe11Bl21mcjjs6hauZXJ"><i id="w-bar" data-page-node-id="mZt5P9D7JLJIxytAT3V9Tu"></i></div>
+    </div>
+    <div class="hcard" data-page-node-id="r9sTCZ0IQetBSxOYI0VlyJ"><span class="lab" data-page-node-id="DWqW8Wmw2iT2kZoF26leRw">倒计时</span><b id="h-time" data-page-node-id="oPMuW58JIhFtDu2d0r1pQF">40:00</b></div>
+    <div class="hcard" data-page-node-id="5oyIzigqCBFdtBNzjoXYbN"><span class="lab" data-page-node-id="cUiiYdejsOBBxXMXDK8uIh">段落数</span><b id="h-para" data-page-node-id="vRfTVhK1PpGh0KYzM2nwbz">0</b></div>
+    <div class="hcard" data-page-node-id="U2ez2bcPLcq5q6mpc67hnu"><span class="lab" data-page-node-id="3veHpFAAfSZ4obzQYqULL5">输出速度</span><b id="h-wpm" data-page-node-id="9ZY5RHP1Uzr5HFifamTxtc">0</b><span style="font-size:12px;color:var(--ink3)" data-page-node-id="0GnItelFlFOnrzpbspRpHO">词/分</span></div>
+  </div>
+
+  <!-- 编辑器 -->
+  <div class="ewrap" data-page-node-id="E5ZOSyYeFZ2FRWiZhKRftY">
+    <textarea class="editor" id="ed" spellcheck="false" autocorrect="off" autocapitalize="off" placeholder="Do not use the browser's spell check or auto-correction — the computer-based IELTS test is just a blank slate. Start writing, and the timer begins."></textarea>
+    <div class="foot" data-page-node-id="BocPADEMVpAxj7gTjFgsZq">
+      <span class="tip" data-page-node-id="bhKBl3YS7bF4OJMkuuPS8b">Enter to split paragraphs · Practice counts only after submission · Refreshing the page abandons it (same as the real exam)</span>
+      <span class="donetag" id="done-tag" data-page-node-id="rHfWW2SBF3EbC0JZnvmOiA">Submitted and saved ✓</span>
+      <div class="btns" data-page-node-id="nuWSQvl8IKXJCKYcRu2E76">
+        <button class="btn" onclick="resetAll()" data-page-node-id="KRFRRvtk92pMrhnxx75ZxQ">Reset</button>
+        <button class="btn main" onclick="submit()" data-page-node-id="16X4RLUQsLejSrH8O1Uxlp">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 统计卡 -->
+  <div class="rvsec" id="rv" data-page-node-id="vL5tIRIlMsvjJbTbArjtmN">
+    <div class="panel" data-page-node-id="xm9h1rburdMk4AflspRzTd">
+      <div class="rvhead" data-page-node-id="PGZCnA3yiWdBCG13aMWM7a"><h3 data-page-node-id="ZPAfIRPQcbe4xEyAashHzj">Practice Statistics</h3></div>
+      <div class="cards" id="cards" data-page-node-id="Yqqjv4We3JXuBXddAvxeci"></div>
+      <div class="note" id="rv-note" data-page-node-id="mE2zP8dOrVNqhdzLSTJZm0"></div>
+      <div class="rvbtns" data-page-node-id="nLKchRyqdCx6U1H10agJI1">
+        <button class="btn" onclick="resetAll()" data-page-node-id="1WBzMXUVCAZ77pLhuNbn6p">Rewrite this prompt</button>
+        <button class="btn main" onclick="randomPick(true)" data-page-node-id="UTD5bdXnDd3G1uz5Qn5bgu">Write another prompt (different one)</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="ttoast" id="toast" data-page-node-id="HcytZkxY1mJwQaVIe2dF4V"></div>
+
+<script>
+/* 12 real IELTS prompts (extracted from the papers DB writing-paper writing.html test-contents section) */
+const PROMPTS=[{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025jan-writing-test1","text":"Some people think that physical strength is important for success in sport, while other people think that mental strength is more important. Discuss both views and give your own opinion.","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"gt-vol1-writing-test1","text":"Every country should have a free health service, even if this means that the latest medical treatments may not be available through the service because they are too expensive.","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025mar-writing-test1","text":"Some people think that job satisfaction is more important than job security, while some people think that they cannot always expect job satisfaction, a permanent job is more important. Discuss both views and give your own opinion.","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025apr-writing-test1","text":"Individuals can do nothing to improve the environment; only governments and large companies can make a difference. To what extent do you agree or disagree?","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025may-writing-test1","text":"Some systems require students to specialize in a limited range of subjects from the age of fifteen. Other systems require students to study a wide range of subjects until they leave school. What are the benefits of these two education systems and which is better?","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025jun-writing-test1","text":"Some cities create housing areas by providing taller buildings. Others create housing by building houses on a wider area of land. What solution is better?","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025jun-writing-test2","text":"In many countries women and men are working full time. It is therefore, logical for women and men to share household works. To what extent do you agree or disagree?","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025jul-writing-test1","text":"In some countries people spend long hours at work. Why does this happen? Is it positive or negative development","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025jul-writing-test2","text":"Some people think the money spent in developing the technology for space exploration is not justified. There are more beneficial ways to spend this money. To what extend do you agree or disagree?","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025feb-writing-test1","text":"The use of social media is replacing face-to-face interaction among many people in society. Do you think the advantages outweigh the disadvantages?","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025feb-writing-test2","text":"People are having more and more sugar-based drinks. What are the reasons? What are the solutions to make people drink less.","count":0},{"gt":false,"taskNo":2,"minWords":250,"maxWords":350,"timeSuggest":40,"exam":"a-2025jan-writing-test2","text":"Some people believe that capital punishment should not be used. Others, however, argue that it should be allowed for the most serious crimes.","count":0}];
+
+let cur=null, t0=null, timer=null, done=false;
+const $=id=>document.getElementById(id);
+
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2000);}
+
+function wordCount(s){const m=s.match(/[A-Za-z']+/g);return m?m.length:0;}
+function paraCount(s){return s.split(/\n+/).filter(x=>x.trim()).length;}
+function fmt(ms){const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+
+/* ---------- Question switching ---------- */
+function renderList(){
+  $('sel').innerHTML=PROMPTS.map((p,i)=>`<option value="${i}">${p.text.slice(0,38)}…${p.count?' · practiced '+p.count+' times':''}</option>`).join('');
+  $('sel').value=String(curIdx);
+}
+function load(idx){
+  cur=PROMPTS[idx];curIdx=idx;done=false;t0=null;clearInterval(timer);
+  $('ed').value='';$('ed').disabled=false;
+  $('b-cat').textContent=cur.gt?'General Training':'Academic';
+  $('b-task').textContent='Task '+cur.taskNo+' · '+(cur.gt?'Letter':'Essay');
+  $('b-min').textContent='≥ '+cur.minWords+' words';
+  $('b-time').textContent='Suggested '+cur.timeSuggest+' minutes';
+  $('b-done').style.display='none';
+  $('ptext').textContent=cur.text;
+  $('psrc').textContent='Source · '+cur.exam+' (real past paper)';
+  $('w-min').textContent=cur.minWords;
+  $('h-time').textContent=String(cur.timeSuggest).padStart(2,'0')+':00';
+  $('rv').classList.remove('show');
+  $('done-tag').classList.remove('show');
+  updateHud();
+  renderList();
+}
+function onPick(){load(Number($('sel').value));}
+function randomPick(fromDone){
+  let i;do{i=Math.floor(Math.random()*PROMPTS.length);}while(PROMPTS.length>1&&i===curIdx);
+  load(i);
+  if(fromDone)$('ed').focus();
+}
+
+/* ---------- Real-time stats ---------- */
+function updateHud(){
+  const v=$('ed').value;
+  const w=wordCount(v);
+  $('w-count').textContent=w;
+  const bar=$('w-bar');
+  const ratio=Math.min(1,w/cur.minWords);
+  bar.style.width=(ratio*100)+'%';
+  bar.style.background=w>=cur.minWords?'var(--accent)':w>0?'var(--ink3)':'var(--ink3)';
+  $('h-para').textContent=paraCount(v);
+  // Pace hint: overlong warning (Task2>350)
+  const st=$('w-state');
+  if(done){st.textContent='Submitted';st.style.color='var(--accent)';}
+  else if(!t0){st.textContent='Not started';st.style.color='var(--ink3)';}
+  else if(w>cur.maxWords){st.textContent='Too long — a time risk in the exam';st.style.color='var(--amber)';}
+  else if(w>=cur.minWords){st.textContent='Target met';st.style.color='var(--accent)';}
+  else {st.textContent='Writing';st.style.color='var(--ink2)';}
+}
+function tick(){
+  const ms=Date.now()-t0;
+  $('h-time').textContent=fmt(Math.max(0,cur.timeSuggest*60000-ms));
+  const w=wordCount($('ed').value);
+  $('h-wpm').textContent=Math.round(w/Math.max(1,ms/60000));
+  if(ms>=cur.timeSuggest*60000){
+    $('h-time').textContent='00:00';
+    $('h-time').style.color='var(--red)';
+  }
+}
+$('ed').addEventListener('input',()=>{
+  if(done)return;
+  if(!t0){t0=Date.now();timer=setInterval(tick,500);}
+  updateHud();
+});
+
+/* ---------- Submit / Reset ---------- */
+function submit(){
+  const v=$('ed').value.trim();
+  const w=wordCount(v);
+  if(!w){toast('Nothing written yet — write before submitting');return;}
+  done=true;clearInterval(timer);
+  const ms=Date.now()-t0, sec=Math.max(1,Math.round(ms/1000));
+  const min=sec/60;
+  cur.count=(cur.count||0)+1;cur.lastW=w;
+  const okW=w>=cur.minWords, over=w>cur.maxWords;
+  const cards=[
+    [w+' words','Word count',okW?'ok':'warn'],
+    [fmt(ms),'Time spent',''],
+    [Math.round(w/min)+' words/min','Output speed',''],
+    [paraCount(v)+' paragraphs','Paragraph count',''],
+    [okW?'Meets requirement':'Below requirement','Min '+cur.minWords+' words',okW?'ok':'warn'],
+  ];
+  $('cards').innerHTML=cards.map(c=>`<div class="rcard ${c[2]}"><b>${c[0]}</b><span>${c[1]}</span></div>`).join('');
+  $('rv-note').innerHTML=over
+    ?'⚠️ Word count exceeds the suggested range — in the exam, over-writing squeezes the time left for checking. Keep it within <b>'+cur.maxWords+'</b> words.'
+    :(okW?'✅ Word count meets the requirement. Note: this environment does not include spelling or grammar checking — proofreading before submitting in the exam is your safety net.'
+         :'Word count below the minimum requirement — in the exam this directly caps the Task Response band score. Aim to write at least '+cur.minWords+' words.');
+  $('rv').classList.add('show');
+  $('ed').disabled=true;
+  $('done-tag').classList.add('show');
+  $('b-done').style.display='';$('b-done').textContent='Practiced '+cur.count+' times · last '+w+' words';
+  renderList();
+  $('rv').scrollIntoView({behavior:'smooth',block:'nearest'});
+  toast('Submitted · '+w+' words');
+}
+function resetAll(){
+  $('rv').classList.remove('show');
+  load(curIdx);
+  $('ed').focus();
+  toast('Reset');
+}
+
+/* ---------- Init ---------- */
+let curIdx=0;
+load(Math.floor(Math.random()*PROMPTS.length));
+</script>
+</body>
+</html>

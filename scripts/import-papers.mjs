@@ -29,7 +29,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 
 const ROOT = process.cwd();
-const PROTO = join(ROOT, "prototype");
+const PROTO = join(ROOT, "prototype", "exam"); // v3 起 prototype/ 下为 exam/ 子目录
 const EXAMS_OUT = join(ROOT, "public", "exams");
 const SHARED_ASSETS = join(EXAMS_OUT, "shared", "exam-assets");
 const DB_FILE = join(ROOT, "data", "app.db");

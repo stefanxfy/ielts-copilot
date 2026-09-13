@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="MCBzd9VyffCUO93E2VMBDN">
+<head data-page-node-id="tzZxraNNppTm9OGINLKqLM">
+<meta charset="UTF-8" data-page-node-id="9E3dfDcdj9RcpXVvggy9FD">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="QuvelB4G8Gl5AOCHMSTQJD">
+<title>阅读学习 · 原型</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --card:#ffffff; --ink:#26261f; --ink2:#6b6a62; --ink3:#9a988d;
+    --line:#e3e1d8; --accent:#0f6e56; --accent-bg:#e1f5ee; --amber:#ba7517; --amber-bg:#faeeda;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.7;}
+  .appnav{position:sticky;top:0;z-index:30;background:rgba(246,245,241,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);}
+  .appnav .in{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:6px;padding:10px 16px;}
+  .navitem{font-size:14px;color:var(--ink3);border:1px solid transparent;background:none;border-radius:999px;padding:5px 16px;cursor:pointer;}
+  .navitem.active{color:var(--accent);background:var(--accent-bg);font-weight:600;}
+  .navright{margin-left:auto;font-size:12px;color:var(--ink3);}
+  .wrap{max-width:880px;margin:0 auto;padding:20px 16px 90px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  h1{font-size:20px;font-weight:600;}
+  .sub{font-size:12px;color:var(--ink3);margin-top:2px;}
+  .back{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--ink2);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 14px;cursor:pointer;margin-bottom:12px;}
+  .back:hover{color:var(--accent);border-color:var(--accent);}
+
+  .h2sec{font-size:14px;font-weight:600;color:var(--ink);margin:26px 0 2px;display:flex;align-items:center;gap:8px;}
+  .h2sec::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--accent);}
+  .h2sec .cnt{font-size:12px;font-weight:400;color:var(--ink3);}
+  .empty{color:var(--ink3);font-size:13px;padding:22px 0;text-align:center;border:1px dashed var(--line);border-radius:12px;margin-top:12px;}
+
+  .resume{background:var(--card);border:2px solid var(--accent);border-radius:14px;padding:14px 16px;cursor:pointer;}
+  .resume:hover{background:#fbfdfc;}
+  .rtitle{font-weight:600;font-size:15px;display:flex;gap:8px;align-items:center;min-width:0;}
+  .rtitle .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rmeta{font-size:12px;color:var(--ink2);margin-top:4px;}
+  .rbar{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:10px;}
+  .rbar i{display:block;height:100%;background:var(--accent);}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;flex-direction:column;}
+  .card:hover{border-color:var(--accent);}
+  .ctitle{font-weight:600;font-size:14.5px;line-height:1.5;}
+  .cmeta{margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .badge{font-size:11px;padding:1px 8px;border-radius:999px;background:var(--accent-bg);color:var(--accent);}
+  .badge.lv{background:var(--amber-bg);color:var(--amber);}
+  .badge.topic{background:#f1efe8;color:var(--ink2);}
+  .cinfo{font-size:12px;color:var(--ink3);margin-top:6px;}
+  .cbar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:10px;}
+  .cbar i{display:block;height:100%;background:var(--accent);}
+  .cstate{font-size:12px;color:var(--ink3);margin-top:5px;}
+  .cstate.done{color:var(--accent);}
+
+  .filters{display:flex;gap:6px;align-items:center;margin-top:12px;flex-wrap:wrap;}
+  .flabel{font-size:12px;color:var(--ink3);}
+  .chip{font-size:12px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;cursor:pointer;color:var(--ink2);}
+  .chip.on{color:var(--accent);border-color:var(--accent);background:var(--accent-bg);}
+
+  .topbar{position:sticky;top:47px;z-index:20;background:rgba(246,245,241,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 0;}
+  .title{font-size:17px;font-weight:600;}
+  .src{font-size:12px;color:var(--ink3);margin-top:2px;}
+  .para{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-top:14px;padding:16px 18px;position:relative;transition:border-color .2s;}
+  .para.playing{border-color:var(--accent);border-left:4px solid var(--accent);}
+  .para .head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .playbtn{width:30px;height:30px;border-radius:50%;border:none;background:var(--accent-bg);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;}
+  .para.playing .playbtn{background:var(--accent);color:#fff;}
+  .pidx{font-size:12px;color:var(--ink3);}
+  .ptime{font-size:12px;color:var(--ink3);margin-left:auto;}
+  .more{font-size:12px;color:var(--ink3);border:none;background:none;cursor:pointer;padding:2px 6px;}
+  .pbar{height:3px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden;opacity:0;}
+  .para.playing .pbar{opacity:1;}
+  .pbar i{display:block;height:100%;width:0;background:var(--accent);}
+  .entext{font-size:16.5px;line-height:1.85;}
+  .hit{cursor:pointer;text-decoration:underline wavy var(--amber);text-underline-offset:4px;}
+  .hit.invocab{text-decoration:underline wavy var(--red);text-underline-offset:4px;}
+  .zhblock{margin-top:12px;background:var(--bg);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--ink2);display:none;}
+  .para.zh-open .zhblock{display:block;}
+  .zh-tag{font-size:11px;color:var(--ink3);margin-bottom:2px;}
+  .zhbtn{font-size:12px;color:var(--ink3);border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:1px 8px;margin-left:6px;cursor:pointer;vertical-align:2px;}
+  .zhbtn.on{color:var(--accent);border-color:var(--accent);background:var(--accent-bg);}
+
+  .card-pop{position:absolute;z-index:40;width:300px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.12);padding:14px 16px;display:none;}
+  .card-pop .w{display:flex;align-items:baseline;gap:10px;}
+  .card-pop .w b{font-size:19px;font-weight:600;}
+  .card-pop .ph{font-size:13px;color:var(--ink3);}
+  .card-pop .say{margin-left:auto;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--bg);cursor:pointer;color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none;}
+  .card-pop .sec{margin-top:10px;font-size:13px;}
+  .card-pop .sec h5{font-size:11px;color:var(--ink3);font-weight:400;margin-bottom:2px;}
+  .card-pop .add{margin-top:12px;width:100%;padding:7px 0;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:13px;cursor:pointer;}
+  .card-pop .add.done{background:var(--bg);color:var(--ink3);border:1px solid var(--line);cursor:default;}
+
+  .bottom{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.95);border-top:1px solid var(--line);z-index:25;display:none;}
+  .bottom.show{display:block;}
+  .bottom .in{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 16px;}
+  .prog{flex:1;height:5px;background:var(--line);border-radius:3px;overflow:hidden;}
+  .prog i{display:block;height:100%;width:0;background:var(--accent);}
+  .stat2{font-size:12px;color:var(--ink2);white-space:nowrap;}
+  .tool{font-size:12px;color:var(--ink2);border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;cursor:pointer;}
+  .tool.on{color:var(--accent);border-color:var(--accent);background:var(--accent-bg);}
+  .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:8px 18px;border-radius:999px;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none;}
+  .toast.show{opacity:.92;}
+</style>
+</head>
+<body data-page-node-id="lA7B95H8bWDhIwZmW5rCh8">
+
+<div class="appnav" data-page-node-id="NcaUAitcrrS3lL6OJ9N6Iq"><div class="in" data-page-node-id="RKmzXj3cMISjDUJwpNq2GF">
+  <button class="navitem" onclick="toast('背单词（导航示意，位于阅读学习左侧）')" data-page-node-id="Af3SIcBcYDg6AypVBwNRMx">背单词</button>
+  <button class="navitem active" data-page-node-id="LPqHsElrBV4AnirX0flY1Y">阅读学习</button>
+  <button class="navitem" onclick="toast('真题模考（导航示意）')" data-page-node-id="OiI76oLHjwvCKRkqC1dKwE">真题模考</button>
+  <span class="navright" data-page-node-id="sIuNwd0sBg1WqzbV3YYsl2">学习中心</span>
+</div></div>
+
+<div class="wrap" data-page-node-id="9CEMePtItQiG8D7L2YW7vy">
+
+<section class="view active" id="view-hub" data-page-node-id="zYgMs6mNOmvmWdt3QJf5tt">
+  <h1 data-page-node-id="oibM56kGhjSggNzw3dctkC">阅读学习</h1>
+  <div class="sub" data-page-node-id="ONf6ETlv2vAIOhbxlUSXVm">边读边听 · 逐段对照 · 生词自动进背单词</div>
+
+  <div class="h2sec" data-page-node-id="secResumeHead">继续学习<span class="cnt" id="resumeCnt"></span></div>
+  <div class="grid" id="continueList" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));"></div>
+  <div class="empty" id="continueEmpty" style="display:none">暂无进行中的阅读 · 从下方文章列表挑一篇开始</div>
+
+  <div class="h2sec" data-page-node-id="secListHead">文章列表</div>
+  <div class="filters" id="listTabs" data-page-node-id="0N4r5LsDsr8Fn1ARXaKBKJ" style="margin-top:8px;"></div>
+  <div class="grid" id="listArticles" data-page-node-id="GTB8QCVkqpFFo8KloqL4FP"></div>
+</section>
+
+<section class="view" id="view-reader" data-page-node-id="dM9Su5SX2cTbx5aoPwLAy2">
+  <button class="back" id="readerBack" onclick="show('hub')" data-page-node-id="6ldBKKUnQAi5sQNbXqWkQK">← 返回阅读学习</button>
+  <div class="topbar" style="margin:0 -16px;padding-left:16px;padding-right:16px;" data-page-node-id="uNdPMzVYWUTsh7AdFBpABZ">
+    <div class="title" id="rdTitle" data-page-node-id="vYHVBHk1JL5qFgBdNZRG2c"></div>
+    <div class="src" id="rdSrc" data-page-node-id="sLd6JPowUPr85ZpW7Okse2"></div>
+  </div>
+  <div id="paras" data-page-node-id="w63Em42thEKVvcHbEFwoUW"></div>
+  <div class="card-pop" id="wordCard" data-page-node-id="w5GnKs1RC8RBOAXdcTGI4o">
+    <div class="w" data-page-node-id="80JJt6v9VFagA343EjPify"><b id="cw" data-page-node-id="5G5ZNquod6x33IFMHXHgag"></b><span class="ph" id="cph" data-page-node-id="hwIbUTG3O22Ni4iuCSiCqH"></span>
+      <button class="say" onclick="speak(currentWord)" title="播放单词读音" data-page-node-id="rus50gaA1b43IYEEGCfdf2"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" data-page-node-id="YXaGub1GzFFWGDcAlyT5dz"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z" data-page-node-id="y9gzhsHOS5hRSwjxQNvAwS"/></svg></button>
+    </div>
+    <div class="sec" data-page-node-id="AhdlPLPxpnusbt1iGUJR0X"><h5 data-page-node-id="4CgIQVFIVrcdQbkZuXH1YW">中文释义</h5><div id="ctr" data-page-node-id="XVDfFuLNQhawnGK1eG4ALY"></div></div>
+    <div class="sec" data-page-node-id="PWhDh8yjKedoKYDfQYkwno"><h5 data-page-node-id="AYt5i5AaWJTF668LKYvvRw">构词解析</h5><div id="croot" style="color:var(--ink2)" data-page-node-id="C5blHoK4GATkZUpg9NsFDJ"></div></div>
+    <div class="sec" data-page-node-id="g6tmwGnobskbq3znDYSZRS"><h5 data-page-node-id="8lMn7W8fBDG9zoH03fzNwD">词形变化</h5><div id="cexc" style="color:var(--ink2)" data-page-node-id="qnQtP7C4EVqAH6BWxYHzqQ"></div></div>
+    <button class="add" id="cadd" onclick="addVocab()" data-page-node-id="gabRi9P5Ok8ahhfwSNvGpD">加入生词本</button>
+  </div>
+</section>
+
+</div>
+
+<div class="bottom" id="bottomBar" data-page-node-id="n5Uu2u42xdo9N0E6Gzoa7q"><div class="in" data-page-node-id="Jq0YYtlCi6dXXxzLX7GCIV">
+  <button class="tool" id="chain" onclick="toggleChain()" data-page-node-id="sEyQmu2RmVNmykYpNsW4Cr">连播：开</button>
+  <div class="prog" data-page-node-id="z1EbDOvS7vFFLiC9FJmZVw"><i id="bprog" data-page-node-id="Toceb7Mv0y1kAjFYuWm1YI"></i></div>
+  <span class="stat2" id="bstat" data-page-node-id="YCG2CBhInVvIpdhI1SmV9j">段 0/6 · 已读 0:00</span>
+</div></div>
+<div class="toast" id="toast" data-page-node-id="H46hoYJjBjM2LGWvUKySmi"></div>
+
+<script>
+const DICT={
+ exposure:{ph:"/ɪkˈspəʊʒə(r)/",tr:"n. 暴露；接触；曝光",root:"ex-(向外) + pos(放置) + -ure(名词后缀) → 暴露在外",exc:"expose v. / exposed adj. / exposure n."},
+ chronic:{ph:"/ˈkrɒnɪk/",tr:"adj. 长期的，慢性的",root:"chron(时间，同 chronology) + -ic → 长时间的",exc:"chronically adv. / chronology n. 时间序列"},
+ deterioration:{ph:"/dɪˌtɪəriəˈreɪʃn/",tr:"n. 恶化，变坏",root:"deterior(更坏，拉丁 deterior) + -ate + -ion → 变得更坏",exc:"deteriorate v. / deteriorating adj."},
+ mitigation:{ph:"/ˌmɪtɪˈɡeɪʃn/",tr:"n. 缓解，减轻",root:"mitig(软，缓和) + -ation → 使缓和",exc:"mitigate v. / mitigating adj."},
+ pervasive:{ph:"/pəˈveɪsɪv/",tr:"adj. 普遍的，弥漫的",root:"per-(贯穿) + vas(走) + -ive → 遍布各处的",exc:"pervasively adv. / pervasiveness n."},
+ impairment:{ph:"/ɪmˈpeəmənt/",tr:"n. 损伤，损害",root:"im-(进入) + pair(坏) + -ment → 弄坏",exc:"impair v. / impaired adj."},
+ affluent:{ph:"/ˈæfluənt/",tr:"adj. 富裕的",root:"af-(向) + flu(流) + -ent → 富得流油的",exc:"affluence n. / affluently adv."},
+ cardiovascular:{ph:"/ˌkɑːdiəʊˈvæskjələ(r)/",tr:"adj. 心血管的",root:"cardi(心) + o + vascul(血管) + -ar",exc:"cardiovascular disease 心血管疾病"},
+ irrational:{ph:"/ɪˈræʃənl/",tr:"adj. 不理性的，无道理的",root:"ir-(否定，同 in-) + rational 理性的",exc:"irrationality n. / irrationally adv."},
+ bias:{ph:"/ˈbaɪəs/",tr:"n. 偏见，偏向",root:"bias < 希腊 biasos 斜路 → 倾斜、偏斜",exc:"biased adj. / unbiased adj."}
+};
+const INVOCAB=new Set(["exposure"]);
+
+const CONTENT={
+ noise:[
+  {en:"Noise pollution has become one of the most pervasive yet under-regulated hazards of modern urban life. Unlike air or water contamination, its effects are invisible, and its sources — traffic, construction, aircraft — are woven into the fabric of daily existence. Recent epidemiological studies suggest that chronic exposure to elevated noise levels is associated not only with hearing impairment but also with cardiovascular disease, sleep disturbance and cognitive decline in children.",
+   zh:"噪声污染已成为现代城市生活中最普遍却受监管最少的危害之一。与空气或水污染不同，其影响是无形的，其来源——交通、建筑、飞机——则交织在日常生活结构之中。最近的流行病学研究表明，长期暴露于高噪声水平不仅与听力损伤相关，还与心血管疾病、睡眠障碍及儿童认知能力下降有关。",dur:38,hits:["pervasive","chronic","exposure","impairment","cardiovascular"]},
+  {en:"The mechanism underlying these outcomes is well documented. Noise triggers a stress response in which the body releases cortisol and adrenaline, elevating heart rate and blood pressure even during sleep, when the sufferer may remain unaware of the disturbance. Over time, researchers argue, this repeated activation contributes to the deterioration of the cardiovascular system.",
+   zh:"这些健康后果背后的机制已有充分记录。噪声会触发应激反应，使身体释放皮质醇和肾上腺素，即使在睡眠期间也会升高心率和血压，而受影响者可能并未察觉这种干扰。研究人员认为，长期反复的激活会逐渐导致心血管系统的恶化。",dur:30,hits:["deterioration","cardiovascular"]},
+  {en:"Policy responses have lagged behind the science. While legislation governing air quality dates back decades, comprehensive noise mapping exists in only a handful of jurisdictions, and enforcement is frequently delegated to under-resourced municipal authorities.",
+   zh:"政策应对落后于科学进展。尽管空气质量立法可追溯至数十年前，但全面的噪声地图仅在少数司法管辖区存在，且执法常被下放给资源不足的市政机构。",dur:24,hits:[]},
+  {en:"Some cities have begun to experiment with mitigation. Barcelona is piloting superblocks that reroute through-traffic, while Paris has installed noise-detecting cameras that fine excessively loud vehicles. Early evaluations suggest measurable reductions in ambient sound levels, though critics caution that such schemes risk displacing traffic, and the noise it generates, to less affluent neighbourhoods.",
+   zh:"一些城市已开始尝试缓解措施。巴塞罗那正在试点将过境交通改道的「超级街区」，巴黎则安装了噪声检测摄像头，对过分嘈杂的车辆罚款。早期评估显示环境声级有可测量的下降，但批评者警告，这类方案可能把交通及其产生的噪声转移到欠富裕的社区。",dur:40,hits:["mitigation","affluent"]},
+  {en:"Individual interventions are equally contested. Sound insulation can shield residents near flight paths, but it is costly and often rented properties are excluded from subsidy schemes. Behavioural advice — closing windows, wearing earplugs — places the burden on the sufferer rather than the source.",
+   zh:"个人层面的干预同样存在争议。隔音设施可以保护航线附近的居民，但成本高昂，且出租房屋常被排除在补贴计划之外。诸如关窗、戴耳塞之类的行为建议，是把负担转嫁给受害者而非污染源。",dur:28,hits:[]},
+  {en:"What the evidence increasingly demands is a shift in perspective: noise should be treated not as an unavoidable by-product of urbanisation, but as a public health variable that can be measured, regulated and reduced — with the same seriousness currently reserved for particulate matter.",
+   zh:"越来越多的证据要求一种视角的转变：噪声不应被视为城市化不可避免的副产品，而应被视为一个可测量、可监管、可削减的公共健康变量——以目前对待颗粒物的同等严肃程度来对待它。",dur:26,hits:[]}
+ ],
+ econ:[
+  {en:"Classical economics assumes that people weigh costs and benefits rationally before every purchase. Behavioural economists have dismantled this assumption, documenting dozens of systematic ways in which human decisions deviate from the rational model — from loss aversion to the endowment effect.",
+   zh:"古典经济学假设人们在每次购买前都会理性地权衡成本与收益。行为经济学家推翻了这一假设，记录了人类决策系统性偏离理性模型的数十种方式——从损失厌恶到禀赋效应。",dur:22,hits:["irrational"]},
+  {en:"One of the most robust findings is framing: whether a glass is described as half full or half empty changes how much people will pay for it. Presenting the same discount as a saving rather than a price nearly doubles its perceived value, a bias that retailers exploit relentlessly.",
+   zh:"最稳健的发现之一是框架效应：把杯子描述成半满还是半空，会改变人们愿意支付的价格。把同样的折扣表述为「省下的钱」而非「标价」，其感知价值几乎翻倍——零售商毫不留情地利用这种偏差。",dur:26,hits:["bias"]},
+  {en:"For policymakers the lesson is double-edged. The same tools that nudge citizens toward retirement savings can be turned toward darker ends, and the line between paternalism and manipulation is drawn, uneasily, case by case.",
+   zh:"对政策制定者而言，经验是把双刃剑。推动公民进行养老储蓄的同一套工具，也可能被用于更阴暗的目的；家长式管理与操纵之间的界线只能逐案艰难划定。",dur:22,hits:[]}
+ ],
+ trees:[
+  {en:"Street trees were once planted for shade and beauty; today they are recognised as critical infrastructure. Urban canopies cool pavements by several degrees, absorb storm water and filter particulate pollution, delivering benefits that engineers struggle to replicate at any price.",
+   zh:"行道树过去只为遮荫与美观而种；如今它们被公认为关键基础设施。城市树冠能为路面降温数度、吸收雨水、过滤颗粒物污染，其效益是工程师花任何代价都难以复制的。",dur:22,hits:[]},
+  {en:"Yet the urban forest is in decline. Drought, disease and cramped planting pits shorten the life of a street tree to as little as a decade, while mature specimens — those that deliver the greatest cooling — are routinely felled for development with chronic underfunding of replacement planting.",
+   zh:"然而城市森林正在衰退。干旱、病害与狭窄的树坑使一棵行道树的寿命缩短至短短十年，而降温效益最大的成熟大树，常因更新补种长期投入不足而被为开发让路砍伐。",dur:26,hits:["chronic"]}
+ ]
+};
+const ARTS=[
+ {id:"noise",lib:"cam",t:"The Impact of Urban Noise on Health",ref:"Cambridge 19 · T1 · P2",lv:"L3",wc:847,topic:"环境",prog:35,pos:2,total:6,content:"noise",lastRead:true},
+ {id:"econ",lib:"cam",t:"Why We Make Irrational Economic Choices",ref:"Cambridge 19 · T1 · P3",lv:"L3",wc:912,topic:"心理",prog:0,total:6,content:"econ"},
+ {id:"trees",lib:"cam",t:"The Secret Lives of Urban Trees",ref:"Cambridge 18 · T3 · P1",lv:"L2",wc:703,topic:"环境",prog:100,total:7,content:"trees"},
+ {id:"anti",lib:"cam",t:"Inside the Antikythera Mechanism",ref:"Cambridge 18 · T2 · P3",lv:"L4",wc:1038,topic:"历史",prog:0,total:8,content:"noise"},
+ {id:"coral",lib:"cam",t:"Coral Reefs and Warming Seas",ref:"Cambridge 20 · T1 · P2",lv:"L3",wc:876,topic:"环境",prog:0,total:6,content:"trees"},
+ {id:"lang",lib:"cam",t:"The Psychology of Language Learning",ref:"Cambridge 20 · T2 · P1",lv:"L2",wc:689,topic:"教育",prog:0,total:6,content:"econ"},
+ {id:"aeon1",lib:"aeon",t:"Sleep and the Consolidation of Memory",ref:"Aeon",lv:"L4",wc:1180,topic:"心理",prog:40,pos:3,total:9,content:"noise"},
+ {id:"ns1",lib:"ns",t:"Learning a Second Language as an Adult",ref:"New Scientist",lv:"L2",wc:640,topic:"教育",prog:0,total:5,content:"trees"},
+ {id:"ng1",lib:"ng",t:"How Cities Are Reclaiming Their Rivers",ref:"National Geographic",lv:"L3",wc:940,topic:"环境",prog:0,total:7,content:"noise"},
+ {id:"sci1",lib:"sci",t:"The Economics of Congestion Charging",ref:"Scientific American",lv:"L3",wc:858,topic:"经济",prog:0,total:6,content:"econ"},
+ {id:"dread1",lib:"dread",t:"Bamboo: The Grass That Builds Skyscrapers",ref:"DreamReader",lv:"L2",wc:595,topic:"科学",prog:0,total:5,content:"trees"}
+];
+const LIB_NAMES={cam:"剑桥雅思真题库",aeon:"Aeon 精选",ns:"New Scientist",ng:"National Geographic",sci:"Scientific American",dread:"DreamReader"};
+let curListLib="cam";
+
+function show(v){
+  document.querySelectorAll(".view").forEach(s=>s.classList.remove("active"));
+  document.getElementById("view-"+v).classList.add("active");
+  document.getElementById("bottomBar").classList.toggle("show",v==="reader");
+  if(v==="hub") renderContinue();
+  if(v!=="reader") stop();
+  window.scrollTo({top:0});
+}
+
+function renderContinue(){
+ const list=ARTS.filter(a=>a.prog>0&&a.prog<100).sort((x,y)=>(y.lastRead?1:0)-(x.lastRead?1:0));
+ document.getElementById("resumeCnt").textContent=list.length?" · "+list.length+" 篇进行中":"";
+ const el=document.getElementById("continueList");
+ document.getElementById("continueEmpty").style.display=list.length?"none":"block";
+ el.innerHTML=list.map(a=>
+  "<div class='card resume' onclick=\"openArticle('"+a.id+"')\"><div class='rtitle'><span class='t'>"+a.t+"</span><span class='badge'>"+a.ref+"</span><span class='badge lv'>"+a.lv+"</span></div>"+
+  "<div class='rmeta'>继续阅读 · 读到第 "+((a.pos||0)+1)+" / "+a.total+" 段"+(a.lastRead?" · 上次打开":"")+"</div>"+
+  "<div class='rbar'><i style='width:"+a.prog+"%'></i></div></div>").join("");
+}
+
+function renderList(){
+ const libs=[...new Set(ARTS.map(a=>a.lib))];
+ document.getElementById("listTabs").innerHTML=
+  "<span class='flabel'>来源</span>"+libs.map(l=>
+   "<button class='chip"+(l===curListLib?" on":"")+"' onclick=\"switchLib('"+l+"')\">"+LIB_NAMES[l]+" · "+ARTS.filter(a=>a.lib===l).length+"</button>").join("");
+ const libArts=ARTS.filter(a=>a.lib===curListLib);
+ document.getElementById("listArticles").innerHTML=libArts.map(a=>{
+  const bar=a.prog>0?"<div class='cbar'><i style='width:"+a.prog+"%'></i></div>":"";
+  const st=a.prog>=100?"<div class='cstate done'>已读完 ✓</div>":a.prog>0?"<div class='cstate'>已读 "+a.prog+"%</div>":"<div class='cstate'>未开始</div>";
+  return "<div class='card' onclick=\"openArticle('"+a.id+"')\"><div class='ctitle'>"+a.t+"</div>"+
+   "<div class='cmeta'><span class='badge'>"+a.ref+"</span><span class='badge lv'>"+a.lv+"</span><span class='badge topic'>"+a.topic+"</span></div>"+
+   "<div class='cinfo'>"+a.wc+" 词 · "+a.total+" 段 · 段级音频 ✓</div>"+bar+st+"</div>";
+ }).join("");
+}
+function switchLib(l){ curListLib=l; renderList(); }
+renderContinue();
+renderList();
+
+let curArt=null;
+function openArticle(artId){
+ curArt=ARTS.find(a=>a.id===artId);
+ ARTS.forEach(a=>a.lastRead=a.id===artId);
+ renderReader(); show("reader");
+}
+function renderReader(){
+ stop();
+ document.getElementById("rdTitle").textContent=curArt.t;
+ document.getElementById("rdSrc").textContent="出自 "+curArt.ref+" · "+curArt.wc+" 词 · "+curArt.total+" 段";
+ document.getElementById("readerBack").textContent="← 返回阅读学习";
+ const paras=CONTENT[curArt.content]||CONTENT.noise;
+ const el=document.getElementById("paras"); el.innerHTML="";
+ paras.forEach((p,i)=>{
+  const d=document.createElement("div");
+  d.className="para"; d.id="para"+i;
+  let en=p.en;
+  (p.hits||[]).forEach(w=>{
+   const key=Object.keys(DICT).find(k=>w.startsWith(k));
+   en=en.replace(w,"<span class='hit"+(INVOCAB.has(key)?" invocab":"")+"' data-w='"+key+"' onclick='showCard(this,event)'>"+w+"</span>");
+  });
+  d.innerHTML="<div class='head'><button class='playbtn' onclick='togglePlay("+i+")' id='pb"+i+"'>"+playSvg()+"</button>"+
+   "<span class='pidx'>段 "+(i+1)+"</span><span class='ptime'>"+p.dur+"s</span>"+
+   "<button class='more' onclick='toast(\"重播 / 复制本段 / 送入打字练习（二期）\")'>⋯</button></div>"+
+   "<div class='entext'>"+en+"<button class='zhbtn' id='zb"+i+"' onclick='toggleZh("+i+",event)'>译</button></div>"+
+   "<div class='zhblock'><div class='zh-tag'>中文对照</div>"+p.zh+"</div>"+
+   "<div class='pbar'><i id='bar"+i+"'></i></div>";
+  el.appendChild(d);
+ });
+ totalParas=paras.length; totalDur=paras.reduce((s,p)=>s+p.dur,0);
+ playing=-1; readSec=0; updStat();
+}
+let totalParas=6,totalDur=186;
+function playSvg(){return "<svg width='13' height='13' viewBox='0 0 24 24' fill='currentColor'><path d='M8 5v14l11-7z'/></svg>";}
+
+let currentWord="";
+function showCard(el,e){
+ currentWord=el.dataset.w; const info=DICT[currentWord]; if(!info)return;
+ const c=document.getElementById("wordCard");
+ document.getElementById("cw").textContent=currentWord;
+ document.getElementById("cph").textContent=info.ph;
+ document.getElementById("ctr").textContent=info.tr;
+ document.getElementById("croot").textContent=info.root;
+ document.getElementById("cexc").textContent=info.exc;
+ const btn=document.getElementById("cadd");
+ const inV=INVOCAB.has(currentWord);
+ btn.textContent=inV?"已在生词本 ✓":"加入生词本";
+ btn.classList.toggle("done",inV);
+ c.style.display="block";
+ const para=el.closest(".para"), r=el.getBoundingClientRect();
+ let top=el.offsetTop+34; if(top+300>para.offsetHeight+40) top=Math.max(8,para.offsetHeight-300);
+ c.style.top=top+"px";
+ c.style.left=Math.min(Math.max(10,r.left-para.getBoundingClientRect().left-130),para.offsetWidth-312)+"px";
+ e.stopPropagation();
+}
+function addVocab(){
+ INVOCAB.add(currentWord);
+ document.querySelectorAll(".hit[data-w='"+currentWord+"']").forEach(s=>s.classList.add("invocab"));
+ const btn=document.getElementById("cadd");
+ btn.textContent="已在生词本 ✓"; btn.classList.add("done");
+ toast("已加入生词本，将进入背单词复习队列");
+}
+document.addEventListener("click",e=>{ if(!e.target.closest(".card-pop")&&!e.target.classList.contains("hit")) document.getElementById("wordCard").style.display="none"; });
+function speak(w){ try{ const u=new SpeechSynthesisUtterance(w); u.lang="en-GB"; u.rate=.9; speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(err){ toast("浏览器不支持语音合成"); } }
+
+function toggleZh(i,e){
+ if(e) e.stopPropagation();
+ const d=document.getElementById("para"+i);
+ const open=d.classList.toggle("zh-open");
+ document.getElementById("zb"+i).classList.toggle("on",open);
+}
+
+let chain=true, playing=-1, timer=null, readSec=0, readTimer=null;
+function togglePlay(i){ if(playing===i){stop();return;} start(i); }
+function start(i){
+ stop(); playing=i;
+ const d=document.getElementById("para"+i); d.classList.add("playing");
+ d.scrollIntoView({behavior:"smooth",block:"center"});
+ let t=0; const dur=(CONTENT[curArt.content]||CONTENT.noise)[i].dur;
+ document.getElementById("pb"+i).innerHTML="<svg width='13' height='13' viewBox='0 0 24 24' fill='currentColor'><path d='M6 5h4v14H6zM14 5h4v14h-4z'/></svg>";
+ timer=setInterval(()=>{
+  t+=.25; readSec+=.25;
+  document.getElementById("bar"+i).style.width=Math.min(100,t/dur*100)+"%";
+  updStat();
+  if(t>=dur){
+   document.getElementById("bar"+i).style.width="100%";
+   if(chain && i<totalParas-1){ start(i+1); } else stop();
+  }
+ },250);
+ if(!readTimer) readTimer=setInterval(updStat,1000);
+}
+function stop(){
+ clearInterval(timer); timer=null;
+ if(playing>=0){
+  const d=document.getElementById("para"+playing);
+  if(d){ d.classList.remove("playing"); document.getElementById("pb"+playing).innerHTML=playSvg(); }
+ }
+ playing=-1;
+}
+function toggleChain(){ chain=!chain; document.getElementById("chain").textContent="连播："+(chain?"开":"关"); }
+function updStat(){
+ const done=(CONTENT[curArt&&curArt.content]||CONTENT.noise).slice(0,Math.max(0,playing)).reduce((a,p)=>a+p.dur,0);
+ const pct=playing<0?0:(done+parseFloat(document.getElementById("bar"+playing)?.style.width||0)/100*(CONTENT[curArt.content]||CONTENT.noise)[playing].dur)/totalDur*100;
+ document.getElementById("bprog").style.width=Math.min(100,pct)+"%";
+ document.getElementById("bstat").textContent="段 "+(playing>=0?playing+1:0)+"/"+totalParas+" · 已读 "+Math.floor(readSec/60)+":"+String(Math.floor(readSec%60)).padStart(2,"0");
+}
+let toastTimer=null;
+function toast(msg){
+ const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2000);
+}
+</script>
+</body>
+</html>

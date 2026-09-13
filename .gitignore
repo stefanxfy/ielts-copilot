@@ -91,8 +91,13 @@ next-env.d.ts
 # ---------- M1 工程产物(dev 与双击共存,见 docs/M1-实施计划.md) ----------
 next-server/
 /config.json
-# data/ 是运行时生成目录(用户的 SQLite 学习库 + 大量临时备份),
-# 全部不进 git。app.db seed 改放 src-tauri/seed-data/ 走 Tauri 资源流。
+# data/ 是运行时生成目录(用户的 SQLite 学习库 + 大量临时备份),全部不进 git。
+# ⚠ 2026-09-13 事故后已把 data/app.db 与 data/ecdict-index.db 移出跟踪(git rm --cached):
+#   - data/app.db 是运行时学习库;被跟踪时"切分支/pull"会原地重写运行中的 SQLite 文件,
+#     与长期持有该库的进程叠加会产出 WAL/主文件不一致 → 前端表现为"全部无数据"。
+#   - data/ecdict-index.db 是 scripts/build-ecdict-index.py 的一次性构建产物(ECdict 全量 csv → 索引)。
+#   ⛔ 严禁 `git add -f data/app.db` 之类的强制加回;要分发初始数据请走 src-tauri/seed-data/。
+#   (注意: .gitignore 对"已跟踪"文件无效 —— 上面这条只在文件处于未跟踪状态时才起作用。)
 /data
 /data/seed-data/
 

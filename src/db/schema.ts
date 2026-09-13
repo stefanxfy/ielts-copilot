@@ -1,11 +1,15 @@
 /**
- * src/db/schema.ts — 全量表定义(v3.1 · 5 表,推倒旧 12 表重写;P8 增 · 背单词 3 表)
+ * src/db/schema.ts — 全量表定义(v3.4 · 8+3+2+2 表;P11 增 · 写作仿真 2 表)
  *
  * 对齐:docs/数据模型设计.md v3.1 + docs/背单词数据模型设计.md v0.7.1
+ *      + docs/阅读库数据模型与交互设计.md v1.4
  * 原则:内容不入库(真题 HTML 留文件系统)/ 锚点即题目(题号三方对齐)/
  *       静态与动态一刀切开(exam_sets+papers=卷的定义,exam_sessions+exam_records=考的历史;
  *       word_books+words+book_word_relation=词书与词条的定义,
- *       word_progress+word_review_log=学习进度与答题流水)
+ *       word_progress+word_review_log=学习进度与答题流水;
+ *       reading_libraries+reading_articles=阅读库与文章的定义,reading_progress=阅读进度)
+ *       —— 例外:阅读库正文(纯文本段落)入 paragraphsJson,支撑段落级随机存取与点词定位;
+ *       原始真题 HTML 仍留文件系统(sourceRefJson 记血缘)。
  *
  * 删除语义:删 exam_sets 级联删 papers 与其下 sessions/records(删卷重录是合法操作);
  *       exam_records.exam_id 显式 RESTRICT(有作答记录的单科卷不许删,防误删)。
@@ -845,5 +849,328 @@ export const wordReviewLog = sqliteTable(
   (t) => [
     index("idx_word_review_log_progress").on(t.progressId),
     index("idx_word_review_log_reviewed").on(t.reviewedAt),
+  ],
+);
+
+/* ================================================================
+ * P9 阅读库(docs/阅读库数据模型与交互设计.md v1.4)
+ *
+ * 本期限制(2026-09-10 用户明确):暂不生成文章音频 —— paragraphsJson[].audio
+ * 恒 null、audioVoice 不写入;reading-tts 后置期补合成零迁移。
+ * 对齐粒度=段落:译文/音频/播放/对照/打字练习全按段落(一段一 mp3,后置期)。
+ * ================================================================ */
+
+/* ---------- P9 阅读库:枚举 + JSON 契约 ---------- */
+
+/** reading_libraries.source:builtin(导入管线按 source 自动归属的预置库)/ custom(用户新建) */
+export const READING_LIB_SOURCES = ["builtin", "custom"] as const;
+export type ReadingLibSource = (typeof READING_LIB_SOURCES)[number];
+
+/** reading_articles.source:素材渠道(与「库」是两层语义:source=从哪来,library=归属哪) */
+export const READING_SOURCES = ["past_paper", "web", "manual"] as const;
+export type ReadingSource = (typeof READING_SOURCES)[number];
+
+/** 难度四档(真题源默认 L3,可手动改级) */
+export const READING_LEVELS = ["L1", "L2", "L3", "L4"] as const;
+export type ReadingLevel = (typeof READING_LEVELS)[number];
+
+/** reading_progress.status(读完即从「继续学习」区消失) */
+export const READING_STATUSES = ["IN_PROGRESS", "COMPLETED"] as const;
+export type ReadingStatus = (typeof READING_STATUSES)[number];
+
+/** reading_articles.source_ref_json — 出处快照(past_paper 必填,其余可空;
+ *  FK 语义但不设外键:删真题卷不影响阅读库存文,出处标注用快照展示) */
+export interface ReadingSourceRef {
+  /** 套卷短标识,如 "a-2025jan" */
+  examSetId?: string;
+  /** 单科卷 examId,如 "a-2025jan-reading-test1" */
+  examId?: string;
+  /** 展示用快照,如 "A类 阅读 · 2025 January Test 1" */
+  paperTitle?: string;
+  /** 该卷第几篇 passage(1 起) */
+  passageNo?: number;
+}
+
+/** paragraphs_json 单条 —— 段落(翻译/音频/播放/对照/打字练习的公共对齐单元) */
+export interface ReadingParagraph {
+  /** 段序号,0 起,全局稳定(重导入保持不变) */
+  idx: number;
+  en: string;
+  /** 段落中文翻译;null = 未生成/生成失败(可重翻补齐) */
+  zh: string | null;
+  /** 段落音频 web 路径 /audio/reading/<articleId>/p03.mp3;null = 未合成(本期恒 null) */
+  audio: string | null;
+}
+
+/* ---------- reading_libraries:阅读库(1 行 = 一个库,对齐 word_books 的「库」层) ---------- */
+
+export const readingLibraries = sqliteTable(
+  "reading_libraries",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** 库英文短标识,幂等键("past-paper" / "aeon" / "custom-20260910");同 word_books.bookId 模式 */
+    libraryId: text("library_id").notNull(),
+    /** 展示名「剑桥雅思真题库」 */
+    name: text("name").notNull(),
+    /** 库说明(来源/定位,可空) */
+    description: text("description"),
+    /** builtin(管线导入自动归属)/ custom(用户新建) */
+    source: text("source", { enum: READING_LIB_SOURCES }).notNull(),
+    /** 库封面图 web 路径;NULL=回落默认色池 */
+    coverImage: text("cover_image"),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex("uq_reading_libraries_library_id").on(t.libraryId)],
+);
+
+/* ---------- reading_articles:文章静态定义(1 行 = 一篇文章,正文段落平铺入库) ---------- */
+
+export const readingArticles = sqliteTable(
+  "reading_articles",
+  {
+    /** 幂等导入键:真题源 "a-2025jan-r-t1-p2",web 源 "<source>-<slug>" */
+    articleId: text("article_id").primaryKey(),
+    /** FK → reading_libraries.id ON DELETE RESTRICT:库非空不许删(防误删整库文章) */
+    libraryId: int("library_id")
+      .notNull()
+      .references(() => readingLibraries.id, { onDelete: "restrict" }),
+    title: text("title").notNull(),
+    source: text("source", { enum: READING_SOURCES }).notNull(),
+    /** 出自哪套真题(past_paper 必填;其余可空)——列表徽标与详情页出处标注的数据源 */
+    sourceRefJson: text("source_ref_json", { mode: "json" }).$type<ReadingSourceRef>(),
+    level: text("level", { enum: READING_LEVELS }).notNull().default("L3"),
+    wordCount: int("word_count").notNull().default(0),
+    /** 话题标签 ["environment","education"],列表筛选用 */
+    topicTagsJson: text("topic_tags_json", { mode: "json" })
+      .$type<string[]>()
+      .notNull()
+      .default(sql`(json_array())`),
+    /** 正文本体:段落平铺数组(整存整取免 join);zh 为 null=未翻译,audio 为 null=未合成(本期恒 null) */
+    paragraphsJson: text("paragraphs_json", { mode: "json" })
+      .$type<ReadingParagraph[]>()
+      .notNull(),
+    /** TTS 音色快照(重合成时幂等判据);本期不写入 */
+    audioVoice: text("audio_voice"),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [
+    index("idx_articles_source").on(t.source),
+    index("idx_articles_library").on(t.libraryId),
+  ],
+);
+
+/* ---------- reading_progress:阅读进度(1 行 = 一人一篇文章一条进度) ---------- */
+
+export const readingProgress = sqliteTable(
+  "reading_progress",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** FK → reading_articles.article_id ON DELETE CASCADE:删文章级联清进度 */
+    articleId: text("article_id")
+      .notNull()
+      .references(() => readingArticles.articleId, { onDelete: "cascade" }),
+    status: text("status", { enum: READING_STATUSES })
+      .notNull()
+      .default("IN_PROGRESS"),
+    /** 读到第几段(0 起)——续读定位 */
+    lastParagraph: int("last_paragraph").notNull().default(0),
+    /** 累计阅读秒数(打卡与统计用) */
+    readSec: int("read_sec").notNull().default(0),
+    /** 最后一次打开时间——「继续学习」区排序依据 */
+    lastReadAt: int("last_read_at", { mode: "timestamp" }),
+    createdAt: int("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: int("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [uniqueIndex("uq_reading_progress_article").on(t.articleId)],
+);
+
+/* ================================================================
+ * P10 打字练习(docs/打字练习数据模型与交互设计.md v1.2)
+ *
+ * 两张表分工:typing_sessions = 成绩流水(打完整篇才入库,只增不改);
+ * typing_progress = 中途进度状态表(一篇文章一行,upsert 覆盖,打完即删)。
+ * 对齐粒度 = 整篇文章(mode=article),无 textSnapshot/paragraphIdx
+ * (2026-09-11 用户明确:删文章后成绩保留、续打直接跳过)。
+ * ================================================================ */
+
+/* ---------- P10 打字练习:枚举 + JSON 契约 ---------- */
+
+/** typing_sessions.mode:article=文章跟打 / drill=错词重练生成稿 */
+export const TYPING_MODES = ["article", "drill"] as const;
+export type TypingMode = (typeof TYPING_MODES)[number];
+
+/** typing_sessions.error_chars_json 单条 —— 最终错字明细(只记最终文本错误,中途改对不算错) */
+export interface TypingError {
+  /** 错字在全文中的位置(0 起;drill 稿为稿件内位置) */
+  pos: number;
+  /** 应打字符 */
+  expected: string;
+  /** 错字所在单词(小写归一;article 模式服务端从原文回填,drill 模式客户端直接提供)。
+   *  错词聚合/重练触发的原料 —— 无 textSnapshot 后词级信息只能在此落 */
+  word?: string;
+}
+
+/** typing_sessions.drill_meta_json —— 错词重练生成元信息(drill 模式专用;
+ *  drill 稿是服务端一次性生成物不入库,triggerWords 是成绩唯一的血缘记录) */
+export interface TypingDrillMeta {
+  /** 触发本次重练的高频错词 */
+  triggerWords: string[];
+}
+
+/* ---------- typing_sessions:跟打成绩流水(1 行 = 打完整篇/一份 drill 稿) ---------- */
+
+export const typingSessions = sqliteTable(
+  "typing_sessions",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** article=文章跟打 / drill=错词重练稿 */
+    mode: text("mode", { enum: TYPING_MODES }).notNull().default("article"),
+    /** 来源文章幂等键;drill 无单一来源为 NULL。FK 语义但不设外键:删文章不影响成绩流水 */
+    articleId: text("article_id"),
+    /** 用时(秒) */
+    durationSec: int("duration_sec").notNull(),
+    /** 文本总字符数(article 模式服务端按 paragraphsJson 拼全文校验) */
+    charTotal: int("char_total").notNull(),
+    /** 最终正确字符数 */
+    charCorrect: int("char_correct").notNull(),
+    /** 退格次数(键位不熟的诊断指标) */
+    backspaces: int("backspaces").notNull().default(0),
+    /** 最高连击:连续输入正确字符的最大数(复盘面板指标卡用) */
+    maxCombo: int("max_combo").notNull().default(0),
+    /** 净速度:(charCorrect / 5) / (durationSec / 60),服务端计算(口径唯一、防篡改) */
+    wpm: real("wpm").notNull(),
+    /** 最终准确率:charCorrect / charTotal,服务端计算 */
+    accuracy: real("accuracy").notNull(),
+    /** 最终错字明细(错键热力/错词清单的原料;全对为 NULL) */
+    errorCharsJson: text("error_chars_json", { mode: "json" })
+      .$type<TypingError[]>(),
+    /** 曾经打错键次表 { 应打小写字符: 次数 }——含回退改对的,键盘热力图/TOP 错字/错词的数据源(全对为 NULL) */
+    typosJson: text("typos_json", { mode: "json" })
+      .$type<Record<string, number>>(),
+    /** drill 生成元信息(article 模式为 NULL) */
+    drillMetaJson: text("drill_meta_json", { mode: "json" })
+      .$type<TypingDrillMeta>(),
+    startedAt: int("started_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [
+    index("idx_typing_sessions_started").on(t.startedAt),
+    index("idx_typing_sessions_article").on(t.articleId),
+  ],
+);
+
+/* ---------- typing_progress:跟打中途进度(1 行 = 一篇在打的文章,upsert 覆盖) ---------- */
+
+export const typingProgress = sqliteTable("typing_progress", {
+  /** FK → reading_articles.article_id ON DELETE CASCADE:删文章级联清中途进度 */
+  articleId: text("article_id")
+    .primaryKey()
+    .references(() => readingArticles.articleId, { onDelete: "cascade" }),
+  /** 已打到的字符位置(0 起,续打定位) */
+  pos: int("pos").notNull().default(0),
+  /** 打错字符位置数组(稀疏,只存错的不存对的;恢复时 marks[pos]=false,其余已打视为对) */
+  errorPosJson: text("error_pos_json", { mode: "json" })
+    .$type<number[]>()
+    .notNull()
+    .default(sql`(json_array())`),
+  /** 本篇开始时间 */
+  startedAt: int("started_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  /** 最后保存时间 */
+  updatedAt: int("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+/* ================================================================
+ * P11 写作仿真(docs/写作仿真数据模型与交互设计.md v1.1)
+ *
+ * 两张表分工:writing_prompts = 真题题库(静态,导入脚本写入,幂等重跑);
+ * writing_sessions = 练习记录(动态,交卷才入库,只增不改)。
+ * 一期只做 A 类 Task 2(2026-09-12 用户拍板 G 类先不做),但 A/G 全量入库
+ * ——解析零成本、category 天然区分,将来启用 G 类零迁移。
+ * ================================================================ */
+
+/* ---------- P11 写作仿真:枚举 + JSON 契约 ---------- */
+
+/** writing_prompts.category:A=Academic / G=General Training */
+export const WRITING_CATEGORIES = ["A", "G"] as const;
+export type WritingCategory = (typeof WRITING_CATEGORIES)[number];
+
+/** writing_prompts.source_ref_json — 出处快照(题库不设 papers 外键,真题卷删除不影响题库) */
+export interface WritingSourceRef {
+  /** 单科卷 examId,如 "a-2025jan-writing-test1" */
+  examId: string;
+  /** 展示用快照,如 "A类 写作 · 2025年1月真题 Test 1" */
+  paperTitle?: string;
+}
+
+/* ---------- writing_prompts:写作真题题库(1 行 = 一道题) ---------- */
+
+export const writingPrompts = sqliteTable("writing_prompts", {
+  /** 幂等键 = papers.exam_id + 任务号,如 "a-2025jan-writing-test1:t2" */
+  promptId: text("prompt_id").primaryKey(),
+  /** 1=Task 1 / 2=Task 2 */
+  taskNo: int("task_no").notNull(),
+  category: text("category", { enum: WRITING_CATEGORIES }).notNull(),
+  /** 题干正文(纯文本;G 类书信含 bullet 要点,换行分隔) */
+  promptText: text("prompt_text").notNull(),
+  /** 最低词数(T1=150 / T2=250) */
+  minWords: int("min_words").notNull(),
+  /** 建议用时(分钟:T1=20 / T2=40) */
+  timeSuggest: int("time_suggest").notNull(),
+  /** A 类 Task 1 图表图 web 路径(/exams/**静态托管);书信/Task 2 为 NULL */
+  imageUrl: text("image_url"),
+  sourceRefJson: text("source_ref_json", { mode: "json" })
+    .$type<WritingSourceRef>()
+    .notNull(),
+  createdAt: int("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+/* ---------- writing_sessions:写作练习记录(1 行 = 交卷一次,正文必存=将来批改原料) ---------- */
+
+export const writingSessions = sqliteTable(
+  "writing_sessions",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    /** FK → writing_prompts.promptId ON DELETE RESTRICT:题库不删 */
+    promptId: text("prompt_id")
+      .notNull()
+      .references(() => writingPrompts.promptId, { onDelete: "restrict" }),
+    /** 提交时词数(服务端按连续字母串重算,不信任客户端) */
+    wordCount: int("word_count").notNull(),
+    /** 用时(秒) */
+    durationSec: int("duration_sec").notNull(),
+    /** 是否达到最低词数(服务端算,只标记不拦截——机考也不阻止少写) */
+    reachedMin: int("reached_min", { mode: "boolean" }).notNull(),
+    /** 用户正文(回看/将来接 LLM 批改的原料) */
+    content: text("content").notNull(),
+    /** AI 四维批改结果(复用 AiGrading;未批改为 NULL。W4,0009) */
+    aiJson: text("ai_json", { mode: "json" }).$type<AiGrading | null>(),
+    finishedAt: int("finished_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => [
+    index("idx_writing_sessions_finished").on(t.finishedAt),
+    index("idx_writing_sessions_prompt").on(t.promptId),
   ],
 );

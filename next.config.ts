@@ -15,13 +15,13 @@ const nextConfig: NextConfig = {
   /* 关闭 Next 16 dev 模式下右下角浮动按钮(next-devtools buildActivity):
      该按钮默认位置在视口右下,鼠标 hover 展开成全屏 dev panel(带 backdrop-blur 白雾),
      在机考页正下方会盖住卷面 iframe,体感就是「白板」。关闭不影响 build 错误显示与生产环境 */
-  devIndicators: {
-    buildActivity: false,
-    appIsrStatus: false,
-  },
-  /* Next 16 dev 跨源保护:dev 资源(/_next/static/*)默认只允许「服务启动时的 hostname」访问
-     (localhost)。浏览器用 127.0.0.1 打开时被判跨源 → 所有 chunk 返回 403,页面无 JS。
-     两个 host 都放行,避免 dev 启动方式/访问方式不一致再踩(仅 dev 生效,不影响 build)。 */
+  /* Next 16 已移除 devIndicators 的 buildActivity/appIsrStatus(仅剩 position),
+     故「关掉」改用 devIndicators: false 表达——等价于原 buildActivity:false 的意图,
+     关闭后不影响 build 错误提示与生产环境。 */
+  devIndicators: false,
+  /* Next 16 dev 跨源保护:dev 资源(/_next/static/*)默认只允许「服务启动时的 hostname」访问。
+     若浏览器访问的 host 与之不一致(如服务记的是 localhost、浏览器走 127.0.0.1)即判跨源,
+     所有 chunk 返回 403、页面无 JS。两个 host 都放行;仅 dev 生效,不影响 build/产物。 */
   allowedDevOrigins: ["127.0.0.1", "localhost"],
   async rewrites() {
     return [

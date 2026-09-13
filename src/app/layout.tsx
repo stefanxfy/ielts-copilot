@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
+import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { Heartbeat } from "@/components/heartbeat";
+import { RouteMemory } from "@/components/route-memory";
 /* 中文正文:思源黑体本地包(Fontsource 可变字重 100-900)。
    不用 next/font/google —— Turbopack 在部分网络环境下拉 Google Fonts 会
    Module not found / 字体 404(vercel/next.js#91653),本地单机应用必须零外网依赖。 */
@@ -9,11 +10,6 @@ import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
 import { DEFAULT_UI_THEME, isUiThemeId, type UiThemeId } from "@/lib/ui-theme";
 import { getSetting } from "@/lib/study/settings";
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "IELTS Copilot · 本地机考",
@@ -30,18 +26,19 @@ function readUiThemeFromDb(): UiThemeId {
   }
 }
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   const uiTheme = readUiThemeFromDb();
   return (
     <html
       lang="zh-CN"
       suppressHydrationWarning
       data-theme={uiTheme === "wheat" ? undefined : uiTheme}
-      className={`${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <body className="min-h-full flex flex-col">
         {children}
         <Heartbeat />
+        <RouteMemory />
         <Toaster position="top-center" />
       </body>
     </html>

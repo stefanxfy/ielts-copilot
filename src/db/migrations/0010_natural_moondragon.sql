@@ -1,0 +1,1 @@
+ALTER TABLE `study_activities` ADD `typing_submission_count` integer DEFAULT 0 NOT NULL;

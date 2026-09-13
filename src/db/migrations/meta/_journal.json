@@ -40,8 +40,43 @@
     {
       "idx": 5,
       "version": "6",
+      "when": 1789037887565,
+      "tag": "0005_furry_edwin_jarvis",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789142779943,
+      "tag": "0006_rapid_the_watchers",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1789170866934,
+      "tag": "0007_glorious_purifiers",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789173191831,
+      "tag": "0008_last_baron_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1789177395472,
+      "tag": "0009_married_killer_shrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
       "when": 1789213760020,
-      "tag": "0005_natural_moondragon",
+      "tag": "0010_natural_moondragon",
       "breakpoints": true
     }
   ]

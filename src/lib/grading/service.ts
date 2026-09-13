@@ -63,7 +63,7 @@ function strArray(v: unknown, max = 8): string[] {
   return v.map((x) => String(x ?? "").trim()).filter(Boolean).slice(0, max);
 }
 
-interface ParsedResult {
+export interface ParsedResult {
   overall: number;
   bands: Record<GradingDimensionName, number>;
   dimensions: GradingDimension[];
@@ -77,8 +77,9 @@ interface ParsedResult {
 /**
  * 校验并规范化模型输出。
  * 四维 band 缺任一即判失败 —— 宁可重试,也不要落半份结果。
+ * (导出供 writing-sim.ts 复用:写作仿真的单篇批改走同一条解析口径)
  */
-function parseResult(raw: unknown): ParsedResult | null {
+export function parseResult(raw: unknown): ParsedResult | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
 

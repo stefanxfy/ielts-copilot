@@ -18,14 +18,23 @@ const NAV = [
   { href: "/", label: "仪表盘" },
   { href: "/plan", label: "备考计划" },
   { href: "/mock", label: "机考模拟" },
-  { href: "/learn", label: "背单词" },
-];
+  /** 背单词:精确 /learn + 词库中心/今日,不吞 /learn/reading(P4 阅读学习) */
+  {
+    href: "/learn",
+    label: "背单词",
+    match: (p: string) =>
+      p === "/learn" || p.startsWith("/learn/books") || p.startsWith("/learn/today"),
+  },
+  { href: "/learn/reading", label: "阅读学习" },
+  { href: "/typing", label: "打字练习" },
+  { href: "/writing", label: "写作练习" },
+] as const;
 
 /** 资料库下拉项:enabled=false 为占位(置灰,点击无反应),后续实现时补 href 即可 */
 const LIBRARY_ITEMS = [
   { label: "单词库", href: "/learn/books", enabled: true },
   { label: "语法库", href: null, enabled: false },
-  { label: "阅读库", href: null, enabled: false },
+  { label: "阅读库", href: "/learn/reading/libraries", enabled: true },
   { label: "视听库", href: null, enabled: false },
 ] as const;
 
@@ -53,7 +62,7 @@ function LibraryDropdown() {
   }, [open]);
   useEffect(() => setOpen(false), [pathname]);
 
-  const isActive = pathname.startsWith("/learn/books");
+  const isActive = pathname.startsWith("/learn/books") || pathname.startsWith("/learn/reading");
 
   return (
     <div ref={rootRef} className="relative">
@@ -119,8 +128,12 @@ function LibraryDropdown() {
 
 export function Topbar() {
   const pathname = usePathname();
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (item: (typeof NAV)[number]) =>
+    "match" in item && item.match
+      ? item.match(pathname)
+      : item.href === "/"
+        ? pathname === "/"
+        : pathname.startsWith(item.href);
 
   return (
     <header className="sticky top-0 z-50 flex h-[52px] items-center gap-4 border-b border-border/70 bg-card/85 px-5 text-card-foreground backdrop-blur">
@@ -136,7 +149,7 @@ export function Topbar() {
             key={n.href}
             href={n.href}
             className={`press-bubble rounded-full px-3 py-1.5 text-[13px] font-medium transition-all ${
-              isActive(n.href)
+              isActive(n)
                 ? "bg-primary/15 font-semibold text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
@@ -151,7 +164,7 @@ export function Topbar() {
         <Link
           href="/settings"
           className={`press-bubble rounded-full px-3 py-1.5 text-[13px] font-medium transition-all ${
-            isActive("/settings")
+            pathname.startsWith("/settings")
               ? "bg-primary/15 font-semibold text-primary"
               : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
