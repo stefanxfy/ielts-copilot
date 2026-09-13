@@ -292,8 +292,9 @@ export default function TypingPage() {
     for (const k in T.marks) if (!T.marks[k]) err++;
     const doneCh = T.pos;
     const cor = doneCh - err;
-    const sec = Math.max(1, T.ms / 1000);
-    const wpm = doneCh > 8 ? Math.round((cor / 5) / (sec / 60)) : 0;
+    // WPM 只在开打后有意义:恢复进度但未按键时 T.ms=0,钳到 1 秒会算出天文数字
+    const sec = T.t0 ? Math.max(1, T.ms / 1000) : 0;
+    const wpm = doneCh > 8 && T.t0 ? Math.round((cor / 5) / (sec / 60)) : 0;
     const acc = doneCh ? cor / doneCh : 1;
     if (hDoneRef.current) hDoneRef.current.textContent = String(doneCh);
     if (hTotalRef.current) hTotalRef.current.textContent = String(T.text.length);
@@ -769,15 +770,16 @@ export default function TypingPage() {
   const buildLiveReview = useCallback((): SessionReview | null => {
     const T = tRef.current;
     if (!T || T.pos === 0) return null;
-    const sec = Math.max(1, T.ms / 1000);
     const errPos = Object.keys(T.marks)
       .filter((k) => !T.marks[k])
       .map(Number);
     const doneCh = T.pos;
     const cor = doneCh - errPos.length;
+    // 同 updateHud 口径:未开打(T.t0 空)不出 WPM,避免恢复进度场景算出虚高值
+    const sec = T.t0 ? Math.max(1, T.ms / 1000) : 0;
     return {
       live: !T.done,
-      wpm: doneCh > 8 ? Math.round((cor / 5) / (sec / 60)) : 0,
+      wpm: doneCh > 8 && T.t0 ? Math.round((cor / 5) / (sec / 60)) : 0,
       acc: doneCh ? cor / doneCh : 1,
       err: errPos.length,
       dur: sec,
