@@ -3,8 +3,8 @@
  *
  * 数据由服务端 / 页面合并下发(整套场次 + 单科独立交卷,统一行形状),
  * 本组件只做筛选与渲染:
- *   - 模式切换:全部 / 整套 / 单科(默认全部)
- *   - 科目多选:听力/阅读/写作/口语,不选 = 不过滤(只作用于单科行)
+ *   - 单排 chips:全部 / 整套 / 听力 / 阅读 / 写作(默认全部)
+ *   - 整套 + 三科可多选(并集);任一选中即与「全部」互斥,全不选 = 全部
  * 无新请求:数据量小(本地库),一次下发客户端过滤即可。
  */
 "use client";
@@ -32,19 +32,15 @@ export interface RecentExamRow {
   href: string;
 }
 
-type KindFilter = "all" | "set" | "single";
+/** 筛选 token:set = 整套场次;其余为单科科目值 */
+type FilterToken = "set" | Subject;
 
-const KIND_TABS: ReadonlyArray<{ v: KindFilter; label: string }> = [
-  { v: "all", label: "全部" },
+/** 筛选 chips:全部 + 可多选的 整套/听力/阅读/写作(口语预留未上线,不出选项) */
+const FILTER_CHIPS: ReadonlyArray<{ v: FilterToken; label: string }> = [
   { v: "set", label: "整套" },
-  { v: "single", label: "单科" },
-];
-
-/** 可筛选科目(与 SUBJECTS 枚举一致;口语预留未上线,不出筛选项) */
-const SUBJECT_FILTERS: ReadonlyArray<[Subject, string]> = [
-  ["listening", "听力"],
-  ["reading", "阅读"],
-  ["writing", "写作"],
+  { v: "listening", label: "听力" },
+  { v: "reading", label: "阅读" },
+  { v: "writing", label: "写作" },
 ];
 
 const fmtDuration = (sec: number) => `${Math.round(sec / 60)} 分钟`;
@@ -57,28 +53,25 @@ const CHIP_ON = `${CHIP} border-primary bg-primary/10 text-primary`;
 const CHIP_OFF = `${CHIP} border-border text-muted-foreground hover:border-primary hover:text-primary`;
 
 export function RecentSessionsList({ rows }: { rows: RecentExamRow[] }) {
-  const [kind, setKind] = useState<KindFilter>("all");
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  /** 已选筛选 token;空 = 全部(与全部互斥) */
+  const [selected, setSelected] = useState<FilterToken[]>([]);
 
+  const all = selected.length === 0;
   const filtered = useMemo(
     () =>
       rows.filter((r) => {
-        if (kind !== "all" && r.kind !== kind) return false;
-        // 科目多选只作用于单科行;不选 = 不过滤
-        if (
-          r.kind === "single" &&
-          subjects.length > 0 &&
-          (!r.subject || !subjects.includes(r.subject))
-        )
-          return false;
-        return true;
+        if (all) return true;
+        // 整套 token 只匹配整套行;科目 token 只匹配对应单科行 → 多选即并集
+        return r.kind === "set"
+          ? selected.includes("set")
+          : selected.includes(r.subject as FilterToken);
       }),
-    [rows, kind, subjects],
+    [rows, all, selected],
   );
 
-  const toggleSubject = (s: Subject) =>
-    setSubjects((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
+  const toggleToken = (v: FilterToken) =>
+    setSelected((prev) =>
+      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v],
     );
 
   return (
@@ -86,27 +79,21 @@ export function RecentSessionsList({ rows }: { rows: RecentExamRow[] }) {
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <h3 className="text-[15px]">最近模考</h3>
         <div className="flex items-center gap-1.5">
-          {KIND_TABS.map((t) => (
+          <button
+            type="button"
+            className={all ? CHIP_ON : CHIP_OFF}
+            onClick={() => setSelected([])}
+          >
+            全部
+          </button>
+          {FILTER_CHIPS.map((t) => (
             <button
               key={t.v}
               type="button"
-              className={kind === t.v ? CHIP_ON : CHIP_OFF}
-              onClick={() => setKind(t.v)}
+              className={selected.includes(t.v) ? CHIP_ON : CHIP_OFF}
+              onClick={() => toggleToken(t.v)}
             >
               {t.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-muted-foreground">科目(可多选,不选=全部):</span>
-          {SUBJECT_FILTERS.map(([s, label]) => (
-            <button
-              key={s}
-              type="button"
-              className={subjects.includes(s) ? CHIP_ON : CHIP_OFF}
-              onClick={() => toggleSubject(s)}
-            >
-              {label}
             </button>
           ))}
         </div>
@@ -143,7 +130,7 @@ export function RecentSessionsList({ rows }: { rows: RecentExamRow[] }) {
                       </span>
                     ) : (
                       <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                        单科 · {SUBJECT_FILTERS.find(([s]) => s === r.subject)?.[1] ?? r.subject}
+                        单科 · {FILTER_CHIPS.find((c) => c.v === r.subject)?.label ?? r.subject}
                       </span>
                     )}
                   </td>
