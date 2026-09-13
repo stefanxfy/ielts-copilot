@@ -541,7 +541,7 @@ export const studyActivities = sqliteTable(
     examSetCompletionCount: int("exam_set_completion_count")
       .notNull()
       .default(0),
-    /** 打字练习篇数(打字追踪上线前恒 0,列先建好) */
+    /** 打字完赛篇数(article 完赛埋点 recordTypingSubmission;drill 片段练习不计) */
     typingSubmissionCount: int("typing_submission_count").notNull().default(0),
     listeningSubmissionCount: int("listening_submission_count")
       .notNull()

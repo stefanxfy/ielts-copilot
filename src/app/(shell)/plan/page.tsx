@@ -11,7 +11,7 @@
  */
 import { and, eq, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db";
-import { studyActivities, studyJournals, studyPlans } from "@/db/schema";
+import { studyActivities, studyJournals, studyPlans, typingSessions } from "@/db/schema";
 import type { PlanAvailability, PlanPhase, TargetScores } from "@/db/schema";
 import { PlanWizard } from "@/components/plan/wizard";
 import { BattleHome } from "@/components/plan/battle-home";
@@ -102,6 +102,7 @@ export default async function PlanPage({
   ).map((r) => ({
     activityDate: r.activityDate,
     examSetCompletionCount: r.examSetCompletionCount,
+    typingSubmissionCount: r.typingSubmissionCount,
     listeningSubmissionCount: r.listeningSubmissionCount,
     readingSubmissionCount: r.readingSubmissionCount,
     writingSubmissionCount: r.writingSubmissionCount,
@@ -110,6 +111,16 @@ export default async function PlanPage({
   }));
 
   const { weekNo, phase, tasks } = buildTodayChecklist(phases, plan.planStartWeekMonday, activities);
+
+  // 今日打字时长(typing_sessions 流水聚合;时长不打 activities,事实源在流水表)
+  const dayStart = new Date();
+  dayStart.setHours(0, 0, 0, 0);
+  const typingTodaySec = db
+    .select({ sec: typingSessions.durationSec })
+    .from(typingSessions)
+    .where(gte(typingSessions.startedAt, dayStart))
+    .all()
+    .reduce((s, r) => s + r.sec, 0);
 
   // 今日 daily 心得(已存内容)
   const todayJournal = db
@@ -138,6 +149,7 @@ export default async function PlanPage({
         weekNo={weekNo}
         phase={phase ? { name: phase.name, focus: phase.focus } : undefined}
         tasks={tasks}
+        typingTodaySec={typingTodaySec}
         punchRules={readPunchRules()}
         initialJournal={todayJournal?.content ?? ""}
         initialAiSummary={yesterdayJournal?.aiSummaryJson ?? null}

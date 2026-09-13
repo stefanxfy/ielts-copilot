@@ -137,6 +137,11 @@ interface CumReview {
   totalErr: number;
   maxCombo: number;
   keyFreq: Record<string, number>;
+  /** 追踪统计:篇数 = article 完赛数;时长 = 全部练习(含 drill)用时 */
+  articleCount?: number;
+  totalDurationSec?: number;
+  todayArticleCount?: number;
+  todayDurationSec?: number;
   perArticle?: Record<string, { count: number; best: number; last: number }>;
   inProgress?: string[];
 }
@@ -180,6 +185,11 @@ function fmt(ms: number) {
 }
 const paceWord = (w: number) =>
   w >= 75 ? "盲打自由" : w >= 60 ? "考场节奏" : w >= 45 ? "稳定输出" : w >= 30 ? "进入状态" : "热身中";
+/** 秒 → 人读时长:≥1h 显示「x时xx分」,否则「x分钟」(不足 1 分钟记 1 分钟) */
+function fmtDur(sec: number) {
+  const m = Math.max(1, Math.round(sec / 60));
+  return m >= 60 ? `${Math.floor(m / 60)}时${String(m % 60).padStart(2, "0")}分` : `${m}分钟`;
+}
 /** WPM 口径说明(HUD/review 悬浮提示共用) */
 const WPM_TIP =
   "WPM = Words Per Minute,每分钟输入速度。按国际测速口径,正确击键数 ÷ 5 ÷ 分钟(非词典词数)。参考:40 = 普通水平,60+ = 雅思机考从容,75+ = 盲打自由。";
@@ -844,6 +854,10 @@ export default function TypingPage() {
             cards: [
               [`${cm.avgWpm}`, "平均 WPM(累计)"],
               [`${Math.round(cm.avgAcc * 100)}%`, "平均准确率"],
+              [`${cm.articleCount ?? 0}`, "累计完成篇数"],
+              [fmtDur(cm.totalDurationSec ?? 0), "累计打字时长"],
+              [`${cm.todayArticleCount ?? 0}`, "今日完成篇数"],
+              [fmtDur(cm.todayDurationSec ?? 0), "今日打字时长"],
               [`${cm.totalErr}`, "累计错误数"],
               [`${cm.maxCombo}`, "最高连击"],
             ] as [string, string][],

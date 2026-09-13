@@ -21,6 +21,7 @@ import { todayStr } from "@/lib/study/date";
 interface ActivityRow {
   activityDate: string;
   examSetCompletionCount: number;
+  typingSubmissionCount?: number;
   listeningSubmissionCount: number;
   readingSubmissionCount: number;
   writingSubmissionCount: number;
@@ -35,7 +36,8 @@ function levelOf(a: ActivityRow | undefined, rules: PunchRules): 0 | 1 | 2 {
     a.readingSubmissionCount +
     a.writingSubmissionCount +
     a.speakingSubmissionCount +
-    a.examSetCompletionCount;
+    a.examSetCompletionCount +
+    (a.typingSubmissionCount ?? 0);
   const punched =
     (submissions >= rules.submissionMin ? 1 : 0) +
     (a.memorizedWordCount >= rules.wordsMin ? 1 : 0);

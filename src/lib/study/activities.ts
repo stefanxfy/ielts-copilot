@@ -5,6 +5,7 @@
  *   recordSubjectSubmission  单科交卷(exam-records POST 新插入分支)
  *   recordExamSetCompletion  套卷完成(finalizeIfComplete 首次转 COMPLETED)
  *   recordMemorizedWord      背词(P8 预留)
+ *   recordTypingSubmission   打字完赛(typing/sessions POST article 模式入库后)
  *
  * 原则:打卡是**旁路统计**,任何失败只 console.warn,绝不阻塞交卷主链路。
  * 统一 upsert:INSERT ... ON CONFLICT(activity_date) DO UPDATE 计数列 + delta。
@@ -59,4 +60,11 @@ export function recordExamSetCompletion(): void {
 export function recordMemorizedWord(delta = 1): void {
   if (!delta) return;
   upsertDelta(todayStr(), { memorized_word_count: delta });
+}
+
+/** 打字完赛埋点:POST /api/typing/sessions 成功入库后调用。
+ *  只有 article 模式算「完成一篇」(错词重练/盲打 drill 是片段练习,不计篇);
+ *  打字时长不打 study_activities —— 流水表 typing_sessions.duration_sec 即事实源,用时聚合。 */
+export function recordTypingSubmission(): void {
+  upsertDelta(todayStr(), { typing_submission_count: 1 });
 }

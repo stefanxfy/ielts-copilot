@@ -50,7 +50,8 @@ export async function generateYesterdaySummary(force = false): Promise<SummaryRe
       activity.readingSubmissionCount +
       activity.writingSubmissionCount +
       activity.speakingSubmissionCount +
-      activity.examSetCompletionCount
+      activity.examSetCompletionCount +
+      (activity.typingSubmissionCount ?? 0)
     : 0;
   const words = activity?.memorizedWordCount ?? 0;
 
@@ -65,6 +66,7 @@ export async function generateYesterdaySummary(force = false): Promise<SummaryRe
         `- 阅读交卷:${activity.readingSubmissionCount} 次`,
         `- 写作交卷:${activity.writingSubmissionCount} 次`,
         `- 完整套卷:${activity.examSetCompletionCount} 套`,
+        `- 打字练习:${activity.typingSubmissionCount ?? 0} 篇`,
         `- 背词:${words} 个`,
       ].join("\n")
     : "- 昨日无交卷与背词记录";

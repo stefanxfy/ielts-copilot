@@ -2,12 +2,14 @@
  * /api/typing/stats — 打字累计汇总(P10 复盘面板「累计」视角 + 文章下拉排序状态数据源)
  *
  * GET:全部 sessions 聚合 —— 场数/平均 WPM/平均准确率/累计错误数/最高连击/错键频次;
+ *   累计完成篇数(article 完赛)/累计打字时长/今日篇数/今日时长(追踪统计,时长含 drill);
  *   另附 perArticle(每篇:次数/最佳 WPM/最近时间)与 inProgress(有中途进度的文章),
  *   供 /typing 文章下拉「练过排前 + 状态标注」。错键热力零新表(先简后繁)。
  */
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { typingProgress, typingSessions } from "@/db/schema";
+import { todayStr } from "@/lib/study/date";
 
 export interface PerArticleStatus {
   count: number;
@@ -23,6 +25,8 @@ export async function GET() {
   const rows = db
     .select({
       articleId: typingSessions.articleId,
+      mode: typingSessions.mode,
+      durationSec: typingSessions.durationSec,
       wpm: typingSessions.wpm,
       accuracy: typingSessions.accuracy,
       maxCombo: typingSessions.maxCombo,
@@ -34,6 +38,21 @@ export async function GET() {
     .all();
 
   const n = rows.length;
+
+  // 追踪统计:篇数 = article 完赛数;时长 = 全部练习(含 drill)用时
+  let articleCount = 0;
+  let totalDurationSec = 0;
+  let todayArticleCount = 0;
+  let todayDurationSec = 0;
+  const today = todayStr();
+  for (const r of rows) {
+    if (r.mode === "article") articleCount++;
+    totalDurationSec += r.durationSec;
+    if (todayStr(r.startedAt) === today) {
+      if (r.mode === "article") todayArticleCount++;
+      todayDurationSec += r.durationSec;
+    }
+  }
   const perArticle: Record<string, PerArticleStatus> = {};
   for (const r of rows) {
     if (!r.articleId) continue;
@@ -50,7 +69,9 @@ export async function GET() {
 
   if (n === 0) {
     return NextResponse.json({
-      n: 0, avgWpm: 0, avgAcc: 0, totalErr: 0, maxCombo: 0, keyFreq: {}, perArticle, inProgress,
+      n: 0, avgWpm: 0, avgAcc: 0, totalErr: 0, maxCombo: 0, keyFreq: {},
+      articleCount: 0, totalDurationSec: 0, todayArticleCount: 0, todayDurationSec: 0,
+      perArticle, inProgress,
     });
   }
 
@@ -75,6 +96,10 @@ export async function GET() {
     totalErr,
     maxCombo,
     keyFreq,
+    articleCount,
+    totalDurationSec,
+    todayArticleCount,
+    todayDurationSec,
     perArticle,
     inProgress,
   });

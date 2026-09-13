@@ -58,6 +58,7 @@ export async function GET(request: Request) {
   ).map((r) => ({
     activityDate: r.activityDate,
     examSetCompletionCount: r.examSetCompletionCount,
+    typingSubmissionCount: r.typingSubmissionCount,
     listeningSubmissionCount: r.listeningSubmissionCount,
     readingSubmissionCount: r.readingSubmissionCount,
     writingSubmissionCount: r.writingSubmissionCount,

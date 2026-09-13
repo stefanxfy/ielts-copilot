@@ -4,6 +4,7 @@
  * 全部查询时计算,不物化(规划 §4.5 / §5.2):
  *   - 勾选:words 按当日 memorized_word_count;科目/套卷按本周累计(周一为周首)
  *   - speaking P8 前豁免:不勾不红,灰色「暂无追踪」(数据列就绪即自动转正常判定)
+ *   - typing 已接入:article 完赛经 recordTypingSubmission 写 typing_submission_count
  *   - 打卡:阈值走 app_settings.punch_rules 配置(现读,历史日即时重算)
  */
 import type { PlanAvailability, PlanPhase, PunchRules } from "@/db/schema";
@@ -20,7 +21,7 @@ export interface DayActivity {
   writingSubmissionCount: number;
   speakingSubmissionCount: number;
   memorizedWordCount: number;
-  /** 打字练习篇数(追踪功能上线前恒 0) */
+  /** 打字完赛篇数(article 完赛埋点;drill 片段练习不计) */
   typingSubmissionCount?: number;
 }
 
@@ -55,7 +56,7 @@ export interface TaskCheck {
   /** 勾选条件值(当日背词数 / 本周累计交卷数) */
   progress: number;
   done: boolean;
-  /** 无追踪数据时豁免:口语(P8 前)与打字(追踪上线前)恒豁免,渲染灰色「暂无追踪」 */
+  /** 无追踪数据时豁免:口语(P8 前)不勾不红,渲染灰色「暂无追踪」 */
   exempt: boolean;
 }
 
@@ -93,9 +94,8 @@ export function buildTodayChecklist(
 
   const todayRow = byDate.get(today);
   const tasks: TaskCheck[] = phase.weeklyTasks.map((t) => {
-    // 豁免(版本级):speaking P8 前无写入方;typing 打字追踪上线前无写入方。
-    // 不勾不红,渲染灰色「暂无追踪」;对应功能上线后移除豁免即自动转正常判定
-    const exempt = t.type === "speaking" || t.type === "typing";
+    // 豁免(版本级):speaking P8 前无写入方。typing 已接入打字完赛埋点,正常判定。
+    const exempt = t.type === "speaking";
     if (t.type === "words") {
       const progress = todayRow?.memorizedWordCount ?? 0;
       return { type: t.type, count: t.count, unit: t.unit, slot: t.slot, progress, done: progress >= t.count, exempt };

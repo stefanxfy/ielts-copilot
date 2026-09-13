@@ -88,6 +88,8 @@ export interface BattleHomeProps {
   weekNo: number;
   phase?: { name: string; focus: string };
   tasks: TaskCheck[];
+  /** 今日打字时长(秒;typing_sessions 当日聚合,供打字任务行补充展示) */
+  typingTodaySec?: number;
   punchRules: PunchRules;
   /** 今日 daily 心得(已存内容) */
   initialJournal: string;
@@ -101,6 +103,7 @@ export function BattleHome({
   weekNo,
   phase,
   tasks,
+  typingTodaySec,
   punchRules,
   initialJournal,
   initialAiSummary,
@@ -355,7 +358,7 @@ export function BattleHome({
               </button>
             </div>
             <p className={`${HINT} mt-1 mb-3`}>科目任务按本周累计判定;背单词按当日判定</p>
-            <TaskList tasks={tasks} emptyHint="当前周没有排期任务" />
+            <TaskList tasks={tasks} emptyHint="当前周没有排期任务" typingTodaySec={typingTodaySec} />
           </>
         )}
       </div>
@@ -479,8 +482,22 @@ export function BattleHome({
   );
 }
 
+/** 秒 → 人读分钟(今日打字时长用;<1 分钟记 1 分钟) */
+function fmtMin(sec: number) {
+  return `${Math.max(1, Math.round(sec / 60))} 分钟`;
+}
+
 /** 任务清单渲染(今日 / 历史日回看共用) */
-function TaskList({ tasks, emptyHint }: { tasks: TaskCheck[]; emptyHint: string }) {
+function TaskList({
+  tasks,
+  emptyHint,
+  typingTodaySec,
+}: {
+  tasks: TaskCheck[];
+  emptyHint: string;
+  /** 今日打字时长(秒;历史日回看不传则不展示) */
+  typingTodaySec?: number;
+}) {
   if (tasks.length === 0) {
     return <p className="py-8 text-center text-[13px] text-muted-foreground">{emptyHint}</p>;
   }
@@ -515,7 +532,13 @@ function TaskList({ tasks, emptyHint }: { tasks: TaskCheck[]; emptyHint: string 
               {t.slot ? <span className="ml-1.5 text-muted-foreground">· {SLOT_LABEL[t.slot] ?? t.slot}</span> : null}
             </div>
             <div className="mt-0.5 text-[11px] text-muted-foreground">
-              {t.exempt ? "暂无追踪(追踪功能上线后开启)" : `进度 ${t.progress}/${t.count}`}
+              {t.exempt
+                ? "暂无追踪(追踪功能上线后开启)"
+                : `进度 ${t.progress}/${t.count}${
+                    t.type === "typing" && typingTodaySec && typingTodaySec > 0
+                      ? ` · 今日打字 ${fmtMin(typingTodaySec)}`
+                      : ""
+                  }`}
             </div>
           </div>
           {!t.exempt && (

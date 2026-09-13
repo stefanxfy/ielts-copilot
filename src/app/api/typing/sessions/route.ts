@@ -14,6 +14,7 @@ import { getDb } from "@/db";
 import { readingArticles, typingProgress, typingSessions } from "@/db/schema";
 import type { TypingError } from "@/db/schema";
 import { buildArticleText, wordAt } from "@/lib/typing/text";
+import { recordTypingSubmission } from "@/lib/study/activities";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -124,6 +125,11 @@ export async function POST(request: Request) {
   // 成绩入库 → 该文章中途进度作废
   if (mode === "article" && body.articleId) {
     db.delete(typingProgress).where(eq(typingProgress.articleId, body.articleId)).run();
+  }
+
+  // 备考计划打卡埋点:完赛一篇(article)计一次;旁路统计,失败不阻塞
+  if (mode === "article") {
+    recordTypingSubmission();
   }
 
   return NextResponse.json({ sessionId: inserted.id, wpm, accuracy, charCorrect, charTotal });
