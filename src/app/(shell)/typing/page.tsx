@@ -406,10 +406,11 @@ export default function TypingPage() {
   const flushTime = useCallback(() => {
     const T = tRef.current;
     if (!T || T.done || !T.t0) return;
-    const unbanked = Date.now() - T.t0 - T.accrued;
+    T.ms = (T.msBase ?? 0) + (Date.now() - T.t0); // ?? 0:容错热更新保留的旧 TState(无 msBase)
+    const unbanked = T.ms - (T.accrued ?? 0);
     if (unbanked > 0) {
       totalMsRef.current += unbanked;
-      T.accrued += unbanked;
+      T.accrued = T.ms;
       localStorage.setItem("typing-total-ms", String(Math.round(totalMsRef.current)));
     }
   }, []);
@@ -443,11 +444,11 @@ export default function TypingPage() {
     if (!T || T.done) return;
     T.done = true;
     T.paused = false;
-    T.ms = T.t0 ? T.msBase + (Date.now() - T.t0) : T.msBase;
+    T.ms = (T.msBase ?? 0) + (T.t0 ? Date.now() - T.t0 : 0);
     if (timerRef.current) clearInterval(timerRef.current);
     // 本轮剩余时长入账全局累计(完赛后不再走 flushTime,这里一次结清)
     {
-      const unbanked = T.ms - T.accrued;
+      const unbanked = T.ms - (T.accrued ?? 0);
       if (unbanked > 0) {
         totalMsRef.current += unbanked;
         T.accrued = T.ms;
@@ -517,10 +518,10 @@ export default function TypingPage() {
   const tick = useCallback(() => {
     const T = tRef.current;
     if (!T || T.done || !T.t0) return;
-    T.ms = T.msBase + (Date.now() - T.t0);
+    T.ms = (T.msBase ?? 0) + (Date.now() - T.t0);
     // 计时显示 = 全局累计 + 本轮未入账部分(刷新/切篇后从累计值继续走)
     if (hTimeRef.current)
-      hTimeRef.current.textContent = fmt(totalMsRef.current + (T.ms - T.accrued));
+      hTimeRef.current.textContent = fmt(totalMsRef.current + (T.ms - (T.accrued ?? 0)));
   }, []);
 
   /* ---------- 键盘(挂载一次,全走 refs) ---------- */
@@ -552,13 +553,13 @@ export default function TypingPage() {
           // 暂停:先入账再冻结本轮计时;任意字符键或再按 ESC 恢复
           flushProgress();
           flushTime();
-          T.ms = T.msBase + (Date.now() - T.t0);
+          T.ms = (T.msBase ?? 0) + (Date.now() - T.t0);
           T.msBase = T.ms;
           T.t0 = null;
           T.paused = true;
           if (timerRef.current) clearInterval(timerRef.current);
           if (hTimeRef.current)
-            hTimeRef.current.textContent = fmt(totalMsRef.current + (T.ms - T.accrued));
+            hTimeRef.current.textContent = fmt(totalMsRef.current + (T.ms - (T.accrued ?? 0)));
           updateHud();
           toast("已暂停 · 计时停止,按任意键继续");
           return;
