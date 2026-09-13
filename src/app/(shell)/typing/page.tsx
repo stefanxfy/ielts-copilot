@@ -168,6 +168,8 @@ interface TState {
   backs: number;
   t0: number | null;
   ms: number;
+  /** 本轮已入账到全局累计(typing-total-ms)的毫秒;防切页/存档多次 flush 双重计数 */
+  accrued: number;
   combo: number;
   maxCombo: number;
   done: boolean;
@@ -239,6 +241,9 @@ export default function TypingPage() {
   const hTimeRef = useRef<HTMLElement>(null);
   const comboNumRef = useRef<HTMLElement>(null);
   const comboPillRef = useRef<HTMLDivElement>(null);
+  /* 全局累计(与文章无关,localStorage 持久化):累计打字毫秒 + 历史最高连击 */
+  const totalMsRef = useRef(0);
+  const bestComboRef = useRef(0);
   const imeRef = useRef<HTMLSpanElement>(null);
   const toastRef = useRef<HTMLDivElement>(null);
   const doneTagRef = useRef<HTMLSpanElement>(null);
@@ -296,7 +301,14 @@ export default function TypingPage() {
     if (hAccRef.current) hAccRef.current.textContent = `${Math.round(acc * 100)}%`;
     if (hWpmRef.current) hWpmRef.current.textContent = `${wpm} WPM · 实时`;
     if (hStateRef.current) hStateRef.current.textContent = paceWord(wpm);
-    if (comboNumRef.current) comboNumRef.current.textContent = String(T.combo);
+    if (comboNumRef.current) {
+      // 连击 pill 显示全局累计最高连击(刷新/切篇不清零;本轮超过时实时抬升)
+      if (T.maxCombo > bestComboRef.current) {
+        bestComboRef.current = T.maxCombo;
+        localStorage.setItem("typing-best-combo", String(bestComboRef.current));
+      }
+      comboNumRef.current.textContent = String(bestComboRef.current);
+    }
     if (comboPillRef.current) comboPillRef.current.classList.toggle("hot", T.combo >= 30);
   }, []);
 
@@ -318,7 +330,7 @@ export default function TypingPage() {
     box.classList.remove("focus");
     setCur(0);
     updateHud();
-    if (hTimeRef.current) hTimeRef.current.textContent = "00:00";
+    if (hTimeRef.current) hTimeRef.current.textContent = fmt(totalMsRef.current);
     if (doneTagRef.current) doneTagRef.current.classList.remove("show");
   }, [setCur, updateHud]);
 
@@ -345,6 +357,7 @@ export default function TypingPage() {
         backs: 0,
         t0: null,
         ms: 0,
+        accrued: 0,
         combo: 0,
         maxCombo: 0,
         done: false,
@@ -382,6 +395,18 @@ export default function TypingPage() {
     );
   }, []);
 
+  /** 把本轮未入账的打字时长并入全局累计(delta 记账,切页/存档/完赛多处调用不重复计) */
+  const flushTime = useCallback(() => {
+    const T = tRef.current;
+    if (!T || T.done || !T.t0) return;
+    const unbanked = Date.now() - T.t0 - T.accrued;
+    if (unbanked > 0) {
+      totalMsRef.current += unbanked;
+      T.accrued += unbanked;
+      localStorage.setItem("typing-total-ms", String(Math.round(totalMsRef.current)));
+    }
+  }, []);
+
   /* ---------- 完成 / 提交 ---------- */
 
   /** 文章打字状态(下拉排序/标注;完赛后刷新) */
@@ -412,7 +437,16 @@ export default function TypingPage() {
     T.done = true;
     T.ms = Date.now() - (T.t0 ?? Date.now());
     if (timerRef.current) clearInterval(timerRef.current);
-    if (hTimeRef.current) hTimeRef.current.textContent = fmt(T.ms);
+    // 本轮剩余时长入账全局累计(完赛后不再走 flushTime,这里一次结清)
+    {
+      const unbanked = T.ms - T.accrued;
+      if (unbanked > 0) {
+        totalMsRef.current += unbanked;
+        T.accrued = T.ms;
+        localStorage.setItem("typing-total-ms", String(Math.round(totalMsRef.current)));
+      }
+    }
+    if (hTimeRef.current) hTimeRef.current.textContent = fmt(totalMsRef.current);
 
     const sec = Math.max(1, T.ms / 1000);
     const errPos = Object.keys(T.marks)
@@ -476,7 +510,9 @@ export default function TypingPage() {
     const T = tRef.current;
     if (!T || T.done || !T.t0) return;
     T.ms = Date.now() - T.t0;
-    if (hTimeRef.current) hTimeRef.current.textContent = fmt(T.ms);
+    // 计时显示 = 全局累计 + 本轮未入账部分(刷新/切篇后从累计值继续走)
+    if (hTimeRef.current)
+      hTimeRef.current.textContent = fmt(totalMsRef.current + (T.ms - T.accrued));
   }, []);
 
   /* ---------- 键盘(挂载一次,全走 refs) ---------- */
@@ -497,6 +533,7 @@ export default function TypingPage() {
       }
       if (e.key === "Escape") {
         flushProgress();
+        flushTime();
         toast("进度已存档,可随时回来续打");
         return;
       }
@@ -559,23 +596,30 @@ export default function TypingPage() {
       document.removeEventListener("compositionstart", onCompStart);
       document.removeEventListener("compositionend", onCompEnd);
     };
-  }, [finish, flushProgress, scheduleSave, setCur, tick, toast, updateHud]);
+  }, [finish, flushProgress, flushTime, scheduleSave, setCur, tick, toast, updateHud]);
 
-  /* 页面隐藏/离开 → 存档兜底 */
+  /* 页面隐藏/离开 → 存档兜底(进度 + 计时累计) */
   useEffect(() => {
     const onVis = () => {
-      if (document.visibilityState === "hidden") flushProgress();
+      if (document.visibilityState === "hidden") {
+        flushProgress();
+        flushTime();
+      }
     };
-    const onHide = () => flushProgress();
+    const onHide = () => {
+      flushProgress();
+      flushTime();
+    };
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("pagehide", onHide);
     return () => {
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("pagehide", onHide);
       flushProgress();
+      flushTime();
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [flushProgress]);
+  }, [flushProgress, flushTime]);
 
   /* 键音偏好恢复(select 为非受控,直改 DOM 值,避免 setState-in-effect) */
   useEffect(() => {
@@ -586,11 +630,20 @@ export default function TypingPage() {
     }
   }, []);
 
+  /* 全局累计恢复:计时/连击跨刷新、跨文章持续(localStorage;与文章无关) */
+  useEffect(() => {
+    totalMsRef.current = Number(localStorage.getItem("typing-total-ms") ?? 0) || 0;
+    bestComboRef.current = Number(localStorage.getItem("typing-best-combo") ?? 0) || 0;
+    if (hTimeRef.current) hTimeRef.current.textContent = fmt(totalMsRef.current);
+    if (comboNumRef.current) comboNumRef.current.textContent = String(bestComboRef.current);
+  }, []);
+
   /* ---------- 数据装载 ---------- */
 
   const loadArticle = useCallback(
     async (id: string, opts?: { fresh?: boolean }) => {
       flushProgress();
+      flushTime(); // 上一轮时长入账全局累计(与文章无关,切篇不清零)
       modeRef.current = "article";
       artIdRef.current = id;
       setMode("article");
@@ -651,11 +704,12 @@ export default function TypingPage() {
         toast("文章加载失败");
       }
     },
-    [flushProgress, initT, setCur, toast, updateHud],
+    [flushProgress, flushTime, initT, setCur, toast, updateHud],
   );
 
   const startDrill = useCallback(async () => {
     flushProgress();
+    flushTime();
     modeRef.current = "drill";
     artIdRef.current = null;
     setMode("drill");
@@ -680,7 +734,7 @@ export default function TypingPage() {
     } catch {
       toast("重练稿生成失败");
     }
-  }, [flushProgress, initT, toast]);
+  }, [flushProgress, flushTime, initT, toast]);
 
   /* 首次进入:支持 ?articleId= 直达(阅读详情入口) */
   useEffect(() => {
@@ -771,6 +825,11 @@ export default function TypingPage() {
 
   const resetTyping = () => {
     const T = tRef.current;
+    // 全局累计一并清零:计时/连击都是本次重置的对象(用户 2026-09-13 要求)
+    totalMsRef.current = 0;
+    bestComboRef.current = 0;
+    localStorage.removeItem("typing-total-ms");
+    localStorage.removeItem("typing-best-combo");
     if (mode === "article" && artIdRef.current) {
       clearProgress(artIdRef.current);
       void loadArticle(artIdRef.current, { fresh: true });
