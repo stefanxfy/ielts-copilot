@@ -14,7 +14,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { AiSummary, PunchRules } from "@/db/schema";
+import type { AiSummary, PunchRules, TargetScores } from "@/db/schema";
 import type { TaskCheck } from "@/lib/study/checklist";
 import { daysBetween, todayStr } from "@/lib/study/date";
 import { ExamNoticeDialog } from "@/components/plan/exam-notice";
@@ -51,6 +51,14 @@ const SLOT_LABEL: Record<string, string> = {
   evening: "晚上",
 };
 
+/** 四科目标展示顺序(与 TargetScores 字段一一对应) */
+const SUBJECT_TARGETS: ReadonlyArray<[keyof TargetScores, string]> = [
+  ["listening", "听力"],
+  ["reading", "阅读"],
+  ["writing", "写作"],
+  ["speaking", "口语"],
+];
+
 /** /api/study-plan-day 响应(历史日任务完成情况) */
 interface HistoryDay {
   ok: boolean;
@@ -85,6 +93,10 @@ export interface BattleHomeProps {
   /** ACTIVE 计划 id(归档 DELETE 用) */
   planId: number;
   examDate: string;
+  /** 目标总分(0–9,0.5 步进) */
+  targetOverallBand: number;
+  /** 四科目标(缺省项展示时用总分−0.5 兜底,不落库) */
+  targetScores: TargetScores;
   weekNo: number;
   phase?: { name: string; focus: string };
   tasks: TaskCheck[];
@@ -100,6 +112,8 @@ export interface BattleHomeProps {
 export function BattleHome({
   planId,
   examDate,
+  targetOverallBand,
+  targetScores,
   weekNo,
   phase,
   tasks,
@@ -110,6 +124,7 @@ export function BattleHome({
 }: BattleHomeProps) {
   const router = useRouter();
   const [noticeOpen, setNoticeOpen] = useState(false);
+  const [scoresOpen, setScoresOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [journal, setJournal] = useState(initialJournal);
@@ -281,6 +296,36 @@ export function BattleHome({
         <p className={`${HINT} mt-2`}>考试日期 {examDate}</p>
         {daysLeft < 0 && (
           <p className="mt-1 text-xs text-warning">考试日已过,可归档再战或调整日期继续</p>
+        )}
+
+        {/* 目标分数:总分直显;四科目标可展开(缺省项按总分−0.5 兜底,与 schema 口径一致) */}
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[13px] text-muted-foreground">目标总分</span>
+            <span className="text-[20px] font-semibold leading-none text-foreground">
+              {targetOverallBand}
+            </span>
+          </div>
+          <button
+            type="button"
+            className={HINT + " hover:text-primary"}
+            aria-expanded={scoresOpen}
+            onClick={() => setScoresOpen((v) => !v)}
+          >
+            {scoresOpen ? "收起四科 ▴" : "四科目标 ▾"}
+          </button>
+        </div>
+        {scoresOpen && (
+          <div className="mt-2.5 grid grid-cols-4 gap-2 rounded-lg bg-muted/60 p-3">
+            {SUBJECT_TARGETS.map(([key, label]) => (
+              <div key={key} className="text-center">
+                <div className="text-[15px] font-semibold text-foreground">
+                  {targetScores[key] ?? Math.max(0, targetOverallBand - 0.5)}
+                </div>
+                <div className="mt-0.5 text-[11px] text-muted-foreground">{label}</div>
+              </div>
+            ))}
+          </div>
         )}
 
         <div className="mt-4 rounded-lg bg-muted/60 p-3.5">

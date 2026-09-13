@@ -146,6 +146,8 @@ export default async function PlanPage({
       <BattleHome
         planId={plan.id}
         examDate={plan.examDate}
+        targetOverallBand={plan.targetOverallBand}
+        targetScores={plan.targetScoresJson as TargetScores}
         weekNo={weekNo}
         phase={phase ? { name: phase.name, focus: phase.focus } : undefined}
         tasks={tasks}
