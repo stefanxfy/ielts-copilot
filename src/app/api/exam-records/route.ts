@@ -217,7 +217,9 @@ export async function POST(request: Request) {
     })
     .returning({ id: examRecords.id })
     .all();
-  if (sessionId) recordSubjectSubmission(paper.subject); // P7 活动埋点(连考才计,单科不计)
+  // P7 活动埋点:连考各科都计;单科模式只计阅读(篇数口径 = 阅读考试交卷或阅读库读完一篇,
+  // 2026-09-13 用户定的口径),听力/写作单科仍不计(避免练习式刷数)
+  if (sessionId || paper.subject === "reading") recordSubjectSubmission(paper.subject);
 
   // 连考模式:交卷后检查场次是否三科齐全,齐全则回写 overall 快照
   const completed = sessionId ? finalizeIfComplete(sessionId) : false;
