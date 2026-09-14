@@ -1305,18 +1305,23 @@ function DictationCard(props: {
       </>
     );
   } else if (type === "audio") {
+    // 无图词降级(数据模型 §10.3): 听觉型隐藏图位, 音标+裸喇叭即一级提示内容
     stimulus =
       level >= 1 || s.done ? (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="vis-img"
-            src={item.content.image}
-            alt="听觉提示配图"
-            onLoad={props.onImgReady}
-          />
-          {hint1}
-        </>
+        item.hasImage && item.content.image ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="vis-img"
+              src={item.content.image}
+              alt="听觉提示配图"
+              onLoad={props.onImgReady}
+            />
+            {hint1}
+          </>
+        ) : (
+          <div className="audio-hint-solo">{hint1}</div>
+        )
       ) : (
         <button
           type="button"

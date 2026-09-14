@@ -567,6 +567,14 @@ html[data-theme="night"] {
   .audio-play:active { transform: scale(.94); }
 
   .ctx-img { margin-bottom: 6px; }
+
+  /* 听觉型无图降级(§10.3): 提示内容(音标+裸喇叭)垂直居中占住原图片位 */
+  .audio-hint-solo {
+    margin: auto 0;
+    display: flex;
+    justify-content: center;
+  }
+  .audio-hint-solo .dict-hint { margin-top: 0; }
   .ctx-sentence {
     margin-top: auto;
     padding-top: 18px;
