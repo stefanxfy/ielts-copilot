@@ -10,6 +10,10 @@ name: 构建 macOS 安装包(Tauri)
 #   - 出包类型:dmg(便携 + App Store 风格双击安装),target "universal" 兼容 arm64 + x86_64
 #   - 不需要 setup-node(.node 资源已通过 setup-node 装在 workflow 缓存),
 #     但 sidecar node.exe 仍要从 runner 全局 node 拷出
+#
+# 听力 mp3 剔除与 Windows 同款:mac dmg 虽无 NSIS 2GiB 限制,但 4.7GB mp3 会让
+# dmg 达 ~5.5GB,超过 GitHub Release 单资产 2GiB 上限,分发同样受阻。
+# 仅影响安装包;本地开发与 next-server 产物不含此剔除。
 
 "on":
   workflow_dispatch:
@@ -72,6 +76,40 @@ jobs:
           echo "node 大小: $(du -h src-tauri/runtime/node | cut -f1)"
           echo "server/ 文件数: $(find src-tauri/server -type f | wc -l)"
 
+      - name: "剔除听力 mp3 并出分卷 zip 与 Windows 同款策略"
+        # 4.7GB 听力音频进 dmg 后 ~5.5GB,超 GitHub Release 单资产 2GiB 上限。
+        # 仅从打包副本(src-tauri/server/public)剔除,源目录与 next-server 不动。
+        shell: bash
+        run: |
+          ASSETS="src-tauri/server/public/exams/shared/exam-assets"
+          shopt -s nullglob
+          MP3S=("$ASSETS"/listening-*.mp3)
+          if [ ${#MP3S[@]} -eq 0 ]; then echo "无听力 mp3,跳过剔除"; exit 0; fi
+          SIZE=$(du -mc "${MP3S[@]}" | tail -1 | cut -f1)
+          echo "剔除前: ${SIZE} MB, ${#MP3S[@]} 个文件"
+          mkdir -p dist-listening
+          for YEAR in 2022 2023 2024 2025; do
+            BATCH=()
+            for f in "${MP3S[@]}"; do
+              case "$f" in *listening-*$YEAR*) BATCH+=("$f");; esac
+            done
+            if [ ${#BATCH[@]} -gt 0 ]; then
+              # -0 仅存储(mp3 压缩率≈0),快速且省 CPU
+              zip -q -0 -j "dist-listening/ielts-listening-$YEAR.zip" "${BATCH[@]}"
+              echo "zip $YEAR: $(du -m "dist-listening/ielts-listening-$YEAR.zip" | cut -f1) MB, ${#BATCH[@]} 个"
+            fi
+          done
+          OTHER=()
+          for f in "${MP3S[@]}"; do
+            case "$f" in *listening-*2022*|*listening-*2023*|*listening-*2024*|*listening-*2025*) ;; *) OTHER+=("$f");; esac
+          done
+          if [ ${#OTHER[@]} -gt 0 ]; then
+            zip -q -0 -j "dist-listening/ielts-listening-misc.zip" "${OTHER[@]}"
+            echo "zip misc: $(du -m "dist-listening/ielts-listening-misc.zip" | cut -f1) MB, ${#OTHER[@]} 个"
+          fi
+          rm -f "${MP3S[@]}"
+          echo "剔除后 server/: $(du -sm src-tauri/server | cut -f1) MB"
+
       - name: "Tauri 构建 .app + .dmg"
         run: |
           npx --yes @tauri-apps/cli@^2 build
@@ -98,4 +136,12 @@ jobs:
           path: |
             src-tauri/target/release/bundle/dmg/*.dmg
             src-tauri/target/release/bundle/macos/*.app
+          if-no-files-found: warn
+
+      - name: "上传听力 zip 分卷 装好后解压回 server/public/exams/shared/exam-assets"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ielts-listening-audio-macos-${{ github.run_number }}
+          path: dist-listening/*.zip
+          retention-days: 30
           if-no-files-found: warn

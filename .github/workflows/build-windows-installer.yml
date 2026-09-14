@@ -3,10 +3,13 @@ name: 构建 Windows 安装包(Tauri)
 # 方案 C(docs/桌面App分发方案设计.md §5,M2):Tauri 壳 + node sidecar 的 NSIS 安装包。
 #
 # 与 zip 工作流(build-windows-package.yml)的差异:
-#   - 产物是 per-user 安装包(Setup.exe),客户机免 Node、免构建、免联网
 #   - sidecar 不做 JS 打包(pkg/SEA):安装形态下文件落盘本是常态,
 #     直接用官方 node.exe + next-server 目录,绕开动态 require 兼容性顽疾
-#   - resources 体量大(public ~259MB),NSIS LZMA 压缩需 10-20 分钟,属正常
+#   - 听力 mp3(public/exams/shared/exam-assets/listening-*.mp3, ~4.7GB)在组装后
+#     剔除并单独出 zip 分卷:NSIS 压缩数据超 2GiB 必报
+#     "Internal compiler error #12345: error mmapping datablock"(makensis 32 位
+#     程序的硬限制,无配置可解,tauri#7372 同款)。mp3 几乎不可压缩,必须物理剔除。
+#     仅影响安装包;本地开发与 next-server 产物不含此剔除。
 #
 # 用法:GitHub 仓库页 → Actions → 本工作流 → Run workflow
 
@@ -95,6 +98,35 @@ jobs:
           "node.exe 大小: {0:N1} MB" -f ((Get-Item src-tauri/runtime/node.exe).Length/1MB)
           "server/ 文件数: $((Get-ChildItem src-tauri/server -Recurse -File).Count)"
 
+      - name: 剔除听力 mp3 并出分卷 zip(NSIS 2GiB 硬限制)
+        # 4.7GB 听力音频若进 NSIS,压缩数据必超 2GiB → makensis
+        # "Internal compiler error #12345: error mmapping datablock"。
+        # 仅从打包副本(src-tauri/server/public)剔除,源目录与 next-server 不动。
+        # zip 按年份分卷(-0 仅存储,mp3 压缩率≈0),单卷均 <2GiB Release 资产上限。
+        shell: pwsh
+        run: |
+          $assets = "src-tauri/server/public/exams/shared/exam-assets"
+          $mp3s = Get-ChildItem $assets -Filter "listening-*.mp3" -ErrorAction SilentlyContinue
+          if (-not $mp3s) { Write-Output "无听力 mp3,跳过剔除"; exit 0 }
+          "剔除前 exam-assets: {0:N0} MB, {1} 个文件" -f (($mp3s | Measure-Object Length -Sum).Sum/1MB), $mp3s.Count
+          New-Item -ItemType Directory -Force dist-listening | Out-Null
+          foreach ($year in "2022","2023","2024","2025") {
+            $batch = $mp3s | Where-Object { $_.Name -match "listening-.*-$year" }
+            if ($batch) {
+              $zip = "dist-listening/ielts-listening-$year.zip"
+              Compress-Archive -Path ($batch.FullName) -DestinationPath $zip -CompressionLevel NoCompression
+              "zip $year : {0:N0} MB, {1} 个" -f ((Get-Item $zip).Length/1MB), $batch.Count
+            }
+          }
+          $other = $mp3s | Where-Object { $_.Name -notmatch "listening-.*-20(22|23|24|25)" }
+          if ($other) {
+            $zip = "dist-listening/ielts-listening-misc.zip"
+            Compress-Archive -Path ($other.FullName) -DestinationPath $zip -CompressionLevel NoCompression
+            "zip misc: {0:N0} MB, {1} 个" -f ((Get-Item $zip).Length/1MB), $other.Count
+          }
+          $mp3s | Remove-Item -Force
+          "剔除后 server/: {0:N0} MB" -f ((Get-ChildItem src-tauri/server -Recurse -File | Measure-Object Length -Sum).Sum/1MB)
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
@@ -116,9 +148,20 @@ jobs:
           path: src-tauri/target/release/bundle/nsis/*.exe
           retention-days: 30
 
+      - name: 上传听力 zip 分卷(NSIS 剔除部分,解压回装到 server/public/exams/shared/exam-assets)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ielts-listening-audio-${{ github.run_number }}
+          path: dist-listening/*.zip
+          retention-days: 30
+
       - name: 上传到 Release(可选)
         if: ${{ inputs.upload_release }}
         shell: pwsh
-        run: gh release upload "${{ github.ref_name }}" (Get-Item src-tauri/target/release/bundle/nsis/*.exe).FullName --clobber
+        run: |
+          gh release upload "${{ github.ref_name }}" (Get-Item src-tauri/target/release/bundle/nsis/*.exe).FullName --clobber
+          if (Test-Path dist-listening) {
+            gh release upload "${{ github.ref_name }}" (Get-Item dist-listening/*.zip).FullName --clobber
+          }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
