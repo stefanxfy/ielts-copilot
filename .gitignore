@@ -104,6 +104,11 @@ next-server/
 # ---------- WorkBuddy 本地工作记忆 ----------
 .workbuddy/
 
+# ---------- tmp/ 本地临时产物(2026-09-14 起不入库) ----------
+# 演示截图(tmp/screenshots/)、录像、调试脚本等均为本地生成物, 不再进 git。
+# (原「原型产物留痕不再忽略 tmp/」策略作废; 历史已跟踪的 15 个文件已 git rm --cached)
+/tmp/
+
 # (原型产物一律入 prototype/ 留痕,不再忽略 tmp/)
 data/iot/cookies.txt
 questions.bak-manual-20260907/
